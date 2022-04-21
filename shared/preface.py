@@ -1,4 +1,7 @@
-
+###############
+### Imports ###
+###############
+# region
 import sys, os
 from datetime import datetime
 import time
@@ -31,8 +34,14 @@ import matplotlib.colors as colors
 import matplotlib.ticker as ticker
 import matplotlib.patches as mpatches
 from mpl_toolkits.axes_grid1 import make_axes_locatable
+# endregion
 
 
+
+#############
+### Plots ###
+#############
+# region
 SMALL_SIZE = 12
 MEDIUM_SIZE = 14
 BIGGER_SIZE = 16
@@ -44,6 +53,7 @@ plt.rc('xtick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
 plt.rc('ytick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
 plt.rc('legend', fontsize=SMALL_SIZE)    # legend fontsize
 plt.rc('figure', titlesize=BIGGER_SIZE)  # fontsize of the figure title
+# endregion
 
 
 
@@ -79,6 +89,7 @@ arcmin = deg/60.                    # Arcminute
 arcsec = arcmin/60.                 # Arcsecond
 sr     = 1.                         # Steradian
 # endregion
+
 
 
 #################
