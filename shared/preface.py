@@ -47,7 +47,7 @@ MEDIUM_SIZE = 14
 BIGGER_SIZE = 16
 
 plt.rc('font', size=SMALL_SIZE)          # controls default text sizes
-plt.rc('axes', titlesize=BIGGER_SIZE)     # fontsize of the axes title
+plt.rc('axes', titlesize=BIGGER_SIZE)    # fontsize of the axes title
 plt.rc('axes', labelsize=MEDIUM_SIZE)    # fontsize of the x and y labels
 plt.rc('xtick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
 plt.rc('ytick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
@@ -61,7 +61,10 @@ plt.rc('figure', titlesize=BIGGER_SIZE)  # fontsize of the figure title
 ### Units ###
 #############
 # region
-eV     = 1.                         # Unit of energy: GeV
+Pi = np.pi
+
+eV     = 1.                         # Unit of energy: eV
+meV    = 1.0e-3*eV
 keV    = 1.0e3*eV
 MeV    = 1.0e3*keV
 GeV    = 1.0e3*MeV
@@ -78,13 +81,18 @@ kpc    = 1.0e3*pc
 Mpc    = 1.0e3*kpc
 
 s      = 2.9979e10*cm               # second
+yr     = 365*24*60*60*s
+Gyr    = 1e9*yr
+t0     = 13.8*Gyr
+Hz     = 1.0/s
 
 kg     = J/m**2*s**2
 gram   = kg/1000.
 Msun   = 1.989e30*kg                # Mass of the Sun
 G      = 6.674e-11*m**3/kg/s**2     # Gravitational constant
+Da     = 1.66e-27*kg                # Dalton or atomic mass unit (u)
 
-deg    = np.pi/180.0                # Degree
+deg    = Pi/180.0                   # Degree
 arcmin = deg/60.                    # Arcminute
 arcsec = arcmin/60.                 # Arcsecond
 sr     = 1.                         # Steradian
@@ -98,12 +106,53 @@ sr     = 1.                         # Steradian
 # region
 h = 0.674
 H0 = h * 100 * km/s/Mpc
-Omega_M = 0.315
-Omega_L = 0.685
-Omega_R = 2.473e-5 / h**2
+Omega_R = 9.23640e-5  # not used in simulation
+Omega_M = 0.3111
+Omega_L = 1.-Omega_M  # since we don't use Omega_R
 
 T_CMB = 2.725*K
 T_CNB = 1.95*K
 
 Pi = np.pi
+
+
+### NFW parameters today - Mertsch et al. (2020)
+Mvir_NFW  = 2.03e12*Msun                           # Virial mass
+rho0_NFW  = 1.06e7*(Msun/kpc**3.)                  # density normalization
+Rs_NFW   = 19.9*kpc                                # scale radius 
+Rvir_NFW = 333.5*kpc                               # virial radius
+# endregion
+
+
+
+######################
+### Control Center ###
+######################
+# region
+PHIs = 10
+THETAs = 10
+Vs = 100
+NR_OF_NEUTRINOS = PHIs*THETAs*Vs
+
+LOWER = 0.01
+UPPER = 100.
+MOMENTA = np.geomspace(LOWER, UPPER, Vs)
+
+NU_MASS = 0.03*unit.eV
+NU_MASS_KG = NU_MASS.to(unit.kg, unit.mass_energy())
+N0 = 112  # standard neutrino number density in [1/cm**3]
+
+## Redshift integration parameters
+#NOTE: Linearly spaced, denser for late times (closer to today)
+late_steps = 200
+early_steps = 100
+Z_START, Z_STOP, Z_AMOUNT = 0., 4., late_steps+early_steps
+z_late = np.linspace(0,2,200)
+z_early = np.linspace(2.01,4,100)
+ZEDS = np.concatenate((z_late, z_early))
+
+# Control if simulation runs forwards (+1) or backwards (-1) in time. 
+TIME_FLOW = -1
+
+SOLVER = 'RK23'
 # endregion
