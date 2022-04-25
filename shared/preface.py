@@ -71,7 +71,7 @@ GeV    = 1.0e3*MeV
 TeV    = 1.0e3*GeV
 erg    = TeV/1.602                  # erg
 J      = 1.0e7*erg                  # joule
-K      = 8.6e-5*eV                  # Kelvin
+K      = 8.61732814e-5*eV           # Kelvin
 
 cm     = 5.0678e4/eV                # centi-meter
 m      = 1.0e2*cm
@@ -80,7 +80,8 @@ pc     = 3.086e18*cm                # parsec
 kpc    = 1.0e3*pc
 Mpc    = 1.0e3*kpc
 
-s      = 2.9979e10*cm               # second
+#NOTE: Natural units defined via c=1, i.e. s/m = 299792458
+s      = 2.99792458e10*cm           # second
 yr     = 365*24*60*60*s
 Gyr    = 1e9*yr
 t0     = 13.8*Gyr
@@ -129,20 +130,22 @@ Rvir_NFW = 333.5*kpc                               # virial radius
 ### Control Center ###
 ######################
 # region
+NU_MASS = 0.03*eV
+NU_MASS_KG = NU_MASS/kg
+NU_MASSES = np.array([0.01,0.05,0.1,0.3])*eV
+N0 = 112  # standard neutrino number density in [1/cm**3]
+
 PHIs = 10
 THETAs = 10
 Vs = 100
 NR_OF_NEUTRINOS = PHIs*THETAs*Vs
 
-LOWER = 0.01
-UPPER = 100.
+LOWER = 0.01*T_CNB
+UPPER = 100.*T_CNB
 MOMENTA = np.geomspace(LOWER, UPPER, Vs)
 
-NU_MASS = 0.03*unit.eV
-NU_MASS_KG = NU_MASS.to(unit.kg, unit.mass_energy())
-N0 = 112  # standard neutrino number density in [1/cm**3]
 
-## Redshift integration parameters
+# Redshift integration parameters
 #NOTE: Linearly spaced, denser for late times (closer to today)
 late_steps = 200
 early_steps = 100
@@ -153,6 +156,7 @@ ZEDS = np.concatenate((z_late, z_early))
 
 # Control if simulation runs forwards (+1) or backwards (-1) in time. 
 TIME_FLOW = -1
+HALOS = 'OFF'
 
 SOLVER = 'RK23'
 # endregion

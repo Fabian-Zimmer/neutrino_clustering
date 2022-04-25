@@ -137,6 +137,59 @@ def scale_radius(z, M_vir):
 
 
 
+#########################
+### Utility functions ###
+#########################
+# region
+
+def load_u_sim():
+    # Load initial and final velocities of simulation.
+    Ns = np.arange(NR_OF_NEUTRINOS, dtype=int)  # Nr. of neutrinos
+    sim = np.array([np.load(f'neutrino_vectors/nu_{Nr+1}.npy') for Nr in Ns])
+    u_all = sim[:,:,3:6]  # (10000, 100, 3) shape, ndim = 3
+
+    return u_all
+
+
+def u_to_p_eV(u_sim, m_target):
+    """Converts velocities [kpc/s] (x,y,z from simulation) to 
+    magnitude of momentum [eV] and ratio y=p/T_nu, according to desired
+    target mass (and mass used in simulation)."""
+
+    # Magnitude of velocity
+    if u_sim.ndim in (0,1):
+        mag_sim = np.sqrt(np.sum(u_sim**2))
+    elif u_sim.ndim == 3:
+        mag_sim = np.sqrt(np.sum(u_sim**2, axis=2))
+    else:
+        mag_sim = np.sqrt(np.sum(u_sim**2, axis=1))
+
+    # From velocity (magnitude) in kpc/s to momentum in eV.
+    p_sim = mag_sim*(kpc/s) * NU_MASS
+
+    # From p_sim to p_target.
+    p_target = p_sim * m_target/NU_MASS
+
+    # p/T_CNB ratio.
+    y = p_target/T_CNB
+
+    return p_target, y
+
+
+def y_fmt(value, tick_number):
+    if value == 1e-2:
+        return r'1+$10^{-2}$'
+    elif value == 1e-1:
+        return r'1+$10^{-1}$'
+    elif value == 1e0:
+        return r'1+$10^0$'
+    elif value == 1e1:
+        return r'1+$10^1$'
+
+# enregion
+
+
+
 ######################
 ### Main functions ###
 ######################
@@ -165,6 +218,52 @@ def s_of_z(z):
     s_of_z, _ = quad(s_integrand, 0., z)
 
     return np.float64(s_of_z)
+
+
+# @nb.njit
+def Psi_NFW_compact(x_i, z, rho_0, M_vir, mode:str):
+
+    # Compute values dependent on redshift.
+    r_vir = R_vir(z, M_vir)
+    r_s = r_vir / c_vir(z, M_vir)
+    
+    # Distance from halo center with current coords. x_i.
+    r = np.sqrt(np.sum(x_i**2))
+
+    m = np.minimum(r, r_vir)
+    M = np.maximum(r, r_vir)
+
+    if mode == 'potential':
+        # Gravitational potential in compact notation with m and M.
+        prefactor = -4.*Pi*G*rho_0*r_s**2
+        term1 = np.log(1. + (m/r_s)) / (r/r_s)
+        term2 = (r_vir/M) / (1. + (r_vir/r_s))
+        potential = prefactor * (term1 - term2)
+
+        return potential / (m**2/s**2)
+
+    if mode == 'derivative':
+        # Derivative in compact notation with m and M.
+        #NOTE: Take absolute value of coord. x_i., s.t. derivative is never < 0.
+        prefactor = 4.*Pi*G*rho_0*r_s**2*np.abs(x_i)/r**2
+        term1 = np.log(1. + (m/r_s)) / (r/r_s)
+        term2 = (r_vir/M) / (1. + (m/r_s))
+        derivative = prefactor * (term1 - term2)
+
+        return derivative / (kpc/s**2)
+
+
+def escape_momentum(x_i, z, rho_0, M_vir, masses):
+
+    # Gravitational potential at position x_i.
+    grav = Psi_NFW_compact(x_i, z, rho_0, M_vir, 'potential')
+
+    # Escape momentum formula from Ringwald & Wong (2004).
+    p_esc = np.sqrt(2*np.abs(grav)) * masses
+    y_esc = p_esc/T_CNB
+
+    return p_esc, y_esc
+
 
 
 def Fermi_Dirac(p):
@@ -203,21 +302,13 @@ def number_density(p0, p1):
     # Fermi-Dirac value with momentum at end of sim.
     FDvals = Fermi_Dirac(p1_sort)  #! needs p in [eV]
 
-    # Convert initial momentum p0 from [eV] to [kg*m/s]
-    p0_SI = (p0_sort.to(unit.J) / const.c).to(unit.kg*unit.m/unit.s)
-    p0_SI = (p0_sort.to(unit.J) / const.c).to(unit.kg*unit.m/unit.s)
-
     # Calculate number density.
-    y = p0_SI.value**2. * FDvals
-    x = p0_SI.value
+    y = p0_sort**2 * FDvals
+    x = p0_sort
     n_raw = np.trapz(y, x)
 
-    # Reintroduce "invisible" planck constant h to get 1/m**3
-    #NOTE: leftover constants are g*4*np.pi
-    n_m3 = n_raw / const.h.value**3 * g*4*np.pi
-
-    # To 1/cm**3
-    n_cm3 = (n_m3/unit.m**3).to(1/unit.cm**3)
+    # Multiply by remaining g/(2*Pi^2) and convert to 1/cm**3
+    n_cm3 = g/(2*Pi**2) * n_raw / (1/cm**3)
 
     return n_cm3
 
