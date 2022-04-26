@@ -6,7 +6,7 @@ from shared.preface import *
 ####################################
 # region
 
-# @nb.njit
+@nb.njit
 def c_vir_avg(z, M_vir):
     """Intermediate/helper function for c_vir function below."""
 
@@ -18,10 +18,10 @@ def c_vir_avg(z, M_vir):
     arg_in_log = (M_vir / (1.e12 / h * Msun))
     c_vir_avg = np.power(a_of_z + b_of_z*np.log10(arg_in_log), 10.)
 
-    return c_vir_avg
+    return np.float64(c_vir_avg)
     
 
-# @nb.njit
+@nb.njit
 def c_vir(z, M_vir):
     """Concentration parameter defined as r_vir/r_s, i.e. the ratio of virial 
     radius to the scale radius of the halo according to eqn. 5.5 of 
@@ -40,14 +40,13 @@ def c_vir(z, M_vir):
     # Also see Methods section of Zhang & Zhang (2018) .
     c0_vir = Rvir_NFW / Rs_NFW 
     beta = c0_vir / c_vir_avg(0, M_vir)
-    print(beta)
 
     c = beta * c_vir_avg(z, M_vir)
 
-    return c
+    return np.float64(c)
 
 
-# @nb.njit
+@nb.njit
 def rho_crit(z):
     """Critical density of the universe as a function of redshift, assuming
     matter domination, only Omega_m and Omega_Lambda in Friedmann equation. See 
@@ -57,16 +56,17 @@ def rho_crit(z):
         z (array): redshift
 
     Returns:
-        array: critical density at redshift z [Msun/kpc**3]
+        array: critical density at redshift z
     """    
     
     H_squared = H0**2 * (Omega_M*(1.+z)**3 + Omega_L) 
-    rho_crit = 3.*H_squared / (8.*Pi*G)
+    rho_crit = np.float64( 3.*H_squared / (8.*Pi*G) )
+    # norm = np.float64(Msun/kpc**3)
 
-    return rho_crit / (Msun/kpc**3)
+    return rho_crit #/ norm
 
 
-# @nb.njit
+@nb.njit
 def Omega_M_z(z):
     """Matter density parameter as a function of redshift, assuming matter
     domination, only Omega_M and Omega_L in Friedmann equation. See notes
@@ -81,10 +81,10 @@ def Omega_M_z(z):
 
     Omega_M_of_z = (Omega_M*(1.+z)**3) / (Omega_M*(1.+z)**3 + Omega_L)
 
-    return Omega_M_of_z
+    return np.float64(Omega_M_of_z)
 
 
-# @nb.njit
+@nb.njit
 def Delta_vir(z):
     """Function as needed for their eqn. (5.7).
 
@@ -97,10 +97,10 @@ def Delta_vir(z):
 
     Delta_vir = 18.*Pi**2 + 82.*(Omega_M_z(z)-1.) - 39.*(Omega_M_z(z)-1.)**2
 
-    return Delta_vir
+    return np.float64(Delta_vir)
 
 
-# @nb.njit
+@nb.njit
 def R_vir(z, M_vir):
     """Virial radius according to eqn. 5.7 in Mertsch et al. (2020).
 
@@ -109,15 +109,15 @@ def R_vir(z, M_vir):
         M_vir (float): virial mass
 
     Returns:
-        array: virial radius [kpc]
+        array: virial radius
     """    
 
     R_vir = np.power(3.*M_vir / (4.*Pi*Delta_vir(z)*rho_crit(z)), 1./3.)
 
-    return R_vir
+    return np.float64(R_vir)
 
 
-# @nb.njit
+@nb.njit
 def scale_radius(z, M_vir):
     """Scale radius of NFW halo.
 
@@ -126,12 +126,12 @@ def scale_radius(z, M_vir):
         M_vir (float): virial mass
 
     Returns:
-        arrat: scale radius [kpc]
+        arrat: scale radius
     """    
     
     r_s = R_vir(z, M_vir) / c_vir(z, M_vir)
 
-    return r_s
+    return np.float64(r_s)
 
 # endregion
 
@@ -142,17 +142,27 @@ def scale_radius(z, M_vir):
 #########################
 # region
 
-def load_u_sim():
+def delete_temp_data(path_to_wildcard_files):
+
+    temp_files = glob.glob(path_to_wildcard_files, recursive=True)
+
+    for f in temp_files:
+        try:
+            os.remove(f)
+        except OSError:
+            print("Error while deleting file (file not found")
+
+
+def load_u_sim(nr_of_nus, halos:str):
     # Load initial and final velocities of simulation.
-    Ns = np.arange(NR_OF_NEUTRINOS, dtype=int)  # Nr. of neutrinos
-    sim = np.array([np.load(f'neutrino_vectors/nu_{Nr+1}.npy') for Nr in Ns])
+    sim = np.load(f'neutrino_vectors/nus_{nr_of_nus}_halos_{halos}.npy')
     u_all = sim[:,:,3:6]  # (10000, 100, 3) shape, ndim = 3
 
     return u_all
 
 
 def u_to_p_eV(u_sim, m_target):
-    """Converts velocities [kpc/s] (x,y,z from simulation) to 
+    """Converts velocities (x,y,z from simulation) to 
     magnitude of momentum [eV] and ratio y=p/T_nu, according to desired
     target mass (and mass used in simulation)."""
 
@@ -165,7 +175,7 @@ def u_to_p_eV(u_sim, m_target):
         mag_sim = np.sqrt(np.sum(u_sim**2, axis=1))
 
     # From velocity (magnitude) in kpc/s to momentum in eV.
-    p_sim = mag_sim*(kpc/s) * NU_MASS
+    p_sim = mag_sim * NU_MASS
 
     # From p_sim to p_target.
     p_target = p_sim * m_target/NU_MASS
@@ -220,8 +230,8 @@ def s_of_z(z):
     return np.float64(s_of_z)
 
 
-# @nb.njit
-def Psi_NFW_compact(x_i, z, rho_0, M_vir, mode:str):
+@nb.njit
+def grav_pot(x_i, z, rho_0, M_vir):
 
     # Compute values dependent on redshift.
     r_vir = R_vir(z, M_vir)
@@ -233,37 +243,62 @@ def Psi_NFW_compact(x_i, z, rho_0, M_vir, mode:str):
     m = np.minimum(r, r_vir)
     M = np.maximum(r, r_vir)
 
-    if mode == 'potential':
-        # Gravitational potential in compact notation with m and M.
-        prefactor = -4.*Pi*G*rho_0*r_s**2
-        term1 = np.log(1. + (m/r_s)) / (r/r_s)
-        term2 = (r_vir/M) / (1. + (r_vir/r_s))
-        potential = prefactor * (term1 - term2)
+    # Gravitational potential in compact notation with m and M.
+    prefactor = -4.*Pi*G*rho_0*r_s**2
+    term1 = np.log(1. + (m/r_s)) / (r/r_s)
+    term2 = (r_vir/M) / (1. + (r_vir/r_s))
+    potential = np.asarray(prefactor * (term1 - term2), dtype=np.float64)
+    # norm = np.float64(m**2/s**2)
 
-        return potential / (m**2/s**2)
+    return potential #/ norm
 
-    if mode == 'derivative':
-        # Derivative in compact notation with m and M.
-        #NOTE: Take absolute value of coord. x_i., s.t. derivative is never < 0.
-        prefactor = 4.*Pi*G*rho_0*r_s**2*np.abs(x_i)/r**2
-        term1 = np.log(1. + (m/r_s)) / (r/r_s)
-        term2 = (r_vir/M) / (1. + (m/r_s))
-        derivative = prefactor * (term1 - term2)
 
-        return derivative / (kpc/s**2)
+@nb.njit
+def dPsi_dxi_NFW(x_i, z, rho_0, M_vir):
+    """Derivative of NFW grav. potential w.r.t. any axis x_i.
+
+    Args:
+        x_i (array): spatial position vector
+        z (array): redshift
+        rho_0 (float): normalization
+        M_vir (float): virial mass
+
+    Returns:
+        array: Derivative vector of grav. potential. for all 3 spatial coords.
+               with units of acceleration.
+    """    
+
+    # Compute values dependent on redshift.
+    r_vir = R_vir(z, M_vir)
+    r_s = r_vir / c_vir(z, M_vir)
+    
+    # Distance from halo center with current coords. x_i.
+    r = np.sqrt(np.sum(x_i**2))
+
+    m = np.minimum(r, r_vir)
+    M = np.maximum(r, r_vir)
+
+    # Derivative in compact notation with m and M.
+    #NOTE: Take absolute value of coord. x_i., s.t. derivative is never < 0.
+    prefactor = 4.*Pi*G*rho_0*r_s**2*np.abs(x_i)/r**2
+    term1 = np.log(1. + (m/r_s)) / (r/r_s)
+    term2 = (r_vir/M) / (1. + (m/r_s))
+    derivative = np.asarray(prefactor * (term1 - term2), dtype=np.float64)
+    # norm = np.float64(kpc/s**2)
+
+    return derivative #/ norm
 
 
 def escape_momentum(x_i, z, rho_0, M_vir, masses):
 
     # Gravitational potential at position x_i.
-    grav = Psi_NFW_compact(x_i, z, rho_0, M_vir, 'potential')
+    grav = grav_pot(x_i, z, rho_0, M_vir)
 
     # Escape momentum formula from Ringwald & Wong (2004).
     p_esc = np.sqrt(2*np.abs(grav)) * masses
     y_esc = p_esc/T_CNB
 
     return p_esc, y_esc
-
 
 
 def Fermi_Dirac(p):

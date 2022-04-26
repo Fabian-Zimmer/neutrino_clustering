@@ -5,6 +5,7 @@
 import sys, os
 from datetime import datetime
 import time
+import glob
 
 # arrays and data packages
 import numpy as np
@@ -137,7 +138,7 @@ N0 = 112  # standard neutrino number density in [1/cm**3]
 
 PHIs = 10
 THETAs = 10
-Vs = 100
+Vs = 10
 NR_OF_NEUTRINOS = PHIs*THETAs*Vs
 
 LOWER = 0.01*T_CNB
@@ -156,7 +157,7 @@ ZEDS = np.concatenate((z_late, z_early))
 
 # Control if simulation runs forwards (+1) or backwards (-1) in time. 
 TIME_FLOW = -1
-HALOS = 'OFF'
+HALOS = 'ON'
 
 SOLVER = 'RK23'
 # endregion

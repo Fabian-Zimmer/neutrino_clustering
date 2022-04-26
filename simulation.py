@@ -5,8 +5,8 @@ import shared.functions as fct
 def draw_ui(phi_points, theta_points):
     """Get initial velocities for the neutrinos."""
 
-    # Convert momenta to initial velocity magnitudes in [kpc/s].
-    v_kpc = (MOMENTA / NU_MASS) / (kpc/s)
+    # Convert momenta to initial velocity magnitudes ("in units of [1]")
+    v_kpc = MOMENTA / NU_MASS
 
     # Split up this magnitude into velocity components.
     #NOTE: Done by using spher. coords. trafos, which act as "weights".
@@ -25,7 +25,7 @@ def draw_ui(phi_points, theta_points):
     return ui_array 
 
 
-def EOMs(s, y):
+def EOMs(s_val, y):
     """Equations of motion for all x_i's and u_i's in terms of s."""
 
     # Initialize vector and attach astropy units.
@@ -41,15 +41,15 @@ def EOMs(s, y):
         return dyds
 
 
-    if HALOS == 'ON':
+    elif HALOS == 'ON':
         # Find z corresponding to s.
-        if s in s_steps:
-            z = ZEDS[s_steps==s][0]
+        if s_val in s_steps:
+            z = ZEDS[s_steps==s_val][0]
         else:
-            z = s_to_z(s)  # interpolation function defined below
+            z = s_to_z(s_val)  # interpolation function defined below
 
         # Gradient value will always be positive.
-        gradient = fct.dPsi_dxi_NFW(x_i, z, rho0_NFW, Mvir_NFW) #.value
+        gradient = fct.dPsi_dxi_NFW(x_i, z, rho0_NFW, Mvir_NFW)
 
         #NOTE: Velocity has to change according to the pointing direction,
         #NOTE: treat all 4 cases seperately.
@@ -64,7 +64,12 @@ def EOMs(s, y):
             else:  # pos < 0. and vel < 0.
                 signs[i] = +1.
     
-        return ...
+
+        dyds = TIME_FLOW * np.array([
+            u_i, signs * 1./(1.+z)**2 * gradient
+        ])
+
+        return dyds
 
 
 def backtrack_1_neutrino(y0_Nr):
@@ -79,7 +84,6 @@ def backtrack_1_neutrino(y0_Nr):
         y0=y0, method=SOLVER, vectorized=True
         )
     
-    #NOTE: output as raw numbers but in [kpc, kpc/s]
     np.save(f'neutrino_vectors/nu_{int(Nr)}.npy', np.array(sol.y.T))
 
 
@@ -96,8 +100,8 @@ if __name__ == '__main__':
 
     # Position of earth w.r.t Milky Way NFW halo center.
     #NOTE: Earth is placed on x axis of coord. system.
-    x1, x2, x3 = 8.5, 0., 0.  # in kpc
-    x0 = np.array([x1, x2, x3])
+    x1, x2, x3 = 8.5, 0., 0.
+    x0 = np.array([x1, x2, x3])*kpc
 
     # Draw initial velocities.
     ui = draw_ui(
@@ -112,9 +116,16 @@ if __name__ == '__main__':
     # backtrack_1_neutrino(y0_Nr[1])
 
     # Run simulation on multiple cores.
-    Processes = 4
+    Processes = 16
     with ProcessPoolExecutor(Processes) as ex:
         ex.map(backtrack_1_neutrino, y0_Nr)  
+
+
+    # Compactify all neutrino vectors into 1 file.
+    Ns = np.arange(NR_OF_NEUTRINOS, dtype=int)  # Nr. of neutrinos
+    nus = np.array([np.load(f'neutrino_vectors/nu_{Nr+1}.npy') for Nr in Ns])
+    np.save(f'neutrino_vectors/nus_{NR_OF_NEUTRINOS}_halos_{HALOS}.npy', nus)
+    fct.delete_temp_data('neutrino_vectors/nu_*.npy')    
 
     seconds = time.time()-start
     minutes = seconds/60.
