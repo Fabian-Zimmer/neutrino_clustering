@@ -6,7 +6,7 @@ def draw_ui(phi_points, theta_points):
     """Get initial velocities for the neutrinos."""
 
     # Convert momenta to initial velocity magnitudes ("in units of [1]")
-    v_kpc = MOMENTA / NU_MASS
+    v_kpc = MOMENTA / NU_MASS / (kpc/s)
 
     # Split up this magnitude into velocity components.
     #NOTE: Done by using spher. coords. trafos, which act as "weights".
@@ -31,8 +31,16 @@ def EOMs(s_val, y):
     # Initialize vector and attach astropy units.
     x_i, u_i = np.reshape(y, (2,3))
 
+    #! Switch to numerical reality here.
+    x_i *= kpc
+    u_i *= (kpc/s)
 
     if HALOS == 'OFF':
+
+        #! Switch to physical reality here.
+        x_i /= kpc
+        u_i /= (kpc/s)
+
         # Create dx/ds and du/ds, i.e. the r.h.s of the eqns. of motion. 
         dyds = TIME_FLOW * np.array([
             u_i, np.zeros(3)
@@ -50,6 +58,11 @@ def EOMs(s_val, y):
 
         # Gradient value will always be positive.
         gradient = fct.dPsi_dxi_NFW(x_i, z, rho0_NFW, Mvir_NFW)
+
+        #! Switch to physical reality here.
+        gradient /= (kpc/s**2)
+        x_i /= kpc
+        u_i /= (kpc/s)
 
         #NOTE: Velocity has to change according to the pointing direction,
         #NOTE: treat all 4 cases seperately.
@@ -101,7 +114,7 @@ if __name__ == '__main__':
     # Position of earth w.r.t Milky Way NFW halo center.
     #NOTE: Earth is placed on x axis of coord. system.
     x1, x2, x3 = 8.5, 0., 0.
-    x0 = np.array([x1, x2, x3])*kpc
+    x0 = np.array([x1, x2, x3])
 
     # Draw initial velocities.
     ui = draw_ui(
@@ -125,9 +138,14 @@ if __name__ == '__main__':
     Ns = np.arange(NR_OF_NEUTRINOS, dtype=int)  # Nr. of neutrinos
     nus = np.array([np.load(f'neutrino_vectors/nu_{Nr+1}.npy') for Nr in Ns])
     np.save(f'neutrino_vectors/nus_{NR_OF_NEUTRINOS}_halos_{HALOS}.npy', nus)
+    
+    # hdf5 file format has same size as npy...
+    # with h5py.File(f'neutrino_vectors/nus_{NR_OF_NEUTRINOS}_halos_{HALOS}.hdf5', 'w') as f:
+        # dset = f.create_dataset('nus', data=nus)
+    
     fct.delete_temp_data('neutrino_vectors/nu_*.npy')    
 
     seconds = time.time()-start
     minutes = seconds/60.
     hours = minutes/60.
-    print('Time sec/min/h: ', seconds, minutes, hours)
+    print(f'Time sec/min/h: {seconds} sec, {minutes} min, {hours} h.')

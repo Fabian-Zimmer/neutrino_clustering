@@ -15,6 +15,7 @@ import h5py
 # astrophysics
 from astropy import units as unit
 from astropy import constants as const
+import natpy as nat
 
 # speed improvement
 import numba as nb  # jit, njit, vectorize
@@ -63,6 +64,7 @@ plt.rc('figure', titlesize=BIGGER_SIZE)  # fontsize of the figure title
 #############
 # region
 Pi = np.pi
+hc_val = (const.h/(2*Pi)*const.c).convert(unit.eV*unit.cm).value
 
 eV     = 1.                         # Unit of energy: eV
 meV    = 1.0e-3*eV
@@ -72,12 +74,12 @@ GeV    = 1.0e3*MeV
 TeV    = 1.0e3*GeV
 erg    = TeV/1.602                  # erg
 J      = 1.0e7*erg                  # joule
-K      = 8.61732814e-5*eV           # Kelvin
+K      = 8.61732814974493e-5*eV     # Kelvin
 
-cm     = 5.0678e4/eV                # centi-meter
+cm     = (1/hc_val)/eV                  # centi-meter
 m      = 1.0e2*cm
 km     = 1.0e3*m
-pc     = 3.086e18*cm                # parsec
+pc     = 3.08567758128e18*cm        # parsec
 kpc    = 1.0e3*pc
 Mpc    = 1.0e3*kpc
 
@@ -85,14 +87,14 @@ Mpc    = 1.0e3*kpc
 s      = 2.99792458e10*cm           # second
 yr     = 365*24*60*60*s
 Gyr    = 1e9*yr
-t0     = 13.8*Gyr
+t0     = 13.787*Gyr
 Hz     = 1.0/s
 
 kg     = J/m**2*s**2
 gram   = kg/1000.
-Msun   = 1.989e30*kg                # Mass of the Sun
-G      = 6.674e-11*m**3/kg/s**2     # Gravitational constant
-Da     = 1.66e-27*kg                # Dalton or atomic mass unit (u)
+Msun   = 1.98847e30*kg              # Mass of the Sun
+G      = 6.6743e-11*m**3/kg/s**2   # Gravitational constant
+Da     = 1.66053906660e-27*kg       # Dalton or atomic mass unit (u)
 
 deg    = Pi/180.0                   # Degree
 arcmin = deg/60.                    # Arcminute
@@ -138,7 +140,7 @@ N0 = 112  # standard neutrino number density in [1/cm**3]
 
 PHIs = 10
 THETAs = 10
-Vs = 10
+Vs = 200
 NR_OF_NEUTRINOS = PHIs*THETAs*Vs
 
 LOWER = 0.01*T_CNB
@@ -157,7 +159,7 @@ ZEDS = np.concatenate((z_late, z_early))
 
 # Control if simulation runs forwards (+1) or backwards (-1) in time. 
 TIME_FLOW = -1
-HALOS = 'ON'
+HALOS = 'OFF'
 
 SOLVER = 'RK23'
 # endregion

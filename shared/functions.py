@@ -61,9 +61,8 @@ def rho_crit(z):
     
     H_squared = H0**2 * (Omega_M*(1.+z)**3 + Omega_L) 
     rho_crit = np.float64( 3.*H_squared / (8.*Pi*G) )
-    # norm = np.float64(Msun/kpc**3)
 
-    return rho_crit #/ norm
+    return rho_crit
 
 
 @nb.njit
@@ -110,11 +109,13 @@ def R_vir(z, M_vir):
 
     Returns:
         array: virial radius
-    """    
+    """
 
-    R_vir = np.power(3.*M_vir / (4.*Pi*Delta_vir(z)*rho_crit(z)), 1./3.)
+    R_vir = np.float64(
+        np.power(3.*M_vir / (4.*Pi*Delta_vir(z)*rho_crit(z)), 1./3.)
+        )
 
-    return np.float64(R_vir)
+    return R_vir
 
 
 @nb.njit
@@ -247,10 +248,10 @@ def grav_pot(x_i, z, rho_0, M_vir):
     prefactor = -4.*Pi*G*rho_0*r_s**2
     term1 = np.log(1. + (m/r_s)) / (r/r_s)
     term2 = (r_vir/M) / (1. + (r_vir/r_s))
-    potential = np.asarray(prefactor * (term1 - term2), dtype=np.float64)
-    # norm = np.float64(m**2/s**2)
+    potential = prefactor * (term1 - term2)
 
-    return potential #/ norm
+    # good in m^2/s^2
+    return np.asarray(potential, dtype=np.float64)
 
 
 @nb.njit
@@ -283,10 +284,9 @@ def dPsi_dxi_NFW(x_i, z, rho_0, M_vir):
     prefactor = 4.*Pi*G*rho_0*r_s**2*np.abs(x_i)/r**2
     term1 = np.log(1. + (m/r_s)) / (r/r_s)
     term2 = (r_vir/M) / (1. + (m/r_s))
-    derivative = np.asarray(prefactor * (term1 - term2), dtype=np.float64)
-    # norm = np.float64(kpc/s**2)
+    derivative = prefactor * (term1 - term2)
 
-    return derivative #/ norm
+    return np.asarray(derivative, dtype=np.float64)
 
 
 def escape_momentum(x_i, z, rho_0, M_vir, masses):
