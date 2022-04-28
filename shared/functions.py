@@ -259,7 +259,7 @@ def grav_pot(x_i, z, rho_0, M_vir):
 
 @nb.njit
 def dPsi_dxi_NFW(x_i, z, rho_0, M_vir):
-    """Derivative of NFW grav. potential w.r.t. any axis x_i.
+    """Derivative of MW NFW grav. potential w.r.t. any axis x_i.
 
     Args:
         x_i (array): spatial position vector

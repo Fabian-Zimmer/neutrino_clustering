@@ -122,7 +122,7 @@ T_CNB = np.power(4/11, 1/3)*T_CMB
 
 ### NFW parameters today - Mertsch et al. (2020)
 Mvir_NFW  = 2.03e12*Msun                           # Virial mass
-rho0_NFW  = 1.06e7*(Msun/kpc**3.)                  # density normalization
+rho0_NFW  = 1.06e7*(Msun/kpc**3)                  # density normalization
 Rs_NFW   = 19.9*kpc                                # scale radius 
 Rvir_NFW = 333.5*kpc                               # virial radius
 # endregion
