@@ -114,10 +114,10 @@ Omega_R = 9.23640e-5  # not used in simulation
 Omega_M = 0.3111
 Omega_L = 1.-Omega_M  # since we don't use Omega_R
 
-T_CMB = 2.725*K
-T_CNB = 1.95*K
-
-Pi = np.pi
+# T_CMB = 2.725*K
+# T_CNB = 1.95*K
+T_CMB = 2.72548*K
+T_CNB = np.power(4/11, 1/3)*T_CMB
 
 
 ### NFW parameters today - Mertsch et al. (2020)
@@ -140,7 +140,7 @@ N0 = 112  # standard neutrino number density in [1/cm**3]
 
 PHIs = 10
 THETAs = 10
-Vs = 200
+Vs = 100
 NR_OF_NEUTRINOS = PHIs*THETAs*Vs
 
 LOWER = 0.01*T_CNB
@@ -153,8 +153,8 @@ MOMENTA = np.geomspace(LOWER, UPPER, Vs)
 late_steps = 200
 early_steps = 100
 Z_START, Z_STOP, Z_AMOUNT = 0., 4., late_steps+early_steps
-z_late = np.linspace(0,2,200)
-z_early = np.linspace(2.01,4,100)
+z_late = np.linspace(0,2,late_steps)
+z_early = np.linspace(2.01,4,late_steps)
 ZEDS = np.concatenate((z_late, z_early))
 
 # Control if simulation runs forwards (+1) or backwards (-1) in time. 

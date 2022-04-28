@@ -37,7 +37,8 @@ def c_vir(z, M_vir):
 
     # The "beta" in eqn. (5.5) is obtained from c_vir_avg(0, M_vir)
     # and c_vir(0, M_vir) (c0_vir variable below) and the values in Table 1.
-    # Also see Methods section of Zhang & Zhang (2018) .
+    # Also see Methods section of Zhang & Zhang (2018),
+    # However, their beta-factor is different!?.
     c0_vir = Rvir_NFW / Rs_NFW 
     beta = c0_vir / c_vir_avg(0, M_vir)
 
@@ -176,7 +177,7 @@ def u_to_p_eV(u_sim, m_target):
         mag_sim = np.sqrt(np.sum(u_sim**2, axis=1))
 
     # From velocity (magnitude) in kpc/s to momentum in eV.
-    p_sim = mag_sim * NU_MASS
+    p_sim = mag_sim*(kpc/s) * NU_MASS
 
     # From p_sim to p_target.
     p_target = p_sim * m_target/NU_MASS
@@ -188,7 +189,10 @@ def u_to_p_eV(u_sim, m_target):
 
 
 def y_fmt(value, tick_number):
-    if value == 1e-2:
+
+    if value == 1e-3:
+        return r'1+$10^{-3}$'
+    elif value == 1e-2:
         return r'1+$10^{-2}$'
     elif value == 1e-1:
         return r'1+$10^{-1}$'
@@ -250,7 +254,6 @@ def grav_pot(x_i, z, rho_0, M_vir):
     term2 = (r_vir/M) / (1. + (r_vir/r_s))
     potential = prefactor * (term1 - term2)
 
-    # good in m^2/s^2
     return np.asarray(potential, dtype=np.float64)
 
 
