@@ -76,7 +76,7 @@ erg    = TeV/1.602                  # erg
 J      = 1.0e7*erg                  # joule
 K      = 8.61732814974493e-5*eV     # Kelvin
 
-cm     = (1/hc_val)/eV                  # centi-meter
+cm     = (1/hc_val)/eV              # centi-meter
 m      = 1.0e2*cm
 km     = 1.0e3*m
 pc     = 3.08567758128e18*cm        # parsec
@@ -93,7 +93,7 @@ Hz     = 1.0/s
 kg     = J/m**2*s**2
 gram   = kg/1000.
 Msun   = 1.98847e30*kg              # Mass of the Sun
-G      = 6.6743e-11*m**3/kg/s**2   # Gravitational constant
+G      = 6.6743e-11*m**3/kg/s**2    # Gravitational constant
 Da     = 1.66053906660e-27*kg       # Dalton or atomic mass unit (u)
 
 deg    = Pi/180.0                   # Degree
@@ -114,17 +114,34 @@ Omega_R = 9.23640e-5  # not used in simulation
 Omega_M = 0.3111
 Omega_L = 1.-Omega_M  # since we don't use Omega_R
 
-# T_CMB = 2.725*K
-# T_CNB = 1.95*K
 T_CMB = 2.72548*K
 T_CNB = np.power(4/11, 1/3)*T_CMB
+# endregion
 
 
-### NFW parameters today - Mertsch et al. (2020)
-Mvir_NFW  = 2.03e12*Msun                           # Virial mass
-rho0_NFW  = 1.06e7*(Msun/kpc**3)                  # density normalization
-Rs_NFW   = 19.9*kpc                                # scale radius 
-Rvir_NFW = 333.5*kpc                               # virial radius
+
+##########################################
+### Parameters - Mertsch et al. (2020) ###
+##########################################
+# region
+
+# NFW parameters for Milky Way.
+Mvir_MW  = 2.03e12*Msun                            # Virial mass
+rho0_MW  = 1.06e7*(Msun/kpc**3)                    # density normalization
+Rs_MW    = 19.9*kpc                                # scale radius 
+Rvir_MW  = 333.5*kpc                               # virial radius
+
+# NFW parameters for Andromeda.
+Mvir_AG  = 8.0e11*Msun                             # Virial mass
+rho0_AG  = 3.89e6*(Msun/kpc**3)                    # density normalization
+Rs_AG   = 21.8*kpc                                 # scale radius 
+Rvir_AG = 244.7*kpc                                # virial radius
+
+# NFW parameters for Virgo Cluster.
+Mvir_VC  = 6.9e14*Msun                             # Virial mass
+rho0_VC  = 8.08e5*(Msun/kpc**3)                    # density normalization
+Rs_VC    = 399.1*kpc                               # scale radius 
+Rvir_VC  = 2328.8*kpc                              # virial radius
 # endregion
 
 
@@ -140,8 +157,8 @@ N0 = 112  # standard neutrino number density in [1/cm**3]
 
 PHIs = 10
 THETAs = 10
-Vs = 100
-NR_OF_NEUTRINOS = PHIs*THETAs*Vs
+Vs = 10
+NUS = PHIs*THETAs*Vs
 
 LOWER = 0.01*T_CNB
 UPPER = 100.*T_CNB
@@ -150,8 +167,8 @@ MOMENTA = np.geomspace(LOWER, UPPER, Vs)
 
 # Redshift integration parameters
 #NOTE: Linearly spaced, denser for late times (closer to today)
-late_steps = 200
-early_steps = 100
+late_steps = 100
+early_steps = 50
 Z_START, Z_STOP, Z_AMOUNT = 0., 4., late_steps+early_steps
 z_late = np.linspace(0,2,late_steps)
 z_early = np.linspace(2.01,4,late_steps)
@@ -159,7 +176,11 @@ ZEDS = np.concatenate((z_late, z_early))
 
 # Control if simulation runs forwards (+1) or backwards (-1) in time. 
 TIME_FLOW = -1
-HALOS = 'OFF'
+
+# Available halos.
+MW_HALO = True
+VC_HALO = False
+AG_HALO = False
 
 SOLVER = 'RK23'
 # endregion

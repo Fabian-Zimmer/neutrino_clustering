@@ -22,7 +22,7 @@ def c_vir_avg(z, M_vir):
     
 
 @nb.njit
-def c_vir(z, M_vir):
+def c_vir(z, M_vir, R_vir, R_s):
     """Concentration parameter defined as r_vir/r_s, i.e. the ratio of virial 
     radius to the scale radius of the halo according to eqn. 5.5 of 
     Mertsch et al. (2020). 
@@ -37,9 +37,8 @@ def c_vir(z, M_vir):
 
     # The "beta" in eqn. (5.5) is obtained from c_vir_avg(0, M_vir)
     # and c_vir(0, M_vir) (c0_vir variable below) and the values in Table 1.
-    # Also see Methods section of Zhang & Zhang (2018),
-    # However, their beta-factor is different!?.
-    c0_vir = Rvir_NFW / Rs_NFW 
+    # (See Methods section of Zhang & Zhang (2018), but their beta is different)
+    c0_vir = R_vir / R_s 
     beta = c0_vir / c_vir_avg(0, M_vir)
 
     c = beta * c_vir_avg(z, M_vir)
@@ -61,9 +60,9 @@ def rho_crit(z):
     """    
     
     H_squared = H0**2 * (Omega_M*(1.+z)**3 + Omega_L) 
-    rho_crit = np.float64( 3.*H_squared / (8.*Pi*G) )
+    rho_crit = 3.*H_squared / (8.*Pi*G)
 
-    return rho_crit
+    return np.float64(rho_crit)
 
 
 @nb.njit
@@ -101,7 +100,7 @@ def Delta_vir(z):
 
 
 @nb.njit
-def R_vir(z, M_vir):
+def R_vir_fct(z, M_vir):
     """Virial radius according to eqn. 5.7 in Mertsch et al. (2020).
 
     Args:
@@ -112,28 +111,10 @@ def R_vir(z, M_vir):
         array: virial radius
     """
 
-    R_vir = np.float64(
-        np.power(3.*M_vir / (4.*Pi*Delta_vir(z)*rho_crit(z)), 1./3.)
-        )
+    R_vir = np.power(3.*M_vir / (4.*Pi*Delta_vir(z)*rho_crit(z)), 1./3.)
 
-    return R_vir
+    return np.float64(R_vir)
 
-
-@nb.njit
-def scale_radius(z, M_vir):
-    """Scale radius of NFW halo.
-
-    Args:
-        z (array): redshift
-        M_vir (float): virial mass
-
-    Returns:
-        arrat: scale radius
-    """    
-    
-    r_s = R_vir(z, M_vir) / c_vir(z, M_vir)
-
-    return np.float64(r_s)
 
 # endregion
 
@@ -157,7 +138,8 @@ def delete_temp_data(path_to_wildcard_files):
 
 def load_u_sim(nr_of_nus, halos:str):
     # Load initial and final velocities of simulation.
-    sim = np.load(f'neutrino_vectors/nus_{nr_of_nus}_halos_{halos}.npy')
+    sim = np.load(
+        f'neutrino_vectors/nus_{nr_of_nus}_halos_{halos}.npy')
     u_all = sim[:,:,3:6]  # (10000, 100, 3) shape, ndim = 3
 
     return u_all
@@ -239,7 +221,7 @@ def s_of_z(z):
 def grav_pot(x_i, z, rho_0, M_vir):
 
     # Compute values dependent on redshift.
-    r_vir = R_vir(z, M_vir)
+    r_vir = R_vir_fct(z, M_vir)
     r_s = r_vir / c_vir(z, M_vir)
     
     # Distance from halo center with current coords. x_i.
@@ -258,7 +240,7 @@ def grav_pot(x_i, z, rho_0, M_vir):
 
 
 @nb.njit
-def dPsi_dxi_NFW(x_i, z, rho_0, M_vir):
+def dPsi_dxi_MW(x_i, z, rho_0, M_vir, R_vir, R_s):
     """Derivative of MW NFW grav. potential w.r.t. any axis x_i.
 
     Args:
@@ -273,11 +255,64 @@ def dPsi_dxi_NFW(x_i, z, rho_0, M_vir):
     """    
 
     # Compute values dependent on redshift.
-    r_vir = R_vir(z, M_vir)
-    r_s = r_vir / c_vir(z, M_vir)
+    r_vir = R_vir_fct(z, M_vir)
+    r_s = r_vir / c_vir(z, M_vir, R_vir, R_s)
     
     # Distance from halo center with current coords. x_i.
     r = np.sqrt(np.sum(x_i**2))
+
+    m = np.minimum(r, r_vir)
+    M = np.maximum(r, r_vir)
+
+    # Derivative in compact notation with m and M.
+    #NOTE: Take absolute value of coord. x_i., s.t. derivative is never < 0.
+    prefactor = 4.*Pi*G*rho_0*r_s**2*np.abs(x_i)/r**2
+    term1 = np.log(1. + (m/r_s)) / (r/r_s)
+    term2 = (r_vir/M) / (1. + (m/r_s))
+    derivative = prefactor * (term1 - term2)
+
+    return np.asarray(derivative, dtype=np.float64)
+
+
+
+def halo_pos(glat, glon, d):
+
+    b = np.deg2rad(glat)
+    l = np.deg2rad(glon)
+
+    z = np.sin(b)*d
+
+    A, B, C = 1., np.tan(alpha), (z**2 - d**2)
+
+    # if 0 <= l <= :
+        # np.zeros()
+
+@nb.njit
+def dPsi_dxi_NFW(x_i, z, rho_0, M_vir, R_vir, R_s, halo:str):
+    """Derivative of MW NFW grav. potential w.r.t. any axis x_i.
+
+    Args:
+        x_i (array): spatial position vector
+        z (array): redshift
+        rho_0 (float): normalization
+        M_vir (float): virial mass
+
+    Returns:
+        array: Derivative vector of grav. potential. for all 3 spatial coords.
+               with units of acceleration.
+    """    
+
+    # Compute values dependent on redshift.
+    r_vir = R_vir_fct(z, M_vir)
+    r_s = r_vir / c_vir(z, M_vir, R_vir, R_s)
+    
+    # Distance from respective halo center with current coords. x_i.
+    if halo == 'MW':
+        r = np.sqrt(np.sum(x_i**2))
+    elif halo == 'M31':
+        r = np.sqrt(np.sum(x_i**2))
+    elif halo == 'VC':
+        r = np.sqrt(np.sum(x_i**2))
 
     m = np.minimum(r, r_vir)
     M = np.maximum(r, r_vir)
