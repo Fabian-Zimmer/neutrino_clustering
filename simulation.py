@@ -2,29 +2,6 @@ from shared.preface import *
 import shared.functions as fct
 
 
-def draw_ui(phi_points, theta_points):
-    """Get initial velocities for the neutrinos."""
-
-    # Convert momenta to initial velocity magnitudes ("in units of [1]")
-    v_kpc = MOMENTA / NU_MASS / (kpc/s)
-
-    # Split up this magnitude into velocity components.
-    #NOTE: Done by using spher. coords. trafos, which act as "weights".
-
-    eps = 0.01  # shift in theta, so poles are not included
-    ps = np.linspace(0., 2.*Pi, phi_points)
-    ts = np.linspace(0.+eps, Pi-eps, theta_points)
-
-    # Minus signs due to choice of coord. system setup (see notes/drawings).
-    uxs = [-v*np.cos(p)*np.sin(t) for p in ps for t in ts for v in v_kpc]
-    uys = [-v*np.sin(p)*np.sin(t) for p in ps for t in ts for v in v_kpc]
-    uzs = [-v*np.cos(t) for _ in ps for t in ts for v in v_kpc]
-
-    ui_array = np.array([[ux, uy, uz] for ux,uy,uz in zip(uxs,uys,uzs)])        
-
-    return ui_array 
-
-
 def EOMs(s_val, y):
     """Equations of motion for all x_i's and u_i's in terms of s."""
 
@@ -106,7 +83,6 @@ def backtrack_1_neutrino(y0_Nr):
     np.save(f'neutrino_vectors/nu_{int(Nr)}.npy', np.array(sol.y.T))
 
 
-
 if __name__ == '__main__':
     start = time.time()
 
@@ -114,19 +90,16 @@ if __name__ == '__main__':
     s_steps = np.array([fct.s_of_z(z) for z in ZEDS])
     s_to_z = interp1d(s_steps, ZEDS, kind='linear', fill_value='extrapolate')
 
-    # Position of earth w.r.t Milky Way NFW halo center.
-    #NOTE: Earth is placed on x axis of coord. system.
-    x1, x2, x3 = 8.5, 0., 0.
-    x0 = np.array([x1, x2, x3])
-
     # Draw initial velocities.
-    ui = draw_ui(
+    ui = fct.draw_ui(
         phi_points   = PHIs,
         theta_points = THETAs,
         )
     
     # Combine vectors and append neutrino particle number.
-    y0_Nr = np.array([np.concatenate((x0,ui[i],[i+1])) for i in range(NUS)])
+    y0_Nr = np.array(
+        [np.concatenate((X_SUN, ui[i], [i+1])) for i in range(NUS)]
+        )
 
     # Test 1 neutrino only.
     # backtrack_1_neutrino(y0_Nr[1])

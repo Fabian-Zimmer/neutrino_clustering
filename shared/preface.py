@@ -134,14 +134,31 @@ Rvir_MW  = 333.5*kpc                               # virial radius
 # NFW parameters for Andromeda.
 Mvir_AG  = 8.0e11*Msun                             # Virial mass
 rho0_AG  = 3.89e6*(Msun/kpc**3)                    # density normalization
-Rs_AG   = 21.8*kpc                                 # scale radius 
-Rvir_AG = 244.7*kpc                                # virial radius
+Rs_AG    = 21.8*kpc                                # scale radius 
+Rvir_AG  = 244.7*kpc                               # virial radius
+
+# Coordinates.
+GLAT_AG = -21.573311                               # Galactic latitude
+GLON_AG = 121.174322                               # Galactic longitude
+DIST_AG = 0.784e3*kpc                              # Distance
+
+# Translated to cartesian coordinates [kpc] in our setup (from fct.halo_pos).
+X_AG    = np.array([632.29742673, -377.40315121, -288.27006757])
 
 # NFW parameters for Virgo Cluster.
-Mvir_VC  = 6.9e14*Msun                             # Virial mass
+# Mvir_VC  = 6.9e14*Msun                             # Virial mass
+Mvir_VC  = 6.9e21*Msun  #! Test with crazy large value
 rho0_VC  = 8.08e5*(Msun/kpc**3)                    # density normalization
 Rs_VC    = 399.1*kpc                               # scale radius 
 Rvir_VC  = 2328.8*kpc                              # virial radius
+
+# Coordinates.
+GLAT_VC = 74.44                                    # Galactic latitude
+GLON_VC = 283.81                                   # Galactic longitude
+DIST_VC = 16.5e3*kpc                               # Distance
+
+# Translated to cartesian coordinates [kpc] in our setup (from fct.halo_pos).
+X_VC     = np.array([-4289.63477282, 1056.51861602, 15895.27621304])
 # endregion
 
 
@@ -152,12 +169,12 @@ Rvir_VC  = 2328.8*kpc                              # virial radius
 # region
 NU_MASS = 0.03*eV
 NU_MASS_KG = NU_MASS/kg
-NU_MASSES = np.array([0.01,0.05,0.1,0.3])*eV
-N0 = 112  # standard neutrino number density in [1/cm**3]
+NU_MASSES = np.array([0.01, 0.05, 0.1, 0.3])*eV
+N0 = 112  # neutrino + antineutrino number density of 1 flavor in [1/cm**3]
 
 PHIs = 10
 THETAs = 10
-Vs = 10
+Vs = 100
 NUS = PHIs*THETAs*Vs
 
 LOWER = 0.01*T_CNB
@@ -177,9 +194,13 @@ ZEDS = np.concatenate((z_late, z_early))
 # Control if simulation runs forwards (+1) or backwards (-1) in time. 
 TIME_FLOW = -1
 
+# Position of earth w.r.t Milky Way NFW halo center.
+#NOTE: Earth is placed on x axis of coord. system.
+X_SUN = np.array([8.5, 0., 0.])
+
 # Available halos.
 MW_HALO = True
-VC_HALO = False
+VC_HALO = True
 AG_HALO = False
 
 SOLVER = 'RK23'

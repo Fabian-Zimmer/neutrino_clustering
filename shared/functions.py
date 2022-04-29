@@ -192,6 +192,29 @@ def y_fmt(value, tick_number):
 ######################
 # region
 
+def draw_ui(phi_points, theta_points):
+    """Get initial velocities for the neutrinos."""
+
+    # Convert momenta to initial velocity magnitudes ("in units of [1]")
+    v_kpc = MOMENTA / NU_MASS / (kpc/s)
+
+    # Split up this magnitude into velocity components.
+    #NOTE: Done by using spher. coords. trafos, which act as "weights".
+
+    eps = 0.01  # shift in theta, so poles are not included
+    ps = np.linspace(0., 2.*Pi, phi_points)
+    ts = np.linspace(0.+eps, Pi-eps, theta_points)
+
+    # Minus signs due to choice of coord. system setup (see notes/drawings).
+    uxs = [-v*np.cos(p)*np.sin(t) for p in ps for t in ts for v in v_kpc]
+    uys = [-v*np.sin(p)*np.sin(t) for p in ps for t in ts for v in v_kpc]
+    uzs = [-v*np.cos(t) for _ in ps for t in ts for v in v_kpc]
+
+    ui_array = np.array([[ux, uy, uz] for ux,uy,uz in zip(uxs,uys,uzs)])        
+
+    return ui_array 
+
+
 def s_of_z(z):
     """Convert redshift to time variable s with eqn. 4.1 in Mertsch et al.
     (2020), keeping only Omega_m0 and Omega_Lambda0 in the Hubble eqn. for H(z).
@@ -274,18 +297,65 @@ def dPsi_dxi_MW(x_i, z, rho_0, M_vir, R_vir, R_s):
     return np.asarray(derivative, dtype=np.float64)
 
 
-
+@nb.njit
 def halo_pos(glat, glon, d):
+    """Calculates halo position in x,y,z coords. from gal. lat. b and lon. l,
+    relative to positon of earth (i.e. sun) at (x,y,z) = (8.5,0,0) [kpc].
+    See notes for derivation."""
 
+    # Galactic latitude and longitude in radian.
     b = np.deg2rad(glat)
     l = np.deg2rad(glon)
 
-    z = np.sin(b)*d
+    # Relative z-axis coordinate.
+    z_rel = np.sin(b)*d
 
-    A, B, C = 1., np.tan(alpha), (z**2 - d**2)
+    # Relative x-axis and y-axis coordinates.
+    if l in (0., Pi):
+        x_rel = np.sqrt(d**2-z_rel**2)
+        y_rel = 0.
+    else:
 
-    # if 0 <= l <= :
-        # np.zeros()
+        # Angle between l and x-axis.
+        # Both the x-axis and y-axis coord. are based on this angle.
+        if 0. < l < Pi:
+            alpha = np.abs(l-(Pi/2.))
+        elif Pi < l < 2.*Pi:
+            alpha = np.abs(l-(3.*Pi/2.))
+
+        x_rel = np.sqrt( (d**2-z_rel**2) / (1+np.tan(alpha)**2) )
+        y_rel = np.sqrt( (d**2-z_rel**2) / (1+1/np.tan(alpha)**2) )
+
+    # x,y,z coords. w.r.t. GC (instead of sun), treating each case seperately.
+    x_sun, y_sun, z_sun = X_SUN[0], X_SUN[1], X_SUN[2]
+    z_GC = z_sun + z_rel
+    if l in (0., 2.*Pi):
+        x_GC = x_sun - x_rel
+        y_GC = y_sun
+    if 0. < l < Pi/2.:
+        x_GC = x_sun - x_rel
+        y_GC = y_sun - y_rel
+    if l == Pi/2.:
+        x_GC = x_sun
+        y_GC = y_sun - y_rel
+    if Pi/2. < l < Pi:
+        x_GC = x_sun + x_rel
+        y_GC = y_sun - y_rel
+    if l == Pi:
+        x_GC = x_sun + x_rel
+        y_GC = y_sun
+    if Pi < l < 3.*Pi/2.:
+        x_GC = x_sun + x_rel
+        y_GC = y_sun + y_rel
+    if l == 3.*Pi/2.:
+        x_GC = x_sun
+        y_GC = y_sun + y_rel
+    if 3.*Pi/2. < l < 2.*Pi:
+        x_GC = x_sun - x_rel
+        y_GC = y_sun + y_rel
+
+    return np.asarray([x_GC, y_GC, z_GC], dtype=np.float64)
+
 
 @nb.njit
 def dPsi_dxi_NFW(x_i, z, rho_0, M_vir, R_vir, R_s, halo:str):
@@ -308,11 +378,11 @@ def dPsi_dxi_NFW(x_i, z, rho_0, M_vir, R_vir, R_s, halo:str):
     
     # Distance from respective halo center with current coords. x_i.
     if halo == 'MW':
-        r = np.sqrt(np.sum(x_i**2))
-    elif halo == 'M31':
-        r = np.sqrt(np.sum(x_i**2))
+        r = np.sqrt(np.sum(x_i**2))  # x_i - X_GC, but GC is coord. center.
+    elif halo == 'AG':
+        r = np.sqrt(np.sum((x_i-X_AG)**2))
     elif halo == 'VC':
-        r = np.sqrt(np.sum(x_i**2))
+        r = np.sqrt(np.sum((x_i-X_VC)**2))
 
     m = np.minimum(r, r_vir)
     M = np.maximum(r, r_vir)
