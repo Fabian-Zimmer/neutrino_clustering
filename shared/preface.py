@@ -146,8 +146,7 @@ DIST_AG = 0.784e3*kpc                              # Distance
 X_AG    = np.array([632.29742673, -377.40315121, -288.27006757])
 
 # NFW parameters for Virgo Cluster.
-# Mvir_VC  = 6.9e14*Msun                             # Virial mass
-Mvir_VC  = 6.9e21*Msun  #! Test with crazy large value
+Mvir_VC  = 6.9e14*Msun                             # Virial mass
 rho0_VC  = 8.08e5*(Msun/kpc**3)                    # density normalization
 Rs_VC    = 399.1*kpc                               # scale radius 
 Rvir_VC  = 2328.8*kpc                              # virial radius
@@ -172,8 +171,8 @@ NU_MASS_KG = NU_MASS/kg
 NU_MASSES = np.array([0.01, 0.05, 0.1, 0.3])*eV
 N0 = 112  # neutrino + antineutrino number density of 1 flavor in [1/cm**3]
 
-PHIs = 10
-THETAs = 10
+PHIs = 20
+THETAs = 20
 Vs = 100
 NUS = PHIs*THETAs*Vs
 
