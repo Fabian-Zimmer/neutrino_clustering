@@ -111,7 +111,8 @@ sr     = 1.                         # Steradian
 h = 0.674
 H0 = h * 100 * km/s/Mpc
 Omega_R = 9.23640e-5  # not used in simulation
-Omega_M = 0.3111
+# Omega_M = 0.3111
+Omega_M = 0.2
 Omega_L = 1.-Omega_M  # since we don't use Omega_R
 
 T_CMB = 2.72548*K
@@ -171,8 +172,8 @@ NU_MASS_KG = NU_MASS/kg
 NU_MASSES = np.array([0.01, 0.05, 0.1, 0.3])*eV
 N0 = 112  # neutrino + antineutrino number density of 1 flavor in [1/cm**3]
 
-PHIs = 20
-THETAs = 20
+PHIs = 10
+THETAs = 10
 Vs = 100
 NUS = PHIs*THETAs*Vs
 
@@ -181,14 +182,22 @@ UPPER = 100.*T_CNB
 MOMENTA = np.geomspace(LOWER, UPPER, Vs)
 
 
-# Redshift integration parameters
-#NOTE: Linearly spaced, denser for late times (closer to today)
-late_steps = 100
-early_steps = 50
+### Redshift integration parameters.
+
+# Linear spacing.
+late_steps = 200
+early_steps = 100
 Z_START, Z_STOP, Z_AMOUNT = 0., 4., late_steps+early_steps
-z_late = np.linspace(0,2,late_steps)
-z_early = np.linspace(2.01,4,late_steps)
+z_late = np.linspace(0,1,late_steps)
+z_early = np.linspace(1.01,4,early_steps)
 ZEDS = np.concatenate((z_late, z_early))
+
+# Logarithmic spacing.
+# Z_START, Z_STOP, Z_AMOUNT = 0., 4., 300-1  # -1 to compensate np.insert of z=4
+# Z_START_LOG = 1e-1
+# zeds_pre = np.geomspace(Z_START_LOG, Z_STOP, Z_AMOUNT) - Z_START_LOG
+# ZEDS = np.insert(zeds_pre, len(zeds_pre), 4.)
+
 
 # Control if simulation runs forwards (+1) or backwards (-1) in time. 
 TIME_FLOW = -1
@@ -199,7 +208,7 @@ X_SUN = np.array([8.5, 0., 0.])
 
 # Available halos.
 MW_HALO = True
-VC_HALO = True
+VC_HALO = False
 AG_HALO = False
 
 SOLVER = 'RK23'

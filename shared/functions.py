@@ -137,12 +137,21 @@ def delete_temp_data(path_to_wildcard_files):
 
 
 def load_u_sim(nr_of_nus, halos:str):
-    # Load initial and final velocities of simulation.
-    sim = np.load(
-        f'neutrino_vectors/nus_{nr_of_nus}_halos_{halos}.npy')
-    u_all = sim[:,:,3:6]  # (10000, 100, 3) shape, ndim = 3
+    """Loads neutrino velocities of simulation."""
+
+    sim = np.load(f'neutrino_vectors/nus_{nr_of_nus}_halos_{halos}.npy')
+    u_all = sim[:,:,3:6]  # (nr_of_nus, len(ZEDS), 3) shape, ndim = 3
 
     return u_all
+
+
+def load_x_sim(nr_of_nus, halos:str):
+    """Loads neutrino positions of simulation."""
+
+    sim = np.load(f'neutrino_vectors/nus_{nr_of_nus}_halos_{halos}.npy')
+    x_all = sim[:,:,0:3]
+
+    return x_all
 
 
 def u_to_p_eV(u_sim, m_target):
@@ -206,6 +215,7 @@ def draw_ui(phi_points, theta_points):
     ts = np.linspace(0.+eps, Pi-eps, theta_points)
 
     # Minus signs due to choice of coord. system setup (see notes/drawings).
+    #                              (<-- outer loops, --> inner loops)
     uxs = [-v*np.cos(p)*np.sin(t) for p in ps for t in ts for v in v_kpc]
     uys = [-v*np.sin(p)*np.sin(t) for p in ps for t in ts for v in v_kpc]
     uzs = [-v*np.cos(t) for _ in ps for t in ts for v in v_kpc]
