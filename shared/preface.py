@@ -36,6 +36,9 @@ import matplotlib.colors as colors
 import matplotlib.ticker as ticker
 import matplotlib.patches as mpatches
 from mpl_toolkits.axes_grid1 import make_axes_locatable
+import colorcet as cc
+CMAP = cc.cm.CET_CBL2
+CMAP_RESIDUALS = cc.cm.bky
 # endregion
 
 
@@ -172,9 +175,9 @@ NU_MASS_KG = NU_MASS/kg
 NU_MASSES = np.array([0.01, 0.05, 0.1, 0.3])*eV
 N0 = 112  # neutrino + antineutrino number density of 1 flavor in [1/cm**3]
 
-PHIs = 20
-THETAs = 20
-Vs = 25
+PHIs = 10
+THETAs = 10
+Vs = 10
 NUS = PHIs*THETAs*Vs
 
 LOWER = 0.01*T_CNB
@@ -208,8 +211,8 @@ X_SUN = np.array([8.5, 0., 0.])
 
 # Available halos.
 MW_HALO = True
-VC_HALO = False
+VC_HALO = True
 AG_HALO = False
 
-SOLVER = 'RK45'
+SOLVER = 'RK23'
 # endregion
