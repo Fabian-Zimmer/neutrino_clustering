@@ -172,9 +172,9 @@ NU_MASS_KG = NU_MASS/kg
 NU_MASSES = np.array([0.01, 0.05, 0.1, 0.3])*eV
 N0 = 112  # neutrino + antineutrino number density of 1 flavor in [1/cm**3]
 
-PHIs = 10
-THETAs = 10
-Vs = 100
+PHIs = 20
+THETAs = 20
+Vs = 25
 NUS = PHIs*THETAs*Vs
 
 LOWER = 0.01*T_CNB
@@ -185,18 +185,18 @@ MOMENTA = np.geomspace(LOWER, UPPER, Vs)
 ### Redshift integration parameters.
 
 # Linear spacing.
-late_steps = 200
-early_steps = 100
-Z_START, Z_STOP, Z_AMOUNT = 0., 4., late_steps+early_steps
-z_late = np.linspace(0,1,late_steps)
-z_early = np.linspace(1.01,4,early_steps)
-ZEDS = np.concatenate((z_late, z_early))
+# late_steps = 200
+# early_steps = 100
+# Z_START, Z_STOP, Z_AMOUNT = 0., 4., late_steps+early_steps
+# z_late = np.linspace(0,1,late_steps)
+# z_early = np.linspace(1.01,4,early_steps)
+# ZEDS = np.concatenate((z_late, z_early))
 
 # Logarithmic spacing.
-# Z_START, Z_STOP, Z_AMOUNT = 0., 4., 300-1  # -1 to compensate np.insert of z=4
-# Z_START_LOG = 1e-1
-# zeds_pre = np.geomspace(Z_START_LOG, Z_STOP, Z_AMOUNT) - Z_START_LOG
-# ZEDS = np.insert(zeds_pre, len(zeds_pre), 4.)
+Z_START, Z_STOP, Z_AMOUNT = 0., 4., 300-1  # -1 to compensate np.insert of z=4
+Z_START_LOG = 1e-1
+zeds_pre = np.geomspace(Z_START_LOG, Z_STOP, Z_AMOUNT) - Z_START_LOG
+ZEDS = np.insert(zeds_pre, len(zeds_pre), 4.)
 
 
 # Control if simulation runs forwards (+1) or backwards (-1) in time. 
@@ -211,5 +211,5 @@ MW_HALO = True
 VC_HALO = False
 AG_HALO = False
 
-SOLVER = 'RK23'
+SOLVER = 'RK45'
 # endregion
