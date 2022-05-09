@@ -6,6 +6,22 @@ from shared.preface import *
 ####################################
 # region
 
+def NFW_profile(r, rho_0, r_s):
+    """NFW density profile.
+
+    Args:
+        r (array): radius from center
+        rho_0 (array): normalisation 
+        r_s (array): scale radius
+
+    Returns:
+        array: density at radius r
+    """    
+
+    rho = rho_0 / (r/r_s) / np.power(1.+(r/r_s), 2.)
+
+    return rho
+
 @nb.njit
 def c_vir_avg(z, M_vir):
     """Intermediate/helper function for c_vir function below."""
