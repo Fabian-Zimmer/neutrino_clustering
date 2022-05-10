@@ -2,7 +2,7 @@ from shared.preface import *
 import shared.functions as fct
 
 
-def EOMs(s_val, y):
+def OLD_EOMs(s_val, y):
     """Equations of motion for all x_i's and u_i's in terms of s."""
 
     # Initialize vector and attach astropy units.
@@ -68,6 +68,53 @@ def EOMs(s_val, y):
     return dyds
 
 
+def EOMs(s_val, y):
+    """Equations of motion for all x_i's and u_i's in terms of s."""
+
+    # Initialize vector and attach astropy units.
+    x_i, u_i = np.reshape(y, (2,3))
+
+
+    #! Switch to numerical reality here.
+    x_i *= kpc
+    u_i *= (kpc/s)
+
+
+    # Find z corresponding to s.
+    if s_val in s_steps:
+        z = ZEDS[s_steps==s_val][0]
+    else:
+        z = s_to_z(s_val)  # interpolation function defined below
+
+    # Sum gradients of each halo.
+    grad_tot = np.zeros(len(x_i))
+    if MW_HALO:
+        grad_tot += fct.dPsi_dxi_NFW(
+            x_i, z, rho0_MW, Mvir_MW, Rvir_MW, Rs_MW, 'MW'
+            )
+    elif AG_HALO:
+        grad_tot += fct.dPsi_dxi_NFW(
+            x_i, z, rho0_AG, Mvir_AG, Rvir_AG, Rs_AG, 'AG'
+            )
+    elif VC_HALO:
+        grad_tot += fct.dPsi_dxi_NFW(
+            x_i, z, rho0_VC, Mvir_VC, Rvir_VC, Rs_VC, 'VC'
+            )
+
+
+    #! Switch to physical reality here.
+    grad_tot /= (kpc/s**2)
+    x_i /= kpc
+    u_i /= (kpc/s)
+
+
+    dyds = TIME_FLOW * np.array([
+        u_i, 1./(1.+z)**2 * grad_tot
+    ])
+
+    return dyds
+
+
 def backtrack_1_neutrino(y0_Nr):
     """Simulate trajectory of 1 neutrino."""
 
@@ -105,7 +152,7 @@ if __name__ == '__main__':
     # backtrack_1_neutrino(y0_Nr[1])
 
     # Run simulation on multiple cores.
-    Processes = 32
+    Processes = 8
     with ProcessPoolExecutor(Processes) as ex:
         ex.map(backtrack_1_neutrino, y0_Nr)  
 

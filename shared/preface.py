@@ -28,7 +28,7 @@ import sympy as sympy
 # scipy packages
 from scipy.integrate import solve_ivp, quad, simpson
 from scipy.interpolate import UnivariateSpline, interp1d
-from scipy.special import expit
+from scipy.special import expit, zeta
 
 # plotting
 import matplotlib.pyplot as plt
@@ -135,6 +135,20 @@ rho0_MW  = 1.06e7*(Msun/kpc**3)                    # density normalization
 Rs_MW    = 19.9*kpc                                # scale radius 
 Rvir_MW  = 333.5*kpc                               # virial radius
 
+# NFW parameters for Virgo Cluster.
+Mvir_VC  = 6.9e14*Msun                             # Virial mass
+rho0_VC  = 8.08e5*(Msun/kpc**3)                    # density normalization
+Rs_VC    = 399.1*kpc                               # scale radius 
+Rvir_VC  = 2328.8*kpc                              # virial radius
+
+# Coordinates.
+GLAT_VC = 74.44                                    # Galactic latitude
+GLON_VC = 283.81                                   # Galactic longitude
+DIST_VC = 16.5e3*kpc                               # Distance
+
+# Translated to cartesian coordinates [kpc] in our setup (from fct.halo_pos).
+X_VC     = np.array([-4289.63477282, 1056.51861602, 15895.27621304])
+
 # NFW parameters for Andromeda.
 Mvir_AG  = 8.0e11*Msun                             # Virial mass
 rho0_AG  = 3.89e6*(Msun/kpc**3)                    # density normalization
@@ -149,19 +163,6 @@ DIST_AG = 0.784e3*kpc                              # Distance
 # Translated to cartesian coordinates [kpc] in our setup (from fct.halo_pos).
 X_AG    = np.array([632.29742673, -377.40315121, -288.27006757])
 
-# NFW parameters for Virgo Cluster.
-Mvir_VC  = 6.9e14*Msun                             # Virial mass
-rho0_VC  = 8.08e5*(Msun/kpc**3)                    # density normalization
-Rs_VC    = 399.1*kpc                               # scale radius 
-Rvir_VC  = 2328.8*kpc                              # virial radius
-
-# Coordinates.
-GLAT_VC = 74.44                                    # Galactic latitude
-GLON_VC = 283.81                                   # Galactic longitude
-DIST_VC = 16.5e3*kpc                               # Distance
-
-# Translated to cartesian coordinates [kpc] in our setup (from fct.halo_pos).
-X_VC     = np.array([-4289.63477282, 1056.51861602, 15895.27621304])
 # endregion
 
 
@@ -170,10 +171,13 @@ X_VC     = np.array([-4289.63477282, 1056.51861602, 15895.27621304])
 ### Control Center ###
 ######################
 # region
-NU_MASS = 0.03*eV
+NU_MASS = 0.3*eV #! always 0.03 so far
 NU_MASS_KG = NU_MASS/kg
 NU_MASSES = np.array([0.01, 0.05, 0.1, 0.3])*eV
-N0 = 112  # neutrino + antineutrino number density of 1 flavor in [1/cm**3]
+
+# Neutrino + antineutrino number density of 1 flavor in [1/cm**3],
+# using the analytical expression for Fermions.
+N0 = 2*zeta(3.)/Pi**2 *T_CNB**3 *(3./4.) /(1/cm**3)
 
 PHIs = 10
 THETAs = 10

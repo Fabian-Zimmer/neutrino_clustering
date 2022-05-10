@@ -422,13 +422,13 @@ def dPsi_dxi_NFW(x_i, z, rho_0, M_vir, R_vir, R_s, halo:str):
     M = np.maximum(r, r_vir)
 
     # Derivative in compact notation with m and M.
-    #NOTE: Take absolute value of coord. x_i., s.t. derivative is never < 0.
-    prefactor = 4.*Pi*G*rho_0*r_s**2*np.abs(x_i)/r**2
+    prefactor = 4.*Pi*G*rho_0*r_s**2*x_i/r**2
     term1 = np.log(1. + (m/r_s)) / (r/r_s)
     term2 = (r_vir/M) / (1. + (m/r_s))
     derivative = prefactor * (term1 - term2)
 
-    return np.asarray(derivative, dtype=np.float64)
+    #NOTE: Minus sign, s.t. velocity changes correctly (see notes).
+    return np.asarray(-derivative, dtype=np.float64)
 
 
 def escape_momentum(x_i, z, rho_0, M_vir, masses):
