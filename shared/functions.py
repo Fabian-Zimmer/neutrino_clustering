@@ -289,41 +289,6 @@ def grav_pot(x_i, z, rho_0, M_vir):
 
 
 @nb.njit
-def dPsi_dxi_MW(x_i, z, rho_0, M_vir, R_vir, R_s):
-    """Derivative of MW NFW grav. potential w.r.t. any axis x_i.
-
-    Args:
-        x_i (array): spatial position vector
-        z (array): redshift
-        rho_0 (float): normalization
-        M_vir (float): virial mass
-
-    Returns:
-        array: Derivative vector of grav. potential. for all 3 spatial coords.
-               with units of acceleration.
-    """    
-
-    # Compute values dependent on redshift.
-    r_vir = R_vir_fct(z, M_vir)
-    r_s = r_vir / c_vir(z, M_vir, R_vir, R_s)
-    
-    # Distance from halo center with current coords. x_i.
-    r = np.sqrt(np.sum(x_i**2))
-
-    m = np.minimum(r, r_vir)
-    M = np.maximum(r, r_vir)
-
-    # Derivative in compact notation with m and M.
-    #NOTE: Take absolute value of coord. x_i., s.t. derivative is never < 0.
-    prefactor = 4.*Pi*G*rho_0*r_s**2*np.abs(x_i)/r**2
-    term1 = np.log(1. + (m/r_s)) / (r/r_s)
-    term2 = (r_vir/M) / (1. + (m/r_s))
-    derivative = prefactor * (term1 - term2)
-
-    return np.asarray(derivative, dtype=np.float64)
-
-
-@nb.njit
 def halo_pos(glat, glon, d):
     """Calculates halo position in x,y,z coords. from gal. lat. b and lon. l,
     relative to positon of earth (i.e. sun) at (x,y,z) = (8.5,0,0) [kpc].
@@ -384,7 +349,7 @@ def halo_pos(glat, glon, d):
 
 
 @nb.njit
-def dPsi_dxi_NFW(x_i, z, rho_0, M_vir, R_vir, R_s, halo:str):
+def OLD_dPsi_dxi_NFW(x_i, z, rho_0, M_vir, R_vir, R_s, halo:str):
     """Derivative of MW NFW grav. potential w.r.t. any axis x_i.
 
     Args:
@@ -409,6 +374,49 @@ def dPsi_dxi_NFW(x_i, z, rho_0, M_vir, R_vir, R_s, halo:str):
         r = np.sqrt(np.sum((x_i-X_AG)**2))
     elif halo == 'VC':
         r = np.sqrt(np.sum((x_i-X_VC)**2))
+
+    m = np.minimum(r, r_vir)
+    M = np.maximum(r, r_vir)
+
+    # Derivative in compact notation with m and M.
+    #NOTE: Take absolute value of coord. x_i., s.t. derivative is never < 0.
+    prefactor = 4.*Pi*G*rho_0*r_s**2*np.abs(x_i)/r**2
+    term1 = np.log(1. + (m/r_s)) / (r/r_s)
+    term2 = (r_vir/M) / (1. + (m/r_s))
+    derivative = prefactor * (term1 - term2)
+
+    return np.asarray(derivative, dtype=np.float64)
+
+
+@nb.njit
+def dPsi_dxi_NFW(x_i, z, rho_0, M_vir, R_vir, R_s, halo:str):
+    """Derivative of MW NFW grav. potential w.r.t. any axis x_i.
+
+    Args:
+        x_i (array): spatial position vector
+        z (array): redshift
+        rho_0 (float): normalization
+        M_vir (float): virial mass
+
+    Returns:
+        array: Derivative vector of grav. potential. for all 3 spatial coords.
+               with units of acceleration.
+    """    
+
+    # Compute values dependent on redshift.
+    r_vir = R_vir_fct(z, M_vir)
+    r_s = r_vir / c_vir(z, M_vir, R_vir, R_s)
+    
+    # Distance from respective halo center with current coords. x_i.
+    if halo == 'MW':
+        r = np.sqrt(np.sum(x_i**2))  # x_i - X_GC, but GC is coord. center.
+    elif halo == 'VC':
+        x_i -= X_VC  # center w.r.t. Virgo Cluster
+        r = np.sqrt(np.sum((x_i)**2))
+    elif halo == 'AG':
+        x_i -= X_AG  # center w.r.t. Andromeda Galaxy
+        r = np.sqrt(np.sum((x_i)**2))
+        
 
     m = np.minimum(r, r_vir)
     M = np.maximum(r, r_vir)
