@@ -19,6 +19,7 @@ import natpy as nat
 
 # speed improvement
 import numba as nb  # jit, njit, vectorize
+import nbkode
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 from functools import lru_cache
 
@@ -39,6 +40,7 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 import colorcet as cc
 CMAP = cc.cm.CET_CBL2
 CMAP_RESIDUALS = cc.cm.bky
+import imageio
 # endregion
 
 
@@ -171,7 +173,7 @@ X_AG    = np.array([632.29742673, -377.40315121, -288.27006757])
 ### Control Center ###
 ######################
 # region
-NU_MASS = 0.3*eV #! always 0.03 so far
+NU_MASS = 0.05*eV  #! with this there is a stable line in results_noHalo.ipynb.
 NU_MASS_KG = NU_MASS/kg
 NU_MASSES = np.array([0.01, 0.05, 0.1, 0.3])*eV
 
@@ -181,7 +183,7 @@ N0 = 2*zeta(3.)/Pi**2 *T_CNB**3 *(3./4.) /(1/cm**3)
 
 PHIs = 10
 THETAs = 10
-Vs = 10
+Vs = 100
 NUS = PHIs*THETAs*Vs
 
 LOWER = 0.01*T_CNB
@@ -200,11 +202,10 @@ MOMENTA = np.geomspace(LOWER, UPPER, Vs)
 # ZEDS = np.concatenate((z_late, z_early))
 
 # Logarithmic spacing.
-Z_START, Z_STOP, Z_AMOUNT = 0., 4., 300-1  # -1 to compensate np.insert of z=4
+Z_START, Z_STOP, Z_AMOUNT = 0., 4., 1000-1  # -1 to compensate np.insert of z=4
 Z_START_LOG = 1e-1
 zeds_pre = np.geomspace(Z_START_LOG, Z_STOP, Z_AMOUNT) - Z_START_LOG
 ZEDS = np.insert(zeds_pre, len(zeds_pre), 4.)
-
 
 # Control if simulation runs forwards (+1) or backwards (-1) in time. 
 TIME_FLOW = -1
@@ -215,7 +216,7 @@ X_SUN = np.array([8.5, 0., 0.])
 
 # Available halos.
 MW_HALO = True
-VC_HALO = True
+VC_HALO = False
 AG_HALO = False
 
 SOLVER = 'RK23'
