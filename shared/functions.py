@@ -220,7 +220,7 @@ def y_fmt(value, tick_number):
 def draw_ui(phi_points, theta_points):
     """Get initial velocities for the neutrinos."""
 
-    # Convert momenta to initial velocity magnitudes ("in units of [1]")
+    # Convert momenta to initial velocity magnitudes, in units of [kpc/s].
     v_kpc = MOMENTA / NU_MASS / (kpc/s)
 
     # Split up this magnitude into velocity components.
@@ -349,46 +349,6 @@ def halo_pos(glat, glon, d):
 
 
 @nb.njit
-def OLD_dPsi_dxi_NFW(x_i, z, rho_0, M_vir, R_vir, R_s, halo:str):
-    """Derivative of MW NFW grav. potential w.r.t. any axis x_i.
-
-    Args:
-        x_i (array): spatial position vector
-        z (array): redshift
-        rho_0 (float): normalization
-        M_vir (float): virial mass
-
-    Returns:
-        array: Derivative vector of grav. potential. for all 3 spatial coords.
-               with units of acceleration.
-    """    
-
-    # Compute values dependent on redshift.
-    r_vir = R_vir_fct(z, M_vir)
-    r_s = r_vir / c_vir(z, M_vir, R_vir, R_s)
-    
-    # Distance from respective halo center with current coords. x_i.
-    if halo == 'MW':
-        r = np.sqrt(np.sum(x_i**2))  # x_i - X_GC, but GC is coord. center.
-    elif halo == 'AG':
-        r = np.sqrt(np.sum((x_i-X_AG)**2))
-    elif halo == 'VC':
-        r = np.sqrt(np.sum((x_i-X_VC)**2))
-
-    m = np.minimum(r, r_vir)
-    M = np.maximum(r, r_vir)
-
-    # Derivative in compact notation with m and M.
-    #NOTE: Take absolute value of coord. x_i., s.t. derivative is never < 0.
-    prefactor = 4.*Pi*G*rho_0*r_s**2*np.abs(x_i)/r**2
-    term1 = np.log(1. + (m/r_s)) / (r/r_s)
-    term2 = (r_vir/M) / (1. + (m/r_s))
-    derivative = prefactor * (term1 - term2)
-
-    return np.asarray(derivative, dtype=np.float64)
-
-
-@nb.njit
 def dPsi_dxi_NFW(x_i, z, rho_0, M_vir, R_vir, R_s, halo:str):
     """Derivative of MW NFW grav. potential w.r.t. any axis x_i.
 
@@ -455,7 +415,7 @@ def Fermi_Dirac(p):
     """
 
     # Function expit from scipy equivalent to 1/(np.exp(-X)+1).
-    # (thus the miunus sign)
+    # (thus the minus sign)
     return expit(-p/T_CNB) 
 
 
@@ -470,14 +430,14 @@ def number_density(p0, p1):
         array: Value of relic neutrino number density.
     """    
 
-    g = 2.  # 2 d.o.f.: flavour and anti-particle/particle 
+    g = 2.  # 2 degrees of freedom: flavour and anti-particle/particle 
     
     #NOTE: trapz integral method needs sorted (ascending) arrays
     ind = p0.argsort()
     p0_sort, p1_sort = p0[ind], p1[ind]
 
     # Fermi-Dirac value with momentum at end of sim.
-    FDvals = Fermi_Dirac(p1_sort)  #! needs p in [eV]
+    FDvals = Fermi_Dirac(p1_sort)
 
     # Calculate number density.
     y = p0_sort**2 * FDvals

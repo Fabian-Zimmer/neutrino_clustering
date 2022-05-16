@@ -173,7 +173,8 @@ X_AG    = np.array([632.29742673, -377.40315121, -288.27006757])
 ### Control Center ###
 ######################
 # region
-NU_MASS = 0.05*eV  #! with this there is a stable line in results_noHalo.ipynb.
+# NU_MASS = 0.05*eV  #! with this there is a stable line in results_noHalo.ipynb.
+NU_MASS = 0.3*eV
 NU_MASS_KG = NU_MASS/kg
 NU_MASSES = np.array([0.01, 0.05, 0.1, 0.3])*eV
 
@@ -187,21 +188,11 @@ Vs = 100
 NUS = PHIs*THETAs*Vs
 
 LOWER = 0.01*T_CNB
-UPPER = 100.*T_CNB
+UPPER = 13*T_CNB
 MOMENTA = np.geomspace(LOWER, UPPER, Vs)
 
 
-### Redshift integration parameters.
-
-# Linear spacing.
-# late_steps = 200
-# early_steps = 100
-# Z_START, Z_STOP, Z_AMOUNT = 0., 4., late_steps+early_steps
-# z_late = np.linspace(0,1,late_steps)
-# z_early = np.linspace(1.01,4,early_steps)
-# ZEDS = np.concatenate((z_late, z_early))
-
-# Logarithmic spacing.
+# Logarithmic redshift spacing.
 Z_START, Z_STOP, Z_AMOUNT = 0., 4., 1000-1  # -1 to compensate np.insert of z=4
 Z_START_LOG = 1e-1
 zeds_pre = np.geomspace(Z_START_LOG, Z_STOP, Z_AMOUNT) - Z_START_LOG
