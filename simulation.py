@@ -23,13 +23,13 @@ def EOMs(s_val, y):
         grad_tot += fct.dPsi_dxi_NFW(
             x_i, z, rho0_MW, Mvir_MW, Rvir_MW, Rs_MW, 'MW'
             )
-    elif AG_HALO:
-        grad_tot += fct.dPsi_dxi_NFW(
-            x_i, z, rho0_AG, Mvir_AG, Rvir_AG, Rs_AG, 'AG'
-            )
-    elif VC_HALO:
+    if VC_HALO:
         grad_tot += fct.dPsi_dxi_NFW(
             x_i, z, rho0_VC, Mvir_VC, Rvir_VC, Rs_VC, 'VC'
+            )
+    if AG_HALO:
+        grad_tot += fct.dPsi_dxi_NFW(
+            x_i, z, rho0_AG, Mvir_AG, Rvir_AG, Rs_AG, 'AG'
             )
 
 
@@ -71,6 +71,7 @@ if __name__ == '__main__':
     ui = fct.draw_ui(
         phi_points   = PHIs,
         theta_points = THETAs,
+        method = METHOD
         )
     
     # Combine vectors and append neutrino particle number.
@@ -78,26 +79,36 @@ if __name__ == '__main__':
         [np.concatenate((X_SUN, ui[i], [i+1])) for i in range(NUS)]
         )
 
-    # Test 1 neutrino only.
-    # backtrack_1_neutrino(y0_Nr[0])
 
+    halos = 'MW'*MW_HALO + '+VC'*VC_HALO + '+AG'*AG_HALO
+    CPUs = 6
+
+    # Print out all relevant parameters for simulation.
+    print(
+        '***Running simulation*** \n',
+        f'neutrinos={NUS} ; method={METHOD} ; halos={halos} ; CPUs={CPUs}'
+    )
+
+    # Test 1 neutrino only.
+    # backtrack_1_neutrino(y0_Nr[1])
+
+    # '''
     # Run simulation on multiple cores.
-    Processes = 6
-    with ProcessPoolExecutor(Processes) as ex:
-        ex.map(backtrack_1_neutrino, y0_Nr)  
+    with ProcessPoolExecutor(CPUs) as ex:
+        ex.map(backtrack_1_neutrino, y0_Nr[34400:])  
 
 
     # Compactify all neutrino vectors into 1 file.
     Ns = np.arange(NUS, dtype=int)  # Nr. of neutrinos
     nus = np.array([np.load(f'neutrino_vectors/nu_{Nr+1}.npy') for Nr in Ns])
     
-    halos = 'MW'*MW_HALO + '+VC'*VC_HALO + '+AG'*AG_HALO
     np.save(
         f'neutrino_vectors/nus_{NUS}_halos_{halos}.npy',
         nus
         )
     
     fct.delete_temp_data('neutrino_vectors/nu_*.npy')    
+    # '''
 
     seconds = time.time()-start
     minutes = seconds/60.

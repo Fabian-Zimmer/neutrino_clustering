@@ -173,8 +173,10 @@ X_AG    = np.array([632.29742673, -377.40315121, -288.27006757])
 ### Control Center ###
 ######################
 # region
-# NU_MASS = 0.05*eV  #! with this there is a stable line in results_noHalo.ipynb.
-NU_MASS = 0.3*eV
+
+#NOTE: Using heaviest mass in conjunction with high momentum range covers
+#NOTE: velocity range sufficient for whole mass range.
+NU_MASS = 0.3*eV  
 NU_MASS_KG = NU_MASS/kg
 NU_MASSES = np.array([0.01, 0.05, 0.1, 0.3])*eV
 
@@ -182,14 +184,32 @@ NU_MASSES = np.array([0.01, 0.05, 0.1, 0.3])*eV
 # using the analytical expression for Fermions.
 N0 = 2*zeta(3.)/Pi**2 *T_CNB**3 *(3./4.) /(1/cm**3)
 
-PHIs = 10
-THETAs = 10
+PHIs = 20
+THETAs = 20
 Vs = 100
 NUS = PHIs*THETAs*Vs
 
 LOWER = 0.01*T_CNB
-UPPER = 13*T_CNB
+UPPER = 400.*T_CNB
+
+# Momentum range.
 MOMENTA = np.geomspace(LOWER, UPPER, Vs)
+
+
+'''
+# Complete velocity range, spanning LOWER < p < UPPER for all masses. 
+V_LOWER = LOWER / NU_MASSES[-1]
+V_UPPER = UPPER / NU_MASSES[0]
+
+v_ranges = []
+for m in NU_MASSES[::-1]:
+    v_ranges.append(np.geomspace(LOWER/m, UPPER/m, 25))
+
+vs = np.array(v_ranges)
+VELOCITIES_KPC = np.sort(np.concatenate((vs[0],vs[1],vs[2],vs[3]))) / (kpc/s)
+
+# VELOCITIES_KPC = np.linspace(V_LOWER, V_UPPER, Vs) / (kpc/s)
+'''
 
 
 # Logarithmic redshift spacing.
@@ -207,8 +227,9 @@ X_SUN = np.array([8.5, 0., 0.])
 
 # Available halos.
 MW_HALO = True
-VC_HALO = False
+VC_HALO = True
 AG_HALO = False
 
+METHOD = 'P'  # 'P' for momentum for sim mass, 'V' for total velocity range.
 SOLVER = 'RK23'
 # endregion

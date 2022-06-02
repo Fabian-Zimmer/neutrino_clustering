@@ -217,11 +217,16 @@ def y_fmt(value, tick_number):
 ######################
 # region
 
-def draw_ui(phi_points, theta_points):
+def draw_ui(phi_points, theta_points, method):
     """Get initial velocities for the neutrinos."""
 
-    # Convert momenta to initial velocity magnitudes, in units of [kpc/s].
-    v_kpc = MOMENTA / NU_MASS / (kpc/s)
+    if method == 'P':
+        # Convert momenta to initial velocity magnitudes, in units of [kpc/s].
+        v_kpc = MOMENTA / NU_MASS / (kpc/s)
+    elif method == 'V':
+        # Run simulation covering total velocity range for all masses.
+        v_kpc = VELOCITIES_KPC
+
 
     # Split up this magnitude into velocity components.
     #NOTE: Done by using spher. coords. trafos, which act as "weights".
@@ -317,9 +322,11 @@ def halo_pos(glat, glon, d):
         x_rel = np.sqrt( (d**2-z_rel**2) / (1+np.tan(alpha)**2) )
         y_rel = np.sqrt( (d**2-z_rel**2) / (1+1/np.tan(alpha)**2) )
 
+
     # x,y,z coords. w.r.t. GC (instead of sun), treating each case seperately.
     x_sun, y_sun, z_sun = X_SUN[0], X_SUN[1], X_SUN[2]
     z_GC = z_sun + z_rel
+
     if l in (0., 2.*Pi):
         x_GC = x_sun - x_rel
         y_GC = y_sun
@@ -363,29 +370,32 @@ def dPsi_dxi_NFW(x_i, z, rho_0, M_vir, R_vir, R_s, halo:str):
                with units of acceleration.
     """    
 
+
     # Compute values dependent on redshift.
     r_vir = R_vir_fct(z, M_vir)
     r_s = r_vir / c_vir(z, M_vir, R_vir, R_s)
     
+
     # Distance from respective halo center with current coords. x_i.
     if halo == 'MW':
-        r = np.sqrt(np.sum(x_i**2))  # x_i - X_GC, but GC is coord. center.
+        x_i_cent = x_i  # x_i - X_GC, but GC is coord. center, i.e. [0,0,0].
+        r = np.sqrt(np.sum(x_i_cent**2))
     elif halo == 'VC':
-        x_i -= X_VC  # center w.r.t. Virgo Cluster
-        r = np.sqrt(np.sum((x_i)**2))
+        x_i_cent = x_i - (X_VC*kpc)  # center w.r.t. Virgo Cluster
+        r = np.sqrt(np.sum(x_i_cent**2))
     elif halo == 'AG':
-        x_i -= X_AG  # center w.r.t. Andromeda Galaxy
-        r = np.sqrt(np.sum((x_i)**2))
-        
-
-    m = np.minimum(r, r_vir)
-    M = np.maximum(r, r_vir)
+        x_i_cent = x_i - (X_AG*kpc)  # center w.r.t. Andromeda Galaxy
+        r = np.sqrt(np.sum(x_i_cent**2))
+    
 
     # Derivative in compact notation with m and M.
-    prefactor = 4.*Pi*G*rho_0*r_s**2*x_i/r**2
+    m = np.minimum(r, r_vir)
+    M = np.maximum(r, r_vir)
+    prefactor = 4.*Pi*G*rho_0*r_s**2*x_i_cent/r**2
     term1 = np.log(1. + (m/r_s)) / (r/r_s)
     term2 = (r_vir/M) / (1. + (m/r_s))
     derivative = prefactor * (term1 - term2)
+
 
     #NOTE: Minus sign, s.t. velocity changes correctly (see notes).
     return np.asarray(-derivative, dtype=np.float64)
