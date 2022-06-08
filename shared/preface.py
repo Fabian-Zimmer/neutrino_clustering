@@ -19,7 +19,7 @@ import natpy as nat
 
 # speed improvement
 import numba as nb  # jit, njit, vectorize
-import nbkode
+# import nbkode
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 from functools import lru_cache
 
