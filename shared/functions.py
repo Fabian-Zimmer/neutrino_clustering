@@ -440,7 +440,7 @@ def number_density(p0, p1):
         array: Value of relic neutrino number density.
     """    
 
-    g = 2.  # 2 degrees of freedom: flavour and anti-particle/particle 
+    g = 2.  # 2 degrees of freedom per flavour: particle and anti-particle
     
     #NOTE: trapz integral method needs sorted (ascending) arrays
     ind = p0.argsort()
