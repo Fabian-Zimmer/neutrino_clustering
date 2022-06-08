@@ -5,7 +5,7 @@ import shared.functions as fct
 def EOMs(s_val, y):
     """Equations of motion for all x_i's and u_i's in terms of s."""
 
-    # Initialize vector and attach astropy units.
+    # Initialize vector.
     x_i, u_i = np.reshape(y, (2,3))
 
 
@@ -62,7 +62,7 @@ def backtrack_1_neutrino(y0_Nr):
 
 
 if __name__ == '__main__':
-    start = time.time()
+    start = time.perf_counter()
     
     # Integration steps.
     S_STEPS = np.array([fct.s_of_z(z) for z in ZEDS])
@@ -110,7 +110,7 @@ if __name__ == '__main__':
     fct.delete_temp_data('neutrino_vectors/nu_*.npy')    
     # '''
 
-    seconds = time.time()-start
+    seconds = time.perf_counter()-start
     minutes = seconds/60.
     hours = minutes/60.
     print(f'Time sec/min/h: {seconds} sec, {minutes} min, {hours} h.')

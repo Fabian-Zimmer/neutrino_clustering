@@ -1,10 +1,9 @@
 from shared.preface import *
 
 
-####################################
-### Functions used in simulation ###
-####################################
-# region
+###########################################
+### Functions used in SMOOTH simulation ###
+###########################################
 
 def NFW_profile(r, rho_0, r_s):
     """NFW density profile.
@@ -132,14 +131,155 @@ def R_vir_fct(z, M_vir):
     return np.float64(R_vir)
 
 
-# endregion
+
+#############################################
+### Functions used in DISCRETE simulation ###
+#############################################
+def read_DM_positions_randomHalo(which_halos, mass_select):
+
+    # Open data files.
+    folder = SIM_DATA
+    snaps = h5py.File(f'{folder}/snapshot_0036.hdf5')
+    group = h5py.File(f'{folder}/subhalo_0036.catalog_groups')
+    parts = h5py.File(f'{folder}/subhalo_0036.catalog_particles')
+    props = h5py.File(f'{folder}/subhalo_0036.properties')
+
+    ### Properties of DM particles.
+
+    # Positions.
+    a = snaps["/Header"].attrs["Scale-factor"]
+    pos = snaps['PartType1/Coordinates'][:][:] * a  
+    #! comoving to physical (pc) with a, then *1e3 to go to kpc
+
+    # Masses.
+    mass = snaps['PartType1/Masses'][:] * 1e10  
+    #! some choice of Camila, *1e10 to get to Msun. All DM particles have same mass.
+
+    # Velocities.
+    vel = snaps['PartType1/Velocities'][:][:]  #! in km/s, physical
+
+    # NFW concentration parameter.
+    cNFW = props['cNFW_200crit'][:]
+
+    # Virial radius.
+    rvir = props['R_200crit'][:] *1e3 # now in kpc
+    
+    # Critical M_200.
+    m200c = props['Mass_200crit'][:] * 1e10  # now in Msun
+
+    # Set neg. values to 1, i.e. 0 in np.log10.
+    m200c[m200c <= 0] = 1
+
+    # This gives exponents of 10^x, which reproduces m200c vals.
+    m200c = np.log10(m200c)  
+
+    # Center of Potential coordinates, for all halos.
+    CoP = np.zeros((len(m200c), 3))
+    CoP[:, 0] = props["Xcminpot"][:]
+    CoP[:, 1] = props["Ycminpot"][:]
+    CoP[:, 2] = props["Zcminpot"][:]
+
+    # Select halos based on exponent, i.e. mass_select input parameter.
+    select_halos = np.where(
+        (m200c >= mass_select-0.2) & (m200c <= mass_select+0.2)
+    )[0]
+
+
+    # Selecting subhalos or halos.
+    subtype = props["Structuretype"][:]
+    if which_halos == 'subhalos':
+        select = np.where(subtype[select_halos] > 10)[0]
+        select_halos = select_halos[select]
+    else:
+        select = np.where(subtype[select_halos] == 10)[0]
+        select_halos = select_halos[select]
+
+    # Select 1 random halo.
+    np.random.seed(SEED)
+    select_random = np.random.randint(len(select_halos) - 1, size=(1))
+    rand_halo = select_halos[select_random]
+
+    # Grab the start position in the particles file to read from
+    halo_start_pos = group["Offset"][rand_halo][0]
+    halo_end_pos = group["Offset"][rand_halo + 1][0]
+
+    particle_ids_in_halo = parts["Particle_IDs"][halo_start_pos:halo_end_pos]
+    particle_ids_from_snapshot = snaps["PartType1/ParticleIDs"][...]
+
+    # Get indices of elements, which are present in both arrays.
+    _, _, indices_p = np.intersect1d(
+        particle_ids_in_halo, particle_ids_from_snapshot, 
+        assume_unique=True, return_indices=True
+    )
+
+    particles_mass = mass[indices_p]
+    particles_pos = pos[indices_p, :]  # : grabs all 3 spatial positions.
+    particles_pos -= CoP[rand_halo, :]  # centering, w.r.t halo they're part of
+    particles_pos *= 1e3  # to kpc
+
+
+    # Save positions relative to CoP (center of halo potential).
+    np.save(
+        f'sim_data/DM_positions_{which_halos}_M{mass_select}.npy',
+        particles_pos,
+    )
+
+
+def grid_3D(l, s):
+
+    # Generate edges of 3D grid.
+    x, y, z = np.mgrid[-l:l+0.1:s, -l:l+0.1:s, -l:l+0.1:s]
+    
+    # Calculate centers of each axis.
+    x_centers = (x[1:,...] + x[:-1,...])/2.
+    y_centers = (y[:,1:,:] + y[:,:-1,:])/2.
+    z_centers = (z[...,1:] + z[...,:-1])/2.
+
+    # Create center coord.-pairs., truncate redundant points.
+    centers3D = np.array([
+        x_centers[:,:-1,:-1], 
+        y_centers[:-1,:,:-1], 
+        z_centers[:-1,:-1,:]
+    ])
+
+    cent_coordPairs3D = centers3D.reshape(3,-1).T 
+
+    return cent_coordPairs3D
+
+
+# @nb.njit
+def cell_gravity(cell_coords, DM_coords, grav_range, m_DM):
+    
+    # Center all DM positions w.r.t. cell center (cc).
+    DM_pos_cc = DM_coords*kpc - cell_coords
+
+    # Calculate distances of DM to cc, sorted in ascending order.
+    DM_dist_cc = np.sqrt(np.sum(DM_pos_cc**2, axis=1))
+
+    # Ascending order indices.
+    ind = DM_dist_cc.argsort()
+
+    # Truncate DM positions depending on distance to cc.
+    DM_pos_cc_sort = DM_pos_cc[ind]
+
+    if grav_range is None:
+        DM_pos_inRange = DM_pos_cc_sort
+    else:
+        DM_pos_inRange = DM_pos_cc_sort[DM_dist_cc[ind] <= grav_range]
+
+    # print(f'{len(DM_pos_trunc)} DM particles inside range')
+
+    ### Calculate superposition gravity.
+    pre = G*m_DM
+    denom = np.power(np.sum((cell_coords-DM_pos_inRange)**2), 3./2.)
+
+    return pre*np.sum((cell_coords-DM_pos_inRange)/denom, axis=0)
 
 
 
 #########################
 ### Utility functions ###
 #########################
-# region
 
 def delete_temp_data(path_to_wildcard_files):
 
@@ -208,14 +348,11 @@ def y_fmt(value, tick_number):
     elif value == 1e1:
         return r'1+$10^1$'
 
-# enregion
-
 
 
 ######################
 ### Main functions ###
 ######################
-# region
 
 def draw_ui(phi_points, theta_points, method):
     """Get initial velocities for the neutrinos."""
@@ -458,5 +595,3 @@ def number_density(p0, p1):
     n_cm3 = g/(2*Pi**2) * n_raw / (1/cm**3)
 
     return n_cm3
-
-# endregion

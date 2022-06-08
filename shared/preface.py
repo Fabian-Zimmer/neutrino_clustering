@@ -1,11 +1,11 @@
 ###############
 ### Imports ###
 ###############
-# region
 import sys, os
 from datetime import datetime
 import time
 import glob
+import random
 
 # arrays and data packages
 import numpy as np
@@ -41,14 +41,24 @@ import colorcet as cc
 CMAP = cc.cm.CET_CBL2
 CMAP_RESIDUALS = cc.cm.bky
 import imageio
-# endregion
+
+# Fix random seeds.
+SEED = 0
+
+
+
+#####################
+### Local Folders ###
+#####################
+#! Uncomment correct path.
+SIM_DATA = '/home/fabian/ownCloud/sim_data'  # for UvA PC
+# SIM_DATA = '/home/fpc/SURFdrive/sim_data'  # for laptop
 
 
 
 #############
 ### Plots ###
 #############
-# region
 SMALL_SIZE = 12
 MEDIUM_SIZE = 14
 BIGGER_SIZE = 16
@@ -60,14 +70,12 @@ plt.rc('xtick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
 plt.rc('ytick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
 plt.rc('legend', fontsize=SMALL_SIZE)    # legend fontsize
 plt.rc('figure', titlesize=BIGGER_SIZE)  # fontsize of the figure title
-# endregion
 
 
 
 #############
 ### Units ###
 #############
-# region
 Pi = np.pi
 hc_val = (const.h/(2*Pi)*const.c).convert(unit.eV*unit.cm).value
 
@@ -105,14 +113,12 @@ deg    = Pi/180.0                   # Degree
 arcmin = deg/60.                    # Arcminute
 arcsec = arcmin/60.                 # Arcsecond
 sr     = 1.                         # Steradian
-# endregion
 
 
 
 #################
 ### Constants ###
 #################
-# region
 h = 0.674
 H0 = h * 100 * km/s/Mpc
 Omega_R = 9.23640e-5  # not used in simulation
@@ -122,14 +128,12 @@ Omega_L = 1.-Omega_M  # since we don't use Omega_R
 
 T_CMB = 2.72548*K
 T_CNB = np.power(4/11, 1/3)*T_CMB
-# endregion
 
 
 
 ##########################################
 ### Parameters - Mertsch et al. (2020) ###
 ##########################################
-# region
 
 # NFW parameters for Milky Way.
 Mvir_MW  = 2.03e12*Msun                            # Virial mass
@@ -165,15 +169,11 @@ DIST_AG = 0.784e3*kpc                              # Distance
 # Translated to cartesian coordinates [kpc] in our setup (from fct.halo_pos).
 X_AG    = np.array([632.29742673, -377.40315121, -288.27006757])
 
-# endregion
-
 
 
 ######################
 ### Control Center ###
 ######################
-# region
-
 #NOTE: Using heaviest mass in conjunction with high momentum range covers
 #NOTE: velocity range sufficient for whole mass range.
 NU_MASS = 0.3*eV  
@@ -232,4 +232,9 @@ AG_HALO = False
 
 METHOD = 'P'  # 'P' for momentum for sim mass, 'V' for total velocity range.
 SOLVER = 'RK23'
-# endregion
+
+# Discrete simulation parameters.
+GRID_L = Rvir_MW
+GRID_S = 100*kpc
+DM_SIM_MASS = 11502999*Msun
+GRAV_RANGE = None
