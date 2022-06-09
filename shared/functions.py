@@ -272,8 +272,10 @@ def cell_gravity(cell_coords, DM_coords, grav_range, m_DM):
     ### Calculate superposition gravity.
     pre = G*m_DM
     denom = np.power(np.sum((cell_coords-DM_pos_inRange)**2), 3./2.)
+    derivative = pre*np.sum((cell_coords-DM_pos_inRange)/denom, axis=0)
 
-    return pre*np.sum((cell_coords-DM_pos_inRange)/denom, axis=0)
+    #NOTE: Minus sign, s.t. velocity changes correctly (see notes).
+    return np.asarray(-derivative, dtype=np.float64)
 
 
 def load_derivative_grid(z):

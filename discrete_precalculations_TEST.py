@@ -25,7 +25,7 @@ start = time.perf_counter()
 dPsi_grid = np.empty(cell_coords.shape)
 for i, coords in enumerate(cell_coords):
     #! multiplication with 1e10, derivatives are too low, see if recover results
-    dPsi_grid[i] = fct.cell_gravity(coords, DM_pos, GRAV_RANGE, DM_SIM_MASS)*1e10
+    dPsi_grid[i] = fct.cell_gravity(coords, DM_pos, GRAV_RANGE, DM_SIM_MASS)*1e8
 
 seconds = time.perf_counter()-start
 minutes = seconds/60.

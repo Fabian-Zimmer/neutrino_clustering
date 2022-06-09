@@ -51,8 +51,8 @@ SEED = 0
 ### Local Folders ###
 #####################
 #! Uncomment correct path.
-# SIM_DATA = '/home/fabian/ownCloud/sim_data'  # for UvA PC
-SIM_DATA = '/home/fpc/SURFdrive/sim_data'  # for laptop
+SIM_DATA = '/home/fabian/ownCloud/sim_data'  # for UvA PC
+# SIM_DATA = '/home/fpc/SURFdrive/sim_data'  # for laptop
 
 
 
@@ -235,6 +235,6 @@ SOLVER = 'RK23'
 
 # Discrete simulation parameters.
 GRID_L = Rvir_MW
-GRID_S = 100*kpc
+GRID_S = 50*kpc
 DM_SIM_MASS = 11502999*Msun
 GRAV_RANGE = None
