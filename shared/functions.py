@@ -276,6 +276,47 @@ def cell_gravity(cell_coords, DM_coords, grav_range, m_DM):
     return pre*np.sum((cell_coords-DM_pos_inRange)/denom, axis=0)
 
 
+def load_derivative_grid(z):
+
+    '''
+    # ID corresponding to current z.
+    idx = np.abs(Z_SNAPSHOTS - z).argmin()
+
+    # Load file with derivative grid of ID.
+    dPsi_grid = np.load(f'~/sim_data/derivative_grid_{idx}')
+    '''
+
+    #NOTE: for now while testing
+    dPsi_grid = np.load(f'{os.getcwd()}/sim_data/dPsi_grid.npy')
+
+    return dPsi_grid
+    
+
+def load_cell_coordinates(z):
+
+    '''
+    # ID corresponding to current z.
+    idx = np.abs(Z_SNAPSHOTS - z).argmin()
+
+    # Load file with position grid of ID.
+    cell_coords = np.load(f'~/sim_data/position_grid_{idx}')
+    '''
+
+    #NOTE: for now while testing
+    cell_coords = np.load(f'{os.getcwd()}/sim_data/cell_coords.npy')
+
+    return cell_coords
+
+
+def nu_in_which_cell(nu_coords, cell_coords):
+
+    # For now, just subtract nu_coords from all cell_coords, then take min.
+    dist = np.sqrt(np.sum((np.abs(cell_coords-nu_coords)**2), axis=1))
+    cell_idx = dist.argmin()
+
+    return cell_idx
+
+
 
 #########################
 ### Utility functions ###
@@ -292,16 +333,23 @@ def delete_temp_data(path_to_wildcard_files):
             print("Error while deleting file (file not found")
 
 
-def load_u_sim(nr_of_nus, halos:str):
+def load_u_sim(nr_of_nus, halos='MW', discrete=False):
     """Loads neutrino velocities of simulation."""
 
-    sim = np.load(f'neutrino_vectors/nus_{nr_of_nus}_halos_{halos}.npy')
-    u_all = sim[:,:,3:6]  # (nr_of_nus, len(ZEDS), 3) shape, ndim = 3
+    if discrete:
+        sim = np.load(f'neutrino_vectors/nus_{nr_of_nus}_SpaceCubes.npy')
+        u_all = sim[:,:,3:6]
+
+    else:
+        sim = np.load(f'neutrino_vectors/nus_{nr_of_nus}_halos_{halos}.npy')
+        u_all = sim[:,:,3:6]
+
+    # u_all.shape = (nr_of_nus, len(ZEDS), 3) ; u_all.ndim = 3
 
     return u_all
 
 
-def load_x_sim(nr_of_nus, halos:str):
+def load_x_sim(nr_of_nus, halos:str, discrete=False):
     """Loads neutrino positions of simulation."""
 
     sim = np.load(f'neutrino_vectors/nus_{nr_of_nus}_halos_{halos}.npy')

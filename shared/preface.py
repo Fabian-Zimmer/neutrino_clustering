@@ -51,8 +51,8 @@ SEED = 0
 ### Local Folders ###
 #####################
 #! Uncomment correct path.
-SIM_DATA = '/home/fabian/ownCloud/sim_data'  # for UvA PC
-# SIM_DATA = '/home/fpc/SURFdrive/sim_data'  # for laptop
+# SIM_DATA = '/home/fabian/ownCloud/sim_data'  # for UvA PC
+SIM_DATA = '/home/fpc/SURFdrive/sim_data'  # for laptop
 
 
 
@@ -184,8 +184,8 @@ NU_MASSES = np.array([0.01, 0.05, 0.1, 0.3])*eV
 # using the analytical expression for Fermions.
 N0 = 2*zeta(3.)/Pi**2 *T_CNB**3 *(3./4.) /(1/cm**3)
 
-PHIs = 20
-THETAs = 20
+PHIs = 10
+THETAs = 10
 Vs = 100
 NUS = PHIs*THETAs*Vs
 
@@ -213,7 +213,7 @@ VELOCITIES_KPC = np.sort(np.concatenate((vs[0],vs[1],vs[2],vs[3]))) / (kpc/s)
 
 
 # Logarithmic redshift spacing.
-Z_START, Z_STOP, Z_AMOUNT = 0., 4., 1000-1  # -1 to compensate np.insert of z=4
+Z_START, Z_STOP, Z_AMOUNT = 0., 4., 100-1  # -1 to compensate np.insert of z=4
 Z_START_LOG = 1e-1
 zeds_pre = np.geomspace(Z_START_LOG, Z_STOP, Z_AMOUNT) - Z_START_LOG
 ZEDS = np.insert(zeds_pre, len(zeds_pre), 4.)
