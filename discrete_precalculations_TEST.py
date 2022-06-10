@@ -1,6 +1,7 @@
 from shared.preface import *
 import shared.functions as fct
 
+start = time.perf_counter()
 
 ### Do the following for all snapshots:
 
@@ -19,21 +20,19 @@ cell_coords = fct.grid_3D(GRID_L, GRID_S)
 #NOTE: Grid should extend until maximum distance neutrinos travel,
 #NOTE: but it should still work with min. grid. for now
 
-start = time.perf_counter()
 
 # 4. Calculate gravity in each cell.
 dPsi_grid = np.empty(cell_coords.shape)
 for i, coords in enumerate(cell_coords):
-    #! multiplication with 1e10, derivatives are too low, see if recover results
     dPsi_grid[i] = fct.cell_gravity(coords, DM_pos, GRAV_RANGE, DM_SIM_MASS)
-
-seconds = time.perf_counter()-start
-minutes = seconds/60.
-hours = minutes/60.
-print(f'Time sec/min/h: {seconds} sec, {minutes} min, {hours} h.')
 
 # 5. Save: 
 #   - Cell (center) x,y,z positions.
 np.save('sim_data/cell_coords.npy', cell_coords)
 #   - Derivative grid.
 np.save('sim_data/dPsi_grid', dPsi_grid)
+
+seconds = time.perf_counter()-start
+minutes = seconds/60.
+hours = minutes/60.
+print(f'Time sec/min/h: {seconds} sec, {minutes} min, {hours} h.')

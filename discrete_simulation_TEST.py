@@ -15,7 +15,6 @@ def EOMs(s_val, y):
     z = np.interp(s_val, S_STEPS, ZEDS)
 
     # Find which (pre-calculated) derivative grid to use at current z.
-    #NOTE: Derivative grid of each snapshot will be a stored file.
     Psi_grid = fct.load_derivative_grid(z)
     pos_grid = fct.load_cell_coordinates(z)
 
@@ -73,7 +72,7 @@ if __name__ == '__main__':
         )
 
 
-    CPUs = 16
+    CPUs = 6
 
     # Print out all relevant parameters for simulation.
     print(

@@ -250,29 +250,36 @@ def grid_3D(l, s):
 # @nb.njit
 def cell_gravity(cell_coords, DM_coords, grav_range, m_DM):
     
-    # Center all DM positions w.r.t. cell center (cc).
-    DM_pos_cc = DM_coords*kpc - cell_coords
+    # Center all DM positions w.r.t. cell center.
+    DM_cc = DM_coords*kpc - cell_coords
 
     # Calculate distances of DM to cc, sorted in ascending order.
-    DM_dist_cc = np.sqrt(np.sum(DM_pos_cc**2, axis=1))
+    DM_dist = np.sqrt(np.sum(DM_cc**2, axis=1))
 
     # Ascending order indices.
-    ind = DM_dist_cc.argsort()
+    ind = DM_dist.argsort()
 
     # Truncate DM positions depending on distance to cc.
-    DM_pos_cc_sort = DM_pos_cc[ind]
+    DM_pos_sort = DM_cc[ind]
+    DM_dist_sort = DM_dist[ind]
 
     if grav_range is None:
-        DM_pos_inRange = DM_pos_cc_sort
+        DM_pos_inRange = DM_pos_sort
+        DM_dist_inRange = DM_dist_sort
     else:
-        DM_pos_inRange = DM_pos_cc_sort[DM_dist_cc[ind] <= grav_range]
+        DM_pos_inRange = DM_pos_sort[DM_dist_sort <= grav_range]
+        DM_dist_inRange = DM_dist_sort[DM_dist_sort <= grav_range]
+
+    # Adjust the distances array to make it compatible with DM positions array.
+    DM_dist_inRange_sync = DM_dist_inRange.reshape(len(DM_dist_inRange),1)
+    DM_dist_inRange_rep = np.repeat(DM_dist_inRange_sync, 3, axis=1)
 
     # print(f'{len(DM_pos_trunc)} DM particles inside range')
 
     ### Calculate superposition gravity.
     pre = G*m_DM
-    denom = np.power(np.sum((cell_coords-DM_pos_inRange)**2), 3./2.)
-    derivative = pre*np.sum((cell_coords-DM_pos_inRange)/denom, axis=0)
+    quotient = (cell_coords-DM_pos_inRange)/(DM_dist_inRange_rep**3)
+    derivative = pre*np.sum(quotient, axis=0)
 
     #NOTE: Minus sign, s.t. velocity changes correctly (see notes).
     return np.asarray(-derivative, dtype=np.float64)

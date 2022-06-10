@@ -2,6 +2,7 @@
 ### Imports ###
 ###############
 import sys, os
+from sys import getsizeof
 from datetime import datetime
 import time
 import glob
@@ -51,8 +52,8 @@ SEED = 0
 ### Local Folders ###
 #####################
 #! Uncomment correct path.
-# SIM_DATA = '/home/fabian/ownCloud/sim_data'  # for UvA PC
-SIM_DATA = '/home/fpc/SURFdrive/sim_data'  # for laptop
+SIM_DATA = '/home/fabian/ownCloud/sim_data'  # for UvA PC
+# SIM_DATA = '/home/fpc/SURFdrive/sim_data'  # for laptop
 
 
 
@@ -227,14 +228,17 @@ X_SUN = np.array([8.5, 0., 0.])
 
 # Available halos.
 MW_HALO = True
-VC_HALO = True
+VC_HALO = False
 AG_HALO = False
 
 METHOD = 'P'  # 'P' for momentum for sim mass, 'V' for total velocity range.
 SOLVER = 'RK23'
 
-# Discrete simulation parameters.
+
+######################################
+### Discrete simulation parameters ###
+######################################
 GRID_L = Rvir_MW
-GRID_S = 50*kpc
+GRID_S = 100*kpc
 DM_SIM_MASS = 11502999*Msun
 GRAV_RANGE = None
