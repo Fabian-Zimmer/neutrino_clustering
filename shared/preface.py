@@ -52,8 +52,8 @@ SEED = 0
 ### Local Folders ###
 #####################
 #! Uncomment correct path.
-SIM_DATA = '/home/fabian/ownCloud/sim_data'  # for UvA PC
-# SIM_DATA = '/home/fpc/SURFdrive/sim_data'  # for laptop
+# SIM_DATA = '/home/fabian/ownCloud/sim_data'  # for UvA PC
+SIM_DATA = '/home/fpc/SURFdrive/sim_data'  # for laptop
 
 
 
