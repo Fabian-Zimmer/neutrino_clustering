@@ -247,7 +247,6 @@ def grid_3D(l, s):
     return cent_coordPairs3D
 
 
-# @nb.njit
 def cell_gravity(cell_coords, DM_coords, grav_range, m_DM):
     
     # Center all DM positions w.r.t. cell center.
@@ -284,6 +283,45 @@ def cell_gravity(cell_coords, DM_coords, grav_range, m_DM):
     #NOTE: Minus sign, s.t. velocity changes correctly (see notes).
     return np.asarray(-derivative, dtype=np.float64)
 
+
+def cell_gravity_3D(cell_coords, DM_coords, grav_range, m_DM):
+    
+    # Center all DM positions w.r.t. cell center.
+    DM_cc = DM_coords*kpc - cell_coords
+
+    # Calculate distances of DM to cc.
+    DM_dist = np.sqrt(np.sum(DM_cc**2, axis=2))
+
+    # Ascending order indices.
+    ind = DM_dist.argsort(axis=1)
+    ind_3D = np.expand_dims(ind, axis=2)
+    ind_3D = np.repeat(ind_3D, 3, axis=2)
+
+    # Sort DM positions according to dist.
+    DM_pos_sort = np.take_along_axis(DM_cc, ind_3D, axis=1)
+    DM_dist_sort = np.take_along_axis(DM_dist, ind, axis=1)
+
+    # Truncate DM positions depending on distance to cc.
+    if grav_range is None:
+        DM_pos_inRange = DM_pos_sort
+        DM_dist_inRange = DM_dist_sort
+    else:
+        #note: untested
+        DM_pos_inRange = DM_pos_sort[DM_dist_sort <= grav_range]
+        DM_dist_inRange = DM_dist_sort[DM_dist_sort <= grav_range]
+
+    # Adjust the distances array to make it compatible with DM positions array.
+    DM_dist_inRange_3D = np.expand_dims(DM_dist_inRange, axis=2)
+    DM_dist_inRange_sync = np.repeat(DM_dist_inRange_3D, 3, axis=2)
+
+    ### Calculate superposition gravity.
+    pre = G*m_DM
+    quotient = (cell_coords-DM_pos_inRange)/(DM_dist_inRange_sync**3)
+    derivative = pre*np.sum(quotient, axis=1)
+
+    #note: Minus sign, s.t. velocity changes correctly (see notes).
+    return np.asarray(-derivative, dtype=np.float64)
+    
 
 def load_derivative_grid(z):
 
