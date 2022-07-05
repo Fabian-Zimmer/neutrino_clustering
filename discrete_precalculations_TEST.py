@@ -5,7 +5,7 @@ start = time.perf_counter()
 
 ### Do the following for all snapshots:
 
-## See SpaceCubes.ipynb cells for each step.
+## See CubeSpace.ipynb cells for each step.
 
 # 1. Read snapshot.
 folder = SIM_DATA

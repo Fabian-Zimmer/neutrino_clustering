@@ -7,7 +7,7 @@ def EOMs(s_val, y):
     # Initialize vector.
     x_i, u_i = np.reshape(y, (2,3))
 
-    #! Switch to numerical reality here.
+    # Switch to numerical reality here.
     x_i *= kpc
     u_i *= (kpc/s)
 
@@ -15,21 +15,21 @@ def EOMs(s_val, y):
     z = np.interp(s_val, S_STEPS, ZEDS)
 
     # Find which (pre-calculated) derivative grid to use at current z.
-    Psi_grid = fct.load_derivative_grid(z)
-    pos_grid = fct.load_cell_coordinates(z)
+    dPsi_grid = fct.load_grid(z, 'derivatives')
+    cell_grid = fct.load_grid(z, 'positions')
 
     # Find gradient at neutrino position, i.e. for corresponding cell.
-    cell_idx = fct.nu_in_which_cell(x_i, pos_grid)
+    cell_idx = fct.nu_in_which_cell(x_i, cell_grid)
 
     # Get derivative of cell.
-    grad_tot = Psi_grid[cell_idx,:]
+    grad_tot = dPsi_grid[cell_idx,:]
     
-    #! Switch to physical reality here.
+    # Switch to physical reality here.
     grad_tot /= (kpc/s**2)
     x_i /= kpc
     u_i /= (kpc/s)
 
-
+    # Hamilton eqns. for integration.
     dyds = TIME_FLOW * np.array([
         u_i, 1./(1.+z)**2 * grad_tot
     ])
@@ -77,7 +77,7 @@ if __name__ == '__main__':
     # Print out all relevant parameters for simulation.
     print(
         '***Running simulation*** \n',
-        f'neutrinos={NUS} ; method=SpaceCubes ; CPUs={CPUs}'
+        f'neutrinos={NUS} ; method=CubeSpace ; CPUs={CPUs}'
     )
 
     # Test 1 neutrino only.
@@ -94,7 +94,7 @@ if __name__ == '__main__':
     nus = np.array([np.load(f'neutrino_vectors/nu_{Nr+1}.npy') for Nr in Ns])
     
     np.save(
-        f'neutrino_vectors/nus_{NUS}_SpaceCubes.npy',
+        f'neutrino_vectors/nus_{NUS}_CubeSpace.npy',
         nus
         )
     

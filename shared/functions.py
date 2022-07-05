@@ -135,14 +135,16 @@ def R_vir_fct(z, M_vir):
 #############################################
 ### Functions used in DISCRETE simulation ###
 #############################################
-def read_DM_positions_randomHalo(which_halos, mass_select):
+def read_DM_positions_randomHalo(
+    which_halos, mass_select, mass_range=0.2, snap_num='0036'
+    ):
 
     # Open data files.
     folder = SIM_DATA
-    snaps = h5py.File(f'{folder}/snapshot_0036.hdf5')
-    group = h5py.File(f'{folder}/subhalo_0036.catalog_groups')
-    parts = h5py.File(f'{folder}/subhalo_0036.catalog_particles')
-    props = h5py.File(f'{folder}/subhalo_0036.properties')
+    snaps = h5py.File(f'{folder}/snapshot_{snap_num}.hdf5')
+    group = h5py.File(f'{folder}/subhalo_{snap_num}.catalog_groups')
+    parts = h5py.File(f'{folder}/subhalo_{snap_num}.catalog_particles')
+    props = h5py.File(f'{folder}/subhalo_{snap_num}.properties')
 
     ### Properties of DM particles.
 
@@ -181,7 +183,7 @@ def read_DM_positions_randomHalo(which_halos, mass_select):
 
     # Select halos based on exponent, i.e. mass_select input parameter.
     select_halos = np.where(
-        (m200c >= mass_select-0.2) & (m200c <= mass_select+0.2)
+        (m200c >= mass_select-mass_range) & (m200c <= mass_select+mass_range)
     )[0]
 
 
@@ -284,7 +286,7 @@ def cell_gravity(cell_coords, DM_coords, grav_range, m_DM):
     return np.asarray(-derivative, dtype=np.float64)
 
 
-def cell_gravity_3D(cell_coords, DM_coords, grav_range, m_DM):
+def cell_gravity_3D(cell_coords, DM_coords, grav_range, m_DM, snap_num='X'):
     
     # Center all DM positions w.r.t. cell center.
     DM_cc = DM_coords*kpc - cell_coords
@@ -320,39 +322,26 @@ def cell_gravity_3D(cell_coords, DM_coords, grav_range, m_DM):
     derivative = pre*np.sum(quotient, axis=1)
 
     #note: Minus sign, s.t. velocity changes correctly (see notes).
-    return np.asarray(-derivative, dtype=np.float64)
+    dPsi_grid = np.asarray(-derivative, dtype=np.float64)
+
+    np.save(f'CubeSpace/dPsi_grid_snapsnot_{snap_num}', dPsi_grid)
     
 
-def load_derivative_grid(z):
+def load_grid(z, which:str):
 
-    '''
     # ID corresponding to current z.
-    idx = np.abs(Z_SNAPSHOTS - z).argmin()
+    idx = np.abs(ZEDS_SNAPSHOTS - z).argmin()
+    snap = NUMS_SNAPSHOTS[idx]
 
-    # Load file with derivative grid of ID.
-    dPsi_grid = np.load(f'~/sim_data/derivative_grid_{idx}')
-    '''
+    if which == 'derivatives':
+        # Load file with derivative grid of ID.
+        grid = np.load(f'{os.getcwd()}/CubeSpace/dPsi_grid_snapsnot_{snap}.npy')
 
-    #NOTE: for now while testing
-    dPsi_grid = np.load(f'{os.getcwd()}/sim_data/dPsi_grid.npy')
+    elif which == 'positions':
+        # Load file with position grid of ID.
+        grid = np.load(f'{os.getcwd()}/CubeSpace/cell_grid_snapsnot_{snap}.npy')
 
-    return dPsi_grid
-    
-
-def load_cell_coordinates(z):
-
-    '''
-    # ID corresponding to current z.
-    idx = np.abs(Z_SNAPSHOTS - z).argmin()
-
-    # Load file with position grid of ID.
-    cell_coords = np.load(f'~/sim_data/position_grid_{idx}')
-    '''
-
-    #NOTE: for now while testing
-    cell_coords = np.load(f'{os.getcwd()}/sim_data/cell_coords.npy')
-
-    return cell_coords
+    return grid
 
 
 def nu_in_which_cell(nu_coords, cell_coords):
@@ -384,7 +373,7 @@ def load_u_sim(nr_of_nus, halos='MW', discrete=False):
     """Loads neutrino velocities of simulation."""
 
     if discrete:
-        sim = np.load(f'neutrino_vectors/nus_{nr_of_nus}_SpaceCubes.npy')
+        sim = np.load(f'neutrino_vectors/nus_{nr_of_nus}_CubeSpace.npy')
         u_all = sim[:,:,3:6]
 
     else:
