@@ -227,17 +227,22 @@ def read_DM_positions_randomHalo(
     )
 
 
-def grid_3D(l, s):
+def grid_3D(l, s, origin_coords=[0.,0.,0.,]):
+    """
+    Generate 3D cell center coordinate grid (built around origin_coords) 
+    extending from center until l in all 3 axes, spaced apart by s.
+    If l=s then 8 cells will be generated (used for subdividing cell into 8).
+    """
 
     # Generate edges of 3D grid.
     x, y, z = np.mgrid[-l:l+0.1:s, -l:l+0.1:s, -l:l+0.1:s]
-    
+
     # Calculate centers of each axis.
     x_centers = (x[1:,...] + x[:-1,...])/2.
     y_centers = (y[:,1:,:] + y[:,:-1,:])/2.
     z_centers = (z[...,1:] + z[...,:-1])/2.
 
-    # Create center coord.-pairs., truncate redundant points.
+    # Create center coord.-pairs. and truncating outermost "layer".
     centers3D = np.array([
         x_centers[:,:-1,:-1], 
         y_centers[:-1,:,:-1], 
@@ -245,6 +250,9 @@ def grid_3D(l, s):
     ])
 
     cent_coordPairs3D = centers3D.reshape(3,-1).T 
+
+    # Shift center of creation from (0,0,0) to other coords.
+    cent_coordPairs3D += origin_coords
 
     return cent_coordPairs3D
 

@@ -7,6 +7,8 @@ from datetime import datetime
 import time
 import glob
 import random
+import gc
+import contextlib
 
 # arrays and data packages
 import numpy as np
