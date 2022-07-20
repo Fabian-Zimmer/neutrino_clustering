@@ -1,6 +1,10 @@
 from shared.preface import *
 import shared.functions as fct
 
+
+#! outdated: cell gravity now calculated with broadcast.
+
+
 start = time.perf_counter()
 
 ### Do the following for all snapshots:
