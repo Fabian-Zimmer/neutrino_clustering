@@ -235,7 +235,8 @@ def grid_3D(l, s, origin_coords=[0.,0.,0.,]):
     """
 
     # Generate edges of 3D grid.
-    x, y, z = np.mgrid[-l:l+0.1:s, -l:l+0.1:s, -l:l+0.1:s]
+    l_eps = l/10.
+    x, y, z = np.mgrid[-l:l+l_eps:s, -l:l+l_eps:s, -l:l+l_eps:s]
 
     # Calculate centers of each axis.
     x_centers = (x[1:,...] + x[:-1,...])/2.
