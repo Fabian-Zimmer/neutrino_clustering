@@ -95,7 +95,7 @@ if __name__ == '__main__':
     # '''
     # Run simulation on multiple cores.
     with ProcessPoolExecutor(CPUs) as ex:
-        ex.map(backtrack_1_neutrino, y0_Nr)  
+        ex.map(backtrack_1_neutrino, y0_Nr[500:])  
 
 
     # Compactify all neutrino vectors into 1 file.
