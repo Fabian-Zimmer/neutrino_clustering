@@ -59,7 +59,7 @@ def backtrack_1_neutrino(y0_Nr):
         )
     
     np.save(f'neutrino_vectors/nu_{int(Nr)}.npy', np.array(sol.y.T))
-
+    gc.collect()
 
 if __name__ == '__main__':
     start = time.perf_counter()
