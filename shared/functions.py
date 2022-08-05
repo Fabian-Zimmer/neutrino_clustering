@@ -284,8 +284,6 @@ def cell_gravity(cell_coords, DM_coords, grav_range, m_DM):
     DM_dist_inRange_sync = DM_dist_inRange.reshape(len(DM_dist_inRange),1)
     DM_dist_inRange_rep = np.repeat(DM_dist_inRange_sync, 3, axis=1)
 
-    # print(f'{len(DM_pos_trunc)} DM particles inside range')
-
     ### Calculate superposition gravity.
     pre = G*m_DM
     quotient = (cell_coords-DM_pos_inRange)/(DM_dist_inRange_rep**3)
@@ -417,7 +415,12 @@ def u_to_p_eV(u_sim, m_target):
         mag_sim = np.sqrt(np.sum(u_sim**2, axis=1))
 
     # From velocity (magnitude) in kpc/s to momentum in eV.
-    p_sim = mag_sim*(kpc/s) * NU_MASS
+
+    # p_sim = mag_sim*(kpc/s) * NU_MASS #! only for non-rel neutrinos...
+
+    #! The correct treatment is:
+    gamma_L = 1/np.sqrt(1-mag_sim**2)
+    p_sim = gamma_L * mag_sim*(kpc/s) * NU_MASS
 
     # From p_sim to p_target.
     p_target = p_sim * m_target/NU_MASS
@@ -452,7 +455,12 @@ def draw_ui(phi_points, theta_points, method):
 
     if method == 'P':
         # Convert momenta to initial velocity magnitudes, in units of [kpc/s].
-        v_kpc = MOMENTA / NU_MASS / (kpc/s)
+        
+        # v_kpc = MOMENTA / NU_MASS / (kpc/s) #! only for non-rel neutrinos...
+        
+        #! The correct treatment is:
+        v_kpc = 1/np.sqrt(NU_MASS**2/MOMENTA**2 + 1) / (kpc/s)
+
     elif method == 'V':
         # Run simulation covering total velocity range for all masses.
         v_kpc = VELOCITIES_KPC
