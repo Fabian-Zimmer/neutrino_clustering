@@ -54,8 +54,8 @@ SEED = 0
 ### Local Folders ###
 #####################
 #! Uncomment correct path.
-# SIM_DATA = '/home/fabian/ownCloud/sim_data'  # for UvA PC
-SIM_DATA = '/home/fpc/SURFdrive/sim_data'  # for laptop
+SIM_DATA = '/home/fabian/ownCloud/sim_data'  # for UvA PC
+# SIM_DATA = '/home/fpc/SURFdrive/sim_data'  # for laptop
 
 
 
@@ -230,11 +230,11 @@ X_SUN = np.array([8.5, 0., 0.])
 
 # Available halos.
 MW_HALO = True
-VC_HALO = False
+VC_HALO = True
 AG_HALO = False
 
 METHOD = 'P'  # 'P' for momentum for sim mass, 'V' for total velocity range.
-SOLVER = 'RK23'
+SOLVER = 'RK45'
 
 
 ######################################

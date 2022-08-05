@@ -81,7 +81,7 @@ if __name__ == '__main__':
 
 
     halos = 'MW'*MW_HALO + '+VC'*VC_HALO + '+AG'*AG_HALO
-    CPUs = 32
+    CPUs = 6
 
     # Print out all relevant parameters for simulation.
     print(
@@ -95,7 +95,7 @@ if __name__ == '__main__':
     # '''
     # Run simulation on multiple cores.
     with ProcessPoolExecutor(CPUs) as ex:
-        ex.map(backtrack_1_neutrino, y0_Nr[start?:end?])  
+        ex.map(backtrack_1_neutrino, y0_Nr)  
 
 
     # Compactify all neutrino vectors into 1 file.
