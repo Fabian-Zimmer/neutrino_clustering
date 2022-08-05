@@ -86,7 +86,7 @@ if __name__ == '__main__':
     # Print out all relevant parameters for simulation.
     print(
         '***Running simulation*** \n',
-        f'neutrinos={NUS} ; method={METHOD} ; halos={halos} ; CPUs={CPUs}'
+        f'neutrinos={NUS} ; method={METHOD} ; solver={SOLVER} ; halos={halos} ; CPUs={CPUs}'
     )
 
     # Test 1 neutrino only.
