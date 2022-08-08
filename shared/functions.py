@@ -422,6 +422,8 @@ def u_to_p_eV(u_sim, m_target):
     gamma_L = 1/np.sqrt(1-mag_sim**2)
     p_sim = gamma_L * mag_sim*(kpc/s) * NU_MASS
 
+    #note: as max. velocity is ~20% of c, the difference is not significant!
+
     # From p_sim to p_target.
     p_target = p_sim * m_target/NU_MASS
 
@@ -507,28 +509,6 @@ def s_of_z(z):
     s_of_z, _ = quad(s_integrand, 0., z)
 
     return np.float64(s_of_z)
-
-
-@nb.njit
-def grav_pot(x_i, z, rho_0, M_vir):
-
-    # Compute values dependent on redshift.
-    r_vir = R_vir_fct(z, M_vir)
-    r_s = r_vir / c_vir(z, M_vir)
-    
-    # Distance from halo center with current coords. x_i.
-    r = np.sqrt(np.sum(x_i**2))
-
-    m = np.minimum(r, r_vir)
-    M = np.maximum(r, r_vir)
-
-    # Gravitational potential in compact notation with m and M.
-    prefactor = -4.*Pi*G*rho_0*r_s**2
-    term1 = np.log(1. + (m/r_s)) / (r/r_s)
-    term2 = (r_vir/M) / (1. + (r_vir/r_s))
-    potential = prefactor * (term1 - term2)
-
-    return np.asarray(potential, dtype=np.float64)
 
 
 @nb.njit
@@ -639,13 +619,35 @@ def dPsi_dxi_NFW(x_i, z, rho_0, M_vir, R_vir, R_s, halo:str):
     return np.asarray(-derivative, dtype=np.float64)
 
 
-def escape_momentum(x_i, z, rho_0, M_vir, masses):
+@nb.njit
+def grav_pot(x_i, z, rho_0, M_vir, R_vir, R_s):
+
+    # Compute values dependent on redshift.
+    r_vir = R_vir_fct(z, M_vir)
+    r_s = r_vir / c_vir(z, M_vir, R_vir, R_s)
+    
+    # Distance from halo center with current coords. x_i.
+    r = np.sqrt(np.sum(x_i**2))
+
+    m = np.minimum(r, r_vir)
+    M = np.maximum(r, r_vir)
+
+    # Gravitational potential in compact notation with m and M.
+    prefactor = -4.*Pi*G*rho_0*r_s**2
+    term1 = np.log(1. + (m/r_s)) / (r/r_s)
+    term2 = (r_vir/M) / (1. + (r_vir/r_s))
+    potential = prefactor * (term1 - term2)
+
+    return np.asarray(potential, dtype=np.float64)
+
+
+def escape_momentum(x_i, z, rho_0, M_vir, R_vir, R_s, m):
 
     # Gravitational potential at position x_i.
-    grav = grav_pot(x_i, z, rho_0, M_vir)
+    grav = grav_pot(x_i, z, rho_0, M_vir, R_vir, R_s)
 
     # Escape momentum formula from Ringwald & Wong (2004).
-    p_esc = np.sqrt(2*np.abs(grav)) * masses
+    p_esc = np.sqrt(2*np.abs(grav)) * m/NU_MASS
     y_esc = p_esc/T_CNB
 
     return p_esc, y_esc
