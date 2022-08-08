@@ -45,6 +45,10 @@ CMAP = cc.cm.CET_CBL2
 CMAP_RESIDUALS = cc.cm.bky
 import imageio
 
+# simulation
+
+
+
 # Fix random seeds.
 SEED = 0
 
