@@ -234,7 +234,7 @@ VC_HALO = True
 AG_HALO = False
 
 METHOD = 'P'  # 'P' for momentum for sim mass, 'V' for total velocity range.
-SOLVER = 'RK45'
+SOLVER = 'RK23'
 
 
 ######################################
