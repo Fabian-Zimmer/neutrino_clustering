@@ -15,8 +15,8 @@ def EOMs(s_val, y):
     z = np.interp(s_val, S_STEPS, ZEDS)
 
     # Find which (pre-calculated) derivative grid to use at current z.
-    dPsi_grid = fct.load_grid(z, 'derivatives')
-    cell_grid = fct.load_grid(z, 'positions')
+    dPsi_grid = fct.load_grid(z, 'L006N188', 'derivatives')
+    cell_grid = fct.load_grid(z, 'L006N188', 'positions')
 
     # Find gradient at neutrino position, i.e. for corresponding cell.
     cell_idx = fct.nu_in_which_cell(x_i, cell_grid)
@@ -49,7 +49,7 @@ def backtrack_1_neutrino(y0_Nr):
         y0=y0, method=SOLVER, vectorized=True
         )
     
-    np.save(f'neutrino_vectors/nu_{int(Nr)}.npy', np.array(sol.y.T))
+    np.save(f'neutrino_vectors/nu_{int(Nr)}_CubeSpace.npy', np.array(sol.y.T))
 
 
 
@@ -77,7 +77,7 @@ if __name__ == '__main__':
     # Print out all relevant parameters for simulation.
     print(
         '***Running simulation*** \n',
-        f'neutrinos={NUS} ; method=CubeSpace ; CPUs={CPUs}'
+        f'neutrinos={NUS} ; method=CubeSpace ; CPUs={CPUs} ; solver={SOLVER}'
     )
 
     # Test 1 neutrino only.
@@ -91,14 +91,14 @@ if __name__ == '__main__':
 
     # Compactify all neutrino vectors into 1 file.
     Ns = np.arange(NUS, dtype=int)  # Nr. of neutrinos
-    nus = np.array([np.load(f'neutrino_vectors/nu_{Nr+1}.npy') for Nr in Ns])
+    nus = np.array([np.load(f'neutrino_vectors/nu_{Nr+1}_CubeSpace.npy') for Nr in Ns])
     
     np.save(
         f'neutrino_vectors/nus_{NUS}_CubeSpace.npy',
         nus
         )
     
-    fct.delete_temp_data('neutrino_vectors/nu_*.npy')    
+    fct.delete_temp_data('neutrino_vectors/nu_*CubeSpace.npy')    
     # '''
 
     seconds = time.perf_counter()-start

@@ -512,7 +512,7 @@ def cell_gravity_3D(cell_coords, DM_coords, grav_range, m_DM, snap_num):
     np.save(f'CubeSpace/dPsi_grid_snapshot_{snap_num}', dPsi_grid)
     
 
-def load_grid(z, which:str):
+def load_grid(z, sim, which):
 
     # ID corresponding to current z.
     idx = np.abs(ZEDS_SNAPSHOTS - z).argmin()
@@ -520,11 +520,15 @@ def load_grid(z, which:str):
 
     if which == 'derivatives':
         # Load file with derivative grid of ID.
-        grid = np.load(f'{os.getcwd()}/CubeSpace/dPsi_grid_snapsnot_{snap}.npy')
+        grid = np.load(
+            f'{os.getcwd()}/CubeSpace/dPsi_grid_snapshot_{snap}.npy'
+        )
 
     elif which == 'positions':
         # Load file with position grid of ID.
-        grid = np.load(f'{os.getcwd()}/CubeSpace/cell_grid_snapsnot_{snap}.npy')
+        grid = np.load(
+            f'{os.getcwd()}/CubeSpace/adapted_cc_{sim}_snapshot_{snap}.npy'
+        )
 
     return grid
 
@@ -532,7 +536,7 @@ def load_grid(z, which:str):
 def nu_in_which_cell(nu_coords, cell_coords):
 
     # For now, just subtract nu_coords from all cell_coords, then take min.
-    dist = np.sqrt(np.sum((np.abs(cell_coords-nu_coords)**2), axis=1))
+    dist = np.sqrt(np.sum((np.abs(cell_coords-nu_coords)**2), axis=2))
     cell_idx = dist.argmin()
 
     return cell_idx

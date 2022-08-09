@@ -13,15 +13,16 @@ start = time.perf_counter()
 tree_path = '/home/fabian/ownCloud/snellius/MergerTree/Tree_data_Centrals_MergerTree_test_93_97.hdf5'
 
 with h5py.File(tree_path) as tree:
-    # Choice of index 2 ("3rd halo") in snapshot_0036 made by visual inspection.
-    masses = tree['Assembly_history/Mass'][0,:]
+    # Choice of index in snapshot_0036.
+    choice = 2  #note: 0 or 1 overloads memory, too 
+    masses = tree['Assembly_history/Mass'][choice,:]
     zeds = tree['Assembly_history/Redshift']
 
     # Initial mass of traced halo.
     m0 = f'{masses[0]:.2e}'
 
     # Progenitor index list.
-    prog_idx = tree['Assembly_history/Progenitor_index'][2,:]
+    prog_idx = tree['Assembly_history/Progenitor_index'][choice,:]
     prog_idx = np.array(np.expand_dims(prog_idx, axis=1), dtype=int)
 
 
@@ -66,7 +67,6 @@ for snap, proj in zip(NUMS_SNAPSHOTS[::-1], prog_idx):
     dPsi_grid /= (kpc/s**2) 
     mags = np.sqrt(np.sum(dPsi_grid**2, axis=1))
     print(mags[0])
-
 
 
 seconds = time.perf_counter()-start
