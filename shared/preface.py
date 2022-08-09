@@ -50,7 +50,7 @@ import imageio
 
 
 # Fix random seeds.
-SEED = 0
+SEED = 1
 
 
 
@@ -58,8 +58,8 @@ SEED = 0
 ### Local Folders ###
 #####################
 #! Uncomment correct path.
-SIM_DATA = '/home/fabian/ownCloud/sim_data'  # for UvA PC
-# SIM_DATA = '/home/fpc/SURFdrive/sim_data'  # for laptop
+SIM_DATA = '/home/fabian/ownCloud/snellius/L006N188'  # for UvA PC
+# SIM_DATA = '/home/fpc/SURFdrive/snellius/L006N188'  # for laptop
 
 
 

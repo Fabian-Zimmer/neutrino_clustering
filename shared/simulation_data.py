@@ -3,8 +3,12 @@ import unyt
 import glob
 import os
 import h5py
-from .utilities import constants
-from .halo_catalogue import HaloCatalogue
+from shared.halo_catalogue import HaloCatalogue
+
+Camila_kpc = 3.08567758e21
+Camila_Msun = 1.9891e33
+Camila_yr = 3.1556926e7
+Camila_Myr = Camila_yr * 1e6
 
 from swiftsimio import load
 
@@ -54,25 +58,25 @@ class SimInfo:
         # Conversion from internal units to kpc
         self.to_kpc_units = (
             self.snapshot.metadata.internal_code_units["Unit length in cgs (U_L)"][0]
-            / constants.kpc
+            / Camila_kpc
         )
 
         # Conversion from internal units to Msun
         self.to_Msun_units = (
             self.snapshot.metadata.internal_code_units["Unit mass in cgs (U_M)"][0]
-            / constants.Msun
+            / Camila_Msun
         )
 
         # Conversion from internal units to Myr
         self.to_Myr_units = (
             self.snapshot.metadata.internal_code_units["Unit time in cgs (U_t)"][0]
-            / constants.Myr
+            / Camila_Myr
         )
 
         # Conversion from internal units to yr
         self.to_yr_units = (
             self.snapshot.metadata.internal_code_units["Unit time in cgs (U_t)"][0]
-            / constants.yr
+            / Camila_yr
         )
 
         # Box size of the simulation in kpc

@@ -136,7 +136,7 @@ def R_vir_fct(z, M_vir):
 ### Functions used in DISCRETE simulation ###
 #############################################
 def read_DM_positions_randomHalo(
-    which_halos, mass_select, mass_range=0.2, snap_num='0036'
+    which_halos, mass_select, mass_range=0.2, snap_num='0036', random=True
     ):
 
     # Open data files.
@@ -196,10 +196,15 @@ def read_DM_positions_randomHalo(
         select = np.where(subtype[select_halos] == 10)[0]
         select_halos = select_halos[select]
 
-    # Select 1 random halo.
-    np.random.seed(SEED)
-    select_random = np.random.randint(len(select_halos) - 1, size=(1))
-    rand_halo = select_halos[select_random]
+
+    if random:
+        # Select 1 random halo.
+        np.random.seed(SEED)
+        select_random = np.random.randint(len(select_halos) - 1, size=(1))
+        rand_halo = select_halos[select_random]
+    else: 
+        # Select halo from merger_tree analysis.
+        
 
     # Grab the start position in the particles file to read from
     halo_start_pos = group["Offset"][rand_halo][0]

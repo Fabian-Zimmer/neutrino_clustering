@@ -8,4 +8,6 @@
         "editor.wordWrap": "wordWrapColumn",
         "editor.wordWrapColumn": 80,
     },
+    "editor.showUnused": true,
+    "javascript.validate.enable": true,
 }
