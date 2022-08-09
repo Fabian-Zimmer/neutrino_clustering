@@ -16,7 +16,7 @@ folder = SIM_DATA
 snaps = h5py.File(f'{folder}/snapshot_0036.hdf5')
 
 # 2. Create file with all DM particle positions, then load it.
-fct.read_DM_positions_randomHalo(which_halos='halos', mass_select=12)
+fct.read_DM_positions(which_halos='halos', mass_select=12)
 DM_pos = np.load('sim_data/DM_positions_halos_M12.npy')
 
 # 3. Construct spatial grid based on DM distribution (uniform for now).
