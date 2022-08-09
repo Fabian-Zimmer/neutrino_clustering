@@ -14,7 +14,7 @@ tree_path = '/home/fabian/ownCloud/snellius/MergerTree/Tree_data_Centrals_Merger
 
 with h5py.File(tree_path) as tree:
     # Choice of index 2 ("3rd halo") in snapshot_0036 made by visual inspection.
-    masses = tree['Assembly_history/Mass'][2,:]
+    masses = tree['Assembly_history/Mass'][0,:]
     zeds = tree['Assembly_history/Redshift']
 
     # Initial mass of traced halo.

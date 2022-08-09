@@ -267,8 +267,7 @@ def grid_3D(l, s, origin_coords=[0.,0.,0.,]):
 
 
 def cell_division(
-    init_cc, DM_pos, parent_GRID_S, DM_lim, stable_cc,
-    sim='L006N188', snap_num='0036'
+    init_cc, DM_pos, parent_GRID_S, DM_lim, stable_cc, sim, snap_num
     ):
     """
     Algorithm for fine-graining a given initial (uniform and rough) grid, which contains the coords of the center of the cells.
@@ -422,12 +421,18 @@ def cell_division(
             stable_cc_so_far = no_parents_cc
 
         #! Repeat the cell division process.
+        # Constant values.
+        sim_const = sim
+        snap_const = snap_num
+
         cell_division(
             init_cc       = sub8_coords,
             DM_pos        = DM_raw8, 
             parent_GRID_S = sub8_GRID_S,  
             DM_lim        = DM_lim_copy,
-            stable_cc     = stable_cc_so_far
+            stable_cc     = stable_cc_so_far,
+            sim           = sim_const,
+            snap_num      = snap_const
         )
 
 
@@ -466,7 +471,7 @@ def cell_gravity(cell_coords, DM_coords, grav_range, m_DM):
     return np.asarray(-derivative, dtype=np.float64)
 
 
-def cell_gravity_3D(cell_coords, DM_coords, grav_range, m_DM, snap_num='X'):
+def cell_gravity_3D(cell_coords, DM_coords, grav_range, m_DM, snap_num):
     
     # Center all DM positions w.r.t. cell center.
     DM_cc = DM_coords*kpc - cell_coords
