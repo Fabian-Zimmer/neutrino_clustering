@@ -59,7 +59,7 @@ def backtrack_1_neutrino(y0_Nr):
         )
     
     np.save(f'neutrino_vectors/nu_{int(Nr)}.npy', np.array(sol.y.T))
-    gc.collect()
+
 
 if __name__ == '__main__':
     start = time.perf_counter()
@@ -90,12 +90,23 @@ if __name__ == '__main__':
     )
 
     # Test 1 neutrino only.
-    # backtrack_1_neutrino(y0_Nr[1])
+    # backtrack_1_neutrino(y0_Nr[0])
 
     # '''
     # Run simulation on multiple cores.
-    with ProcessPoolExecutor(CPUs) as ex:
-        ex.map(backtrack_1_neutrino, y0_Nr[500:])  
+
+    batch_size = 100
+    ticks = np.arange(0, NUS/batch_size, dtype=int)
+    for i in ticks:
+
+        id_min = (i*batch_size) + 1
+        id_max = ((i+1)*batch_size) + 1
+        print(f'From {id_min} to and incl. {id_max-1}')
+
+        with ProcessPoolExecutor(CPUs) as ex:
+            ex.map(backtrack_1_neutrino, y0_Nr[id_min:id_max])
+
+        print(f'Batch {i+1}/{len(ticks)} done!')
 
 
     # Compactify all neutrino vectors into 1 file.
@@ -103,7 +114,7 @@ if __name__ == '__main__':
     nus = np.array([np.load(f'neutrino_vectors/nu_{Nr+1}.npy') for Nr in Ns])
     
     np.save(
-        f'neutrino_vectors/nus_{NUS}_halos_{halos}.npy',
+        f'neutrino_vectors/nus_{NUS}_halos_{halos}_{SOLVER}.npy',
         nus
         )
     

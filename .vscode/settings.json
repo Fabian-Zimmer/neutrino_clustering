@@ -10,4 +10,5 @@
     },
     "editor.showUnused": true,
     "javascript.validate.enable": true,
+    "editor.experimental.stickyScroll.enabled": true,
 }
