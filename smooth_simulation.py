@@ -89,12 +89,13 @@ if __name__ == '__main__':
         f'neutrinos={NUS} ; method={METHOD} ; solver={SOLVER} ; halos={halos} ; CPUs={CPUs}'
     )
 
+
     # Test 1 neutrino only.
     # backtrack_1_neutrino(y0_Nr[0])
 
-    # '''
-    # Run simulation on multiple cores.
 
+    # Run simulation on multiple cores, in batches.
+    #note: important for Rk45 solver, where memory of process increases alot
     batch_size = 100
     ticks = np.arange(0, NUS/batch_size, dtype=int)
     for i in ticks:
@@ -119,7 +120,6 @@ if __name__ == '__main__':
         )
     
     fct.delete_temp_data('neutrino_vectors/nu_*.npy')    
-    # '''
 
     seconds = time.perf_counter()-start
     minutes = seconds/60.

@@ -10,6 +10,7 @@ start = time.perf_counter()
 # ------------------------------- #
 
 # Path to merger_tree file.
+#note: for now this file is generated in Ch.5 cell of CubeSpace.ipynb ...
 tree_path = '/home/fabian/ownCloud/snellius/MergerTree/Tree_data_Centrals_MergerTree_test_93_97.hdf5'
 
 with h5py.File(tree_path) as tree:
