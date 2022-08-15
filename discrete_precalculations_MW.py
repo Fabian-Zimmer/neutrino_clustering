@@ -52,11 +52,11 @@ for snap, proj in zip(NUMS_SNAPSHOTS[::-1], prog_idx):
 
     DM_lim = 10000
 
-    fct.cell_division.count = -1  # initialize the recursion counter
-    fct.cell_division(
+    cell_division_count = fct.cell_division_iterative(
         init_cc, DM_pos_for_cell_division, GRID_S, DM_lim, None,
         sim=sim_ID, snap_num=snap
         )
+
     adapted_cc = np.load(f'CubeSpace/adapted_cc_{sim_ID}_snapshot_{snap}.npy')
     adapted_DM = np.repeat(DM_pos, len(adapted_cc), axis=0)
 
@@ -67,8 +67,8 @@ for snap, proj in zip(NUMS_SNAPSHOTS[::-1], prog_idx):
     # Display and check order of magnitude of gravity.
     dPsi_grid /= (kpc/s**2) 
     mags = np.sqrt(np.sum(dPsi_grid**2, axis=1))
-    print(mags[0])
 
+    print(f'snapshot {snap} : cell division rounds: {cell_division_count}')
 
 seconds = time.perf_counter()-start
 minutes = seconds/60.
