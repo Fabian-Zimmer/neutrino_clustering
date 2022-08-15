@@ -15,7 +15,7 @@ tree_path = '/home/fabian/ownCloud/snellius/MergerTree/Tree_data_Centrals_Merger
 
 with h5py.File(tree_path) as tree:
     # Choice of index in snapshot_0036.
-    choice = 2  #note: 0 or 1 overloads memory, too 
+    choice = 1  #note: 0 or 1 overloads memory
     masses = tree['Assembly_history/Mass'][choice,:]
     zeds = tree['Assembly_history/Redshift']
 
@@ -50,7 +50,7 @@ for snap, proj in zip(NUMS_SNAPSHOTS[::-1], prog_idx):
     DM_pos = np.expand_dims(DM_raw, axis=0)
     DM_pos_for_cell_division = np.repeat(DM_pos, len(init_cc), axis=0)
 
-    DM_lim = 10000
+    DM_lim = 1000
 
     cell_division_count = fct.cell_division_iterative(
         init_cc, DM_pos_for_cell_division, GRID_S, DM_lim, None,
