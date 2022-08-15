@@ -129,8 +129,7 @@ sr     = 1.                         # Steradian
 h = 0.674
 H0 = h * 100 * km/s/Mpc
 Omega_R = 9.23640e-5  # not used in simulation
-# Omega_M = 0.3111
-Omega_M = 0.2
+Omega_M = 0.3111
 Omega_L = 1.-Omega_M  # since we don't use Omega_R
 
 T_CMB = 2.72548*K
@@ -234,7 +233,7 @@ X_SUN = np.array([8.5, 0., 0.])
 
 # Available halos.
 MW_HALO = True
-VC_HALO = True
+VC_HALO = False
 AG_HALO = False
 
 METHOD = 'P'  # 'P' for momentum for sim mass, 'V' for total velocity range.

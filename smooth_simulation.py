@@ -81,7 +81,7 @@ if __name__ == '__main__':
 
 
     halos = 'MW'*MW_HALO + '+VC'*VC_HALO + '+AG'*AG_HALO
-    CPUs = 6
+    CPUs = 8
 
     # Print out all relevant parameters for simulation.
     print(
@@ -96,13 +96,16 @@ if __name__ == '__main__':
 
     # Run simulation on multiple cores, in batches.
     #note: important for Rk45 solver, where memory of process increases alot
-    batch_size = 100
+    batch_size = 1000
     ticks = np.arange(0, NUS/batch_size, dtype=int)
     for i in ticks:
 
         id_min = (i*batch_size) + 1
         id_max = ((i+1)*batch_size) + 1
         print(f'From {id_min} to and incl. {id_max-1}')
+
+        if i == 0:
+            id_min = 0
 
         with ProcessPoolExecutor(CPUs) as ex:
             ex.map(backtrack_1_neutrino, y0_Nr[id_min:id_max])
