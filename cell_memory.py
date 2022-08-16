@@ -181,7 +181,7 @@ DM_raw = np.load(
 grid = fct.grid_3D(GRID_L, GRID_S)
 init_cc = np.expand_dims(grid, axis=1)
 DM_raw = np.expand_dims(DM_raw, axis=0)
-DM_pos_for_cell_division = np.repeat(DM_raw, len(init_cc), axis=0)
+DM_pos_for_cell_division = np.repeat(DM_raw, len(init_cc), axis=0)*kpc
 
 DM_lim = 1000
 
