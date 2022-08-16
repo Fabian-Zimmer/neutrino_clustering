@@ -15,7 +15,7 @@ tree_path = '/home/fabian/ownCloud/snellius/MergerTree/Tree_data_Centrals_Merger
 
 with h5py.File(tree_path) as tree:
     # Choice of index in snapshot_0036.
-    choice = 1  #note: 0 or 1 overloads memory
+    choice = 2  #note: 0 or 1 overloads memory
     masses = tree['Assembly_history/Mass'][choice,:]
     zeds = tree['Assembly_history/Redshift']
 

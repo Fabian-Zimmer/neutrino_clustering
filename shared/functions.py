@@ -452,27 +452,26 @@ def check_grid(init_cc, DM_pos, parent_GRID_S, DM_lim):
     DM_range = parent_GRID_S/2.
 
     # Center all DM positions w.r.t. center, for all cells.
-    DM_cc = DM_pos - init_cc
+    DM_pos -= init_cc
 
     # Calculate distances of all DM to center, for all cells.
-    DM_dist = np.sqrt(np.sum(DM_cc**2, axis=2))
+    DM_dis = np.sqrt(np.sum(DM_pos**2, axis=2))
 
     # Indices to order other arrays according to DM dist in ascending order.
-    ind = DM_dist.argsort(axis=1)
-
-    # Reshape these indices for compatibility.
-    ind_3D = np.expand_dims(ind, axis=2)
-    ind_3D = np.repeat(ind_3D, 3, axis=2)
+    ind_2D = DM_dis.argsort(axis=1)
+    ind_3D = np.repeat(np.expand_dims(ind_2D, axis=2), 3, axis=2)
 
     # Sort DM arrays according to DM distance with these indices.
-    DM_cc_sort = np.take_along_axis(DM_cc, ind_3D, axis=1)
-    DM_dist_sort = np.take_along_axis(DM_dist, ind, axis=1)
+    DM_pos_sort = np.take_along_axis(DM_pos, ind_3D, axis=1)
+    DM_dis_sort = np.take_along_axis(DM_dis, ind_2D, axis=1)
+    del DM_dis, ind_2D, ind_3D
 
     # This array is a bit confusing: It has the shape (X,2) and contains pairs 
     # of indices, where the 1st entry is the cell number and the 2nd the index 
     # of a DM particle inside the given range for that cell. X then counts all 
     # DM particles inside range across all cells.
-    DM_IDs = np.argwhere(DM_dist_sort <= DM_range)
+    DM_IDs = np.argwhere(DM_dis_sort <= DM_range)
+    del DM_dis_sort
 
     # Find the index unique to each cell, up to which the DM particles should
     # be kept, while the rest is outside range and no longer relevant.
@@ -488,17 +487,18 @@ def check_grid(init_cc, DM_pos, parent_GRID_S, DM_lim):
 
         if i in DM_IDs.T[0]:
             cell_ID = np.where(max_DM_rows[:,0] == i)[0][0]
-            DM_cc_sort[i, max_DM_rows[cell_ID,1]+1:, :] = np.nan
+            DM_pos_sort[i, max_DM_rows[cell_ID,1]+1:, :] = np.nan
 
         else:
-            DM_cc_sort[i, ...] = np.nan
+            DM_pos_sort[i, ...] = np.nan
 
     # Drop "rows" common to all cells, which contain only nan values. This 
     # "maximum row" is determined by the highest value in the array, which 
     # contains the index of the row for each cell, beyond which the values are 
     # replaced by nan values.
     max_DM_rank = np.max(max_DM_rows[:,1])
-    DM_cc_compact = np.delete(DM_cc_sort, np.s_[max_DM_rank+1:], axis=1)
+    DM_cc_compact = np.delete(DM_pos_sort, np.s_[max_DM_rank+1:], axis=1)
+    del DM_pos_sort
 
     # Count the number of DM particles in each cell, after all the filtering.
     DM_count = np.count_nonzero(~np.isnan(DM_cc_compact[:,:,0]), axis=1)
@@ -507,6 +507,7 @@ def check_grid(init_cc, DM_pos, parent_GRID_S, DM_lim):
     # from the DM positions array...
     cell_cut_IDs = DM_count <= DM_lim
     DM_cc_minimal = np.delete(DM_cc_compact, cell_cut_IDs, axis=0)
+    del DM_cc_compact
     thresh = np.size(DM_cc_minimal, axis=0)
 
     return cell_cut_IDs, DM_cc_minimal, thresh
