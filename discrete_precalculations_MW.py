@@ -5,7 +5,7 @@ import shared.functions as fct
 def main():
     start = time.perf_counter()
 
-    DM_lim = 100000
+    DM_lim = 1000
     print(f'DM particle limit: {DM_lim}')
 
     # ------------------------------- #
@@ -18,7 +18,7 @@ def main():
 
     with h5py.File(tree_path) as tree:
         # Choice of index in snapshot_0036.
-        choice = 0  #note: 0 or 1 overloads memory
+        choice = 2  #note: 0 or 1 overloads memory
         masses = tree['Assembly_history/Mass'][choice,:]
         zeds = tree['Assembly_history/Redshift']
 
