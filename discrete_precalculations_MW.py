@@ -40,7 +40,7 @@ def main():
         
         # Generate files with positions of DM particles
         fct.read_DM_positions(
-            which_halos='halos', mass_select=12,  # unnecessary when giving index...
+            which_halos='halos', mass_select=12,  # outdated but necessary...
             random=False, snap_num=snap, sim=sim_ID, 
             halo_index=int(proj), init_m=m0
         )
@@ -63,14 +63,9 @@ def main():
         adapted_cc = np.load(f'CubeSpace/adapted_cc_{sim_ID}_snapshot_{snap}.npy')
         adapted_DM = np.repeat(DM_pos, len(adapted_cc), axis=0)
         fct.cell_gravity_3D(adapted_cc, adapted_DM, GRAV_RANGE, DM_SIM_MASS, snap)
-        
-        # Display and check order of magnitude of gravity.
-        # dPsi_grid = np.load(f'CubeSpace/dPsi_grid_snapshot_{snap}.npy')
-        # dPsi_grid /= (kpc/s**2) 
-        # mags = np.sqrt(np.sum(dPsi_grid**2, axis=1))
 
         print(f'snapshot {snap} : cell division rounds: {cell_division_count}')
-        break
+        
 
 
     seconds = time.perf_counter()-start

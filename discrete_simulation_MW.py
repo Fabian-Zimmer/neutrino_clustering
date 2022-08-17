@@ -7,7 +7,7 @@ def EOMs(s_val, y):
     # Initialize vector.
     x_i, u_i = np.reshape(y, (2,3))
 
-    # Switch to numerical reality here.
+    # Switch to "numerical reality" here.
     x_i *= kpc
     u_i *= (kpc/s)
 
@@ -24,7 +24,7 @@ def EOMs(s_val, y):
     # Get derivative of cell.
     grad_tot = dPsi_grid[cell_idx,:]
     
-    # Switch to physical reality here.
+    # Switch to "physical reality" here.
     grad_tot /= (kpc/s**2)
     x_i /= kpc
     u_i /= (kpc/s)

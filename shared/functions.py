@@ -671,7 +671,8 @@ def cell_gravity_3D(cell_coords, DM_pos, grav_range, m_DM, snap_num):
 
     ### Calculate superposition gravity.
     pre = G*m_DM
-    quotient = (cell_coords-DM_pos_sort)/(DM_dis_sync**3)
+    eps = 0.  #! offset to avoid very large gravity values
+    quotient = (cell_coords-DM_pos_sort)/(DM_dis_sync**3 + eps)
     del DM_pos_sort, DM_dis_sync
     derivative = pre*np.sum(quotient, axis=1)
 
