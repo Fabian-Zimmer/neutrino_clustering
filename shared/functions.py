@@ -650,6 +650,15 @@ def cell_gravity_3D(cell_coords, DM_pos, grav_range, m_DM, snap_num):
 
     # Ascending order indices.
     ind_2D = DM_dis.argsort(axis=1)
+
+    if grav_range is not None:
+        # Truncate DM in each cell, based on cell with most DM in range.
+        # (each cell should have unique truncation according to DM_dis array, 
+        # but that would make ndarray irregular, i.e. not a hyper-triangle)
+        diff = grav_range-DM_dis
+        max_ID = np.max(np.sum(diff>=0, axis=1))
+        ind_2D = ind_2D[:, :max_ID]
+
     ind_3D = np.repeat(np.expand_dims(ind_2D, axis=2), 3, axis=2)
 
     # Sort DM positions according to dist.
@@ -657,23 +666,13 @@ def cell_gravity_3D(cell_coords, DM_pos, grav_range, m_DM, snap_num):
     DM_dis_sort = np.take_along_axis(DM_dis, ind_2D, axis=1)
     del DM_dis, ind_2D, ind_3D
 
-    # Truncate DM positions depending on distance to cc.
-    if grav_range is None:
-        DM_pos_inRange = DM_pos_sort
-        DM_dis_inRange = DM_dis_sort
-    else:
-        #note: untested
-        DM_pos_inRange = DM_pos_sort[DM_dis_sort <= grav_range]
-        DM_dis_inRange = DM_dis_sort[DM_dis_sort <= grav_range]
-
     # Adjust the distances array to make it compatible with DM positions array.
-    DM_dis_inRange_3D = np.expand_dims(DM_dis_inRange, axis=2)
-    DM_dis_inRange_sync = np.repeat(DM_dis_inRange_3D, 3, axis=2)
+    DM_dis_sync = np.repeat(np.expand_dims(DM_dis_sort, axis=2), 3, axis=2)
 
     ### Calculate superposition gravity.
     pre = G*m_DM
-    quotient = (cell_coords-DM_pos_inRange)/(DM_dis_inRange_sync**3)
-    del DM_pos_inRange, DM_dis_inRange_sync
+    quotient = (cell_coords-DM_pos_sort)/(DM_dis_sync**3)
+    del DM_pos_sort, DM_dis_sync
     derivative = pre*np.sum(quotient, axis=1)
 
     #note: Minus sign, s.t. velocity changes correctly (see notes).
@@ -804,25 +803,17 @@ def y_fmt(value, tick_number):
 ### Main functions ###
 ######################
 
-def draw_ui(phi_points, theta_points, method):
+def draw_ui(phi_points, theta_points):
     """Get initial velocities for the neutrinos."""
 
-    if method == 'P':
-        # Convert momenta to initial velocity magnitudes, in units of [kpc/s].
-        
-        # v_kpc = MOMENTA / NU_MASS / (kpc/s) #! only for non-rel neutrinos...
-        
-        #! The correct treatment is:
-        v_kpc = 1/np.sqrt(NU_MASS**2/MOMENTA**2 + 1) / (kpc/s)
-
-    elif method == 'V':
-        # Run simulation covering total velocity range for all masses.
-        v_kpc = VELOCITIES_KPC
-
+    # Convert momenta to initial velocity magnitudes, in units of [kpc/s].
+    # note: since the max. velocity in the sim is ~20% of c, the difference
+    # note: between the non-rel. and rel. treatment is negligible (~1%)
+    # v_kpc = MOMENTA / NU_MASS / (kpc/s)  # non-rel formula
+    v_kpc = 1/np.sqrt(NU_MASS**2/MOMENTA**2 + 1) / (kpc/s)  # rel. formula
 
     # Split up this magnitude into velocity components.
-    #NOTE: Done by using spher. coords. trafos, which act as "weights".
-
+    # note: Done by using spher. coords. trafos, which act as "weights".
     eps = 0.01  # shift in theta, so poles are not included
     ps = np.linspace(0., 2.*Pi, phi_points)
     ts = np.linspace(0.+eps, Pi-eps, theta_points)

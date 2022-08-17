@@ -70,8 +70,7 @@ if __name__ == '__main__':
     # Draw initial velocities.
     ui = fct.draw_ui(
         phi_points   = PHIs,
-        theta_points = THETAs,
-        method = METHOD
+        theta_points = THETAs
         )
     
     # Combine vectors and append neutrino particle number.
@@ -86,7 +85,7 @@ if __name__ == '__main__':
     # Print out all relevant parameters for simulation.
     print(
         '***Running simulation*** \n',
-        f'neutrinos={NUS} ; method={METHOD} ; solver={SOLVER} ; halos={halos} ; CPUs={CPUs}'
+        f'neutrinos={NUS} ; solver={SOLVER} ; halos={halos} ; CPUs={CPUs}'
     )
 
 

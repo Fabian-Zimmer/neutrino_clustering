@@ -62,8 +62,7 @@ if __name__ == '__main__':
     # Draw initial velocities.
     ui = fct.draw_ui(
         phi_points   = PHIs,
-        theta_points = THETAs,
-        method = METHOD
+        theta_points = THETAs
         )
     
     # Combine vectors and append neutrino particle number.

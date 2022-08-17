@@ -202,22 +202,6 @@ UPPER = 400.*T_CNB
 MOMENTA = np.geomspace(LOWER, UPPER, Vs)
 
 
-'''
-# Complete velocity range, spanning LOWER < p < UPPER for all masses. 
-V_LOWER = LOWER / NU_MASSES[-1]
-V_UPPER = UPPER / NU_MASSES[0]
-
-v_ranges = []
-for m in NU_MASSES[::-1]:
-    v_ranges.append(np.geomspace(LOWER/m, UPPER/m, 25))
-
-vs = np.array(v_ranges)
-VELOCITIES_KPC = np.sort(np.concatenate((vs[0],vs[1],vs[2],vs[3]))) / (kpc/s)
-
-# VELOCITIES_KPC = np.linspace(V_LOWER, V_UPPER, Vs) / (kpc/s)
-'''
-
-
 # Logarithmic redshift spacing.
 Z_START, Z_STOP, Z_AMOUNT = 0., 4., 100-1  # -1 to compensate np.insert of z=4
 Z_START_LOG = 1e-1
@@ -236,7 +220,6 @@ MW_HALO = True
 VC_HALO = False
 AG_HALO = False
 
-METHOD = 'P'  # 'P' for momentum for sim mass, 'V' for total velocity range.
 SOLVER = 'RK23'
 
 
