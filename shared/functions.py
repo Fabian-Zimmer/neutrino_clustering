@@ -671,10 +671,11 @@ def cell_gravity_3D(cell_coords, DM_pos, grav_range, m_DM, snap_num):
 
     ### Calculate superposition gravity.
     pre = G*m_DM
-    eps = 0.  #! offset to avoid very large gravity values
-    quotient = (cell_coords-DM_pos_sort)/(DM_dis_sync**3 + eps)
+    # quot = (cell_coords-DM_pos_sort)/(DM_dis_sync**3)  # no offset (old code)
+    eps = 650*pc  # offset = resolution floor of Camila's sim
+    quot = (cell_coords-DM_pos_sort)/np.power((DM_dis_sync**2 + eps**2), 3./2.)
     del DM_pos_sort, DM_dis_sync
-    derivative = pre*np.sum(quotient, axis=1)
+    derivative = pre*np.sum(quot, axis=1)
 
     #note: Minus sign, s.t. velocity changes correctly (see notes).
     dPsi_grid = np.asarray(-derivative, dtype=np.float64)
