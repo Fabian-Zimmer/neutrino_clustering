@@ -3,12 +3,10 @@
 ###############
 import sys, os
 from sys import getsizeof
-from datetime import datetime
 import time
 import glob
 import random
 import gc
-import contextlib
 
 # arrays and data packages
 import numpy as np
@@ -21,13 +19,8 @@ from astropy import constants as const
 import natpy as nat
 
 # speed improvement
-import numba as nb  # jit, njit, vectorize
-# import nbkode
+import numba as nb
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
-from functools import lru_cache
-
-# symbolic integration
-import sympy as sympy
 
 # scipy packages
 from scipy.integrate import solve_ivp, quad, simpson
@@ -39,14 +32,7 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 import matplotlib.ticker as ticker
 import matplotlib.patches as mpatches
-from mpl_toolkits.axes_grid1 import make_axes_locatable
-import colorcet as cc
-CMAP = cc.cm.CET_CBL2
-CMAP_RESIDUALS = cc.cm.bky
 import imageio
-
-# simulation
-
 
 
 # Fix random seeds.
