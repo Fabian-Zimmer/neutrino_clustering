@@ -1,3 +1,5 @@
+from shared.preface import *
+
 import velociraptor
 from shared.snapshot_data import snapshot_info
 from shared.tree_dataset import TreeCatalogue

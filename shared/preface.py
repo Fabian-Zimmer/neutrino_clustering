@@ -42,13 +42,24 @@ SEED = 1
 
 
 
-#####################
-### Local Folders ###
-#####################
-#! Uncomment correct path.
-SIM_DATA = '/home/fabian/ownCloud/snellius/L006N188'  # for UvA PC
-# SIM_DATA = '/home/fpc/SURFdrive/snellius/L006N188'  # for laptop
+#######################
+### Path Management ###
+#######################
 
+# Paths for FZ_snellius.
+if str(pathlib.Path.home()) == '/home/zimmer':
+    HOME = '/home/zimmer'
+    SIM_DATA = '/projects/0/einf180/Tango_sims'
+
+# Paths for FZ_desktop.
+elif str(pathlib.Path.home()) == '/home/fabian':
+    HOME = '/home/fabian'
+    SIM_DATA = f'{HOME}/ownCloud/snellius'
+
+# Paths for FZ_laptop.
+elif str(pathlib.Path.home()) == '/home/fpc':
+    HOME = '/home/fpc'
+    SIM_DATA = f'{HOME}/SURFdrive/snellius'
 
 
 #############

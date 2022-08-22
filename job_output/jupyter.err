@@ -1,0 +1,16 @@
+[I 15:04:04.278 NotebookApp] Serving notebooks from local directory: /gpfs/home4/zimmer/neutrino_clustering_V2
+[I 15:04:04.279 NotebookApp] Jupyter Notebook 6.4.12 is running at:
+[I 15:04:04.279 NotebookApp] http://localhost:5066/?token=9496f93fd733e7d5ec9a5f5e4627ec016f7ea9d812e6bdcd
+[I 15:04:04.279 NotebookApp]  or http://127.0.0.1:5066/?token=9496f93fd733e7d5ec9a5f5e4627ec016f7ea9d812e6bdcd
+[I 15:04:04.279 NotebookApp] Use Control-C to stop this server and shut down all kernels (twice to skip confirmation).
+[C 15:04:04.285 NotebookApp] 
+    
+    To access the notebook, open this file in a browser:
+        file:///gpfs/home4/zimmer/.local/share/jupyter/runtime/nbserver-2092067-open.html
+    Or copy and paste one of these URLs:
+        http://localhost:5066/?token=9496f93fd733e7d5ec9a5f5e4627ec016f7ea9d812e6bdcd
+     or http://127.0.0.1:5066/?token=9496f93fd733e7d5ec9a5f5e4627ec016f7ea9d812e6bdcd
+[I 15:05:49.074 NotebookApp] Creating new notebook in 
+[I 15:05:49.195 NotebookApp] Kernel started: 554dc985-7ec7-4555-b1c0-c8a5a94aa20f, name: python3
+[W 15:05:49.256 NotebookApp] delete /testground-jvsc-ccc68e02-6f12-4060-b0a8-99f3b38b6bba7cb94bde-c53e-44c3-a917-b04ccba975dc.ipynb
+[W 15:05:49.256 NotebookApp] Skipping trash for /gpfs/home4/zimmer/neutrino_clustering_V2/testground-jvsc-ccc68e02-6f12-4060-b0a8-99f3b38b6bba7cb94bde-c53e-44c3-a917-b04ccba975dc.ipynb, [Errno 13] Permission denied: b'/gpfs/home4/.Trash-59104'

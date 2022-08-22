@@ -1,8 +1,0 @@
-Traceback (most recent call last):
-  File "/home/zimmer/neutrino_clustering_V2/merger_tree.py", line 192, in <module>
-    main(config_parameters)
-  File "/home/zimmer/neutrino_clustering_V2/merger_tree.py", line 139, in main
-    sim_info = simulation_data.SimInfo(
-  File "/gpfs/home4/zimmer/neutrino_clustering_V2/shared/simulation_data.py", line 149, in __init__
-    self.n_snapshots = int(newest_snap_name.replace(f"{self.directory}/{base_name}_", "").replace(".hdf5", "")) + 1
-ValueError: invalid literal for int() with base 10: '/projects/0/einf180/Tango_sims/L006N188/DMONLY/SigmaConstant00/snapshot_0036'

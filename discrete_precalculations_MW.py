@@ -5,6 +5,7 @@ import shared.functions as fct
 def main():
     start = time.perf_counter()
 
+    sim_ID = 'L006N188'
     DM_lim = 1000
     print(f'DM particle limit: {DM_lim}')
 
@@ -13,8 +14,7 @@ def main():
     # ------------------------------- #
 
     # Path to merger_tree file.
-    #note: for now this file is generated in Ch.4 cell of CubeSpace.ipynb ...
-    tree_path = '/home/fabian/ownCloud/snellius/MergerTree/Tree_data_Centrals_MergerTree_test_93_97.hdf5'
+    tree_path = f'{pathlib.Path.cwd().parent}/neutrino_clustering_output_local/MergerTree/MergerTree_{sim_ID}.hdf5'
 
     with h5py.File(tree_path) as tree:
         # Choice of index in snapshot_0036.
@@ -35,7 +35,6 @@ def main():
     # Precalculations for all snapshots. #
     # ---------------------------------- #
 
-    sim_ID = 'L006N188'
     for snap, proj in zip(NUMS_SNAPSHOTS[::-1], prog_idx):
         
         # Generate files with positions of DM particles

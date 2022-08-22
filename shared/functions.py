@@ -141,7 +141,7 @@ def read_DM_positions(
     ):
 
     # Open data files.
-    folder = SIM_DATA
+    rootf = SIM_DATA
     snaps = h5py.File(f'{folder}/snapshot_{snap_num}.hdf5')
     group = h5py.File(f'{folder}/subhalo_{snap_num}.catalog_groups')
     parts = h5py.File(f'{folder}/subhalo_{snap_num}.catalog_particles')
