@@ -143,6 +143,9 @@ class SimInfo:
         base_name = os.path.splitext(base_name)[0]
 
         newest_snap_name = max(glob.glob(f"{self.directory}/{base_name}_*.hdf5"), key=os.path.getctime)
+
+        print(f'{newest_snap_name}', f'{self.directory}', f'{base_name}')
+
         self.n_snapshots = int(newest_snap_name.replace(f"{self.directory}/{base_name}_", "").replace(".hdf5", "")) + 1
 
         num_snap = "".join([s for s in self.catalogue_name if s.isdigit()])
