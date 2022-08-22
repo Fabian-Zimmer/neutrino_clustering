@@ -164,29 +164,21 @@ class Mock_ArgumentParser:
         # 'subhalo_0034.properties'
     ]
 
-    home = str(pathlib.Path.home())
-    root = '/projects/0/einf180/Tango_sims'
-    directory_list = f'{root}/{sim_ID}/DMONLY/SigmaConstant00/'
-    output_directory = f'{home}/neutrino_clustering_output_local/MergerTree/'
-    number_of_inputs = len(snapshot_list)
-
-    '''
     # Paths for FZ_snellius.
-    if str(pathlib.Path.home()) == 'home/zimmer':
-        home = 'home/zimmer'
-        root = 'projects/0/einf180/Tango_sims'
+    if str(pathlib.Path.home()) == '/home/zimmer':
+        home = '/home/zimmer'
+        root = '/projects/0/einf180/Tango_sims'
         directory_list = f'{root}/{sim_ID}/DMONLY/SigmaConstant00/'
-        output_directory = f'{home}/neutrino_clustering_output_local/MergerTree'
+        output_directory = f'{home}/neutrino_clustering_output_local/MergerTree/'
         number_of_inputs = len(snapshot_list)
 
     # Paths for FZ_desktop.
-    elif str(pathlib.Path.home()) == 'home/fabian':
-        root = 'home/fabian'
+    elif str(pathlib.Path.home()) == '/home/fabian':
+        root = '/home/fabian'
         home = f'{root}/my_github_projects'
-        directory_list = f'{root}/ownCloud/snellius/L006N188'
-        output_directory = f'{home}/neutrino_clustering_output_local/MergerTree'
+        directory_list = f'{root}/ownCloud/snellius/L006N188/'
+        output_directory = f'{home}/neutrino_clustering_output_local/MergerTree/'
         number_of_inputs = len(snapshot_list)
-    '''
 
 config_parameters = Mock_ArgumentParser()
 main(config_parameters)
