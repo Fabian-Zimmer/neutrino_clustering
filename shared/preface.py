@@ -46,19 +46,18 @@ SEED = 1
 ### Path Management ###
 #######################
 
+HOME = pathlib.Path.home()
+
 # Paths for FZ_snellius.
-if str(pathlib.Path.home()) == '/home/zimmer':
-    HOME = '/home/zimmer'
+if str(HOME) == '/home/zimmer':
     SIM_DATA = '/projects/0/einf180/Tango_sims'
 
 # Paths for FZ_desktop.
-elif str(pathlib.Path.home()) == '/home/fabian':
-    HOME = '/home/fabian'
+elif str(HOME) == '/home/fabian':
     SIM_DATA = f'{HOME}/ownCloud/snellius'
 
 # Paths for FZ_laptop.
-elif str(pathlib.Path.home()) == '/home/fpc':
-    HOME = '/home/fpc'
+elif str(HOME) == '/home/fpc':
     SIM_DATA = f'{HOME}/SURFdrive/snellius'
 
 

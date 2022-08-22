@@ -141,11 +141,26 @@ def read_DM_positions(
     ):
 
     # Open data files.
-    rootf = SIM_DATA
-    snaps = h5py.File(f'{folder}/snapshot_{snap_num}.hdf5')
-    group = h5py.File(f'{folder}/subhalo_{snap_num}.catalog_groups')
-    parts = h5py.File(f'{folder}/subhalo_{snap_num}.catalog_particles')
-    props = h5py.File(f'{folder}/subhalo_{snap_num}.properties')
+    snaps = h5py.File(str(next(
+        pathlib.Path(
+            f'{SIM_DATA}/{sim}').glob(f'**/snapshot_{snap_num}.hdf5'
+        )
+    )))
+    group = h5py.File(str(next(
+        pathlib.Path(
+            f'{SIM_DATA}/{sim}').glob(f'**/subhalo_{snap_num}.catalog_groups'
+        )
+    )))
+    parts = h5py.File(str(next(
+        pathlib.Path(
+            f'{SIM_DATA}/{sim}').glob(f'**/subhalo_{snap_num}.catalog_particles'
+        )
+    )))
+    props = h5py.File(str(next(
+        pathlib.Path(
+            f'{SIM_DATA}/{sim}').glob(f'**/subhalo_{snap_num}.properties'
+        )
+    )))
 
     ### Properties of DM particles.
 

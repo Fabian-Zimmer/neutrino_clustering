@@ -14,3 +14,10 @@
 [I 15:05:49.195 NotebookApp] Kernel started: 554dc985-7ec7-4555-b1c0-c8a5a94aa20f, name: python3
 [W 15:05:49.256 NotebookApp] delete /testground-jvsc-ccc68e02-6f12-4060-b0a8-99f3b38b6bba7cb94bde-c53e-44c3-a917-b04ccba975dc.ipynb
 [W 15:05:49.256 NotebookApp] Skipping trash for /gpfs/home4/zimmer/neutrino_clustering_V2/testground-jvsc-ccc68e02-6f12-4060-b0a8-99f3b38b6bba7cb94bde-c53e-44c3-a917-b04ccba975dc.ipynb, [Errno 13] Permission denied: b'/gpfs/home4/.Trash-59104'
+[I 15:23:01.357 NotebookApp] Kernel restarted: 554dc985-7ec7-4555-b1c0-c8a5a94aa20f
+[I 15:23:01.364 NotebookApp] Starting buffering for 554dc985-7ec7-4555-b1c0-c8a5a94aa20f:2903e3e0-7e08-47e4-8618-16079d94f2ac
+[I 15:23:01.372 NotebookApp] Restoring connection for 554dc985-7ec7-4555-b1c0-c8a5a94aa20f:2903e3e0-7e08-47e4-8618-16079d94f2ac
+[I 15:23:54.317 NotebookApp] Starting buffering for 554dc985-7ec7-4555-b1c0-c8a5a94aa20f:2903e3e0-7e08-47e4-8618-16079d94f2ac
+[I 15:32:39.566 NotebookApp] Kernel restarted: 554dc985-7ec7-4555-b1c0-c8a5a94aa20f
+[I 15:32:39.571 NotebookApp] Starting buffering for 554dc985-7ec7-4555-b1c0-c8a5a94aa20f:eced0881-85d8-4e49-8d06-57af2113e776
+[I 15:32:39.577 NotebookApp] Restoring connection for 554dc985-7ec7-4555-b1c0-c8a5a94aa20f:eced0881-85d8-4e49-8d06-57af2113e776

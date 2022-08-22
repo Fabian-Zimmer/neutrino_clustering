@@ -1,19 +1,17 @@
 #!/bin/bash
-#SBATCH --job-name=test_job
-#SBATCH --partition=thin
-#SBATCH --time=01:00:00
-#SBATCH --nodes=1
+#SBATCH --job-name=PreCalc
+#SBATCH -p thin
+#SBATCH -t 01:00:00
+#SBATCH -N 1
 #SBATCH --tasks-per-node=1
 #SBATCH --cpus-per-task=32
-#SBATCH -o job_output/output.out
-#SBATCH -e job_output/error.err
+#SBATCH --mem-per-cpu=60000
+#SBATCH -o jobs/pre_calc.out
+#SBATCH -e jobs/pre_calc.err
 #SBATCH -v
 
 module purge
 source $HOME/.conda/envs/neutrino_clustering/bin/activate
-
-# Make tree.
-# python $HOME/neutrino_clustering_V2/merger_tree.py
 
 # Run precalculations.
 python $HOME/neutrino_clustering_V2/discrete_precalculations_MW.py

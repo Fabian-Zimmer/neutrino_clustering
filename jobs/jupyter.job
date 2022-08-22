@@ -1,12 +1,12 @@
 #!/bin/bash
-#SBATCH --job-name=JupyterServer
+#SBATCH --job-name=Jupyter
 #SBATCH -p thin
 #SBATCH -t 06:00:00
 #SBATCH -N 1
 #SBATCH --tasks-per-node=1
 #SBATCH --cpus-per-task=8
-#SBATCH -o job_output/jupyter.out
-#SBATCH -e job_output/jupyter.err
+#SBATCH -o jobs/jupyter.out
+#SBATCH -e jobs/jupyter.err
 #SBATCH -v
 
 source $HOME/.conda/envs/neutrino_clustering/bin/activate
