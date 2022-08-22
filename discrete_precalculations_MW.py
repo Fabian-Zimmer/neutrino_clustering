@@ -13,12 +13,12 @@ def main():
     # ------------------------------- #
 
     # Path to merger_tree file.
-    #note: for now this file is generated in Ch.5 cell of CubeSpace.ipynb ...
+    #note: for now this file is generated in Ch.4 cell of CubeSpace.ipynb ...
     tree_path = '/home/fabian/ownCloud/snellius/MergerTree/Tree_data_Centrals_MergerTree_test_93_97.hdf5'
 
     with h5py.File(tree_path) as tree:
         # Choice of index in snapshot_0036.
-        choice = 2  #note: 0 or 1 overloads memory
+        choice = 0  #note: 0 is ~1e12Msun, 1 & 2 are ~1e11Msun
         masses = tree['Assembly_history/Mass'][choice,:]
         zeds = tree['Assembly_history/Redshift']
 
