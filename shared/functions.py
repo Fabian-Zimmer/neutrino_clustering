@@ -497,6 +497,8 @@ def cell_gravity_3D(cell_coords, DM_pos, grav_range, m_DM, snap_num):
         # Truncate DM in each cell, based on cell with most DM in range.
         # (each cell should have unique truncation according to DM_dis array, 
         # but that would make ndarray irregular, i.e. not a hyper-triangle)
+        # note: this means each cell has a diff. grav. range, s.t. all the 
+        # note: range for each cell ultimatley encompasses the same nr. of DM
         diff = grav_range-DM_dis
         max_ID = np.max(np.sum(diff>=0, axis=1))
         ind_2D = ind_2D[:, :max_ID]
@@ -519,7 +521,7 @@ def cell_gravity_3D(cell_coords, DM_pos, grav_range, m_DM, snap_num):
     del DM_pos_sort, DM_dis_sync
     derivative = pre*np.sum(quot, axis=1)
 
-    #note: Minus sign, s.t. velocity changes correctly (see notes).
+    # note: Minus sign, s.t. velocity changes correctly (see notes).
     dPsi_grid = np.asarray(-derivative, dtype=np.float64)
 
     np.save(f'CubeSpace/dPsi_grid_snapshot_{snap_num}', dPsi_grid)
