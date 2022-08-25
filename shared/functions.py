@@ -167,7 +167,7 @@ def read_DM_positions(
     # Positions.
     a = snaps["/Header"].attrs["Scale-factor"]
     pos = snaps['PartType1/Coordinates'][:][:] * a  
-    #! comoving to physical (pc) with a, then *1e3 to go to kpc
+    #! comoving to physical (pc) with a, then *1e3 to go to kpc (later)
 
     # Masses.
     mass = snaps['PartType1/Masses'][:] * 1e10  
@@ -216,8 +216,7 @@ def read_DM_positions(
         # Select 1 random halo.
         np.random.seed(SEED)
         select_random = np.random.randint(len(select_halos) - 1, size=(1))
-        halo_index = select_halos[select_random]  # this is an index
-        print(halo_index, type(halo_index), type(halo_index[0]))
+        halo_index = select_halos[select_random]
 
     # Grab the start position in the particles file to read from
     halo_start_pos = group["Offset"][halo_index]#[0]
