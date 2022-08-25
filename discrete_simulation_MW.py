@@ -71,9 +71,9 @@ if __name__ == '__main__':
         )
 
 
-    CPUs = 6
+    CPUs = 16
 
-    # Print out all relevant parameters for simulation.
+    # Display parameters for simulation.
     print(
         '***Running simulation*** \n',
         f'neutrinos={NUS} ; method=CubeSpace ; CPUs={CPUs} ; solver={SOLVER}'

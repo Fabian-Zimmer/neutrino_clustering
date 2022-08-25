@@ -79,7 +79,7 @@ def check_grid(init_cc, DM_pos, parent_GRID_S, DM_lim):
     return cell_cut_IDs, DM_cc_minimal, thresh
 
 
-def cell_division_iterative(
+def cell_division(
     init_cc, DM_pos, parent_GRID_S, DM_lim, stable_cc, sim, snap_num
     ):
 
@@ -185,7 +185,7 @@ DM_pos_for_cell_division = np.repeat(DM_raw, len(init_cc), axis=0)*kpc
 
 DM_lim = 1000
 
-cell_division_count = cell_division_iterative(
+cell_division_count = cell_division(
     init_cc, DM_pos_for_cell_division, GRID_S, DM_lim, None,
     sim=sim_ID, snap_num=snap
     )

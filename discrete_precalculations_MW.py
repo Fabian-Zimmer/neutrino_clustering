@@ -6,8 +6,7 @@ def main():
     start = time.perf_counter()
 
     sim_ID = 'L006N188'
-    DM_lim = 1000
-    print(f'DM particle limit: {DM_lim}')
+    DM_lim = 10000
 
     # ------------------------------- #
     # Generate progenitor index list. #
@@ -18,18 +17,25 @@ def main():
 
     with h5py.File(tree_path) as tree:
         # Choice of index in snapshot_0036.
-        choice = 0  #note: 0 is ~1e12Msun, 1 & 2 are ~1e11Msun
+        choice = 1  #note: 0 is ~1e12Msun, 1 & 2 are ~1e11Msun
         masses = tree['Assembly_history/Mass'][choice,:]
         zeds = tree['Assembly_history/Redshift']
 
         # Initial mass of traced halo.
         m0 = f'{masses[0]:.2e}'
-        print(f'Halo mass: {m0}')
 
         # Progenitor index list.
         prog_idx = tree['Assembly_history/Progenitor_index'][choice,:]
         prog_idx = np.array(np.expand_dims(prog_idx, axis=1), dtype=int)
 
+
+    # Display script parameters.
+    print('*************************************')
+    print(f'Simulation: {sim_ID}')
+    print(f'Mass of selected halo: {m0}')
+    print(f'DM particle limit: {DM_lim}')
+    print(f'Gravity type/range: {GRAV_VISUAL}')
+    print('*************************************')
 
     # ---------------------------------- #
     # Precalculations for all snapshots. #
@@ -53,7 +59,7 @@ def main():
         DM_pos = np.expand_dims(DM_raw, axis=0)
         DM_pos_for_cell_division = np.repeat(DM_pos, len(init_cc), axis=0)
 
-        cell_division_count = fct.cell_division_iterative(
+        cell_division_count = fct.cell_division(
             init_cc, DM_pos_for_cell_division, GRID_S, DM_lim, None,
             sim=sim_ID, snap_num=snap
             )

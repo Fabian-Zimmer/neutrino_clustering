@@ -68,6 +68,7 @@ SMALL_SIZE = 12
 MEDIUM_SIZE = 14
 BIGGER_SIZE = 16
 
+plt.rc('figure', figsize=(8, 8))
 plt.rc('font', size=SMALL_SIZE)          # controls default text sizes
 plt.rc('axes', titlesize=BIGGER_SIZE)    # fontsize of the axes title
 plt.rc('axes', labelsize=MEDIUM_SIZE)    # fontsize of the x and y labels
@@ -229,5 +230,7 @@ NUMS_SNAPSHOTS = np.load('shared/NUMS_SNAPSHOTS.npy')
 
 GRID_L = Rvir_MW
 GRID_S = 100*kpc
+DM_LIM = 10000
 DM_SIM_MASS = 11502999*Msun
-GRAV_RANGE = None
+GRAV_RANGE = GRID_S/2.  # None -> includes all DM particles
+GRAV_VISUAL = 'Inscribed Sphere'
