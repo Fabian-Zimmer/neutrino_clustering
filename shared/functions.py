@@ -385,11 +385,17 @@ def cell_division(
 
             if cell_division_count > 0:
 
-                print('Shape after divison:', DM_count.shape, cell_com.shape)
-                print(np.shape(DM_count_arr), np.shape(cell_com_arr))
-
+                # Append DM count and c.o.m. coords of last iteration.
                 DM_count_arr.append(DM_count)
                 cell_com_arr.append(cell_com)
+
+                # Convert nested lists to ndarray.
+                DM_count_np = np.array(
+                    list(itertools.chain.from_iterable(DM_count_arr))
+                )
+                cell_com_np = np.array(
+                    list(itertools.chain.from_iterable(cell_com_arr))
+                )
 
                 # The final iteration is a concatenation of the survival cells 
                 # from the previous iteration and the newest sub8 cell coords 
@@ -400,12 +406,12 @@ def cell_division(
                     final_cc
                 )
                 np.save(
-                    f'CubeSpace/cell_com_{sim}_snapshot_{snap_num}.npy',
-                    np.array(DM_count_arr)
+                    f'CubeSpace/DM_count_{sim}_snapshot_{snap_num}.npy',
+                    DM_count_np
                 )
                 np.save(
-                    f'CubeSpace/DM_count_{sim}_snapshot_{snap_num}.npy',
-                    np.array(cell_com_arr)
+                    f'CubeSpace/cell_com_{sim}_snapshot_{snap_num}.npy',
+                    cell_com_np
                 )
                 return cell_division_count
             else:
@@ -426,8 +432,6 @@ def cell_division(
                 return cell_division_count
 
         else:
-
-            print('Shape before divison:', DM_count.shape, cell_com.shape)
 
             # Save DM count and c.o.m coords of each cell, for stable grid.
             DM_count_arr.append(np.delete(DM_count, ~cell_cut_IDs, axis=0))
@@ -522,7 +526,8 @@ def cell_gravity(cell_coords, DM_coords, grav_range, m_DM):
     return np.asarray(-derivative, dtype=np.float64)
 
 
-def cell_gravity_3D(cell_coords, DM_pos, grav_range, m_DM, snap_num):
+def cell_gravity_3D(
+    cell_coords, cell_com, DM_pos, DM_count, grav_range, m_DM, snap_num):
     
     # Center all DM positions w.r.t. cell center.
     DM_pos -= cell_coords
@@ -553,12 +558,27 @@ def cell_gravity_3D(cell_coords, DM_pos, grav_range, m_DM, snap_num):
     # Adjust the distances array to make it compatible with DM positions array.
     DM_dis_sync = np.repeat(np.expand_dims(DM_dis_sort, axis=2), 3, axis=2)
 
-    ### Calculate superposition gravity.
+    ### Calculate short-range gravity.
     pre = G*m_DM
     eps = 650*pc  # offset = resolution floor of Camila's sim
     quot = (cell_coords-DM_pos_sort)/np.power((DM_dis_sync**2 + eps**2), 3./2.)
     del DM_pos_sort, DM_dis_sync
-    derivative = pre*np.sum(quot, axis=1)
+    dPsi_short = pre*np.sum(quot, axis=1)
+
+    ### Calculate long-range gravity.
+    lenD0 = cell_coords.shape[0]
+    com_rep = np.repeat(
+        np.expand_dims(cell_com, axis=1), lenD0, axis=1
+    )
+    mask_raw = np.zeros((lenD0, lenD0), int)
+    np.fill_diagonal(mask_raw, 1)
+    mask = np.repeat(np.expand_dims(mask_raw, axis=2), 3, axis=2)
+    com_del = com_rep[~mask.astype(dtype=bool)].reshape(lenD0, lenD0-1, 3)
+    del com_rep
+    quot = (cell_coords-com_del)/np.power(, 3)
+    dPsi_long = pre*np.sum(DM_count*quot)
+
+    derivative = dPsi_short # + dPsi_long
 
     # note: Minus sign, s.t. velocity changes correctly (see notes).
     dPsi_grid = np.asarray(-derivative, dtype=np.float64)

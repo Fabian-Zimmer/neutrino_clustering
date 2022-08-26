@@ -9,6 +9,7 @@ import random
 import gc
 import argparse
 import pathlib
+import itertools
 
 # arrays and data packages
 import numpy as np

@@ -64,9 +64,20 @@ def main():
             )
 
         # Calculate gravity in each cell.
-        adapted_cc = np.load(f'CubeSpace/adapted_cc_{sim_ID}_snapshot_{snap}.npy')
+        adapted_cc = np.load(
+            f'CubeSpace/adapted_cc_{sim_ID}_snapshot_{snap}.npy'
+        )
+        cell_com = np.load(
+            'CubeSpace/cell_com_L006N188_snapshot_0036.npy'
+        )
+        DM_count = np.load(
+            'CubeSpace/DM_count_L006N188_snapshot_0036.npy'
+        )
         adapted_DM = np.repeat(DM_pos, len(adapted_cc), axis=0)
-        fct.cell_gravity_3D(adapted_cc, adapted_DM, GRAV_RANGE, DM_SIM_MASS, snap)
+        fct.cell_gravity_3D(
+            adapted_cc, cell_com, adapted_DM, DM_count,
+            GRAV_RANGE, DM_SIM_MASS, snap
+        )
 
         print(f'snapshot {snap} : cell division rounds: {cell_division_count}')
         
