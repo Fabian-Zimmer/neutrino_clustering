@@ -435,7 +435,7 @@ def cell_division(
 
             if cell_division_count > 0:
                 stable_cc_so_far = np.concatenate((stable_cc, no_parents_cc), axis=0)
-            else:
+            else:  # ending of first division loop
                 stable_cc_so_far = no_parents_cc
 
             # Overwrite variables for next loop.
@@ -515,7 +515,6 @@ def cell_gravity_3D(cell_coords, DM_pos, grav_range, m_DM, snap_num):
 
     ### Calculate superposition gravity.
     pre = G*m_DM
-    # quot = (cell_coords-DM_pos_sort)/(DM_dis_sync**3)  # no offset (old code)
     eps = 650*pc  # offset = resolution floor of Camila's sim
     quot = (cell_coords-DM_pos_sort)/np.power((DM_dis_sync**2 + eps**2), 3./2.)
     del DM_pos_sort, DM_dis_sync
