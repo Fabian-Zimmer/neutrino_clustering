@@ -6,7 +6,6 @@ def main():
     start = time.perf_counter()
 
     sim_ID = 'L006N188'
-    DM_lim = 10000
 
     # ------------------------------- #
     # Generate progenitor index list. #
@@ -17,7 +16,7 @@ def main():
 
     with h5py.File(tree_path) as tree:
         # Choice of index in snapshot_0036.
-        choice = 1  #note: 0 is ~1e12Msun, 1 & 2 are ~1e11Msun
+        choice = 2  #note: 0 is ~1e12Msun, 1 & 2 are ~1e11Msun
         masses = tree['Assembly_history/Mass'][choice,:]
         zeds = tree['Assembly_history/Redshift']
 
@@ -33,7 +32,7 @@ def main():
     print('*************************************')
     print(f'Simulation: {sim_ID}')
     print(f'Mass of selected halo: {m0}')
-    print(f'DM particle limit: {DM_lim}')
+    print(f'DM particle limit: {DM_LIM}')
     print(f'Gravity type/range: {GRAV_VISUAL}')
     print('*************************************')
 
@@ -60,7 +59,7 @@ def main():
         DM_pos_for_cell_division = np.repeat(DM_pos, len(init_cc), axis=0)
 
         cell_division_count = fct.cell_division(
-            init_cc, DM_pos_for_cell_division, GRID_S, DM_lim, None,
+            init_cc, DM_pos_for_cell_division, GRID_S, DM_LIM, None,
             sim=sim_ID, snap_num=snap
             )
 

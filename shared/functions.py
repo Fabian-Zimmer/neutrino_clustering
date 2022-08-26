@@ -344,17 +344,23 @@ def check_grid(init_cc, DM_pos, parent_GRID_S, DM_lim):
     DM_cc_compact = np.delete(DM_pos_sort, np.s_[max_DM_rank+1:], axis=1)
     del DM_pos_sort
 
-    # Count the number of DM particles in each cell, after all the filtering.
-    DM_count = np.count_nonzero(~np.isnan(DM_cc_compact[:,:,0]), axis=1)
+    # Count the number of DM particles in each cell, before deleting cells.
+    DM_count_raw = np.count_nonzero(~np.isnan(DM_cc_compact[:,:,0]), axis=1)
+
+    # Calculate c.o.m coords. for each cell, before deleting cells.
+    DM_count = np.repeat(np.expand_dims(DM_count_raw, axis=1), 3, axis=1)
+    DM_count[DM_count==0] = 1  # to avoid divide by zero
+    cell_com = np.nansum(DM_cc_compact, axis=1)/DM_count
+    del DM_count
 
     # Drop all cells containing an amount of DM below the given threshold, 
-    # from the DM positions array...
-    cell_cut_IDs = DM_count <= DM_lim
+    # from the DM positions array.
+    cell_cut_IDs = DM_count_raw <= DM_lim
     DM_cc_minimal = np.delete(DM_cc_compact, cell_cut_IDs, axis=0)
     del DM_cc_compact
     thresh = np.size(DM_cc_minimal, axis=0)
 
-    return cell_cut_IDs, DM_cc_minimal, thresh
+    return DM_count_raw, cell_com, cell_cut_IDs, DM_cc_minimal, thresh
 
 
 def cell_division(
@@ -365,9 +371,12 @@ def cell_division(
     thresh = 1
     cell_division_count = 0
 
+    DM_count_arr = []
+    cell_com_arr = []
+
     while thresh > 0:
 
-        cell_cut_IDs, DM_cc_minimal, thresh = check_grid(
+        DM_count, cell_com, cell_cut_IDs, DM_cc_minimal, thresh = check_grid(
             init_cc, DM_pos, parent_GRID_S, DM_lim
         )
 
@@ -375,27 +384,58 @@ def cell_division(
         if thresh == 0:
 
             if cell_division_count > 0:
+
+                print('Shape after divison:', DM_count.shape, cell_com.shape)
+                print(np.shape(DM_count_arr), np.shape(cell_com_arr))
+
+                DM_count_arr.append(DM_count)
+                cell_com_arr.append(cell_com)
+
                 # The final iteration is a concatenation of the survival cells 
-                # from the previous iteration and the newest sub8 cell coords...
+                # from the previous iteration and the newest sub8 cell coords 
+                # (which are now init_cc).
                 final_cc = np.concatenate((stable_cc, init_cc), axis=0)
                 np.save(
                     f'CubeSpace/adapted_cc_{sim}_snapshot_{snap_num}.npy', 
                     final_cc
                 )
+                np.save(
+                    f'CubeSpace/cell_com_{sim}_snapshot_{snap_num}.npy',
+                    np.array(DM_count_arr)
+                )
+                np.save(
+                    f'CubeSpace/DM_count_{sim}_snapshot_{snap_num}.npy',
+                    np.array(cell_com_arr)
+                )
                 return cell_division_count
             else:
-                # ...or the initial grid itself, if it's fine-grained already.
+
+                # Return initial grid itself, if it's fine-grained already.
                 np.save(
                     f'CubeSpace/adapted_cc_{sim}_snapshot_{snap_num}.npy', 
                     init_cc
+                )
+                np.save(
+                    f'CubeSpace/cell_com_{sim}_snapshot_{snap_num}.npy',
+                    DM_count
+                )
+                np.save(
+                    f'CubeSpace/DM_count_{sim}_snapshot_{snap_num}.npy',
+                    cell_com
                 )
                 return cell_division_count
 
         else:
 
-            # ...and the initial cell coordinates grid. This array contains all 
-            # cells (i.e. their coords. ), which need to be divided into 8 
-            # "child cells", hence the name "parent cells".
+            print('Shape before divison:', DM_count.shape, cell_com.shape)
+
+            # Save DM count and c.o.m coords of each cell, for stable grid.
+            DM_count_arr.append(np.delete(DM_count, ~cell_cut_IDs, axis=0))
+            cell_com_arr.append(np.delete(cell_com, ~cell_cut_IDs, axis=0))
+            del DM_count, cell_com
+
+            # Array containing all cells (i.e. their coords. ), which need to
+            # be divided into 8 "child cells", hence the name "parent cells".
             parent_cc = np.delete(init_cc, cell_cut_IDs, axis=0)
 
             # "Reset" the DM coords, s.t. all DM positions are w.r.t. the 
@@ -497,8 +537,8 @@ def cell_gravity_3D(cell_coords, DM_pos, grav_range, m_DM, snap_num):
         # Truncate DM in each cell, based on cell with most DM in range.
         # (each cell should have unique truncation according to DM_dis array, 
         # but that would make ndarray irregular, i.e. not a hyper-triangle)
-        # note: this means each cell has a diff. grav. range, s.t. all the 
-        # note: range for each cell ultimatley encompasses the same nr. of DM
+        # note: this means each cell has a diff. grav. range, s.t. the range  
+        # note: for each cell ultimately encompasses the same amount of DM
         diff = grav_range-DM_dis
         max_ID = np.max(np.sum(diff>=0, axis=1))
         ind_2D = ind_2D[:, :max_ID]
