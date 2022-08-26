@@ -152,8 +152,7 @@ def main(config: ArgumentParser):
 
 class Mock_ArgumentParser:
 
-    sim_ID = 'L006N188'
-    name_list = f'MergerTree_{sim_ID}'
+    name_list = f'MergerTree_{SIM_ID}'
 
     snapshot_list = [
         'snapshot_0036.hdf5', 
@@ -170,7 +169,7 @@ class Mock_ArgumentParser:
     if str(pathlib.Path.home()) == '/home/zimmer':
         home = '/home/zimmer'
         root = '/projects/0/einf180/Tango_sims'
-        directory_list = f'{root}/{sim_ID}/DMONLY/SigmaConstant00/'
+        directory_list = f'{root}/{SIM_ID}/DMONLY/SigmaConstant00/'
         output_directory = f'{home}/neutrino_clustering_output_local/MergerTree/'
         number_of_inputs = len(snapshot_list)
 

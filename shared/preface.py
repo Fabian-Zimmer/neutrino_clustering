@@ -229,6 +229,7 @@ SOLVER = 'RK23'
 ZEDS_SNAPSHOTS = np.load('shared/ZEDS_SNAPSHOTS.npy')
 NUMS_SNAPSHOTS = np.load('shared/NUMS_SNAPSHOTS.npy')
 
+SIM_ID = 'L006N188'
 GRID_L = Rvir_MW
 GRID_S = 100*kpc
 DM_LIM = 10000

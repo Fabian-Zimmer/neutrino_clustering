@@ -15,8 +15,8 @@ def EOMs(s_val, y):
     z = np.interp(s_val, S_STEPS, ZEDS)
 
     # Find which (pre-calculated) derivative grid to use at current z.
-    dPsi_grid = fct.load_grid(z, 'L006N188', 'derivatives')
-    cell_grid = fct.load_grid(z, 'L006N188', 'positions')
+    dPsi_grid = fct.load_grid(z, SIM_ID, 'derivatives')
+    cell_grid = fct.load_grid(z, SIM_ID, 'positions')
 
     # Find gradient at neutrino position, i.e. for corresponding cell.
     cell_idx = fct.nu_in_which_cell(x_i, cell_grid)

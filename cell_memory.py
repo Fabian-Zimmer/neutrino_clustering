@@ -170,13 +170,12 @@ def cell_division(
 
 
 # Values for file reading.
-sim_ID = 'L006N188'
 snap = '0036'
 m0 = '2.59e+11'
 
 # Initial grid and DM positions.
 DM_raw = np.load(
-    f'CubeSpace/DM_positions_{sim_ID}_snapshot_{snap}_{m0}Msun.npy'
+    f'CubeSpace/DM_positions_{SIM_ID}_snapshot_{snap}_{m0}Msun.npy'
 )*kpc
 grid = fct.grid_3D(GRID_L, GRID_S)
 init_cc = np.expand_dims(grid, axis=1)
@@ -187,9 +186,9 @@ DM_lim = 1000
 
 cell_division_count = cell_division(
     init_cc, DM_pos_for_cell_division, GRID_S, DM_lim, None,
-    sim=sim_ID, snap_num=snap
+    sim=SIM_ID, snap_num=snap
     )
-adapted_cc = np.load(f'CubeSpace/adapted_cc_{sim_ID}_snapshot_{snap}.npy')
+adapted_cc = np.load(f'CubeSpace/adapted_cc_{SIM_ID}_snapshot_{snap}.npy')
 
 print(init_cc.shape)
 print(adapted_cc.shape)

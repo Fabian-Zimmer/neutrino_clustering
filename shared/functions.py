@@ -422,11 +422,11 @@ def cell_division(
                     init_cc
                 )
                 np.save(
-                    f'CubeSpace/cell_com_{sim}_snapshot_{snap_num}.npy',
+                    f'CubeSpace/DM_count_{sim}_snapshot_{snap_num}.npy',
                     DM_count
                 )
                 np.save(
-                    f'CubeSpace/DM_count_{sim}_snapshot_{snap_num}.npy',
+                    f'CubeSpace/cell_com_{sim}_snapshot_{snap_num}.npy',
                     cell_com
                 )
                 return cell_division_count
@@ -558,27 +558,62 @@ def cell_gravity_3D(
     # Adjust the distances array to make it compatible with DM positions array.
     DM_dis_sync = np.repeat(np.expand_dims(DM_dis_sort, axis=2), 3, axis=2)
 
-    ### Calculate short-range gravity.
+    # ------------------------------ #
+    # Calculate short-range gravity. #
+    # ------------------------------ #
+
     pre = G*m_DM
     eps = 650*pc  # offset = resolution floor of Camila's sim
     quot = (cell_coords-DM_pos_sort)/np.power((DM_dis_sync**2 + eps**2), 3./2.)
     del DM_pos_sort, DM_dis_sync
     dPsi_short = pre*np.sum(quot, axis=1)
 
-    ### Calculate long-range gravity.
-    lenD0 = cell_coords.shape[0]
-    com_rep = np.repeat(
-        np.expand_dims(cell_com, axis=1), lenD0, axis=1
-    )
-    mask_raw = np.zeros((lenD0, lenD0), int)
-    np.fill_diagonal(mask_raw, 1)
-    mask = np.repeat(np.expand_dims(mask_raw, axis=2), 3, axis=2)
-    com_del = com_rep[~mask.astype(dtype=bool)].reshape(lenD0, lenD0-1, 3)
-    del com_rep
-    quot = (cell_coords-com_del)/np.power(, 3)
-    dPsi_long = pre*np.sum(DM_count*quot)
+    #! this long-range code breaks the number (over)density plot. FIX!
+    '''
+    # ----------------------------- #
+    # Calculate long-range gravity. #
+    # ----------------------------- #
 
-    derivative = dPsi_short # + dPsi_long
+    # Number of cells.
+    cells = cell_coords.shape[0]
+    
+    # Adjust c.o.m cell cords. and DM count arrays dimensionally.
+    com_rep = np.repeat(
+        np.expand_dims(cell_com, axis=1), cells, axis=1
+    )
+    DM_count_rep = np.repeat(
+        np.expand_dims(DM_count, axis=1), cells, axis=1
+    )
+
+    # Create mask to drop cell, for which long-range gravity is being computed.
+    # Otherwise each cell will get its own c.o.m. gravity additionally.
+    mask_raw = np.zeros((cells, cells), int)
+    np.fill_diagonal(mask_raw, 1)
+
+    # Before mask changes dimensionally, filter DM count array and adjust.
+    DM_count_del = DM_count_rep[
+        ~mask_raw.astype(dtype=bool)
+    ].reshape(cells, cells-1)
+    DM_count_sync = np.expand_dims(DM_count_del, axis=2)
+
+    # Adjust mask dimensionally and filter c.o.m. cell coords.
+    mask = np.repeat(np.expand_dims(mask_raw, axis=2), 3, axis=2)
+    com_del = com_rep[~mask.astype(dtype=bool)].reshape(cells, cells-1, 3)
+    del com_rep
+
+    # Distances between cell centers and cell c.o.m. coords.
+    com_dis = np.sqrt(np.sum((cell_coords-com_del)**2, axis=2))
+    com_dis_sync = np.repeat(np.expand_dims(com_dis, axis=2), 3, axis=2)
+
+    # Long-range gravity component for each cell (without including itself).
+    quot = (cell_coords-com_del)/np.power(com_dis_sync, 3)
+    dPsi_long = pre*np.sum(DM_count_sync*quot, axis=1)
+
+    # Total derivative as short+long range.
+    derivative = dPsi_short + dPsi_long
+    '''
+
+    derivative = dPsi_short
 
     # note: Minus sign, s.t. velocity changes correctly (see notes).
     dPsi_grid = np.asarray(-derivative, dtype=np.float64)

@@ -5,14 +5,12 @@ import shared.functions as fct
 def main():
     start = time.perf_counter()
 
-    sim_ID = 'L006N188'
-
     # ------------------------------- #
     # Generate progenitor index list. #
     # ------------------------------- #
 
     # Path to merger_tree file.
-    tree_path = f'{pathlib.Path.cwd().parent}/neutrino_clustering_output_local/MergerTree/MergerTree_{sim_ID}.hdf5'
+    tree_path = f'{pathlib.Path.cwd().parent}/neutrino_clustering_output_local/MergerTree/MergerTree_{SIM_ID}.hdf5'
 
     with h5py.File(tree_path) as tree:
         # Choice of index in snapshot_0036.
@@ -30,7 +28,7 @@ def main():
 
     # Display script parameters.
     print('*************************************')
-    print(f'Simulation: {sim_ID}')
+    print(f'Simulation: {SIM_ID}')
     print(f'Mass of selected halo: {m0}')
     print(f'DM particle limit: {DM_LIM}')
     print(f'Gravity type/range: {GRAV_VISUAL}')
@@ -45,13 +43,13 @@ def main():
         # Generate files with positions of DM particles
         fct.read_DM_positions(
             which_halos='halos', mass_select=12,  # outdated but necessary...
-            random=False, snap_num=snap, sim=sim_ID, 
+            random=False, snap_num=snap, sim=SIM_ID, 
             halo_index=int(proj), init_m=m0
         )
 
         # Initial grid and DM positions.
         DM_raw = np.load(
-            f'CubeSpace/DM_positions_{sim_ID}_snapshot_{snap}_{m0}Msun.npy'
+            f'CubeSpace/DM_positions_{SIM_ID}_snapshot_{snap}_{m0}Msun.npy'
         )*kpc
         grid = fct.grid_3D(GRID_L, GRID_S)
         init_cc = np.expand_dims(grid, axis=1)
@@ -60,18 +58,18 @@ def main():
 
         cell_division_count = fct.cell_division(
             init_cc, DM_pos_for_cell_division, GRID_S, DM_LIM, None,
-            sim=sim_ID, snap_num=snap
+            sim=SIM_ID, snap_num=snap
             )
 
         # Calculate gravity in each cell.
         adapted_cc = np.load(
-            f'CubeSpace/adapted_cc_{sim_ID}_snapshot_{snap}.npy'
+            f'CubeSpace/adapted_cc_{SIM_ID}_snapshot_{snap}.npy'
         )
         cell_com = np.load(
-            'CubeSpace/cell_com_L006N188_snapshot_0036.npy'
+            f'CubeSpace/cell_com_{SIM_ID}_snapshot_{snap}.npy'
         )
         DM_count = np.load(
-            'CubeSpace/DM_count_L006N188_snapshot_0036.npy'
+            f'CubeSpace/DM_count_{SIM_ID}_snapshot_{snap}.npy'
         )
         adapted_DM = np.repeat(DM_pos, len(adapted_cc), axis=0)
         fct.cell_gravity_3D(
