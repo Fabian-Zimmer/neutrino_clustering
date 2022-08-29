@@ -71,7 +71,7 @@ if __name__ == '__main__':
         )
 
 
-    CPUs = 16
+    CPUs = 6
 
     # Display parameters for simulation.
     print(

@@ -348,7 +348,8 @@ def check_grid(init_cc, DM_pos, parent_GRID_S, DM_lim):
     DM_count_raw = np.count_nonzero(~np.isnan(DM_cc_compact[:,:,0]), axis=1)
 
     # Calculate c.o.m coords. for each cell, before deleting cells.
-    DM_count = np.repeat(np.expand_dims(DM_count_raw, axis=1), 3, axis=1)
+    # DM_count = np.repeat(np.expand_dims(DM_count_raw, axis=1), 3, axis=1)
+    DM_count = np.expand_dims(DM_count_raw, axis=1)
     DM_count[DM_count==0] = 1  # to avoid divide by zero
     cell_com = np.nansum(DM_cc_compact, axis=1)/DM_count
     del DM_count
@@ -373,6 +374,7 @@ def cell_division(
 
     DM_count_arr = []
     cell_com_arr = []
+    cell_gen_arr = []
 
     while thresh > 0:
 
@@ -382,6 +384,10 @@ def cell_division(
 
         #! If no cells are in need of division -> return final coords.
         if thresh == 0:
+
+            cell_gen_np = np.array(
+                list(itertools.chain.from_iterable(cell_gen_arr))
+            )
 
             if cell_division_count > 0:
 
@@ -413,6 +419,10 @@ def cell_division(
                     f'CubeSpace/cell_com_{sim}_snapshot_{snap_num}.npy',
                     cell_com_np
                 )
+                np.save(
+                    f'CubeSpace/cell_gen_{sim}_snapshot_{snap_num}.npy',
+                    cell_gen_np
+                )
                 return cell_division_count
             else:
 
@@ -428,6 +438,10 @@ def cell_division(
                 np.save(
                     f'CubeSpace/cell_com_{sim}_snapshot_{snap_num}.npy',
                     cell_com
+                )
+                np.save(
+                    f'CubeSpace/cell_gen_{sim}_snapshot_{snap_num}.npy',
+                    cell_gen_np
                 )
                 return cell_division_count
 
@@ -476,6 +490,11 @@ def cell_division(
             # Delete all cells in initial cell coords array, corresponding to 
             # the cells in need of division, i.e. the parent cells.
             no_parents_cc = np.delete(init_cc, ~cell_cut_IDs, axis=0)
+
+            # Save generation index of stable cells.
+            cell_gen_arr.append(
+                np.zeros(len(no_parents_cc), int) + cell_division_count
+            )
 
             if cell_division_count > 0:
                 stable_cc_so_far = np.concatenate((stable_cc, no_parents_cc), axis=0)
@@ -538,6 +557,8 @@ def cell_gravity_3D(
     # Ascending order indices.
     ind_2D = DM_dis.argsort(axis=1)
 
+    #! gravity range has to be dynamic to work with long range gravity! 
+    #! currently, small cells in center get duplicate gravity regions...
     if grav_range is not None:
         # Truncate DM in each cell, based on cell with most DM in range.
         # (each cell should have unique truncation according to DM_dis array, 
@@ -556,7 +577,7 @@ def cell_gravity_3D(
     del DM_dis, ind_2D, ind_3D
 
     # Adjust the distances array to make it compatible with DM positions array.
-    DM_dis_sync = np.repeat(np.expand_dims(DM_dis_sort, axis=2), 3, axis=2)
+    DM_dis_sync = np.expand_dims(DM_dis_sort, axis=2)
 
     # ------------------------------ #
     # Calculate short-range gravity. #
@@ -567,13 +588,14 @@ def cell_gravity_3D(
     quot = (cell_coords-DM_pos_sort)/np.power((DM_dis_sync**2 + eps**2), 3./2.)
     del DM_pos_sort, DM_dis_sync
     dPsi_short = pre*np.sum(quot, axis=1)
+    del quot
+
 
     #! this long-range code breaks the number (over)density plot. FIX!
-    '''
     # ----------------------------- #
     # Calculate long-range gravity. #
     # ----------------------------- #
-
+    '''
     # Number of cells.
     cells = cell_coords.shape[0]
     
@@ -603,11 +625,12 @@ def cell_gravity_3D(
 
     # Distances between cell centers and cell c.o.m. coords.
     com_dis = np.sqrt(np.sum((cell_coords-com_del)**2, axis=2))
-    com_dis_sync = np.repeat(np.expand_dims(com_dis, axis=2), 3, axis=2)
+    com_dis_sync = np.expand_dims(com_dis, axis=2)
 
     # Long-range gravity component for each cell (without including itself).
-    quot = (cell_coords-com_del)/np.power(com_dis_sync, 3)
-    dPsi_long = pre*np.sum(DM_count_sync*quot, axis=1)
+    quot_long = (cell_coords-com_del)/np.power(com_dis_sync, 3)
+    dPsi_long = pre*np.sum(DM_count_sync*quot_long, axis=1)
+    del quot_long
 
     # Total derivative as short+long range.
     derivative = dPsi_short + dPsi_long

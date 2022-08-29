@@ -61,7 +61,7 @@ def main():
             sim=SIM_ID, snap_num=snap
             )
 
-        # Calculate gravity in each cell.
+        # Arrays produced by cell division algorithm.
         adapted_cc = np.load(
             f'CubeSpace/adapted_cc_{SIM_ID}_snapshot_{snap}.npy'
         )
@@ -71,6 +71,8 @@ def main():
         DM_count = np.load(
             f'CubeSpace/DM_count_{SIM_ID}_snapshot_{snap}.npy'
         )
+
+        # Calculate gravity in each cell.
         adapted_DM = np.repeat(DM_pos, len(adapted_cc), axis=0)
         fct.cell_gravity_3D(
             adapted_cc, cell_com, adapted_DM, DM_count,
