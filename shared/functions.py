@@ -385,6 +385,12 @@ def cell_division(
         #! If no cells are in need of division -> return final coords.
         if thresh == 0:
 
+            # Append cell generation number of last iteration.
+            cell_gen_arr.append(
+                np.zeros(len(init_cc), int) + cell_division_count
+            )
+            
+            # Convert nested lists to ndarray.
             cell_gen_np = np.array(
                 list(itertools.chain.from_iterable(cell_gen_arr))
             )
@@ -568,6 +574,7 @@ def cell_gravity_3D(
         diff = grav_range-DM_dis
         max_ID = np.max(np.sum(diff>=0, axis=1))
         ind_2D = ind_2D[:, :max_ID]
+    
 
     ind_3D = np.repeat(np.expand_dims(ind_2D, axis=2), 3, axis=2)
 
