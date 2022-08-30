@@ -317,18 +317,22 @@ def check_grid(init_cc, DM_pos, parent_GRID_S, DM_lim):
 
     # Calculate c.o.m coords. for each cell, before deleting cells.
     DM_count = np.expand_dims(DM_count_raw, axis=1)
+    del DM_count_raw
     DM_count[DM_count==0] = 1  # to avoid divide by zero
     cell_com = np.nansum(DM_compact, axis=1)/DM_count
     del DM_count
 
+    # Count again, overwriting zeros to ones causes issues
+    DM_count_final = np.count_nonzero(~np.isnan(DM_compact[:,:,0]), axis=1)
+
     # Drop all cells containing an amount of DM below the given threshold, 
     # from the DM positions array.
-    cell_cut_IDs = DM_count_raw <= DM_lim
+    cell_cut_IDs = DM_count_final <= DM_lim
     DM_cc_minimal = np.delete(DM_compact, cell_cut_IDs, axis=0)
     del DM_compact
     thresh = np.size(DM_cc_minimal, axis=0)
 
-    return DM_count_raw, cell_com, cell_cut_IDs, DM_cc_minimal, thresh
+    return DM_count_final, cell_com, cell_cut_IDs, DM_cc_minimal, thresh
 
 
 def cell_division(

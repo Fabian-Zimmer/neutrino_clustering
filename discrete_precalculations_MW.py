@@ -37,6 +37,10 @@ def main():
     # Precalculations for all snapshots. #
     # ---------------------------------- #
 
+    # Initial grid always the same, hence outside of loop over snapshots.
+    grid = fct.grid_3D(GRID_L, GRID_S)
+    init_cc = np.expand_dims(grid, axis=1)
+
     for snap, proj in zip(NUMS_SNAPSHOTS[::-1], prog_idx):
         
         # Generate files with positions of DM particles
@@ -50,8 +54,6 @@ def main():
         DM_raw = np.load(
             f'CubeSpace/DM_positions_{SIM_ID}_snapshot_{snap}_{m0}Msun.npy'
         )*kpc
-        grid = fct.grid_3D(GRID_L, GRID_S)
-        init_cc = np.expand_dims(grid, axis=1)
         DM_pos = np.expand_dims(DM_raw, axis=0)
         DM_pos_for_cell_division = np.repeat(DM_pos, len(init_cc), axis=0)
 
