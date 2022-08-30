@@ -28,10 +28,9 @@ def main():
 
     # Display script parameters.
     print('*************************************')
-    print(f'Simulation: {SIM_ID}')
+    print(f'Simulation box: {SIM_ID}')
     print(f'Mass of selected halo: {m0}')
-    print(f'DM particle limit: {DM_LIM}')
-    print(f'Gravity type/range: {GRAV_VISUAL}')
+    print(f'DM particle limit for cells: {DM_LIM}')
     print('*************************************')
 
     # ---------------------------------- #
@@ -63,25 +62,23 @@ def main():
 
         # Arrays produced by cell division algorithm.
         adapted_cc = np.load(
-            f'CubeSpace/adapted_cc_{SIM_ID}_snapshot_{snap}.npy'
-        )
+            f'CubeSpace/adapted_cc_{SIM_ID}_snapshot_{snap}.npy')
+        cell_gen = np.load(
+            f'CubeSpace/cell_gen_{SIM_ID}_snapshot_{snap}.npy')
         cell_com = np.load(
-            f'CubeSpace/cell_com_{SIM_ID}_snapshot_{snap}.npy'
-        )
+            f'CubeSpace/cell_com_{SIM_ID}_snapshot_{snap}.npy')
         DM_count = np.load(
-            f'CubeSpace/DM_count_{SIM_ID}_snapshot_{snap}.npy'
-        )
+            f'CubeSpace/DM_count_{SIM_ID}_snapshot_{snap}.npy')
 
         # Calculate gravity in each cell.
         adapted_DM = np.repeat(DM_pos, len(adapted_cc), axis=0)
         fct.cell_gravity_3D(
-            adapted_cc, cell_com, adapted_DM, DM_count,
-            GRAV_RANGE, DM_SIM_MASS, snap
+            adapted_cc, cell_com, cell_gen,
+            adapted_DM, DM_count, DM_SIM_MASS, snap
         )
 
         print(f'snapshot {snap} : cell division rounds: {cell_division_count}')
         
-
 
     seconds = time.perf_counter()-start
     minutes = seconds/60.

@@ -285,80 +285,47 @@ def check_grid(init_cc, DM_pos, parent_GRID_S, DM_lim):
     Determine which cells have DM above threshold and thus need division.
     """
 
-    # -------------- #
-    # Preliminaries. #
-    # -------------- #
-
-    # Range within DM particles are "part of" the cell:
-    # Circumscribed circle.
-    # DM_range = parent_GRID_S/np.sqrt(2)
-    # Inscribed circle.
-    DM_range = parent_GRID_S/2.
-
     # Center all DM positions w.r.t. center, for all cells.
     DM_pos -= init_cc
 
-    # Calculate distances of all DM to center, for all cells.
-    DM_dis = np.sqrt(np.sum(DM_pos**2, axis=2))
+    # Cell length of current grid generation, used to limit DM particles.
+    cell_len = np.ones((len(init_cc),1), dtype=np.float64)*parent_GRID_S/2.
 
-    # Indices to order other arrays according to DM dist in ascending order.
-    ind_2D = DM_dis.argsort(axis=1)
-    ind_3D = np.repeat(np.expand_dims(ind_2D, axis=2), 3, axis=2)
+    # Select DM particles inside each cell based on cube length generation.
+    DM_in_cell_IDs = np.asarray(
+        (np.abs(DM_pos[:,:,0]) <= cell_len) & 
+        (np.abs(DM_pos[:,:,1]) <= cell_len) & 
+        (np.abs(DM_pos[:,:,2]) <= cell_len)
+    )
 
-    # Sort DM arrays according to DM distance with these indices.
-    DM_pos_sort = np.take_along_axis(DM_pos, ind_3D, axis=1)
-    DM_dis_sort = np.take_along_axis(DM_dis, ind_2D, axis=1)
-    del DM_dis, ind_2D, ind_3D
+    # Set DM outside cell to nan values.
+    DM_pos[~DM_in_cell_IDs] = np.nan
 
-    # This array is a bit confusing: It has the shape (X,2) and contains pairs 
-    # of indices, where the 1st entry is the cell number and the 2nd the index 
-    # of a DM particle inside the given range for that cell. X then counts all 
-    # DM particles inside range across all cells.
-    DM_IDs = np.argwhere(DM_dis_sort <= DM_range)
-    del DM_dis_sort
+    DM_sort = np.sort(DM_pos, axis=1)
 
-    # Find the index unique to each cell, up to which the DM particles should
-    # be kept, while the rest is outside range and no longer relevant.
-    # Due to the method chosen, the last cell is not included and is attached 
-    # seperately with np.vstack(...).
-    row = DM_IDs.T[1]
-    fw_diff = row[:-1] - row[1:]
-    max_DM_rows_no_last_cell = np.argwhere(fw_diff.flatten() >= 0).flatten()
-    max_DM_rows = np.vstack((DM_IDs[max_DM_rows_no_last_cell,:], DM_IDs[-1,:]))
+    # Calculate distances of DM and adjust array dimensionally.
+    DM_dis = np.expand_dims(np.sqrt(np.sum(DM_sort**2, axis=2)), axis=2)
 
-    # Replace all entries beyond these indices (for each cell) with nan values.
-    for i in range(len(init_cc)):
-
-        if i in DM_IDs.T[0]:
-            cell_ID = np.where(max_DM_rows[:,0] == i)[0][0]
-            DM_pos_sort[i, max_DM_rows[cell_ID,1]+1:, :] = np.nan
-
-        else:
-            DM_pos_sort[i, ...] = np.nan
-
-    # Drop "rows" common to all cells, which contain only nan values. This 
-    # "maximum row" is determined by the highest value in the array, which 
-    # contains the index of the row for each cell, beyond which the values are 
-    # replaced by nan values.
-    max_DM_rank = np.max(max_DM_rows[:,1])
-    DM_cc_compact = np.delete(DM_pos_sort, np.s_[max_DM_rank+1:], axis=1)
-    del DM_pos_sort
+    # Drop "rows" common to all cells, which contain only nan values. This is 
+    # determined by the cell with the most non-nan entries.
+    max_DM_rank = np.max(np.count_nonzero(~np.isnan(DM_sort[:,:,0]), axis=1))
+    DM_compact = np.delete(DM_sort, np.s_[max_DM_rank+1:], axis=1)
+    del DM_sort
 
     # Count the number of DM particles in each cell, before deleting cells.
-    DM_count_raw = np.count_nonzero(~np.isnan(DM_cc_compact[:,:,0]), axis=1)
+    DM_count_raw = np.count_nonzero(~np.isnan(DM_compact[:,:,0]), axis=1)
 
     # Calculate c.o.m coords. for each cell, before deleting cells.
-    # DM_count = np.repeat(np.expand_dims(DM_count_raw, axis=1), 3, axis=1)
     DM_count = np.expand_dims(DM_count_raw, axis=1)
     DM_count[DM_count==0] = 1  # to avoid divide by zero
-    cell_com = np.nansum(DM_cc_compact, axis=1)/DM_count
+    cell_com = np.nansum(DM_compact, axis=1)/DM_count
     del DM_count
 
     # Drop all cells containing an amount of DM below the given threshold, 
     # from the DM positions array.
     cell_cut_IDs = DM_count_raw <= DM_lim
-    DM_cc_minimal = np.delete(DM_cc_compact, cell_cut_IDs, axis=0)
-    del DM_cc_compact
+    DM_cc_minimal = np.delete(DM_compact, cell_cut_IDs, axis=0)
+    del DM_compact
     thresh = np.size(DM_cc_minimal, axis=0)
 
     return DM_count_raw, cell_com, cell_cut_IDs, DM_cc_minimal, thresh
@@ -516,118 +483,82 @@ def cell_division(
             cell_division_count += 1
 
 
-def cell_gravity(cell_coords, DM_coords, grav_range, m_DM):
-    
-    # Center all DM positions w.r.t. cell center.
-    DM_cc = DM_coords*kpc - cell_coords
-
-    # Calculate distances of DM to cc, sorted in ascending order.
-    DM_dist = np.sqrt(np.sum(DM_cc**2, axis=1))
-
-    # Ascending order indices.
-    ind = DM_dist.argsort()
-
-    # Truncate DM positions depending on distance to cc.
-    DM_pos_sort = DM_cc[ind]
-    DM_dist_sort = DM_dist[ind]
-
-    if grav_range is None:
-        DM_pos_inRange = DM_pos_sort
-        DM_dist_inRange = DM_dist_sort
-    else:
-        DM_pos_inRange = DM_pos_sort[DM_dist_sort <= grav_range]
-        DM_dist_inRange = DM_dist_sort[DM_dist_sort <= grav_range]
-
-    # Adjust the distances array to make it compatible with DM positions array.
-    DM_dist_inRange_sync = DM_dist_inRange.reshape(len(DM_dist_inRange),1)
-    DM_dist_inRange_rep = np.repeat(DM_dist_inRange_sync, 3, axis=1)
-
-    ### Calculate superposition gravity.
-    pre = G*m_DM
-    quotient = (cell_coords-DM_pos_inRange)/(DM_dist_inRange_rep**3)
-    derivative = pre*np.sum(quotient, axis=0)
-
-    #NOTE: Minus sign, s.t. velocity changes correctly (see notes).
-    return np.asarray(-derivative, dtype=np.float64)
-
-
 def cell_gravity_3D(
-    cell_coords, cell_com, DM_pos, DM_count, grav_range, m_DM, snap_num):
+    cell_coords, cell_com, cell_gen, 
+    DM_pos, DM_count, m_DM, snap_num):
     
     # Center all DM positions w.r.t. cell center.
     DM_pos -= cell_coords
 
-    # Calculate distances of DM to cc.
-    DM_dis = np.sqrt(np.sum(DM_pos**2, axis=2))
+    # Cell lengths to limit DM particles. Limit for the largest cell is 
+    # GRID_S/2, not just GRID_S, therefore the cell_gen+1 !
+    cell_len = np.expand_dims(GRID_S/(2**(cell_gen+1)), axis=1)
 
-    # Ascending order indices.
-    ind_2D = DM_dis.argsort(axis=1)
+    # Select DM particles inside each cell based on cube length generation.
+    DM_in_cell_IDs = np.asarray(
+        (np.abs(DM_pos[:,:,0]) <= cell_len) & 
+        (np.abs(DM_pos[:,:,1]) <= cell_len) & 
+        (np.abs(DM_pos[:,:,2]) <= cell_len)
+    )
 
-    #! gravity range has to be dynamic to work with long range gravity! 
-    #! currently, small cells in center get duplicate gravity regions...
-    if grav_range is not None:
-        # Truncate DM in each cell, based on cell with most DM in range.
-        # (each cell should have unique truncation according to DM_dis array, 
-        # but that would make ndarray irregular, i.e. not a hyper-triangle)
-        # note: this means each cell has a diff. grav. range, s.t. the range  
-        # note: for each cell ultimately encompasses the same amount of DM
-        diff = grav_range-DM_dis
-        max_ID = np.max(np.sum(diff>=0, axis=1))
-        ind_2D = ind_2D[:, :max_ID]
-    
+    # Set DM outside cell to nan values.
+    DM_pos[~DM_in_cell_IDs] = np.nan
 
-    ind_3D = np.repeat(np.expand_dims(ind_2D, axis=2), 3, axis=2)
+    # Sort (nan values to bottom) and truncate array based on DM_LIM parameter.
+    # This simple way works since each cell cannot have more than DM_LIM.
+    DM_sort = np.sort(DM_pos, axis=1)
+    DM_in = DM_sort[:,:DM_LIM,:]
+    del DM_pos, DM_sort
 
-    # Sort DM positions according to dist.
-    DM_pos_sort = np.take_along_axis(DM_pos, ind_3D, axis=1)
-    DM_dis_sort = np.take_along_axis(DM_dis, ind_2D, axis=1)
-    del DM_dis, ind_2D, ind_3D
-
-    # Adjust the distances array to make it compatible with DM positions array.
-    DM_dis_sync = np.expand_dims(DM_dis_sort, axis=2)
+    # Calculate distances of DM and adjust array dimensionally.
+    DM_dis = np.expand_dims(np.sqrt(np.sum(DM_in**2, axis=2)), axis=2)
 
     # ------------------------------ #
     # Calculate short-range gravity. #
     # ------------------------------ #
 
-    pre = G*m_DM
-    eps = 650*pc  # offset = resolution floor of Camila's sim
-    quot = (cell_coords-DM_pos_sort)/np.power((DM_dis_sync**2 + eps**2), 3./2.)
-    del DM_pos_sort, DM_dis_sync
-    dPsi_short = pre*np.sum(quot, axis=1)
+    # Cells can be as small as ~1kpc, offset of resolution of Camila's sim 
+    # (650 pc) is too high then, thus division by 10.
+    eps = 650*pc / 10
+
+    # nan values to 0 for numerator, and 1 for denominator to avoid infinities.
+    quot = np.nan_to_num(cell_coords - DM_in, copy=False, nan=0.0) / \
+        np.nan_to_num(
+            np.power((DM_dis**2 + eps**2), 3./2.), copy=False, nan=1.0
+        )
+    del DM_in, DM_dis
+    dPsi_short = G*m_DM*np.sum(quot, axis=1)
     del quot
 
 
-    #! this long-range code breaks the number (over)density plot. FIX!
     # ----------------------------- #
     # Calculate long-range gravity. #
     # ----------------------------- #
-    '''
+    
     # Number of cells.
-    cells = cell_coords.shape[0]
+    cs = cell_coords.shape[0]
     
     # Adjust c.o.m cell cords. and DM count arrays dimensionally.
     com_rep = np.repeat(
-        np.expand_dims(cell_com, axis=1), cells, axis=1
+        np.expand_dims(cell_com, axis=1), cs, axis=1
     )
     DM_count_rep = np.repeat(
-        np.expand_dims(DM_count, axis=1), cells, axis=1
+        np.expand_dims(DM_count, axis=1), cs, axis=1
     )
 
     # Create mask to drop cell, for which long-range gravity is being computed.
     # Otherwise each cell will get its own c.o.m. gravity additionally.
-    mask_raw = np.zeros((cells, cells), int)
+    mask_raw = np.zeros((cs, cs), int)
     np.fill_diagonal(mask_raw, 1)
 
-    # Before mask changes dimensionally, filter DM count array and adjust.
-    DM_count_del = DM_count_rep[
-        ~mask_raw.astype(dtype=bool)
-    ].reshape(cells, cells-1)
+    # Before mask changes dimensionally, filter DM count array, 
+    # then adjust it dimensionally.
+    DM_count_del = DM_count_rep[~mask_raw.astype(dtype=bool)].reshape(cs,cs-1)
     DM_count_sync = np.expand_dims(DM_count_del, axis=2)
 
     # Adjust mask dimensionally and filter c.o.m. cell coords.
     mask = np.repeat(np.expand_dims(mask_raw, axis=2), 3, axis=2)
-    com_del = com_rep[~mask.astype(dtype=bool)].reshape(cells, cells-1, 3)
+    com_del = com_rep[~mask.astype(dtype=bool)].reshape(cs, cs-1, 3)
     del com_rep
 
     # Distances between cell centers and cell c.o.m. coords.
@@ -636,20 +567,17 @@ def cell_gravity_3D(
 
     # Long-range gravity component for each cell (without including itself).
     quot_long = (cell_coords-com_del)/np.power(com_dis_sync, 3)
-    dPsi_long = pre*np.sum(DM_count_sync*quot_long, axis=1)
+    dPsi_long = G*m_DM*np.sum(DM_count_sync*quot_long, axis=1)
     del quot_long
 
     # Total derivative as short+long range.
     derivative = dPsi_short + dPsi_long
-    '''
-
-    derivative = dPsi_short
-
-    # note: Minus sign, s.t. velocity changes correctly (see notes).
+    
+    # note: Minus sign, s.t. velocity changes correctly (see GoodNotes).
     dPsi_grid = np.asarray(-derivative, dtype=np.float64)
 
     np.save(f'CubeSpace/dPsi_grid_snapshot_{snap_num}', dPsi_grid)
-    
+
 
 def load_grid(z, sim, which):
 
@@ -659,19 +587,16 @@ def load_grid(z, sim, which):
 
     if which == 'derivatives':
         # Load file with derivative grid of ID.
-        grid = np.load(
-            f'{os.getcwd()}/CubeSpace/dPsi_grid_snapshot_{snap}.npy'
-        )
+        grid = np.load(f'CubeSpace/dPsi_grid_snapshot_{snap}.npy')
 
     elif which == 'positions':
         # Load file with position grid of ID.
-        grid = np.load(
-            f'{os.getcwd()}/CubeSpace/adapted_cc_{sim}_snapshot_{snap}.npy'
-        )
+        grid = np.load(f'CubeSpace/adapted_cc_{sim}_snapshot_{snap}.npy')
 
     return grid
 
 
+@nb.njit
 def nu_in_which_cell(nu_coords, cell_coords):
 
     # For now, just subtract nu_coords from all cell_coords, then take min.
@@ -928,7 +853,7 @@ def dPsi_dxi_NFW(x_i, z, rho_0, M_vir, R_vir, R_s, halo:str):
     derivative = prefactor * (term1 - term2)
 
 
-    #NOTE: Minus sign, s.t. velocity changes correctly (see notes).
+    #NOTE: Minus sign, s.t. velocity changes correctly (see GoodNotes).
     return np.asarray(-derivative, dtype=np.float64)
 
 
@@ -1011,3 +936,231 @@ def number_density(p0, p1):
     n_cm3 = g/(2*Pi**2) * n_raw / (1/cm**3)
 
     return n_cm3
+
+
+#####################
+### Archived Code ###
+#####################
+# Perhaps useful as older functions contain other algorithms and methods. 
+
+'''
+def check_grid_OLD(init_cc, DM_pos, parent_GRID_S, DM_lim):
+    """
+    Determine which cells have DM above threshold and thus need division.
+    """
+
+    # -------------- #
+    # Preliminaries. #
+    # -------------- #
+
+    # Range within DM particles are "part of" the cell:
+    # Circumscribed circle.
+    # DM_range = parent_GRID_S/np.sqrt(2)
+    # Inscribed circle.
+    DM_range = parent_GRID_S/2.
+
+    # Center all DM positions w.r.t. center, for all cells.
+    DM_pos -= init_cc
+
+    # Calculate distances of all DM to center, for all cells.
+    DM_dis = np.sqrt(np.sum(DM_pos**2, axis=2))
+
+    # Indices to order other arrays according to DM dist in ascending order.
+    ind_2D = DM_dis.argsort(axis=1)
+    ind_3D = np.repeat(np.expand_dims(ind_2D, axis=2), 3, axis=2)
+
+    # Sort DM arrays according to DM distance with these indices.
+    DM_pos_sort = np.take_along_axis(DM_pos, ind_3D, axis=1)
+    DM_dis_sort = np.take_along_axis(DM_dis, ind_2D, axis=1)
+    del DM_dis, ind_2D, ind_3D
+
+    # This array is a bit confusing: It has the shape (X,2) and contains pairs 
+    # of indices, where the 1st entry is the cell number and the 2nd the index 
+    # of a DM particle inside the given range for that cell. X then counts all 
+    # DM particles inside range across all cells.
+    DM_IDs = np.argwhere(DM_dis_sort <= DM_range)
+    del DM_dis_sort
+
+    # Find the index unique to each cell, up to which the DM particles should
+    # be kept, while the rest is outside range and no longer relevant.
+    # Due to the method chosen, the last cell is not included and is attached 
+    # seperately with np.vstack(...).
+    row = DM_IDs.T[1]
+    fw_diff = row[:-1] - row[1:]
+    max_DM_rows_no_last_cell = np.argwhere(fw_diff.flatten() >= 0).flatten()
+    max_DM_rows = np.vstack((DM_IDs[max_DM_rows_no_last_cell,:], DM_IDs[-1,:]))
+
+    # Replace all entries beyond these indices (for each cell) with nan values.
+    for i in range(len(init_cc)):
+
+        if i in DM_IDs.T[0]:
+            cell_ID = np.where(max_DM_rows[:,0] == i)[0][0]
+            DM_pos_sort[i, max_DM_rows[cell_ID,1]+1:, :] = np.nan
+
+        else:
+            DM_pos_sort[i, ...] = np.nan
+
+    # Drop "rows" common to all cells, which contain only nan values. This 
+    # "maximum row" is determined by the highest value in the array, which 
+    # contains the index of the row for each cell, beyond which the values are 
+    # replaced by nan values.
+    max_DM_rank = np.max(max_DM_rows[:,1])
+    DM_cc_compact = np.delete(DM_pos_sort, np.s_[max_DM_rank+1:], axis=1)
+    del DM_pos_sort
+
+    # Count the number of DM particles in each cell, before deleting cells.
+    DM_count_raw = np.count_nonzero(~np.isnan(DM_cc_compact[:,:,0]), axis=1)
+
+    # Calculate c.o.m coords. for each cell, before deleting cells.
+    # DM_count = np.repeat(np.expand_dims(DM_count_raw, axis=1), 3, axis=1)
+    DM_count = np.expand_dims(DM_count_raw, axis=1)
+    DM_count[DM_count==0] = 1  # to avoid divide by zero
+    cell_com = np.nansum(DM_cc_compact, axis=1)/DM_count
+    del DM_count
+
+    # Drop all cells containing an amount of DM below the given threshold, 
+    # from the DM positions array.
+    cell_cut_IDs = DM_count_raw <= DM_lim
+    DM_cc_minimal = np.delete(DM_cc_compact, cell_cut_IDs, axis=0)
+    del DM_cc_compact
+    thresh = np.size(DM_cc_minimal, axis=0)
+
+    return DM_count_raw, cell_com, cell_cut_IDs, DM_cc_minimal, thresh
+'''
+
+'''
+def cell_gravity(cell_coords, DM_coords, grav_range, m_DM):
+    
+    # Center all DM positions w.r.t. cell center.
+    DM_cc = DM_coords*kpc - cell_coords
+
+    # Calculate distances of DM to cc, sorted in ascending order.
+    DM_dist = np.sqrt(np.sum(DM_cc**2, axis=1))
+
+    # Ascending order indices.
+    ind = DM_dist.argsort()
+
+    # Truncate DM positions depending on distance to cc.
+    DM_pos_sort = DM_cc[ind]
+    DM_dist_sort = DM_dist[ind]
+
+    if grav_range is None:
+        DM_pos_inRange = DM_pos_sort
+        DM_dist_inRange = DM_dist_sort
+    else:
+        DM_pos_inRange = DM_pos_sort[DM_dist_sort <= grav_range]
+        DM_dist_inRange = DM_dist_sort[DM_dist_sort <= grav_range]
+
+    # Adjust the distances array to make it compatible with DM positions array.
+    DM_dist_inRange_sync = DM_dist_inRange.reshape(len(DM_dist_inRange),1)
+    DM_dist_inRange_rep = np.repeat(DM_dist_inRange_sync, 3, axis=1)
+
+    ### Calculate superposition gravity.
+    pre = G*m_DM
+    quotient = (cell_coords-DM_pos_inRange)/(DM_dist_inRange_rep**3)
+    derivative = pre*np.sum(quotient, axis=0)
+
+    #NOTE: Minus sign, s.t. velocity changes correctly (see GoodNotes).
+    return np.asarray(-derivative, dtype=np.float64)
+'''
+
+'''
+def cell_gravity_3D_OLD(
+    cell_coords, cell_com, DM_pos, DM_count, grav_range, m_DM, snap_num):
+    
+    # Center all DM positions w.r.t. cell center.
+    DM_pos -= cell_coords
+
+    # Calculate distances of DM to cc.
+    DM_dis = np.sqrt(np.sum(DM_pos**2, axis=2))
+
+    # Ascending order indices.
+    ind_2D = DM_dis.argsort(axis=1)
+
+    #! gravity range has to be dynamic to work with long range gravity! 
+    #! currently, small cells in center get duplicate gravity regions...
+    if grav_range is not None:
+        # Truncate DM in each cell, based on cell with most DM in range.
+        # (each cell should have unique truncation according to DM_dis array, 
+        # but that would make ndarray irregular, i.e. not a hyper-triangle)
+        # note: this means each cell has a diff. grav. range, s.t. the range  
+        # note: for each cell ultimately encompasses the same amount of DM
+        diff = grav_range-DM_dis
+        max_ID = np.max(np.sum(diff>=0, axis=1))
+        ind_2D = ind_2D[:, :max_ID]
+    
+
+    ind_3D = np.repeat(np.expand_dims(ind_2D, axis=2), 3, axis=2)
+
+    # Sort DM positions according to dist.
+    DM_pos_sort = np.take_along_axis(DM_pos, ind_3D, axis=1)
+    DM_dis_sort = np.take_along_axis(DM_dis, ind_2D, axis=1)
+    del DM_dis, ind_2D, ind_3D
+
+    # Adjust the distances array to make it compatible with DM positions array.
+    DM_dis_sync = np.expand_dims(DM_dis_sort, axis=2)
+
+    # ------------------------------ #
+    # Calculate short-range gravity. #
+    # ------------------------------ #
+
+    pre = G*m_DM
+    eps = 650*pc  # offset = resolution floor of Camila's sim
+    quot = (cell_coords-DM_pos_sort)/np.power((DM_dis_sync**2 + eps**2), 3./2.)
+    del DM_pos_sort, DM_dis_sync
+    dPsi_short = pre*np.sum(quot, axis=1)
+    del quot
+
+
+    #! this long-range code breaks the number (over)density plot. FIX!
+    # ----------------------------- #
+    # Calculate long-range gravity. #
+    # ----------------------------- #
+    
+    # Number of cells.
+    cells = cell_coords.shape[0]
+    
+    # Adjust c.o.m cell cords. and DM count arrays dimensionally.
+    com_rep = np.repeat(
+        np.expand_dims(cell_com, axis=1), cells, axis=1
+    )
+    DM_count_rep = np.repeat(
+        np.expand_dims(DM_count, axis=1), cells, axis=1
+    )
+
+    # Create mask to drop cell, for which long-range gravity is being computed.
+    # Otherwise each cell will get its own c.o.m. gravity additionally.
+    mask_raw = np.zeros((cells, cells), int)
+    np.fill_diagonal(mask_raw, 1)
+
+    # Before mask changes dimensionally, filter DM count array and adjust.
+    DM_count_del = DM_count_rep[
+        ~mask_raw.astype(dtype=bool)
+    ].reshape(cells, cells-1)
+    DM_count_sync = np.expand_dims(DM_count_del, axis=2)
+
+    # Adjust mask dimensionally and filter c.o.m. cell coords.
+    mask = np.repeat(np.expand_dims(mask_raw, axis=2), 3, axis=2)
+    com_del = com_rep[~mask.astype(dtype=bool)].reshape(cells, cells-1, 3)
+    del com_rep
+
+    # Distances between cell centers and cell c.o.m. coords.
+    com_dis = np.sqrt(np.sum((cell_coords-com_del)**2, axis=2))
+    com_dis_sync = np.expand_dims(com_dis, axis=2)
+
+    # Long-range gravity component for each cell (without including itself).
+    quot_long = (cell_coords-com_del)/np.power(com_dis_sync, 3)
+    dPsi_long = pre*np.sum(DM_count_sync*quot_long, axis=1)
+    del quot_long
+
+    # Total derivative as short+long range.
+    derivative = dPsi_short + dPsi_long
+    
+
+    derivative = dPsi_short
+
+    # note: Minus sign, s.t. velocity changes correctly (see GoodNotes).
+    dPsi_grid = np.asarray(-derivative, dtype=np.float64)
+
+    np.save(f'CubeSpace/dPsi_grid_snapshot_{snap_num}', dPsi_grid)
+''' 
