@@ -454,7 +454,7 @@ def cell_division(
             # of the new cells is determined by the previous length of the 
             # parent cell.
             sub8_GRID_S = parent_GRID_S/2.
-            sub8_raw = fct.grid_3D(sub8_GRID_S, sub8_GRID_S)
+            sub8_raw = grid_3D(sub8_GRID_S, sub8_GRID_S)
 
             # Match dimensions of child-array(s) to parent-array(s).
             sub8_coords = np.repeat(
@@ -525,7 +525,7 @@ def cell_gravity_3D(
 
     # Cells can be as small as ~1kpc, offset of resolution of Camila's sim 
     # (650 pc) is too high then, thus division by 10.
-    eps = 650*pc / 10
+    eps = 650*pc / 10.
 
     # nan values to 0 for numerator, and 1 for denominator to avoid infinities.
     quot = np.nan_to_num(cell_coords - DM_in, copy=False, nan=0.0) / \
@@ -540,7 +540,7 @@ def cell_gravity_3D(
     # ----------------------------- #
     # Calculate long-range gravity. #
     # ----------------------------- #
-    
+    '''
     # Number of cells.
     cs = cell_coords.shape[0]
     
@@ -578,7 +578,10 @@ def cell_gravity_3D(
 
     # Total derivative as short+long range.
     derivative = dPsi_short + dPsi_long
-    
+    '''
+
+    derivative = dPsi_short
+
     # note: Minus sign, s.t. velocity changes correctly (see GoodNotes).
     dPsi_grid = np.asarray(-derivative, dtype=np.float64)
 
