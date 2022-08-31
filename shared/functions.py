@@ -433,6 +433,7 @@ def cell_division(
             # Array containing all cells (i.e. their coords. ), which need to
             # be divided into 8 "child cells", hence the name "parent cells".
             parent_cc = np.delete(init_cc, stable_cells, axis=0)
+            pcs = len(parent_cc)
 
             # -------------------------------------------------- #
             # Replace each parent cell by the 8 new child cells. #
@@ -455,16 +456,14 @@ def cell_division(
             # parent cell.
             sub8_GRID_S = parent_GRID_S/2.
             sub8_raw = grid_3D(sub8_GRID_S, sub8_GRID_S)
+            
+            # Temporarily reshape to center on parent cells.
+            sub8_temp = np.tile(sub8_raw, (pcs,1)).reshape((pcs, 8, 3))
 
-            # Match dimensions of child-array(s) to parent-array(s).
-            sub8_coords = np.repeat(
-                np.expand_dims(sub8_raw, axis=0), len(parent_cc), axis=0
-            )
-
-            # Reshape array to match repeated DM position array.
-            sub8_coords = np.expand_dims(
-                np.reshape(sub8_coords, (len(parent_cc)*8, 3)), axis=1
-            )
+            # Center each new 8-batch of child cells on a different parent cell.
+            # sub8_coords = np.reshape(sub8_temp - parent_cc, (pcs*8, 1, 3))
+            sub8_coords = np.reshape(sub8_temp, (pcs*8, 1, 3))
+            del sub8_raw, sub8_temp, parent_cc
 
             # Delete all cells in initial cell coords array, corresponding to 
             # the cells in need of division, i.e. the parent cells.
