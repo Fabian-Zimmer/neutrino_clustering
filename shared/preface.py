@@ -10,6 +10,7 @@ import gc
 import argparse
 import pathlib
 import itertools
+from memory_profiler import profile
 
 # arrays and data packages
 import numpy as np
