@@ -236,4 +236,3 @@ GRID_S = 100*kpc
 DM_LIM = 1000
 DM_SIM_MASS = 11502999*Msun
 GRAV_RANGE = GRID_S/2.  # None -> includes all DM particles
-GRAV_VISUAL = 'Inscribed Sphere'
