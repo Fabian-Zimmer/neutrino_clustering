@@ -171,7 +171,7 @@ def read_DM_positions(
 
     # Masses.
     mass = snaps['PartType1/Masses'][:] * 1e10  
-    #! some choice of Camila, *1e10 to get to Msun. All DM particles have same mass.
+    #! In Camila's sims: *1e10 to get to Msun, all DM particles have same mass.
 
     # Velocities.
     vel = snaps['PartType1/Velocities'][:][:]  #! in km/s, physical
@@ -343,8 +343,12 @@ def check_grid(init_cc, DM_pos, parent_GRID_S, DM_lim, gen_count):
 
 
 def cell_division(
-    init_cc, DM_pos, parent_GRID_S, DM_lim, stable_cc, sim, snap_num
+    init_cc, DM_pos, parent_GRID_S, DM_lim, stable_cc, sim, snap_num, 
+    test_names=False
     ):
+
+    if test_names:
+        sim = 'TestFile'
 
     # Initiate counters.
     thresh = 1
@@ -439,17 +443,13 @@ def cell_division(
             # Replace each parent cell by the 8 new child cells. #
             # -------------------------------------------------- #
 
-            # note: 
-            # There is no need for recentering the DM particles or the newly 
-            # created child cells on the parent cells, etc. Since the DM 
-            # particles are centered on their respective parent cells, they see 
-            # the origin as (0,0,0) already. The child cells are also created 
-            # around (0,0,0). The only crucial centering is inside the 
-            # check_grid function with "DM_pos -= init_cc" !
+            # Reset DM on parent cells, such that they can be centered on new 
+            # child cells again later.
+            DM_reset = DM_cc_minimal + parent_cc
 
             # Repeat each DM "column" 8 times. This will be the DM position 
             # array in the next iteration.
-            DM_raw8 = np.repeat(DM_cc_minimal, repeats=8, axis=0)
+            DM_rep8 = np.repeat(DM_reset, repeats=8, axis=0)
 
             # Create 8 new cells around origin of (0,0,0). The length and size 
             # of the new cells is determined by the previous length of the 
@@ -461,8 +461,7 @@ def cell_division(
             sub8_temp = np.tile(sub8_raw, (pcs,1)).reshape((pcs, 8, 3))
 
             # Center each new 8-batch of child cells on a different parent cell.
-            # sub8_coords = np.reshape(sub8_temp - parent_cc, (pcs*8, 1, 3))
-            sub8_coords = np.reshape(sub8_temp, (pcs*8, 1, 3))
+            sub8_coords = np.reshape(sub8_temp + parent_cc, (pcs*8, 1, 3))
             del sub8_raw, sub8_temp, parent_cc
 
             # Delete all cells in initial cell coords array, corresponding to 
@@ -481,7 +480,7 @@ def cell_division(
 
             # Overwrite variables for next loop.
             init_cc       = sub8_coords
-            DM_pos        = DM_raw8
+            DM_pos        = DM_rep8
             parent_GRID_S = sub8_GRID_S
             stable_cc     = stable_cc_so_far
 
@@ -490,7 +489,7 @@ def cell_division(
 
 def cell_gravity_3D(
     cell_coords, cell_com, cell_gen, 
-    DM_pos, DM_count, m_DM, snap_num):
+    DM_pos, DM_count, m_DM, snap_num, test_names=False):
     
     # Center all DM positions w.r.t. cell center.
     DM_pos -= cell_coords
@@ -539,7 +538,7 @@ def cell_gravity_3D(
     # ----------------------------- #
     # Calculate long-range gravity. #
     # ----------------------------- #
-    '''
+    
     # Number of cells.
     cs = cell_coords.shape[0]
     
@@ -577,12 +576,15 @@ def cell_gravity_3D(
 
     # Total derivative as short+long range.
     derivative = dPsi_short + dPsi_long
-    '''
-
-    derivative = dPsi_short
+    
+    # derivative = dPsi_short
 
     # note: Minus sign, s.t. velocity changes correctly (see GoodNotes).
     dPsi_grid = np.asarray(-derivative, dtype=np.float64)
+
+    # Rename files when testing to not overwrite important files for sims.
+    if test_names:
+        snap_num = 'TestFile'
 
     np.save(f'CubeSpace/dPsi_grid_snapshot_{snap_num}', dPsi_grid)
 

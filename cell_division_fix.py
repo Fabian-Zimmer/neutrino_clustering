@@ -9,9 +9,9 @@ m0 = '2.59e+11'
 # Overwrite global DM_LIM parameter, to manually set rounds of cell division.
 # DM_LIM = 100000  # round(s): 0
 # DM_LIM = 50000   # round(s): 1
-DM_LIM = 40000   # round(s): 2
+# DM_LIM = 40000   # round(s): 2
 # DM_LIM = 10000   # round(s): 4
-# DM_LIM = 1000    # round(s): 6
+# DM_LIM = 1000    # round(s): 8
 
 # Initial grid and DM positions.
 grid = fct.grid_3D(GRID_L, GRID_S)
