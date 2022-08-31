@@ -191,9 +191,9 @@ NU_MASSES = np.array([0.01, 0.05, 0.1, 0.3])*eV
 # using the analytical expression for Fermions.
 N0 = 2*zeta(3.)/Pi**2 *T_CNB**3 *(3./4.) /(1/cm**3)
 
-PHIs = 20
-THETAs = 20
-Vs = 200
+PHIs = 10
+THETAs = 10
+Vs = 100
 NUS = PHIs*THETAs*Vs
 
 LOWER = 0.01*T_CNB
@@ -232,6 +232,6 @@ NUMS_SNAPSHOTS = np.load('shared/NUMS_SNAPSHOTS.npy')
 
 SIM_ID = 'L006N188'
 GRID_L = Rvir_MW
-GRID_S = 100*kpc
+GRID_S = 80*kpc
 DM_LIM = 1000
 DM_SIM_MASS = 11502999*Msun
