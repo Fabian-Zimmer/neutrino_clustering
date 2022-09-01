@@ -5,26 +5,9 @@ import shared.functions as fct
 def main():
     start = time.perf_counter()
 
-    # ------------------------------- #
-    # Generate progenitor index list. #
-    # ------------------------------- #
-
-    # Path to merger_tree file.
-    tree_path = f'{pathlib.Path.cwd().parent}/neutrino_clustering_output_local/MergerTree/MergerTree_{SIM_ID}.hdf5'
-
-    with h5py.File(tree_path) as tree:
-        # Choice of index in snapshot_0036.
-        choice = 2  #note: 0 is ~1e12Msun, 1 & 2 are ~1e11Msun
-        masses = tree['Assembly_history/Mass'][choice,:]
-        zeds = tree['Assembly_history/Redshift']
-
-        # Initial mass of traced halo.
-        m0 = f'{masses[0]:.2e}'
-
-        # Progenitor index list.
-        prog_idx = tree['Assembly_history/Progenitor_index'][choice,:]
-        prog_idx = np.array(np.expand_dims(prog_idx, axis=1), dtype=int)
-
+    # Generate progenitor index list.
+    # note on init_halo for L006N188 sim: 0 is ~1e12Msun, 1 & 2 are ~1e11Msun.
+    m0, prog_idx = fct.read_MergerTree(init_halo=2) 
 
     # Display script parameters.
     print('*************************************')

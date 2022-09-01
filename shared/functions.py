@@ -21,6 +21,18 @@ def NFW_profile(r, rho_0, r_s):
 
     return rho
 
+
+def scale_density_NFW(z, c):
+    """Eqn. (2) from arXiv:1302.0288. c=r_200/r_s."""
+    numer = 200 * c**3
+    denom = 3 * (np.log(1+c) - (c/(1+c)))
+    delta_c = numer/denom
+
+    rho_c = rho_crit(z)
+
+    return rho_c*delta_c
+
+
 @nb.njit
 def c_vir_avg(z, M_vir):
     """Intermediate/helper function for c_vir function below."""
@@ -135,9 +147,30 @@ def R_vir_fct(z, M_vir):
 #############################################
 ### Functions used in DISCRETE simulation ###
 #############################################
+
+def read_MergerTree(init_halo):
+    # Path to merger_tree file.
+    tree_path = f'{pathlib.Path.cwd().parent}/neutrino_clustering_output_local/MergerTree/MergerTree_{SIM_ID}.hdf5'
+
+    with h5py.File(tree_path) as tree:
+        # Choice of index in snapshot_0036.
+        masses = tree['Assembly_history/Mass'][init_halo,:]
+        zeds = tree['Assembly_history/Redshift']
+
+        # Initial mass of traced halo.
+        m0 = f'{masses[0]:.2e}'
+
+        # Progenitor index list.
+        prog_idx = tree['Assembly_history/Progenitor_index'][init_halo,:]
+        prog_idx = np.array(np.expand_dims(prog_idx, axis=1), dtype=int)
+
+    return m0, prog_idx
+
+
 def read_DM_positions(
     which_halos, mass_select, mass_range=0.2, 
-    random=True, snap_num='0036', sim='L___N___', halo_index=0, init_m=0
+    random=True, snap_num='0036', sim='L___N___', halo_index=0, init_m=0,
+    save_params=False
     ):
 
     # Open data files.
@@ -171,7 +204,7 @@ def read_DM_positions(
 
     # Masses.
     mass = snaps['PartType1/Masses'][:] * 1e10  
-    #! In Camila's sims: *1e10 to get to Msun, all DM particles have same mass.
+    #! In Camila's sims: *1e10 to get to Msun & all DM particles have same mass.
 
     # Velocities.
     vel = snaps['PartType1/Velocities'][:][:]  #! in km/s, physical
@@ -247,6 +280,13 @@ def read_DM_positions(
             f'CubeSpace/DM_positions_{sim}_snapshot_{snap_num}_{init_m}Msun.npy',
             particles_pos
         )
+
+    if save_params:
+        # Select corresponding cNFW, rvir and Mvir of chosen halo.
+        halo_cNFW = cNFW[halo_index]
+        halo_rvir = rvir[halo_index]
+        halo_Mvir = m200c[halo_index]
+        return halo_cNFW, halo_rvir, halo_Mvir
 
 
 def grid_3D(l, s, origin_coords=[0.,0.,0.,]):
@@ -487,9 +527,46 @@ def cell_division(
             cell_division_count += 1
 
 
+def manual_cell_division(
+    sim_id, snap_num, m0, DM_raw,
+    DM_lim_manual, GRID_L_manual, GRID_S_manual
+):
+    
+    # Initial grid and DM positions.
+    grid = grid_3D(GRID_L_manual, GRID_S_manual)
+    init_cc = np.expand_dims(grid, axis=1)
+    DM_pos = np.expand_dims(DM_raw, axis=0)
+    DM_ready = np.repeat(DM_pos, len(init_cc), axis=0)
+    print('Grid and DM shapes before division:', init_cc.shape, DM_ready.shape)
+
+    cell_division_count = cell_division(
+        init_cc, DM_ready, GRID_S_manual, DM_lim_manual, 
+        stable_cc=None, sim=sim_id, snap_num=snap_num, 
+        test_names=True  #! s.t. important files don't get changed
+    )
+    print(f'cell division rounds: {cell_division_count}')
+
+    # Output.
+    adapted_cc = np.load(
+        f'CubeSpace/adapted_cc_TestFile_snapshot_{snap_num}.npy')
+    cell_gen = np.load(
+        f'CubeSpace/cell_gen_TestFile_snapshot_{snap_num}.npy')
+    cell_com = np.load(
+        f'CubeSpace/cell_com_TestFile_snapshot_{snap_num}.npy')
+    DM_count = np.load(
+        f'CubeSpace/DM_count_TestFile_snapshot_{snap_num}.npy')
+
+    print('Shapes of output files:', adapted_cc.shape, cell_gen.shape, cell_com.shape, DM_count.shape)
+
+    print('Total DM count across all cells:', DM_count.sum())
+
+    return adapted_cc, cell_gen, cell_com, DM_count
+
+
+
 def cell_gravity_3D(
     cell_coords, cell_com, cell_gen, 
-    DM_pos, DM_count, m_DM, snap_num, test_names=False):
+    DM_pos, DM_count, m_DM, snap_num, long_range=True, test_names=False):
     
     # Center all DM positions w.r.t. cell center.
     DM_pos -= cell_coords
@@ -534,50 +611,50 @@ def cell_gravity_3D(
     dPsi_short = G*m_DM*np.sum(quot, axis=1)
     del quot
 
+    if long_range:
+        # ----------------------------- #
+        # Calculate long-range gravity. #
+        # ----------------------------- #
+        
+        # Number of cells.
+        cs = cell_coords.shape[0]
+        
+        # Adjust c.o.m cell cords. and DM count arrays dimensionally.
+        com_rep = np.repeat(
+            np.expand_dims(cell_com, axis=1), cs, axis=1
+        )
+        DM_count_rep = np.repeat(
+            np.expand_dims(DM_count, axis=1), cs, axis=1
+        )
 
-    # ----------------------------- #
-    # Calculate long-range gravity. #
-    # ----------------------------- #
-    
-    # Number of cells.
-    cs = cell_coords.shape[0]
-    
-    # Adjust c.o.m cell cords. and DM count arrays dimensionally.
-    com_rep = np.repeat(
-        np.expand_dims(cell_com, axis=1), cs, axis=1
-    )
-    DM_count_rep = np.repeat(
-        np.expand_dims(DM_count, axis=1), cs, axis=1
-    )
+        # Create mask to drop cell, for which long-range gravity is being computed.
+        # Otherwise each cell will get its own c.o.m. gravity additionally.
+        mask_raw = np.zeros((cs, cs), int)
+        np.fill_diagonal(mask_raw, 1)
 
-    # Create mask to drop cell, for which long-range gravity is being computed.
-    # Otherwise each cell will get its own c.o.m. gravity additionally.
-    mask_raw = np.zeros((cs, cs), int)
-    np.fill_diagonal(mask_raw, 1)
+        # Before mask changes dimensionally, filter DM count array, 
+        # then adjust it dimensionally.
+        DM_count_del = DM_count_rep[~mask_raw.astype(dtype=bool)].reshape(cs,cs-1)
+        DM_count_sync = np.expand_dims(DM_count_del, axis=2)
 
-    # Before mask changes dimensionally, filter DM count array, 
-    # then adjust it dimensionally.
-    DM_count_del = DM_count_rep[~mask_raw.astype(dtype=bool)].reshape(cs,cs-1)
-    DM_count_sync = np.expand_dims(DM_count_del, axis=2)
+        # Adjust mask dimensionally and filter c.o.m. cell coords.
+        mask = np.repeat(np.expand_dims(mask_raw, axis=2), 3, axis=2)
+        com_del = com_rep[~mask.astype(dtype=bool)].reshape(cs, cs-1, 3)
+        del com_rep
 
-    # Adjust mask dimensionally and filter c.o.m. cell coords.
-    mask = np.repeat(np.expand_dims(mask_raw, axis=2), 3, axis=2)
-    com_del = com_rep[~mask.astype(dtype=bool)].reshape(cs, cs-1, 3)
-    del com_rep
+        # Distances between cell centers and cell c.o.m. coords.
+        com_dis = np.sqrt(np.sum((cell_coords-com_del)**2, axis=2))
+        com_dis_sync = np.expand_dims(com_dis, axis=2)
 
-    # Distances between cell centers and cell c.o.m. coords.
-    com_dis = np.sqrt(np.sum((cell_coords-com_del)**2, axis=2))
-    com_dis_sync = np.expand_dims(com_dis, axis=2)
+        # Long-range gravity component for each cell (without including itself).
+        quot_long = (cell_coords-com_del)/np.power(com_dis_sync, 3)
+        dPsi_long = G*m_DM*np.sum(DM_count_sync*quot_long, axis=1)
+        del quot_long
 
-    # Long-range gravity component for each cell (without including itself).
-    quot_long = (cell_coords-com_del)/np.power(com_dis_sync, 3)
-    dPsi_long = G*m_DM*np.sum(DM_count_sync*quot_long, axis=1)
-    del quot_long
-
-    # Total derivative as short+long range.
-    derivative = dPsi_short + dPsi_long
-    
-    # derivative = dPsi_short
+        # Total derivative as short+long range.
+        derivative = dPsi_short + dPsi_long
+    else:
+        derivative = dPsi_short
 
     # note: Minus sign, s.t. velocity changes correctly (see GoodNotes).
     dPsi_grid = np.asarray(-derivative, dtype=np.float64)
@@ -823,7 +900,7 @@ def halo_pos(glat, glon, d):
 
 @nb.njit
 def dPsi_dxi_NFW(x_i, z, rho_0, M_vir, R_vir, R_s, halo:str):
-    """Derivative of MW NFW grav. potential w.r.t. any axis x_i.
+    """Derivative of NFW gravity of a halo w.r.t. any axis x_i.
 
     Args:
         x_i (array): spatial position vector
@@ -836,11 +913,16 @@ def dPsi_dxi_NFW(x_i, z, rho_0, M_vir, R_vir, R_s, halo:str):
                with units of acceleration.
     """    
 
-
-    # Compute values dependent on redshift.
-    r_vir = R_vir_fct(z, M_vir)
-    r_s = r_vir / c_vir(z, M_vir, R_vir, R_s)
-    
+    if halo in ('MW', 'VC', 'AG'):
+        # Compute values dependent on redshift.
+        r_vir = R_vir_fct(z, M_vir)
+        r_s = r_vir / c_vir(z, M_vir, R_vir, R_s)
+    else:
+        # If function is used to calculate NFW gravity for arbitrary halo.
+        r_vir = R_vir
+        r_s = R_s
+        x_i_cent = x_i
+        r = np.sqrt(np.sum(x_i_cent**2))
 
     # Distance from respective halo center with current coords. x_i.
     if halo == 'MW':
@@ -853,7 +935,6 @@ def dPsi_dxi_NFW(x_i, z, rho_0, M_vir, R_vir, R_s, halo:str):
         x_i_cent = x_i - (X_AG*kpc)  # center w.r.t. Andromeda Galaxy
         r = np.sqrt(np.sum(x_i_cent**2))
     
-
     # Derivative in compact notation with m and M.
     m = np.minimum(r, r_vir)
     M = np.maximum(r, r_vir)
@@ -861,7 +942,6 @@ def dPsi_dxi_NFW(x_i, z, rho_0, M_vir, R_vir, R_s, halo:str):
     term1 = np.log(1. + (m/r_s)) / (r/r_s)
     term2 = (r_vir/M) / (1. + (m/r_s))
     derivative = prefactor * (term1 - term2)
-
 
     #NOTE: Minus sign, s.t. velocity changes correctly (see GoodNotes).
     return np.asarray(-derivative, dtype=np.float64)
