@@ -10,7 +10,7 @@ def EOMs(s_val, y):
 
     # Check if neutrino is outside virial radius of halo.
     # (Preferably check if outside of grid...)
-    if np.sqrt(np.sum(x_i**2)) > Rvir
+    # if np.sqrt(np.sum(x_i**2)) > ...
 
 
     # Switch to "numerical reality" here.

@@ -569,10 +569,10 @@ def simple_gravity(x_i, M_halo, X_halo):
     numer = x_i - X_halo
 
     # Sum along some axis...
-    denom = np.sqrt(np.sum((x_i - X_halo)**2))
+    denom = np.sqrt(np.sum((x_i - X_halo)**2))**3
 
     return pre*numer/denom
-    
+
 
 def cell_gravity_3D(
     cell_coords, cell_com, cell_gen, 
