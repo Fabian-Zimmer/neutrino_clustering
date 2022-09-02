@@ -203,11 +203,11 @@ def read_DM_positions(
     #! comoving to physical (pc) with a, then *1e3 to go to kpc (later)
 
     # Masses.
-    mass = snaps['PartType1/Masses'][:] * 1e10  
+    # mass = snaps['PartType1/Masses'][:] * 1e10  
     #! In Camila's sims: *1e10 to get to Msun & all DM particles have same mass.
 
     # Velocities.
-    vel = snaps['PartType1/Velocities'][:][:]  #! in km/s, physical
+    # vel = snaps['PartType1/Velocities'][:][:]  #! in km/s, physical
 
     # NFW concentration parameter.
     cNFW = props['cNFW_200crit'][:]
@@ -264,7 +264,7 @@ def read_DM_positions(
         assume_unique=True, return_indices=True
     )
 
-    particles_mass = mass[indices_p]
+    # particles_mass = mass[indices_p]
     particles_pos = pos[indices_p, :]  # : grabs all 3 spatial positions.
     particles_pos -= CoP[halo_index, :]  # centering, w.r.t halo they're part of
     particles_pos *= 1e3  # to kpc
@@ -600,7 +600,7 @@ def cell_gravity_3D(
 
     # Cells can be as small as ~1kpc, offset of resolution of Camila's sim 
     # (650 pc) is too high then, thus division by 10.
-    eps = 650*pc / 10.
+    eps = 650*pc / 2.
 
     # nan values to 0 for numerator, and 1 for denominator to avoid infinities.
     quot = np.nan_to_num(cell_coords - DM_in, copy=False, nan=0.0) / \
@@ -725,11 +725,18 @@ def load_u_sim(nr_of_nus, halos='MW', discrete=False):
     return u_all
 
 
-def load_x_sim(nr_of_nus, halos:str, discrete=False):
+def load_x_sim(nr_of_nus, halos='MW', discrete=False):
     """Loads neutrino positions of simulation."""
 
-    sim = np.load(f'neutrino_vectors/nus_{nr_of_nus}_halos_{halos}.npy')
-    x_all = sim[:,:,0:3]
+    if discrete:
+        sim = np.load(f'neutrino_vectors/nus_{nr_of_nus}_CubeSpace.npy')
+        x_all = sim[:,:,0:3]
+
+    else:
+        sim = np.load(f'neutrino_vectors/nus_{nr_of_nus}_halos_{halos}.npy')
+        x_all = sim[:,:,0:3]
+
+    # x_all.shape = (nr_of_nus, len(ZEDS), 3) ; x_all.ndim = 3
 
     return x_all
 

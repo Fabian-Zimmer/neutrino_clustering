@@ -1,5 +1,5 @@
 ###############
-### Imports ###
+### Imports ###  # TEST
 ###############
 import sys, os
 from sys import getsizeof
@@ -14,6 +14,7 @@ from memory_profiler import profile
 
 # arrays and data packages
 import numpy as np
+import pandas as pd
 import re
 import h5py
 
@@ -104,7 +105,8 @@ pc     = 3.08567758128e18*cm        # parsec
 kpc    = 1.0e3*pc
 Mpc    = 1.0e3*kpc
 
-#NOTE: Natural units defined via c=1, i.e. s/m = 299792458
+# note: 
+# Natural units defined via c=1, i.e. s/m = 299792458
 s      = 2.99792458e10*cm           # second
 yr     = 365*24*60*60*s
 Gyr    = 1e9*yr
@@ -181,8 +183,10 @@ X_AG    = np.array([632.29742673, -377.40315121, -288.27006757])
 ######################
 ### Control Center ###
 ######################
-#NOTE: Using heaviest mass in conjunction with high momentum range covers
-#NOTE: velocity range sufficient for whole mass range.
+# note:
+# Using heaviest mass in conjunction with high momentum range covers
+# velocity range sufficient for whole mass range. ANd in this way, the fastest 
+# neutrino travels at ~21% of the speed of light.
 NU_MASS = 0.3*eV  
 NU_MASS_KG = NU_MASS/kg
 NU_MASSES = np.array([0.01, 0.05, 0.1, 0.3])*eV
@@ -213,7 +217,8 @@ ZEDS = np.insert(zeds_pre, len(zeds_pre), 4.)
 TIME_FLOW = -1
 
 # Position of earth w.r.t Milky Way NFW halo center.
-#NOTE: Earth is placed on x axis of coord. system.
+# note: 
+# Earth is placed on x axis of coord. system.
 X_SUN = np.array([8.5, 0., 0.])
 
 # Available halos.
