@@ -7,6 +7,12 @@ def EOMs(s_val, y):
     # Initialize vector.
     x_i, u_i = np.reshape(y, (2,3))
 
+
+    # Check if neutrino is outside virial radius of halo.
+    # (Preferably check if outside of grid...)
+    if np.sqrt(np.sum(x_i**2)) > Rvir
+
+
     # Switch to "numerical reality" here.
     x_i *= kpc
     u_i *= (kpc/s)

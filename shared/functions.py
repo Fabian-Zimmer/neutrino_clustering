@@ -528,7 +528,7 @@ def cell_division(
 
 
 def manual_cell_division(
-    sim_id, snap_num, m0, DM_raw,
+    sim_id, snap_num, DM_raw,
     DM_lim_manual, GRID_L_manual, GRID_S_manual
 ):
     
@@ -563,6 +563,16 @@ def manual_cell_division(
     return adapted_cc, cell_gen, cell_com, DM_count
 
 
+def simple_gravity(x_i, M_halo, X_halo):
+    pre = G*M_halo
+
+    numer = x_i - X_halo
+
+    # Sum along some axis...
+    denom = np.sqrt(np.sum((x_i - X_halo)**2))
+
+    return pre*numer/denom
+    
 
 def cell_gravity_3D(
     cell_coords, cell_com, cell_gen, 
