@@ -13,7 +13,8 @@ mass_gauge = 11
 if halo_type == 'halos':
     # Generate progenitor index list.
     # note on init_halo for L006N188 sim: 0 is ~1e12Msun, 1 & 2 are ~1e11Msun.
-    init_halo = 0
+    init_halo = 2
+
     m0, prog_idx = fct.read_MergerTree(init_halo) 
 
     # Generate file for DM particles of chosen halo and get parameters.
@@ -54,10 +55,10 @@ print(
 # DM_lim_custom = 30000
 # DM_lim_custom = 10000
 # DM_lim_custom = 8000
-DM_lim_custom = 1000
+DM_lim_custom = 1
 
-GRID_L_custom = 800*kpc
-GRID_S_custom= 600*kpc
+GRID_L_custom = 400*kpc
+GRID_S_custom= 200*kpc
 
 adapted_cc, cell_gen, cell_com, DM_count = fct.manual_cell_division(
     sim_id, snap_num, DM_raw,
