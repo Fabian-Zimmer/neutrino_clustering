@@ -237,6 +237,6 @@ NUMS_SNAPSHOTS = np.load('shared/NUMS_SNAPSHOTS.npy')
 
 SIM_ID = 'L006N188'
 GRID_L = Rvir_MW
-GRID_S = 80*kpc
+GRID_S = 100*kpc
 DM_LIM = 1000
 DM_SIM_MASS = 11502999*Msun

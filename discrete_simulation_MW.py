@@ -7,12 +7,6 @@ def EOMs(s_val, y):
     # Initialize vector.
     x_i, u_i = np.reshape(y, (2,3))
 
-
-    # Check if neutrino is outside virial radius of halo.
-    # (Preferably check if outside of grid...)
-    # if np.sqrt(np.sum(x_i**2)) > ...
-
-
     # Switch to "numerical reality" here.
     x_i *= kpc
     u_i *= (kpc/s)
@@ -24,12 +18,17 @@ def EOMs(s_val, y):
     dPsi_grid = fct.load_grid(z, SIM_ID, 'derivatives')
     cell_grid = fct.load_grid(z, SIM_ID, 'positions')
 
-    # Find gradient at neutrino position, i.e. for corresponding cell.
-    cell_idx = fct.nu_in_which_cell(x_i, cell_grid)
 
-    # Get derivative of cell.
-    grad_tot = dPsi_grid[cell_idx,:]
-    
+    nu_inside_grid = True
+    nu_outside_grid = False
+
+    # Find gradient at neutrino position.
+    if nu_inside_grid:
+        cell_idx = fct.nu_in_which_cell(x_i, cell_grid)  # index of cell
+        grad_tot = dPsi_grid[cell_idx,:]                 # derivative of cell
+    elif nu_outside_grid:
+        grad_tot = ...
+
     # Switch to "physical reality" here.
     grad_tot /= (kpc/s**2)
     x_i /= kpc

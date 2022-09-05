@@ -168,7 +168,7 @@ def read_MergerTree(init_halo):
 
 
 def read_DM_positions(
-    which_halos, mass_select, mass_range=0.2, 
+    which_halos='halos', mass_select=12, mass_range=0.2, 
     random=True, snap_num='0036', sim='L___N___', halo_index=0, init_m=0,
     save_params=False
     ):
@@ -247,13 +247,17 @@ def read_DM_positions(
             select_halos = select_halos[select]
 
         # Select 1 random halo.
-        np.random.seed(SEED)
+        np.random.seed(1)
         select_random = np.random.randint(len(select_halos) - 1, size=(1))
         halo_index = select_halos[select_random]
 
-    # Grab the start position in the particles file to read from
-    halo_start_pos = group["Offset"][halo_index]#[0]
-    halo_end_pos = group["Offset"][halo_index + 1]#[0]
+        # Grab the start position in the particles file to read from
+        halo_start_pos = group["Offset"][halo_index][0]
+        halo_end_pos = group["Offset"][halo_index + 1][0]
+
+    else:
+        halo_start_pos = group["Offset"][halo_index]#[0]
+        halo_end_pos = group["Offset"][halo_index + 1]#[0]
 
     particle_ids_in_halo = parts["Particle_IDs"][halo_start_pos:halo_end_pos]
     particle_ids_from_snapshot = snaps["PartType1/ParticleIDs"][...]
