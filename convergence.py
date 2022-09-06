@@ -55,6 +55,7 @@ print(
 # DM_lim_custom = 30000
 # DM_lim_custom = 10000
 # DM_lim_custom = 8000
+# DM_lim_custom = 1000
 DM_lim_custom = 1
 
 GRID_L_custom = 400*kpc
