@@ -500,6 +500,9 @@ def cell_division(
             # child cells again later.
             DM_reset = DM_cc_minimal + parents_cc
 
+            #! check: DM_reset should be completely unique array, i.e. no DM
+            #! particle should be present twice. (before repetition below...)
+
             # Repeat each DM "column" 8 times. This will be the DM position 
             # array in the next iteration.
             DM_rep8 = np.repeat(DM_reset, repeats=8, axis=0)
@@ -518,7 +521,9 @@ def cell_division(
             del sub8_raw, sub8_temp, parents_cc
 
             if cell_division_count > 0:
-                stable_cc_so_far = np.concatenate((stable_cc, no_parents_cc), axis=0)
+                stable_cc_so_far = np.concatenate(
+                    (stable_cc, no_parents_cc), axis=0
+                )
             else:  # ending of first division loop
                 stable_cc_so_far = no_parents_cc
 
