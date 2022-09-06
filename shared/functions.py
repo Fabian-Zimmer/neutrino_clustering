@@ -297,7 +297,7 @@ def grid_3D(l, s, origin_coords=[0.,0.,0.,]):
     """
     Generate 3D cell center coordinate grid (built around origin_coords) 
     extending from center until l in all 3 axes, spaced apart by s.
-    If l=s then 8 cells will be generated (used for subdividing cell into 8).
+    If l=s then 8 cells will be generated (used for dividing 1 cell into 8).
     """
 
     # Generate edges of 3D grid.
@@ -478,35 +478,10 @@ def cell_division(
         else:
             del DM_count, cell_com
             
-            # Array containing all cells (i.e. their coords. ), which need to
+            # Array containing all cells (i.e. their coords.), which need to
             # be divided into 8 "child cells", hence the name "parent cells".
-            parent_cc = np.delete(init_cc, stable_cells, axis=0)
-            pcs = len(parent_cc)
-
-            # -------------------------------------------------- #
-            # Replace each parent cell by the 8 new child cells. #
-            # -------------------------------------------------- #
-
-            # Reset DM on parent cells, such that they can be centered on new 
-            # child cells again later.
-            DM_reset = DM_cc_minimal + parent_cc
-
-            # Repeat each DM "column" 8 times. This will be the DM position 
-            # array in the next iteration.
-            DM_rep8 = np.repeat(DM_reset, repeats=8, axis=0)
-
-            # Create 8 new cells around origin of (0,0,0). The length and size 
-            # of the new cells is determined by the previous length of the 
-            # parent cell.
-            sub8_GRID_S = parent_GRID_S/2.
-            sub8_raw = grid_3D(sub8_GRID_S, sub8_GRID_S)
-            
-            # Temporarily reshape to center on parent cells.
-            sub8_temp = np.tile(sub8_raw, (pcs,1)).reshape((pcs, 8, 3))
-
-            # Center each new 8-batch of child cells on a different parent cell.
-            sub8_coords = np.reshape(sub8_temp + parent_cc, (pcs*8, 1, 3))
-            del sub8_raw, sub8_temp, parent_cc
+            parents_cc = np.delete(init_cc, stable_cells, axis=0)
+            pcs = len(parents_cc)
 
             # Delete all cells in initial cell coords array, corresponding to 
             # the cells in need of division, i.e. the parent cells.
@@ -516,6 +491,31 @@ def cell_division(
             cell_gen_arr.append(
                 np.zeros(len(no_parents_cc), int) + cell_division_count
             )
+
+            # -------------------------------------------------- #
+            # Replace each parent cell by the 8 new child cells. #
+            # -------------------------------------------------- #
+
+            # Reset DM on parent cells, such that they can be centered on new 
+            # child cells again later.
+            DM_reset = DM_cc_minimal + parents_cc
+
+            # Repeat each DM "column" 8 times. This will be the DM position 
+            # array in the next iteration.
+            DM_rep8 = np.repeat(DM_reset, repeats=8, axis=0)
+
+            # Create 8 new cells around origin of (0,0,0). The length and size 
+            # of the new cells is determined by the previous length of the 
+            # parent cell, i.e. half of it.
+            sub8_GRID_S = parent_GRID_S/2.
+            sub8_raw = grid_3D(sub8_GRID_S, sub8_GRID_S)
+            
+            # Temporarily reshape to center on parent cells.
+            sub8_temp = np.tile(sub8_raw, (pcs,1)).reshape((pcs, 8, 3))
+
+            # Center each new 8-batch of child cells on a different parent cell.
+            sub8_coords = np.reshape(sub8_temp + parents_cc, (pcs*8, 1, 3))
+            del sub8_raw, sub8_temp, parents_cc
 
             if cell_division_count > 0:
                 stable_cc_so_far = np.concatenate((stable_cc, no_parents_cc), axis=0)

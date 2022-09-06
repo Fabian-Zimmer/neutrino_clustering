@@ -53,10 +53,10 @@ print(
 # DM_lim_custom = 300000
 # DM_lim_custom = 50000
 # DM_lim_custom = 30000
-# DM_lim_custom = 10000
+DM_lim_custom = 10000
 # DM_lim_custom = 8000
-# DM_lim_custom = 1000
-DM_lim_custom = 1
+# DM_lim_custom = 100
+# DM_lim_custom = 1
 
 GRID_L_custom = 400*kpc
 GRID_S_custom= 200*kpc
@@ -74,17 +74,17 @@ adapted_cc, cell_gen, cell_com, DM_count = fct.manual_cell_division(
 # Build grid around Milky Way.
 trimmed_cc = np.delete(adapted_cc, np.s_[DM_count==0], axis=0)
 print(trimmed_cc.shape)
-new_grid = np.squeeze(adapted_cc, axis=1) / kpc
+new_grid = np.squeeze(trimmed_cc, axis=1) / kpc
 
 fig = plt.figure(figsize=(8,8))
 ax = fig.add_subplot(111, projection='3d')
 
 DM_raw /= kpc
 x_DM, y_DM, z_DM = DM_raw[:,0], DM_raw[:,1], DM_raw[:,2]
-cut = 10
+cut = 2
 x, y, z = x_DM[1::cut], y_DM[1::cut], z_DM[1::cut]
 
-ax.scatter(x, y, z, alpha=0.05, c='rebeccapurple', s=0.2)
+ax.scatter(x, y, z, alpha=0.9, c='rebeccapurple', s=0.0001)
 
 # Draw sphere around GC with radius=Rvir_MW.
 rGC = halo_rvir/kpc
@@ -94,9 +94,9 @@ yGC = rGC * np.sin(uGC) * np.sin(vGC)
 zGC = rGC * np.cos(vGC)
 
 xg, yg, zg = new_grid[:,0], new_grid[:,1], new_grid[:,2] 
-ax.scatter(xg, yg, zg, s=0.2, marker='x', color='black', alpha=0.5)
+ax.scatter(xg, yg, zg, s=0.2, marker='x', color='black', alpha=0.9)
 
-# Can't make it show up with all the DM particles.
+# Too crowded to make it show up among all the DM particles.
 # ax.scatter(
 #     X_SUN[0], X_SUN[1], X_SUN[2], s=10, color='blue', marker='o',
 #     label='Earth', zorder=0
@@ -111,4 +111,4 @@ ax.plot_surface(
 zero_cells = np.count_nonzero(DM_count==0.)
 print(zero_cells)
 
-plt.show()
+# plt.show()
