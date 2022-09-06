@@ -350,17 +350,18 @@ def check_grid(init_cc, DM_pos, parent_GRID_S, DM_lim, gen_count):
 
     # Drop "rows" common to all cells, which contain only nan values. This is 
     # determined by the cell with the most non-nan entries.
-    max_DM_rank = np.max(np.count_nonzero(~np.isnan(DM_sort[:,:,0]), axis=1))
-    DM_compact = np.delete(DM_sort, np.s_[max_DM_rank:], axis=1)
+    DM_count_cells = np.count_nonzero(~np.isnan(DM_sort[:,:,0]), axis=1)
+    DM_compact = np.delete(
+        DM_sort, np.s_[np.max(DM_count_cells):], axis=1
+    )
     del DM_sort
 
     # Drop all cells containing an amount of DM below the given threshold, 
     # from the DM positions array.
-    DM_count_all = np.count_nonzero(~np.isnan(DM_compact[:,:,0]), axis=1)
-    stable_cells = DM_count_all <= DM_lim
-    DM_cc_minimal = np.delete(DM_compact, stable_cells, axis=0)
-    thresh = np.size(DM_cc_minimal, axis=0)
-    del DM_count_all
+    stable_cells = DM_count_cells <= DM_lim
+    DM_unstable_cells = np.delete(DM_compact, stable_cells, axis=0)
+    thresh = np.size(DM_unstable_cells, axis=0)
+    del DM_count_cells
 
     # Count the number of DM particles in stable cells.
     DM_stable_cells = np.delete(DM_compact, ~stable_cells, axis=0)
@@ -373,7 +374,10 @@ def check_grid(init_cc, DM_pos, parent_GRID_S, DM_lim, gen_count):
     DM_count_sync = np.expand_dims(DM_count_stable, axis=1)
     DM_count_sync[DM_count_sync==0] = 1  # to avoid divide by zero
     cell_com = np.nansum(DM_stable_cells, axis=1)/DM_count_sync
-    del DM_count_stable
+    del DM_count_stable, DM_count_sync
+    # note: 
+    # cell_com can have (0,0,0) for a cell. Doesn't matter, since DM_count in 
+    # cell is then 0, which will set term in long-range to zero.
 
     # Count again, where zeros are present (not ones).
     DM_count_final = np.count_nonzero(
@@ -383,7 +387,7 @@ def check_grid(init_cc, DM_pos, parent_GRID_S, DM_lim, gen_count):
     # Free up memory just in case.
     del DM_stable_cells
 
-    return DM_count_final, cell_com, stable_cells, DM_cc_minimal, thresh
+    return DM_count_final, cell_com, stable_cells, DM_unstable_cells, thresh
 
 
 def cell_division(
@@ -499,6 +503,23 @@ def cell_division(
             # Reset DM on parent cells, such that they can be centered on new 
             # child cells again later.
             DM_reset = DM_cc_minimal + parents_cc
+
+            DM_nonan = DM_reset[~np.isnan(DM_reset)]
+
+            len1 = len(np.unique(DM_nonan))
+            len2 = len(DM_nonan.flatten())
+            # print(len1==len2)
+
+            #? why is this statement not True? The DM_reset should be unique
+
+            # nan_count = np.count_nonzero(np.isnan(DM_reset))
+
+            # print(len(np.unique(DM_reset)))
+            # print((len(DM_reset.flatten()) - (nan_count-1)))
+
+            # print(
+            #     len(np.unique(DM_reset)) == (len(DM_reset.flatten()) - (nan_count-1))
+            # )
 
             #! check: DM_reset should be completely unique array, i.e. no DM
             #! particle should be present twice. (before repetition below...)

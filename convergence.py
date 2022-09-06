@@ -52,14 +52,14 @@ print(
 
 # DM_lim_custom = 300000
 # DM_lim_custom = 50000
-# DM_lim_custom = 30000
-DM_lim_custom = 10000
+# DM_lim_custom = 40000
+# DM_lim_custom = 10000
 # DM_lim_custom = 8000
 # DM_lim_custom = 100
-# DM_lim_custom = 1
+DM_lim_custom = 1
 
-GRID_L_custom = 400*kpc
-GRID_S_custom= 200*kpc
+GRID_L_custom = 100*kpc
+GRID_S_custom= 50*kpc
 
 adapted_cc, cell_gen, cell_com, DM_count = fct.manual_cell_division(
     sim_id, snap_num, DM_raw,
@@ -84,7 +84,7 @@ x_DM, y_DM, z_DM = DM_raw[:,0], DM_raw[:,1], DM_raw[:,2]
 cut = 2
 x, y, z = x_DM[1::cut], y_DM[1::cut], z_DM[1::cut]
 
-ax.scatter(x, y, z, alpha=0.9, c='rebeccapurple', s=0.0001)
+ax.scatter(x, y, z, alpha=1, c='rebeccapurple', s=0.001)
 
 # Draw sphere around GC with radius=Rvir_MW.
 rGC = halo_rvir/kpc
@@ -94,7 +94,7 @@ yGC = rGC * np.sin(uGC) * np.sin(vGC)
 zGC = rGC * np.cos(vGC)
 
 xg, yg, zg = new_grid[:,0], new_grid[:,1], new_grid[:,2] 
-ax.scatter(xg, yg, zg, s=0.2, marker='x', color='black', alpha=0.9)
+ax.scatter(xg, yg, zg, s=0.2, marker='x', color='black', alpha=0.8)
 
 # Too crowded to make it show up among all the DM particles.
 # ax.scatter(
@@ -111,4 +111,4 @@ ax.plot_surface(
 zero_cells = np.count_nonzero(DM_count==0.)
 print(zero_cells)
 
-# plt.show()
+plt.show()
