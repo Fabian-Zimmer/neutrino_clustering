@@ -55,11 +55,11 @@ print(
 # DM_lim_custom = 40000
 # DM_lim_custom = 10000
 # DM_lim_custom = 8000
-# DM_lim_custom = 100
-DM_lim_custom = 1
+DM_lim_custom = 100
+# DM_lim_custom = 1
 
-GRID_L_custom = 100*kpc
-GRID_S_custom= 50*kpc
+GRID_L_custom = 200*kpc
+GRID_S_custom= 100*kpc
 
 adapted_cc, cell_gen, cell_com, DM_count = fct.manual_cell_division(
     sim_id, snap_num, DM_raw,
