@@ -504,15 +504,14 @@ def cell_division(
             # Reset DM on parent cells, such that they can be centered on new 
             # child cells again later.
             DM_reset = DM_cc_minimal + parents_cc
-            DM_reset_flat = DM_reset.flatten()
 
-            nan_count = np.count_nonzero(np.isnan(DM_reset_flat))
+            nan_count = np.count_nonzero(np.isnan(DM_reset))
 
-            unique_DM = np.unique(DM_reset_flat)
+            unique_DM = np.unique(DM_reset, axis=1)
             print(unique_DM.shape)
 
             print(
-                len(unique_DM) == (len(DM_reset_flat.flatten()) - (nan_count-1))
+                len(unique_DM) == (len(DM_reset.flatten()) - (nan_count-1))
             )
 
             #? why is this statement not True? The DM_reset should be unique
