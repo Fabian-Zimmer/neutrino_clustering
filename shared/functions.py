@@ -341,7 +341,7 @@ def check_grid(init_cc, DM_pos, parent_GRID_S, DM_lim, gen_count):
         (np.abs(DM_pos[:,:,1]) <= cell_len) & 
         (np.abs(DM_pos[:,:,2]) <= cell_len)
     )
-    
+    # print(DM_in_cell_IDs.shape, DM_in_cell_IDs)
 
     # Set DM outside cell to nan values.
     DM_pos[~DM_in_cell_IDs] = np.nan
@@ -504,13 +504,16 @@ def cell_division(
             # Reset DM on parent cells, such that they can be centered on new 
             # child cells again later.
             DM_reset = DM_cc_minimal + parents_cc
+            DM_reset_flat = DM_reset.flatten()
 
-            DM_nonan = DM_reset[~np.isnan(DM_reset)]
-            print(DM_nonan.shape)
+            nan_count = np.count_nonzero(np.isnan(DM_reset_flat))
 
-            len1 = len(np.unique(DM_nonan.flatten()))
-            len2 = len(DM_nonan.flatten())
-            print(len1==len2, len1, len2)
+            unique_DM = np.unique(DM_reset_flat)
+            print(unique_DM.shape)
+
+            print(
+                len(unique_DM) == (len(DM_reset_flat.flatten()) - (nan_count-1))
+            )
 
             #? why is this statement not True? The DM_reset should be unique
 
