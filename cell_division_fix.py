@@ -1,44 +1,114 @@
 from shared.preface import *
 import shared.functions as fct
 
+# %matplotlib widget
 
 # Parameters.
-snap = '0036'
-m0 = '2.59e+11'
+sim_id = 'L006N188'
+snap_num = '0036'
+z = 0
+halo_type = 'halos'
+mass_gauge = 11
 
-# Overwrite global DM_LIM parameter, to manually set rounds of cell division.
-# DM_LIM = 100000  # round(s): 0
-# DM_LIM = 50000   # round(s): 1
-# DM_LIM = 40000   # round(s): 2
-# DM_LIM = 10000   # round(s): 4
-# DM_LIM = 1000    # round(s): 8
 
-# Initial grid and DM positions.
-grid = fct.grid_3D(GRID_L, GRID_S)
-init_cc = np.expand_dims(grid, axis=1)
-DM_raw = np.load(
-    f'CubeSpace/DM_positions_{SIM_ID}_snapshot_{snap}_{m0}Msun.npy'
-)*kpc
-DM_pos = np.expand_dims(DM_raw, axis=0)
-DM_ready = np.repeat(DM_pos, len(init_cc), axis=0)
-print('Input data shapes', init_cc.shape, DM_ready.shape)
+if halo_type == 'halos':
+    # Generate progenitor index list.
+    # note on init_halo for L006N188 sim: 0 is ~1e12Msun, 1 & 2 are ~1e11Msun.
+    init_halo = 1
+    m0, prog_idx = fct.read_MergerTree(init_halo) 
 
-cell_division_count = fct.cell_division(
-    init_cc, DM_ready, GRID_S, DM_LIM, 
-    stable_cc=None, sim=SIM_ID, snap_num=snap
+    # Generate file for DM particles of chosen halo and get parameters.
+    halo_cNFW, halo_rvir, halo_Mvir = fct.read_DM_positions(
+        random=False, snap_num=snap_num, sim=sim_id, 
+        halo_index=int(init_halo), init_m=m0, save_params=True
+    )
+    halo_rvir *= kpc
+    halo_Mvir = 10**halo_Mvir * Msun
+
+    DM_raw = np.load(
+        f'CubeSpace/DM_positions_{sim_id}_snapshot_{snap_num}_{m0}Msun.npy'
+    )*kpc
+
+elif halo_type == 'subhalos':
+    # Generate file for DM particles of chosen halo and get parameters.
+    halo_cNFW, halo_rvir, halo_Mvir = fct.read_DM_positions(
+        which_halos=halo_type, mass_select=mass_gauge, mass_range=1,
+        random=True, snap_num=snap_num, sim=sim_id, 
+        save_params=True
+    )
+    halo_rvir *= kpc
+    halo_Mvir = 10**halo_Mvir * Msun
+
+    DM_raw = np.load(
+        f'CubeSpace/DM_positions_{halo_type}_M{mass_gauge}.npy'
+    )*kpc
+
+print(
+    f'Halo parameters:',
+    '\n', 
+    f'cNFW={halo_cNFW:.2f}',
+    f'rvir={halo_rvir/kpc:.2f} kpc ; Mvir={halo_Mvir/Msun:.2e} Msun'
 )
-print(f'cell division rounds: {cell_division_count}')
 
-# Output.
-adapted_cc = np.load(
-    f'CubeSpace/adapted_cc_{SIM_ID}_snapshot_{snap}.npy')
-cell_gen = np.load(
-    f'CubeSpace/cell_gen_{SIM_ID}_snapshot_{snap}.npy')
-cell_com = np.load(
-    f'CubeSpace/cell_com_{SIM_ID}_snapshot_{snap}.npy')
-DM_count = np.load(
-    f'CubeSpace/DM_count_{SIM_ID}_snapshot_{snap}.npy')
+# DM_lim_custom = 1000000
+DM_lim_custom = 10000
+# DM_lim_custom = 30000
+# DM_lim_custom = 10000
+# DM_lim_custom = 8000
+# DM_lim_custom = 100
 
-print('Shapes of output files:', adapted_cc.shape, cell_gen.shape, cell_com.shape, DM_count.shape)
+GRID_L_custom = 100*kpc
+GRID_S_custom= 50*kpc
 
-print('Total DM count across all cells:', DM_count.sum())
+adapted_cc, cell_gen, cell_com, DM_count = fct.manual_cell_division(
+    sim_id, snap_num, DM_raw,
+    DM_lim_custom, GRID_L_custom, GRID_S_custom
+)
+
+
+################################################
+### Plotting the outcome after iteration(s). ###
+################################################
+
+# Build grid around Milky Way.
+trimmed_cc = np.delete(adapted_cc, np.s_[DM_count==0], axis=0)
+print(trimmed_cc.shape)
+new_grid = np.squeeze(trimmed_cc, axis=1) / kpc
+
+fig = plt.figure(figsize=(8,8))
+ax = fig.add_subplot(111, projection='3d')
+
+DM_raw /= kpc
+x_DM, y_DM, z_DM = DM_raw[:,0], DM_raw[:,1], DM_raw[:,2]
+cut = 1
+x, y, z = x_DM[1::cut], y_DM[1::cut], z_DM[1::cut]
+
+# ax.scatter(x, y, z, alpha=0.9, c='rebeccapurple', s=0.001)
+
+# Draw sphere around GC with radius=Rvir_MW.
+rGC = halo_rvir/kpc
+uGC, vGC = np.mgrid[0:2 * np.pi:200j, 0:np.pi:100j]
+xGC = rGC * np.cos(uGC) * np.sin(vGC)
+yGC = rGC * np.sin(uGC) * np.sin(vGC)
+zGC = rGC * np.cos(vGC)
+
+xg, yg, zg = new_grid[:,0], new_grid[:,1], new_grid[:,2] 
+ax.scatter(xg, yg, zg, s=0.2, marker='x', color='black', alpha=0.5)
+
+# Can't make it show up with all the DM particles.
+# ax.scatter(
+#     X_SUN[0], X_SUN[1], X_SUN[2], s=10, color='blue', marker='o',
+#     label='Earth', zorder=0
+# )
+
+ax.plot_surface(
+    xGC, yGC, zGC, alpha=0.1, 
+    cmap=plt.cm.coolwarm, vmin=-1, vmax=1,# antialiased=False,
+    rstride=1, cstride=1
+)
+
+zero_cells = np.count_nonzero(DM_count==0.)
+print(zero_cells)
+
+plt.savefig('figures/cell_division_fix.pdf')
+# plt.show()

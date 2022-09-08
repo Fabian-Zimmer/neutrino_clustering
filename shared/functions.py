@@ -341,6 +341,7 @@ def check_grid(init_cc, DM_pos, parent_GRID_S, DM_lim, gen_count):
         (np.abs(DM_pos[:,:,1]) <= cell_len) & 
         (np.abs(DM_pos[:,:,2]) <= cell_len)
     )
+    
 
     # Set DM outside cell to nan values.
     DM_pos[~DM_in_cell_IDs] = np.nan
@@ -505,10 +506,11 @@ def cell_division(
             DM_reset = DM_cc_minimal + parents_cc
 
             DM_nonan = DM_reset[~np.isnan(DM_reset)]
+            print(DM_nonan.shape)
 
-            len1 = len(np.unique(DM_nonan))
+            len1 = len(np.unique(DM_nonan.flatten()))
             len2 = len(DM_nonan.flatten())
-            # print(len1==len2)
+            print(len1==len2, len1, len2)
 
             #? why is this statement not True? The DM_reset should be unique
 
@@ -546,14 +548,17 @@ def cell_division(
                     (stable_cc, no_parents_cc), axis=0
                 )
             else:  # ending of first division loop
-                stable_cc_so_far = no_parents_cc
+                stable_cc_so_far = no_parents_cc.copy()
 
             # Overwrite variables for next loop.
-            init_cc       = sub8_coords
-            DM_pos        = DM_rep8
-            parent_GRID_S = sub8_GRID_S
-            stable_cc     = stable_cc_so_far
-
+            init_cc       = sub8_coords.copy()
+            del sub8_coords
+            DM_pos        = DM_rep8.copy()
+            del DM_rep8
+            parent_GRID_S = sub8_GRID_S.copy()
+            stable_cc     = stable_cc_so_far.copy()
+            del stable_cc_so_far
+            
             cell_division_count += 1
 
 
