@@ -6,8 +6,7 @@ def main():
     start = time.perf_counter()
 
     # Generate progenitor index list.
-    # note on init_halo for L006N188 sim: 0 is ~1e12Msun, 1 & 2 are ~1e11Msun.
-    m0, prog_idx = fct.read_MergerTree(init_halo=2) 
+    m0, prog_idx = fct.read_MergerTree(init_halo=HALO_INDEX) 
 
     # Display script parameters.
     print('*************************************')
@@ -28,8 +27,8 @@ def main():
         
         # Generate files with positions of DM particles
         fct.read_DM_positions(
-            which_halos='halos', mass_select=12,  # outdated but necessary...
-            random=False, snap_num=snap, sim=SIM_ID, 
+            which_halos='halos', random=False, 
+            snap_num=snap, sim=SIM_ID, 
             halo_index=int(proj), init_m=m0
         )
 

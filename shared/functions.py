@@ -628,7 +628,7 @@ def cell_gravity_3D(
 
     # Cells can be as small as ~1kpc, offset of resolution of Camila's sim 
     # (650 pc) is too high then, thus division by 10.
-    eps = 650*pc / 2.
+    eps = 650*pc / 10.
 
     # nan values to 0 for numerator, and 1 for denominator to avoid infinities.
     quot = np.nan_to_num(cell_coords - DM_in, copy=False, nan=0.0) / \
