@@ -341,13 +341,17 @@ def check_grid(init_cc, DM_pos, parent_GRID_S, DM_lim, gen_count):
         (np.abs(DM_pos[:,:,1]) < cell_len) & 
         (np.abs(DM_pos[:,:,2]) < cell_len)
     )
-    # print(DM_in_cell_IDs.shape, DM_in_cell_IDs)
 
     # Set DM outside cell to nan values.
     DM_pos[~DM_in_cell_IDs] = np.nan
 
-    # Sort all nan values to the bottom of axis 1.
-    DM_sort = np.sort(DM_pos, axis=1)
+    # Sort all nan values to the bottom of axis 1, i.e. the DM-in-cell-X axis.
+    ind_2D = DM_pos[:,:,0].argsort(axis=1)
+    ind_3D = np.repeat(np.expand_dims(ind_2D, axis=2), 3, axis=2)
+
+    DM_sort = np.take_along_axis(DM_pos, ind_3D, axis=1)
+
+    # DM_sort = np.sort(DM_pos, axis=1)  #! this mf...
 
     # Drop "rows" common to all cells, which contain only nan values. This is 
     # determined by the cell with the most non-nan entries.
@@ -530,17 +534,14 @@ def cell_division(
                     (stable_cc, no_parent_cells), axis=0
                 )
             else:  # ending of first division loop
-                stable_cc_so_far = no_parent_cells.copy()
+                stable_cc_so_far = no_parent_cells
 
             # Overwrite variables for next loop.
-            init_cc       = sub8_coords.copy()
-            del sub8_coords
-            DM_pos        = DM_rep8.copy()
-            del DM_rep8
-            parent_GRID_S = sub8_GRID_S.copy()
-            stable_cc     = stable_cc_so_far.copy()
-            del stable_cc_so_far
-            
+            init_cc       = sub8_coords
+            DM_pos        = DM_rep8
+            parent_GRID_S = sub8_GRID_S
+            stable_cc     = stable_cc_so_far
+
             cell_division_count += 1
 
 

@@ -50,7 +50,7 @@ print(
     f'rvir={halo_rvir/kpc:.2f} kpc ; Mvir={halo_Mvir/Msun:.2e} {m0} Msun'
 )
 
-DM_lim_custom = 1000
+DM_lim_custom = 100
 GRID_L_custom = 200*kpc
 GRID_S_custom= 100*kpc
 
@@ -67,9 +67,7 @@ adapted_cc, cell_gen, cell_com, DM_count = fct.manual_cell_division(
 # Build grid around Milky Way.
 # trimmed_cc = np.delete(adapted_cc, np.s_[DM_count==0], axis=0)
 # print(trimmed_cc.shape)
-print(f'Before squeeze {adapted_cc.shape}')
 new_grid = np.squeeze(adapted_cc, axis=1) / kpc
-print(f'After squeeze {new_grid.shape}')
 
 fig = plt.figure(figsize=(8,8))
 ax = fig.add_subplot(111, projection='3d')
@@ -103,8 +101,10 @@ ax.plot_surface(
     rstride=1, cstride=1
 )
 
+# ax.view_init(-170,90)
+
 zero_cells = np.count_nonzero(DM_count==0.)
-print(zero_cells)
+print(f'Cells with 0 DM in them: {zero_cells} / {len(new_grid)}')
 
 plt.savefig('figures/cell_division_fix.pdf')
 # plt.show()

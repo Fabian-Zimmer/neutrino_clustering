@@ -37,6 +37,7 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 import matplotlib.ticker as ticker
 import matplotlib.patches as mpatches
+from mpl_toolkits import mplot3d
 # import imageio
 
 
@@ -236,7 +237,7 @@ ZEDS_SNAPSHOTS = np.load('shared/ZEDS_SNAPSHOTS.npy')
 NUMS_SNAPSHOTS = np.load('shared/NUMS_SNAPSHOTS.npy')
 
 SIM_ID = 'L006N188'
-GRID_L = Rvir_MW
-GRID_S = 100*kpc
-DM_LIM = 1000
+GRID_L = 300*kpc
+GRID_S = 300*kpc
+DM_LIM = 3000
 DM_SIM_MASS = 11502999*Msun
