@@ -337,9 +337,9 @@ def check_grid(init_cc, DM_pos, parent_GRID_S, DM_lim, gen_count):
 
     # Select DM particles inside each cell based on cube length generation.
     DM_in_cell_IDs = np.asarray(
-        (np.abs(DM_pos[:,:,0]) <= cell_len) & 
-        (np.abs(DM_pos[:,:,1]) <= cell_len) & 
-        (np.abs(DM_pos[:,:,2]) <= cell_len)
+        (np.abs(DM_pos[:,:,0]) < cell_len) & 
+        (np.abs(DM_pos[:,:,1]) < cell_len) & 
+        (np.abs(DM_pos[:,:,2]) < cell_len)
     )
     # print(DM_in_cell_IDs.shape, DM_in_cell_IDs)
 
@@ -378,7 +378,8 @@ def check_grid(init_cc, DM_pos, parent_GRID_S, DM_lim, gen_count):
     del DM_count_stable, DM_count_sync
     # note: 
     # cell_com can have (0,0,0) for a cell. Doesn't matter, since DM_count in 
-    # cell is then 0, which will set term in long-range to zero.
+    # cell is then 0, which will set term in long-range (in cell_gravity_3D 
+    # function) to zero.
 
     # Count again, where zeros are present (not ones).
     DM_count_final = np.count_nonzero(
@@ -409,7 +410,7 @@ def cell_division(
 
     while thresh > 0:
 
-        DM_count, cell_com, stable_cells, DM_cc_minimal, thresh = check_grid(
+        DM_count, cell_com, stable_cells, DM_parent_cells, thresh = check_grid(
             init_cc, DM_pos, parent_GRID_S, DM_lim, cell_division_count
         )
 
@@ -485,16 +486,16 @@ def cell_division(
             
             # Array containing all cells (i.e. their coords.), which need to
             # be divided into 8 "child cells", hence the name "parent cells".
-            parents_cc = np.delete(init_cc, stable_cells, axis=0)
-            pcs = len(parents_cc)
+            parent_cells = np.delete(init_cc, stable_cells, axis=0)
+            pcs = len(parent_cells)
 
-            # Delete all cells in initial cell coords array, corresponding to 
-            # the cells in need of division, i.e. the parent cells.
-            no_parents_cc = np.delete(init_cc, ~stable_cells, axis=0)
+            # Array containing all cells, which are "stable" and need no 
+            # division, so excluding all parent cells.
+            no_parent_cells = np.delete(init_cc, ~stable_cells, axis=0)
 
             # Save generation index of stable cells.
             cell_gen_arr.append(
-                np.zeros(len(no_parents_cc), int) + cell_division_count
+                np.zeros(len(no_parent_cells), int) + cell_division_count
             )
 
             # -------------------------------------------------- #
@@ -503,30 +504,9 @@ def cell_division(
 
             # Reset DM on parent cells, such that they can be centered on new 
             # child cells again later.
-            DM_reset = DM_cc_minimal + parents_cc
-
-            nan_count = np.count_nonzero(np.isnan(DM_reset))
-
-            unique_DM = np.unique(DM_reset, axis=1)
-            print(unique_DM.shape)
-
-            print(
-                len(unique_DM) == (len(DM_reset.flatten()) - (nan_count-1))
-            )
-
-            #? why is this statement not True? The DM_reset should be unique
-
-            # nan_count = np.count_nonzero(np.isnan(DM_reset))
-
-            # print(len(np.unique(DM_reset)))
-            # print((len(DM_reset.flatten()) - (nan_count-1)))
-
-            # print(
-            #     len(np.unique(DM_reset)) == (len(DM_reset.flatten()) - (nan_count-1))
-            # )
-
-            #! check: DM_reset should be completely unique array, i.e. no DM
-            #! particle should be present twice. (before repetition below...)
+            DM_reset = DM_parent_cells + parent_cells
+            # note: 
+            # Array does not contain duplicate DM, each cell has unique DM.
 
             # Repeat each DM "column" 8 times. This will be the DM position 
             # array in the next iteration.
@@ -537,20 +517,20 @@ def cell_division(
             # parent cell, i.e. half of it.
             sub8_GRID_S = parent_GRID_S/2.
             sub8_raw = grid_3D(sub8_GRID_S, sub8_GRID_S)
-            
+
             # Temporarily reshape to center on parent cells.
             sub8_temp = np.tile(sub8_raw, (pcs,1)).reshape((pcs, 8, 3))
 
             # Center each new 8-batch of child cells on a different parent cell.
-            sub8_coords = np.reshape(sub8_temp + parents_cc, (pcs*8, 1, 3))
-            del sub8_raw, sub8_temp, parents_cc
+            sub8_coords = np.reshape(sub8_temp + parent_cells, (pcs*8, 1, 3))
+            del sub8_raw, sub8_temp, parent_cells
 
             if cell_division_count > 0:
                 stable_cc_so_far = np.concatenate(
-                    (stable_cc, no_parents_cc), axis=0
+                    (stable_cc, no_parent_cells), axis=0
                 )
             else:  # ending of first division loop
-                stable_cc_so_far = no_parents_cc.copy()
+                stable_cc_so_far = no_parent_cells.copy()
 
             # Overwrite variables for next loop.
             init_cc       = sub8_coords.copy()

@@ -47,18 +47,12 @@ print(
     f'Halo parameters:',
     '\n', 
     f'cNFW={halo_cNFW:.2f}',
-    f'rvir={halo_rvir/kpc:.2f} kpc ; Mvir={halo_Mvir/Msun:.2e} Msun'
+    f'rvir={halo_rvir/kpc:.2f} kpc ; Mvir={halo_Mvir/Msun:.2e} {m0} Msun'
 )
 
-# DM_lim_custom = 1000000
-DM_lim_custom = 10000
-# DM_lim_custom = 30000
-# DM_lim_custom = 10000
-# DM_lim_custom = 8000
-# DM_lim_custom = 100
-
-GRID_L_custom = 100*kpc
-GRID_S_custom= 50*kpc
+DM_lim_custom = 1000
+GRID_L_custom = 200*kpc
+GRID_S_custom= 100*kpc
 
 adapted_cc, cell_gen, cell_com, DM_count = fct.manual_cell_division(
     sim_id, snap_num, DM_raw,
@@ -71,9 +65,11 @@ adapted_cc, cell_gen, cell_com, DM_count = fct.manual_cell_division(
 ################################################
 
 # Build grid around Milky Way.
-trimmed_cc = np.delete(adapted_cc, np.s_[DM_count==0], axis=0)
-print(trimmed_cc.shape)
-new_grid = np.squeeze(trimmed_cc, axis=1) / kpc
+# trimmed_cc = np.delete(adapted_cc, np.s_[DM_count==0], axis=0)
+# print(trimmed_cc.shape)
+print(f'Before squeeze {adapted_cc.shape}')
+new_grid = np.squeeze(adapted_cc, axis=1) / kpc
+print(f'After squeeze {new_grid.shape}')
 
 fig = plt.figure(figsize=(8,8))
 ax = fig.add_subplot(111, projection='3d')
