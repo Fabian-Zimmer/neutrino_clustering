@@ -95,13 +95,13 @@ if __name__ == '__main__':
 
     # Compactify all neutrino vectors into 1 file.
     Ns = np.arange(NUS, dtype=int)  # Nr. of neutrinos
-    nus = np.array([np.load(f'neutrino_vectors/nu_{Nr+1}_CubeSpace.npy') for Nr in Ns])
-    
+    nus = np.array(
+        [np.load(f'neutrino_vectors/nu_{Nr+1}_CubeSpace.npy') for Nr in Ns]
+    )
     np.save(
         f'neutrino_vectors/nus_{NUS}_CubeSpace.npy',
         nus
-        )
-    
+        )  
     fct.delete_temp_data('neutrino_vectors/nu_*CubeSpace.npy')    
     # '''
 

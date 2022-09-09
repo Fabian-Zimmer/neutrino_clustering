@@ -348,8 +348,8 @@ def check_grid(init_cc, DM_pos, parent_GRID_S, DM_lim, gen_count):
     # Sort all nan values to the bottom of axis 1, i.e. the DM-in-cell-X axis.
     ind_2D = DM_pos[:,:,0].argsort(axis=1)
     ind_3D = np.repeat(np.expand_dims(ind_2D, axis=2), 3, axis=2)
-
     DM_sort = np.take_along_axis(DM_pos, ind_3D, axis=1)
+    del ind_2D, ind_3D
 
     # DM_sort = np.sort(DM_pos, axis=1)  #! this mf...
 
@@ -546,8 +546,8 @@ def cell_division(
 
 
 def manual_cell_division(
-    sim_id, snap_num, DM_raw,
-    DM_lim_manual, GRID_L_manual, GRID_S_manual
+    sim_id, snap_num, DM_raw, DM_lim_manual, 
+    GRID_L_manual, GRID_S_manual, m0
 ):
     
     # Initial grid and DM positions.
@@ -559,20 +559,20 @@ def manual_cell_division(
 
     cell_division_count = cell_division(
         init_cc, DM_ready, GRID_S_manual, DM_lim_manual, 
-        stable_cc=None, sim=sim_id, snap_num=snap_num, 
+        stable_cc=None, sim=sim_id, snap_num=snap_num, m0=m0,
         test_names=True  #! s.t. important files don't get changed
     )
     print(f'cell division rounds: {cell_division_count}')
 
     # Output.
     adapted_cc = np.load(
-        f'CubeSpace/adapted_cc_TestFile_snapshot_{snap_num}.npy')
+        f'CubeSpace/adapted_cc_TestFile_snapshot_{snap_num}_{m0}Msun.npy')
     cell_gen = np.load(
-        f'CubeSpace/cell_gen_TestFile_snapshot_{snap_num}.npy')
+        f'CubeSpace/cell_gen_TestFile_snapshot_{snap_num}_{m0}Msun.npy')
     cell_com = np.load(
-        f'CubeSpace/cell_com_TestFile_snapshot_{snap_num}.npy')
+        f'CubeSpace/cell_com_TestFile_snapshot_{snap_num}_{m0}Msun.npy')
     DM_count = np.load(
-        f'CubeSpace/DM_count_TestFile_snapshot_{snap_num}.npy')
+        f'CubeSpace/DM_count_TestFile_snapshot_{snap_num}_{m0}Msun.npy')
 
     print('Shapes of output files:', adapted_cc.shape, cell_gen.shape, cell_com.shape, DM_count.shape)
 
@@ -592,9 +592,12 @@ def simple_gravity(x_i, M_halo, X_halo):
     return pre*numer/denom
 
 
+@profile
 def cell_gravity_3D(
     cell_coords, cell_com, cell_gen, 
-    DM_pos, DM_count, m_DM, snap_num, long_range=True, test_names=False):
+    DM_pos, DM_count, m_DM, snap_num, m0,
+    long_range=True, test_names=False, batches=False, batch_num=0
+):
     
     # Center all DM positions w.r.t. cell center.
     DM_pos -= cell_coords
@@ -605,19 +608,23 @@ def cell_gravity_3D(
 
     # Select DM particles inside each cell based on cube length generation.
     DM_in_cell_IDs = np.asarray(
-        (np.abs(DM_pos[:,:,0]) <= cell_len) & 
-        (np.abs(DM_pos[:,:,1]) <= cell_len) & 
-        (np.abs(DM_pos[:,:,2]) <= cell_len)
+        (np.abs(DM_pos[:,:,0]) < cell_len) & 
+        (np.abs(DM_pos[:,:,1]) < cell_len) & 
+        (np.abs(DM_pos[:,:,2]) < cell_len)
     )
 
     # Set DM outside cell to nan values.
     DM_pos[~DM_in_cell_IDs] = np.nan
 
-    # Sort (nan values to bottom) and truncate array based on DM_LIM parameter.
-    # This simple way works since each cell cannot have more than DM_LIM.
-    DM_sort = np.sort(DM_pos, axis=1)
+    # Sort all nan values to the bottom of axis 1, i.e. the DM-in-cell-X axis 
+    # and truncate array based on DM_LIM parameter. This simple way works since 
+    # each cell cannot have more than DM_LIM.
+
+    ind_2D = DM_pos[:,:,0].argsort(axis=1)
+    ind_3D = np.repeat(np.expand_dims(ind_2D, axis=2), 3, axis=2)
+    DM_sort = np.take_along_axis(DM_pos, ind_3D, axis=1)
     DM_in = DM_sort[:,:DM_LIM,:]
-    del DM_pos, DM_sort
+    del ind_2D, ind_3D, DM_sort
 
     # Calculate distances of DM and adjust array dimensionally.
     DM_dis = np.expand_dims(np.sqrt(np.sum(DM_in**2, axis=2)), axis=2)
@@ -691,7 +698,14 @@ def cell_gravity_3D(
     if test_names:
         snap_num = 'TestFile'
 
-    np.save(f'CubeSpace/dPsi_grid_snapshot_{snap_num}', dPsi_grid)
+    if batches:
+        np.save(
+            f'CubeSpace/dPsi_grid_snapshot_{snap_num}_batch{batch_num}.npy', dPsi_grid
+        )
+    else:
+        np.save(
+            f'CubeSpace/dPsi_grid_snapshot_{snap_num}_{m0}Msun.npy', dPsi_grid
+        )
 
 
 def load_grid(z, sim, which):

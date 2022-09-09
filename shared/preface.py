@@ -17,6 +17,7 @@ import numpy as np
 import pandas as pd
 import re
 import h5py
+from funcy import chunks
 
 # astrophysics
 from astropy import units as unit
@@ -242,7 +243,7 @@ HALO_INDEX = 0 #! For L006N188 sim: 0 is ~1e12Msun, 1 & 2 are ~1e11Msun.
 if HALO_INDEX == 0:
     GRID_L = 400*kpc
     GRID_S = 400*kpc
-    DM_LIM = 10000
+    DM_LIM = 800000
 else:
     GRID_L = 300*kpc
     GRID_S = 300*kpc
