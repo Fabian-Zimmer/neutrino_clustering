@@ -397,7 +397,7 @@ def check_grid(init_cc, DM_pos, parent_GRID_S, DM_lim, gen_count):
 
 
 def cell_division(
-    init_cc, DM_pos, parent_GRID_S, DM_lim, stable_cc, sim, snap_num, 
+    init_cc, DM_pos, parent_GRID_S, DM_lim, stable_cc, sim, snap_num, m0,
     test_names=False
     ):
 
@@ -448,19 +448,19 @@ def cell_division(
                 # (which are now init_cc).
                 final_cc = np.concatenate((stable_cc, init_cc), axis=0)
                 np.save(
-                    f'CubeSpace/adapted_cc_{sim}_snapshot_{snap_num}.npy', 
+                    f'CubeSpace/adapted_cc_{sim}_snapshot_{snap_num}_{m0}Msun.npy', 
                     final_cc
                 )
                 np.save(
-                    f'CubeSpace/DM_count_{sim}_snapshot_{snap_num}.npy',
+                    f'CubeSpace/DM_count_{sim}_snapshot_{snap_num}_{m0}Msun.npy',
                     DM_count_np
                 )
                 np.save(
-                    f'CubeSpace/cell_com_{sim}_snapshot_{snap_num}.npy',
+                    f'CubeSpace/cell_com_{sim}_snapshot_{snap_num}_{m0}Msun.npy',
                     cell_com_np
                 )
                 np.save(
-                    f'CubeSpace/cell_gen_{sim}_snapshot_{snap_num}.npy',
+                    f'CubeSpace/cell_gen_{sim}_snapshot_{snap_num}_{m0}Msun.npy',
                     cell_gen_np
                 )
                 return cell_division_count
@@ -468,19 +468,19 @@ def cell_division(
 
                 # Return initial grid itself, if it's fine-grained already.
                 np.save(
-                    f'CubeSpace/adapted_cc_{sim}_snapshot_{snap_num}.npy', 
+                    f'CubeSpace/adapted_cc_{sim}_snapshot_{snap_num}_{m0}Msun.npy', 
                     init_cc
                 )
                 np.save(
-                    f'CubeSpace/DM_count_{sim}_snapshot_{snap_num}.npy',
+                    f'CubeSpace/DM_count_{sim}_snapshot_{snap_num}_{m0}Msun.npy',
                     DM_count_np
                 )
                 np.save(
-                    f'CubeSpace/cell_com_{sim}_snapshot_{snap_num}.npy',
+                    f'CubeSpace/cell_com_{sim}_snapshot_{snap_num}_{m0}Msun.npy',
                     cell_com_np
                 )
                 np.save(
-                    f'CubeSpace/cell_gen_{sim}_snapshot_{snap_num}.npy',
+                    f'CubeSpace/cell_gen_{sim}_snapshot_{snap_num}_{m0}Msun.npy',
                     cell_gen_np
                 )
                 return cell_division_count

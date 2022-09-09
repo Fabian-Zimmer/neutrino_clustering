@@ -41,18 +41,18 @@ def main():
 
         cell_division_count = fct.cell_division(
             init_cc, DM_pos_for_cell_division, GRID_S, DM_LIM, None,
-            sim=SIM_ID, snap_num=snap
+            sim=SIM_ID, snap_num=snap, m0=m0
             )
 
         # Arrays produced by cell division algorithm.
         adapted_cc = np.load(
-            f'CubeSpace/adapted_cc_{SIM_ID}_snapshot_{snap}.npy')
+            f'CubeSpace/adapted_cc_{SIM_ID}_snapshot_{snap}_{m0}Msun.npy')
         cell_gen = np.load(
-            f'CubeSpace/cell_gen_{SIM_ID}_snapshot_{snap}.npy')
+            f'CubeSpace/cell_gen_{SIM_ID}_snapshot_{snap}_{m0}Msun.npy')
         cell_com = np.load(
-            f'CubeSpace/cell_com_{SIM_ID}_snapshot_{snap}.npy')
+            f'CubeSpace/cell_com_{SIM_ID}_snapshot_{snap}_{m0}Msun.npy')
         DM_count = np.load(
-            f'CubeSpace/DM_count_{SIM_ID}_snapshot_{snap}.npy')
+            f'CubeSpace/DM_count_{SIM_ID}_snapshot_{snap}_{m0}Msun.npy')
 
         # Calculate gravity in each cell.
         adapted_DM = np.repeat(DM_pos, len(adapted_cc), axis=0)

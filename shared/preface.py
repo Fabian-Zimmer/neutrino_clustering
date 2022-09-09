@@ -237,8 +237,15 @@ ZEDS_SNAPSHOTS = np.load('shared/ZEDS_SNAPSHOTS.npy')
 NUMS_SNAPSHOTS = np.load('shared/NUMS_SNAPSHOTS.npy')
 
 SIM_ID = 'L006N188'
-HALO_INDEX = 1 #! For L006N188 sim: 0 is ~1e12Msun, 1 & 2 are ~1e11Msun.
-GRID_L = 300*kpc
-GRID_S = 300*kpc
-DM_LIM = 3000
+HALO_INDEX = 0 #! For L006N188 sim: 0 is ~1e12Msun, 1 & 2 are ~1e11Msun.
+
+if HALO_INDEX == 0:
+    GRID_L = 400*kpc
+    GRID_S = 400*kpc
+    DM_LIM = 10000
+else:
+    GRID_L = 300*kpc
+    GRID_S = 300*kpc
+    DM_LIM = 3000
+
 DM_SIM_MASS = 11502999*Msun
