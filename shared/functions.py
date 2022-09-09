@@ -592,7 +592,6 @@ def simple_gravity(x_i, M_halo, X_halo):
     return pre*numer/denom
 
 
-@profile
 def cell_gravity_3D(
     cell_coords, cell_com, cell_gen, 
     DM_pos, DM_count, m_DM, snap_num, m0,
