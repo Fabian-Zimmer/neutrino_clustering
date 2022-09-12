@@ -199,15 +199,84 @@ def read_DM_positions(
 
     # Positions.
     a = snaps["/Header"].attrs["Scale-factor"]
+    pos = snaps['PartType1/Coordinates'][:][:] * a
+
+    # NFW concentration parameter.
+    cNFW = props['cNFW_200crit'][:]
+
+    # Virial radius.
+    rvir = props['R_200crit'][:]
+    
+    # Critical M_200.
+    m200c = props['Mass_200crit'][:] * 1e10  # now in Msun
+
+    # Set neg. values to 1, i.e. 0 in np.log10.
+    m200c[m200c <= 0] = 1
+
+    # This gives exponents of 10^x, which reproduces m200c vals.
+    m200c = np.log10(m200c)  
+
+    # Center of Potential coordinates, for all halos.
+    CoP = np.zeros((len(m200c), 3))
+    CoP[:, 0] = props["Xcminpot"][:]
+    CoP[:, 1] = props["Ycminpot"][:]
+    CoP[:, 2] = props["Zcminpot"][:]
+
+    # Include all DM particles within certain radius.
+    halo_rvir = rvir[halo_index]
+    pos -= CoP[halo_index, :]
+    dis = np.sqrt(np.sum(pos**2, axis=1))
+    particles_pos = pos[dis <= halo_rvir*2]
+    particles_pos *= 1e3
+    halo_rvir *= 1e3
+
+    # Save positions relative to CoP (center of halo potential).
+    np.save(
+        f'CubeSpace/DM_positions_{sim}_snapshot_{snap_num}_{init_m}Msun.npy',
+        particles_pos
+    )
+    
+    if save_params:
+        # Select corresponding cNFW, rvir and Mvir of chosen halo.
+        halo_cNFW = cNFW[halo_index]
+        halo_Mvir = m200c[halo_index]
+        return halo_cNFW, halo_rvir, halo_Mvir
+
+
+def read_DM_positions_V2(
+    which_halos='halos', mass_select=12, mass_range=0.2, 
+    random=True, snap_num='0036', sim='L___N___', halo_index=0, init_m=0,
+    save_params=False
+    ):
+
+    # Open data files.
+    snaps = h5py.File(str(next(
+        pathlib.Path(
+            f'{SIM_DATA}/{sim}').glob(f'**/snapshot_{snap_num}.hdf5'
+        )
+    )))
+    group = h5py.File(str(next(
+        pathlib.Path(
+            f'{SIM_DATA}/{sim}').glob(f'**/subhalo_{snap_num}.catalog_groups'
+        )
+    )))
+    parts = h5py.File(str(next(
+        pathlib.Path(
+            f'{SIM_DATA}/{sim}').glob(f'**/subhalo_{snap_num}.catalog_particles'
+        )
+    )))
+    props = h5py.File(str(next(
+        pathlib.Path(
+            f'{SIM_DATA}/{sim}').glob(f'**/subhalo_{snap_num}.properties'
+        )
+    )))
+
+    ### Properties of DM particles.
+
+    # Positions.
+    a = snaps["/Header"].attrs["Scale-factor"]
     pos = snaps['PartType1/Coordinates'][:][:] * a  
     #! comoving to physical (pc) with a, then *1e3 to go to kpc (later)
-
-    # Masses.
-    # mass = snaps['PartType1/Masses'][:] * 1e10  
-    #! In Camila's sims: *1e10 to get to Msun & all DM particles have same mass.
-
-    # Velocities.
-    # vel = snaps['PartType1/Velocities'][:][:]  #! in km/s, physical
 
     # NFW concentration parameter.
     cNFW = props['cNFW_200crit'][:]
@@ -597,7 +666,6 @@ def cell_gravity_3D(
     DM_pos, DM_count, m_DM, snap_num, m0,
     long_range=True, test_names=False, batches=False, batch_num=0
 ):
-    
     # Center all DM positions w.r.t. cell center.
     DM_pos -= cell_coords
 
@@ -707,7 +775,7 @@ def cell_gravity_3D(
         )
 
 
-def load_grid(z, sim, which):
+def load_grid(z, sim, m0, which):
 
     # ID corresponding to current z.
     idx = np.abs(ZEDS_SNAPSHOTS - z).argmin()
@@ -715,11 +783,15 @@ def load_grid(z, sim, which):
 
     if which == 'derivatives':
         # Load file with derivative grid of ID.
-        grid = np.load(f'CubeSpace/dPsi_grid_snapshot_{snap}.npy')
+        grid = np.load(
+            f'CubeSpace/dPsi_grid_snapshot_{snap}_{m0}Msun.npy'
+        )
 
     elif which == 'positions':
         # Load file with position grid of ID.
-        grid = np.load(f'CubeSpace/adapted_cc_{sim}_snapshot_{snap}.npy')
+        grid = np.load(
+            f'CubeSpace/adapted_cc_{sim}_snapshot_{snap}_{m0}Msun.npy'
+        )
 
     return grid
 

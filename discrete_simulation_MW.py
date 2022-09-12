@@ -15,8 +15,8 @@ def EOMs(s_val, y):
     z = np.interp(s_val, S_STEPS, ZEDS)
 
     # Find which (pre-calculated) derivative grid to use at current z.
-    dPsi_grid = fct.load_grid(z, SIM_ID, 'derivatives')
-    cell_grid = fct.load_grid(z, SIM_ID, 'positions')
+    dPsi_grid = fct.load_grid(z, SIM_ID, HALO_MASS, 'derivatives')
+    cell_grid = fct.load_grid(z, SIM_ID, HALO_MASS, 'positions')
 
 
     nu_inside_grid = True

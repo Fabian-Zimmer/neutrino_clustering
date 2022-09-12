@@ -1,31 +1,33 @@
+from sqlite3 import adapt
 from shared.preface import *
 import shared.functions as fct
 
 
-def main():
-    start = time.perf_counter()
+start = time.perf_counter()
 
-    # Generate progenitor index list.
-    m0, prog_idx = fct.read_MergerTree(init_halo=HALO_INDEX) 
+# Generate progenitor index list.
+m0, prog_idx = fct.read_MergerTree(init_halo=HALO_INDEX)
 
-    # Display script parameters.
-    print('*************************************')
-    print(f'Simulation box: {SIM_ID}')
-    print(f'Mass of selected halo: {m0}')
-    print(f'DM particle limit for cells: {DM_LIM}')
-    print('*************************************')
+# Display script parameters.
+print('*************************************')
+print(f'Simulation box: {SIM_ID}')
+print(f'Mass of selected halo: {m0}')
+print(f'DM particle limit for cells: {DM_LIM}')
+print('*************************************')
 
-    # ---------------------------------- #
-    # Precalculations for all snapshots. #
-    # ---------------------------------- #
+# ---------------------------------- #
+# Precalculations for all snapshots. #
+# ---------------------------------- #
 
-    # Initial grid always the same, hence outside of loop over snapshots.
-    grid = fct.grid_3D(GRID_L, GRID_S)
-    init_cc = np.expand_dims(grid, axis=1)
+# Initial grid always the same, hence outside of loop over snapshots.
+grid = fct.grid_3D(GRID_L, GRID_S)
+init_cc = np.expand_dims(grid, axis=1)
 
-    # for snap, proj in zip(NUMS_SNAPSHOTS[::-1], prog_idx):
-    snap = NUMS_SNAPSHOTS[::-1][0]
-    proj = prog_idx[0]
+for snap, proj in zip(NUMS_SNAPSHOTS[::-1], prog_idx):
+
+# For single snapshot test.
+# snap = NUMS_SNAPSHOTS[::-1][0]
+# proj = prog_idx[0]
 
     # Generate files with positions of DM particles
     fct.read_DM_positions(
@@ -55,18 +57,24 @@ def main():
         f'CubeSpace/cell_com_{SIM_ID}_snapshot_{snap}_{m0}Msun.npy')
     DM_count = np.load(
         f'CubeSpace/DM_count_{SIM_ID}_snapshot_{snap}_{m0}Msun.npy')
+    print(adapted_cc.shape, cell_gen.shape, cell_com.shape, DM_count.shape)
 
     # Generate gravity grid, in batches of cells, due to memory intensity.
-    batch_size = 10
+    batch_size = 20
     bs_cc = chunks(batch_size, adapted_cc)
     bs_gen = chunks(batch_size, cell_gen)
     bs_com = chunks(batch_size, cell_com)
     bs_count = chunks(batch_size, DM_count)
 
-    bs_nums = len(list(bs_count))
-    for b,       b_cc,  b_gen,  b_com,  b_count in zip(
-        bs_nums, bs_cc, bs_gen, bs_com, bs_count
+    b_nums = []
+    for b,  (b_cc,  b_gen,  b_com,  b_count) in enumerate(
+        zip(bs_cc, bs_gen, bs_com, bs_count)
     ):
+        b_nums.append(b)
+        b_cc = np.array(b_cc)
+        b_gen = np.array(b_gen)
+        b_com = np.array(b_com)
+        b_count = np.array(b_count)
 
         # Calculate gravity in each cell in current batch.
         b_DM = np.repeat(DM_pos, len(b_cc), axis=0)
@@ -75,16 +83,18 @@ def main():
             b_DM, b_count, DM_SIM_MASS, snap, m0,
             batches=True, batch_num=b
         )
+    bs_nums = np.array(b_nums)
 
     # Combine and then delete batch files.
-    #! check if this works: since the last element of dPsi_batches might have a 
-    #! different shape than the previous ones. Perhaps itertools are needed.
-    dPsi_batches = np.array([
-            np.load(
-                f'CubeSpace/dPsi_grid_snapshot_{snap}_batch{b}.npy'
-            ) for b in bs_nums
-        ])
-    np.save(f'CubeSpace/dPsi_grid_snapshot_{snap}_{m0}Msun.npy', dPsi_batches)
+    dPsi_batches = [
+        np.load(
+            f'CubeSpace/dPsi_grid_snapshot_{snap}_batch{b}.npy'
+        ) for b in bs_nums
+    ]
+    dPsi_combined = np.array(
+        list(itertools.chain.from_iterable(dPsi_batches))
+    )
+    np.save(f'CubeSpace/dPsi_grid_snapshot_{snap}_{m0}Msun.npy', dPsi_combined)
     fct.delete_temp_data('CubeSpace/dPsi_*batch*.npy') 
 
     '''
@@ -97,13 +107,9 @@ def main():
     '''
 
     print(f'snapshot {snap} : cell division rounds: {cell_division_count}')
-    
-
-    seconds = time.perf_counter()-start
-    minutes = seconds/60.
-    hours = minutes/60.
-    print(f'Time sec/min/h: {seconds} sec, {minutes} min, {hours} h.')
 
 
-if __name__ == "__main__":
-    main()
+seconds = time.perf_counter()-start
+minutes = seconds/60.
+hours = minutes/60.
+print(f'Time sec/min/h: {seconds} sec, {minutes} min, {hours} h.')
