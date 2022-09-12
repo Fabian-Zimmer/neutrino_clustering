@@ -60,7 +60,7 @@ for snap, proj in zip(NUMS_SNAPSHOTS[::-1], prog_idx):
     print(adapted_cc.shape, cell_gen.shape, cell_com.shape, DM_count.shape)
 
     # Generate gravity grid, in batches of cells, due to memory intensity.
-    batch_size = 20
+    batch_size = 70
     bs_cc = chunks(batch_size, adapted_cc)
     bs_gen = chunks(batch_size, cell_gen)
     bs_com = chunks(batch_size, cell_com)
