@@ -1,5 +1,3 @@
-from sqlite3 import adapt
-from discrete_simulation_MW import NrDM_SNAPSHOTS
 from shared.preface import *
 import shared.functions as fct
 
