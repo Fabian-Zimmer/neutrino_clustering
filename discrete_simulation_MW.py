@@ -14,20 +14,24 @@ def EOMs(s_val, y):
     # Find z corresponding to s via interpolation.
     z = np.interp(s_val, S_STEPS, ZEDS)
 
-    # Find which (pre-calculated) derivative grid to use at current z.
-    dPsi_grid = fct.load_grid(z, SIM_ID, HALO_MASS, 'derivatives')
-    cell_grid = fct.load_grid(z, SIM_ID, HALO_MASS, 'positions')
+    # ID corresponding to current z.
+    idx = np.abs(ZEDS_SNAPSHOTS - z).argmin()
+    snap = NUMS_SNAPSHOTS[idx]
+    NrDM = NrDM_SNAPSHOTS[idx]
 
+    # Neutrino inside cell grid.
+    if np.all(np.abs(x_i)) <= GRID_L:
 
-    nu_inside_grid = True
-    nu_outside_grid = False
+        # Find which (pre-calculated) derivative grid to use at current z.
+        dPsi_grid = fct.load_grid(snap, SIM_ID, HALO_MASS, 'derivatives')
+        cell_grid = fct.load_grid(snap, SIM_ID, HALO_MASS, 'positions')
 
-    # Find gradient at neutrino position.
-    if nu_inside_grid:
         cell_idx = fct.nu_in_which_cell(x_i, cell_grid)  # index of cell
         grad_tot = dPsi_grid[cell_idx,:]                 # derivative of cell
-    elif nu_outside_grid:
-        grad_tot = ...
+
+    # Neutrino outside cell grid.
+    else:
+        grad_tot = fct.outside_gravity(x_i, NrDM)
 
     # Switch to "physical reality" here.
     grad_tot /= (kpc/s**2)
@@ -60,7 +64,7 @@ def backtrack_1_neutrino(y0_Nr):
 
 if __name__ == '__main__':
     start = time.perf_counter()
-    
+
     # Integration steps.
     S_STEPS = np.array([fct.s_of_z(z) for z in ZEDS])
 
@@ -75,6 +79,8 @@ if __name__ == '__main__':
         [np.concatenate((X_SUN, ui[i], [i+1])) for i in range(NUS)]
         )
 
+    # Number of DM particles used for each snapshot.
+    NrDM_SNAPSHOTS = np.load('shared/NrDM_SNAPSHOTS.npy')
 
     CPUs = 6
 

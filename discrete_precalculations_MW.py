@@ -1,4 +1,5 @@
 from sqlite3 import adapt
+from discrete_simulation_MW import NrDM_SNAPSHOTS
 from shared.preface import *
 import shared.functions as fct
 
@@ -23,7 +24,10 @@ print('*************************************')
 grid = fct.grid_3D(GRID_L, GRID_S)
 init_cc = np.expand_dims(grid, axis=1)
 
-for snap, proj in zip(NUMS_SNAPSHOTS[::-1], prog_idx):
+# Save number of DM particles used for each snapshot.
+NrDM_snaps = np.zeros(len(NUMS_SNAPSHOTS))
+
+for j, (snap, proj) in enumerate(zip(NUMS_SNAPSHOTS[::-1], prog_idx)):
 
 # For single snapshot test.
 # snap = NUMS_SNAPSHOTS[::-1][0]
@@ -57,7 +61,8 @@ for snap, proj in zip(NUMS_SNAPSHOTS[::-1], prog_idx):
         f'CubeSpace/cell_com_{SIM_ID}_snapshot_{snap}_{m0}Msun.npy')
     DM_count = np.load(
         f'CubeSpace/DM_count_{SIM_ID}_snapshot_{snap}_{m0}Msun.npy')
-    print(adapted_cc.shape, cell_gen.shape, cell_com.shape, DM_count.shape)
+    NrDM_snaps[j] = np.sum(DM_count)
+    # print(adapted_cc.shape, cell_gen.shape, cell_com.shape, DM_count.shape)
 
     # Generate gravity grid, in batches of cells, due to memory intensity.
     batch_size = 70
@@ -108,6 +113,7 @@ for snap, proj in zip(NUMS_SNAPSHOTS[::-1], prog_idx):
 
     print(f'snapshot {snap} : cell division rounds: {cell_division_count}')
 
+np.save('shared/NrDM_SNAPSHOTS.npy', NrDM_snaps)
 
 seconds = time.perf_counter()-start
 minutes = seconds/60.

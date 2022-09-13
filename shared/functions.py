@@ -243,7 +243,7 @@ def read_DM_positions(
         return halo_cNFW, halo_rvir, halo_Mvir
 
 
-def read_DM_positions_V2(
+def read_DM_positions_alt(
     which_halos='halos', mass_select=12, mass_range=0.2, 
     random=True, snap_num='0036', sim='L___N___', halo_index=0, init_m=0,
     save_params=False
@@ -650,15 +650,11 @@ def manual_cell_division(
     return adapted_cc, cell_gen, cell_com, DM_count
 
 
-def simple_gravity(x_i, M_halo, X_halo):
-    pre = G*M_halo
+def outside_gravity(x_i, DM_tot):
+    pre = G*DM_tot*DM_SIM_MASS
+    denom = np.sqrt(np.sum(x_i**2))**3
 
-    numer = x_i - X_halo
-
-    # Sum along some axis...
-    denom = np.sqrt(np.sum((x_i - X_halo)**2))**3
-
-    return pre*numer/denom
+    return pre*x_i/denom
 
 
 def cell_gravity_3D(
@@ -775,11 +771,7 @@ def cell_gravity_3D(
         )
 
 
-def load_grid(z, sim, m0, which):
-
-    # ID corresponding to current z.
-    idx = np.abs(ZEDS_SNAPSHOTS - z).argmin()
-    snap = NUMS_SNAPSHOTS[idx]
+def load_grid(snap, sim, m0, which):
 
     if which == 'derivatives':
         # Load file with derivative grid of ID.
