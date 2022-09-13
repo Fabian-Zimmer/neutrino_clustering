@@ -168,6 +168,60 @@ def read_MergerTree(init_halo):
 
 
 def read_DM_positions(
+    snap_num, sim, halo_index, init_m, DM_radius_kpc
+    ):
+
+    # Open data files.
+    snaps = h5py.File(str(next(
+        pathlib.Path(
+            f'{SIM_DATA}/{sim}').glob(f'**/snapshot_{snap_num}.hdf5'
+        )
+    )))
+    props = h5py.File(str(next(
+        pathlib.Path(
+            f'{SIM_DATA}/{sim}').glob(f'**/subhalo_{snap_num}.properties'
+        )
+    )))
+
+    # Positions.
+    a = snaps["/Header"].attrs["Scale-factor"]
+    pos = snaps['PartType1/Coordinates'][:][:] * a
+
+    # Virial radius.
+    rvir = props['R_200crit'][:] 
+    halo_rvir = rvir[halo_index] * 1e3
+    
+    # Critical M_200.
+    m200c = props['Mass_200crit'][:] * 1e10  # now in Msun
+
+    # Set neg. values to 1, i.e. 0 in np.log10.
+    m200c[m200c <= 0] = 1
+
+    # This gives exponents of 10^x, which reproduces m200c vals.
+    m200c = np.log10(m200c)  
+
+    # Center of Potential coordinates, for all halos.
+    CoP = np.zeros((len(m200c), 3))
+    CoP[:, 0] = props["Xcminpot"][:]
+    CoP[:, 1] = props["Ycminpot"][:]
+    CoP[:, 2] = props["Zcminpot"][:]
+
+    # Include all DM particles within certain radius.
+    pos -= CoP[halo_index, :]
+    dis = np.sqrt(np.sum(pos**2, axis=1))
+    particles_pos = pos[dis <= DM_radius_kpc/1e3]
+    particles_pos *= 1e3
+
+    # Save positions relative to CoP (center of halo potential).
+    np.save(
+        f'CubeSpace/DM_positions_{sim}_snapshot_{snap_num}_{init_m}Msun_{DM_radius_kpc}kpc.npy',
+        particles_pos
+    )
+
+    return halo_rvir
+
+
+def read_DM_positions_alt2(
     which_halos='halos', mass_select=12, mass_range=0.2, 
     random=True, snap_num='0036', sim='L___N___', halo_index=0, init_m=0,
     save_params=False

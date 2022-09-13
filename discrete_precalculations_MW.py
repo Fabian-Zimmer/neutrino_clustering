@@ -29,7 +29,7 @@ def main_pre():
     for j, (snap, proj) in enumerate(zip(NUMS_SNAPSHOTS[::-1], prog_idx)):
 
         # Generate files with positions of DM particles
-        fct.read_DM_positions(
+        fct.read_DM_positions_alt2(
             which_halos='halos', random=False, 
             snap_num=snap, sim=SIM_ID, 
             halo_index=int(proj), init_m=m0
