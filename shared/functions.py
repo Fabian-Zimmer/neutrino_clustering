@@ -226,7 +226,8 @@ def read_DM_positions(
     halo_rvir = rvir[halo_index]
     pos -= CoP[halo_index, :]
     dis = np.sqrt(np.sum(pos**2, axis=1))
-    particles_pos = pos[dis <= halo_rvir*2]
+    # particles_pos = pos[dis <= halo_rvir*2]  # adjust to virial radius
+    particles_pos = pos[dis <= 500/1e3]  # fixed DM inclusion radius
     particles_pos *= 1e3
     halo_rvir *= 1e3
 
