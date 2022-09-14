@@ -522,7 +522,7 @@ def check_grid(init_cc, DM_pos, parent_GRID_S, DM_lim, gen_count):
 
 def cell_division(
     init_cc, DM_pos, parent_GRID_S, DM_lim, stable_cc, sim, snap_num, m0,
-    test_names=False
+    DM_incl_radius, test_names=False
     ):
 
     if test_names:
@@ -572,19 +572,19 @@ def cell_division(
                 # (which are now init_cc).
                 final_cc = np.concatenate((stable_cc, init_cc), axis=0)
                 np.save(
-                    f'CubeSpace/adapted_cc_{sim}_snapshot_{snap_num}_{m0}Msun.npy', 
+                    f'CubeSpace/adapted_cc_{sim}_snapshot_{snap_num}_{m0}Msun_{DM_incl_radius}kpc.npy', 
                     final_cc
                 )
                 np.save(
-                    f'CubeSpace/DM_count_{sim}_snapshot_{snap_num}_{m0}Msun.npy',
+                    f'CubeSpace/DM_count_{sim}_snapshot_{snap_num}_{m0}Msun_{DM_incl_radius}kpc.npy',
                     DM_count_np
                 )
                 np.save(
-                    f'CubeSpace/cell_com_{sim}_snapshot_{snap_num}_{m0}Msun.npy',
+                    f'CubeSpace/cell_com_{sim}_snapshot_{snap_num}_{m0}Msun_{DM_incl_radius}kpc.npy',
                     cell_com_np
                 )
                 np.save(
-                    f'CubeSpace/cell_gen_{sim}_snapshot_{snap_num}_{m0}Msun.npy',
+                    f'CubeSpace/cell_gen_{sim}_snapshot_{snap_num}_{m0}Msun_{DM_incl_radius}kpc.npy',
                     cell_gen_np
                 )
                 return cell_division_count
@@ -592,19 +592,19 @@ def cell_division(
 
                 # Return initial grid itself, if it's fine-grained already.
                 np.save(
-                    f'CubeSpace/adapted_cc_{sim}_snapshot_{snap_num}_{m0}Msun.npy', 
+                    f'CubeSpace/adapted_cc_{sim}_snapshot_{snap_num}_{m0}Msun_{DM_incl_radius}kpc.npy', 
                     init_cc
                 )
                 np.save(
-                    f'CubeSpace/DM_count_{sim}_snapshot_{snap_num}_{m0}Msun.npy',
+                    f'CubeSpace/DM_count_{sim}_snapshot_{snap_num}_{m0}Msun_{DM_incl_radius}kpc.npy',
                     DM_count_np
                 )
                 np.save(
-                    f'CubeSpace/cell_com_{sim}_snapshot_{snap_num}_{m0}Msun.npy',
+                    f'CubeSpace/cell_com_{sim}_snapshot_{snap_num}_{m0}Msun_{DM_incl_radius}kpc.npy',
                     cell_com_np
                 )
                 np.save(
-                    f'CubeSpace/cell_gen_{sim}_snapshot_{snap_num}_{m0}Msun.npy',
+                    f'CubeSpace/cell_gen_{sim}_snapshot_{snap_num}_{m0}Msun_{DM_incl_radius}kpc.npy',
                     cell_gen_np
                 )
                 return cell_division_count
@@ -705,6 +705,7 @@ def manual_cell_division(
     return adapted_cc, cell_gen, cell_com, DM_count
 
 
+@nb.njit
 def outside_gravity(x_i, DM_tot):
     pre = G*DM_tot*DM_SIM_MASS
     denom = np.sqrt(np.sum(x_i**2))**3
@@ -826,18 +827,18 @@ def cell_gravity_3D(
         )
 
 
-def load_grid(snap, sim, m0, which):
+def load_grid(snap, sim, m0, DM_incl_radius, which):
 
     if which == 'derivatives':
         # Load file with derivative grid of ID.
         grid = np.load(
-            f'CubeSpace/dPsi_grid_snapshot_{snap}_{m0}Msun.npy'
+            f'CubeSpace/dPsi_grid_snapshot_{snap}_{m0}Msun_{DM_incl_radius}kpc.npy'
         )
 
     elif which == 'positions':
         # Load file with position grid of ID.
         grid = np.load(
-            f'CubeSpace/adapted_cc_{sim}_snapshot_{snap}_{m0}Msun.npy'
+            f'CubeSpace/adapted_cc_{sim}_snapshot_{snap}_{m0}Msun_{DM_incl_radius}kpc.npy'
         )
 
     return grid
@@ -869,11 +870,18 @@ def delete_temp_data(path_to_wildcard_files):
             print("Error while deleting file (file not found")
 
 
-def load_u_sim(nr_of_nus, halos='MW', discrete=False):
+def load_u_sim(nr_of_nus, halos='MW', discrete=False, DM_radius=None):
     """Loads neutrino velocities of simulation."""
 
     if discrete:
         sim = np.load(f'neutrino_vectors/nus_{nr_of_nus}_CubeSpace.npy')
+        u_all = sim[:,:,3:6]
+
+    elif discrete and DM_radius is not None:
+        m0 = HALO_MASS
+        sim = np.load(
+        f'neutrino_vectors/nus_{nr_of_nus}_CubeSpace_{m0}Msun_{DM_radius}kpc.npy'
+        )
         u_all = sim[:,:,3:6]
 
     else:
@@ -885,11 +893,18 @@ def load_u_sim(nr_of_nus, halos='MW', discrete=False):
     return u_all
 
 
-def load_x_sim(nr_of_nus, halos='MW', discrete=False):
+def load_x_sim(nr_of_nus, halos='MW', discrete=False, DM_radius=None):
     """Loads neutrino positions of simulation."""
 
     if discrete:
         sim = np.load(f'neutrino_vectors/nus_{nr_of_nus}_CubeSpace.npy')
+        x_all = sim[:,:,0:3]
+
+    elif discrete and DM_radius is not None:
+        m0 = HALO_MASS
+        sim = np.load(
+        f'neutrino_vectors/nus_{nr_of_nus}_CubeSpace_{m0}Msun_{DM_radius}kpc.npy'
+        )
         x_all = sim[:,:,0:3]
 
     else:
