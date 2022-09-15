@@ -280,8 +280,8 @@ def read_DM_positions_alt2(
     halo_rvir = rvir[halo_index]
     pos -= CoP[halo_index, :]
     dis = np.sqrt(np.sum(pos**2, axis=1))
-    # particles_pos = pos[dis <= halo_rvir*2]  # adjust to virial radius
-    particles_pos = pos[dis <= 500/1e3]  # fixed DM inclusion radius
+    particles_pos = pos[dis <= halo_rvir]  # adjust to virial radius
+    # particles_pos = pos[dis <= 500/1e3]  # fixed DM inclusion radius
     particles_pos *= 1e3
     halo_rvir *= 1e3
 
@@ -671,7 +671,7 @@ def cell_division(
 
 def manual_cell_division(
     sim_id, snap_num, DM_raw, DM_lim_manual, 
-    GRID_L_manual, GRID_S_manual, m0
+    GRID_L_manual, GRID_S_manual, m0, DM_radius
 ):
     
     # Initial grid and DM positions.
@@ -683,20 +683,21 @@ def manual_cell_division(
 
     cell_division_count = cell_division(
         init_cc, DM_ready, GRID_S_manual, DM_lim_manual, 
-        stable_cc=None, sim=sim_id, snap_num=snap_num, m0=m0,
+        stable_cc=None, sim=sim_id, snap_num=snap_num, m0=m0, 
+        DM_incl_radius=DM_radius,
         test_names=True  #! s.t. important files don't get changed
     )
     print(f'cell division rounds: {cell_division_count}')
 
     # Output.
     adapted_cc = np.load(
-        f'CubeSpace/adapted_cc_TestFile_snapshot_{snap_num}_{m0}Msun.npy')
+        f'CubeSpace/adapted_cc_TestFile_snapshot_{snap_num}_{m0}Msun_{DM_radius}kpc.npy')
     cell_gen = np.load(
-        f'CubeSpace/cell_gen_TestFile_snapshot_{snap_num}_{m0}Msun.npy')
+        f'CubeSpace/cell_gen_TestFile_snapshot_{snap_num}_{m0}Msun_{DM_radius}kpc.npy')
     cell_com = np.load(
-        f'CubeSpace/cell_com_TestFile_snapshot_{snap_num}_{m0}Msun.npy')
+        f'CubeSpace/cell_com_TestFile_snapshot_{snap_num}_{m0}Msun_{DM_radius}kpc.npy')
     DM_count = np.load(
-        f'CubeSpace/DM_count_TestFile_snapshot_{snap_num}_{m0}Msun.npy')
+        f'CubeSpace/DM_count_TestFile_snapshot_{snap_num}_{m0}Msun_{DM_radius}kpc.npy')
 
     print('Shapes of output files:', adapted_cc.shape, cell_gen.shape, cell_com.shape, DM_count.shape)
 
