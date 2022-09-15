@@ -1,5 +1,5 @@
 ###############
-### Imports ### Updated?
+### Imports ###
 ###############
 import sys, os
 from sys import getsizeof
@@ -187,8 +187,8 @@ X_AG    = np.array([632.29742673, -377.40315121, -288.27006757])
 ######################
 # note:
 # Using heaviest mass in conjunction with high momentum range covers
-# velocity range sufficient for whole mass range. ANd in this way, the fastest 
-# neutrino travels at ~21% of the speed of light.
+# velocity range sufficient for whole mass range. And in this way, the fastest 
+# neutrino travels at ~22% of the speed of light.
 NU_MASS = 0.3*eV  
 NU_MASS_KG = NU_MASS/kg
 NU_MASSES = np.array([0.01, 0.05, 0.1, 0.3])*eV

@@ -4,6 +4,7 @@ from shared.preface import *
 ###########################################
 ### Functions used in SMOOTH simulation ###
 ###########################################
+# region
 
 def NFW_profile(r, rho_0, r_s):
     """NFW density profile.
@@ -141,7 +142,7 @@ def R_vir_fct(z, M_vir):
     R_vir = np.power(3.*M_vir / (4.*Pi*Delta_vir(z)*rho_crit(z)), 1./3.)
 
     return np.float64(R_vir)
-
+# endregion
 
 
 #############################################
@@ -166,6 +167,128 @@ def read_MergerTree(init_halo):
 
     return m0, prog_idx
 
+
+def read_DM_halo_batch(
+    sim, snap, mass_gauge, mass_range, halo_type
+):
+    """
+    Selects a batch of halos from simulation, depending on given mass gauge and mass range values. Saves halo parameters and DM positions.
+    """
+
+    # ---------------- #
+    # Open data files. #
+    # ---------------- #
+
+    snaps = h5py.File(str(next(
+        pathlib.Path(
+            f'{SIM_DATA}/{sim}').glob(f'**/snapshot_{snap}.hdf5'
+        )
+    )))
+    group = h5py.File(str(next(
+        pathlib.Path(
+            f'{SIM_DATA}/{sim}').glob(f'**/subhalo_{snap}.catalog_groups'
+        )
+    )))
+    parts = h5py.File(str(next(
+        pathlib.Path(
+            f'{SIM_DATA}/{sim}').glob(f'**/subhalo_{snap}.catalog_particles'
+        )
+    )))
+    props = h5py.File(str(next(
+        pathlib.Path(
+            f'{SIM_DATA}/{sim}').glob(f'**/subhalo_{snap}.properties'
+        )
+    )))
+
+
+    # ---------------------------------- #
+    # Read in parameters of halo in sim. #
+    # ---------------------------------- #
+
+    # DM particle positions.
+    a = snaps["/Header"].attrs["Scale-factor"]
+    pos = snaps['PartType1/Coordinates'][:][:] *a  # comoving to physical
+
+    # NFW concentration.
+    cNFW = props['cNFW_200crit'][:]
+
+    # Virial radius.
+    rvir = props['R_200crit'][:] *1e3 # to kpc units
+    
+    # Critical M_200.
+    m200c = props['Mass_200crit'][:] *1e10  # to Msun units
+
+    # Set neg. values to 1, i.e. 0 in np.log10.
+    m200c[m200c <= 0] = 1
+
+    # This gives exponents of 10^x, which reproduces m200c vals.
+    m200c = np.log10(m200c)  
+
+    # Center of Potential coordinates, for all halos.
+    CoP = np.zeros((len(m200c), 3))
+    CoP[:, 0] = props["Xcminpot"][:]
+    CoP[:, 1] = props["Ycminpot"][:]
+    CoP[:, 2] = props["Zcminpot"][:]
+
+
+    # -------------------------------------------------- #
+    # Select a halo sample based on mass and mass range. #
+    # -------------------------------------------------- #
+
+    select_halos = np.where(
+        (m200c >= mass_gauge-mass_range) & (m200c <= mass_gauge+mass_range)
+    )[0]
+
+    # Selecting subhalos or (host/main) halos.
+    subtype = props["Structuretype"][:]
+    if halo_type == 'subhalos':
+        select = np.where(subtype[select_halos] > 10)[0]
+        select_halos = select_halos[select]
+    else:
+        select = np.where(subtype[select_halos] == 10)[0]
+        select_halos = select_halos[select]
+
+    # Limit amount of halos to given size.
+    halo_number = len(select_halos)
+    halo_limit = 10
+    if halo_number >= halo_limit:
+        rand_IDs = np.random.randint(0, halo_number-1, size=(halo_limit))
+        select_halos = select_halos[rand_IDs]
+
+    halo_params = np.zeros((len(select_halos), 3))
+    for j, halo_idx in enumerate(select_halos):
+
+        # Start and stop index for current halo.
+        halo_init = group["Offset"][halo_idx]
+        halo_stop = group["Offset"][halo_idx + 1]
+
+        # Particle IDs of halo and snapshot.
+        halo_Particle_IDs = parts["Particle_IDs"][halo_init:halo_stop]
+        snap_Particle_IDs = snaps["PartType1/ParticleIDs"][...]
+
+        # Particle IDs present in both above arrays.
+        _, _, indices_p = np.intersect1d(
+            halo_Particle_IDs, snap_Particle_IDs, 
+            assume_unique=True, return_indices=True
+        )
+
+        # Save DM positions (centered on halo).
+        DM_pos = pos[indices_p, :]  # x,y,z of each DM particle
+        DM_pos -= CoP[halo_idx, :]  # center DM on current halo
+        DM_pos *= 1e3  # to kpc
+        np.save(
+            f'{sim}/DM_pos_snap_{snap}_1e+{mass_gauge}Msun_halo{j}.npy',
+            DM_pos
+        )
+
+        # Save cNFW, rvir and Mvir of current halo.
+        halo_params[j, 0] = rvir[halo_idx]
+        halo_params[j, 1] = m200c[halo_idx]
+        halo_params[j, 2] = cNFW[halo_idx]
+
+    np.save(f'{sim}/halo_params_snap_{snap}_1e+{mass_gauge}Msun', halo_params)
+
+    
 
 def read_DM_positions(
     snap_num, sim, halo_index, init_m, DM_radius_kpc

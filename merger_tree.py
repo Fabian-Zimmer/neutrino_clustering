@@ -177,7 +177,7 @@ class Mock_ArgumentParser:
     elif str(pathlib.Path.home()) == '/home/fabian':
         root = '/home/fabian'
         home = f'{root}/my_github_projects'
-        directory_list = f'{root}/ownCloud/snellius/L006N188/'
+        directory_list = f'{root}/ownCloud/snellius/{SIM_ID}/'
         output_directory = f'{home}/neutrino_clustering_output_local/MergerTree/'
         number_of_inputs = len(snapshot_list)
 
