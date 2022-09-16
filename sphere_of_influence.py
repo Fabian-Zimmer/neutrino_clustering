@@ -49,8 +49,8 @@ def main_radius_pre(DM_radius):
             )
 
         # Arrays produced by cell division algorithm.
-        adapted_cc = np.load(
-            f'CubeSpace/adapted_cc_{SIM_ID}_snapshot_{snap}_{m0}Msun_{DM_radius}kpc.npy')
+        fin_grid = np.load(
+            f'CubeSpace/fin_grid_{SIM_ID}_snapshot_{snap}_{m0}Msun_{DM_radius}kpc.npy')
         cell_gen = np.load(
             f'CubeSpace/cell_gen_{SIM_ID}_snapshot_{snap}_{m0}Msun_{DM_radius}kpc.npy')
         cell_com = np.load(
@@ -58,13 +58,13 @@ def main_radius_pre(DM_radius):
         DM_count = np.load(
             f'CubeSpace/DM_count_{SIM_ID}_snapshot_{snap}_{m0}Msun_{DM_radius}kpc.npy')
         NrDM_snaps[j] = np.sum(DM_count)
-        # print(adapted_cc.shape, cell_gen.shape, cell_com.shape, DM_count.shape)
+        # print(fin_grid.shape, cell_gen.shape, cell_com.shape, DM_count.shape)
 
         # Generate gravity grid, in batches of cells, due to memory intensity.
         batch_size = 10  
         #! snapshot 14 memory crash?
         
-        bs_cc = chunks(batch_size, adapted_cc)
+        bs_cc = chunks(batch_size, fin_grid)
         bs_gen = chunks(batch_size, cell_gen)
         bs_com = chunks(batch_size, cell_com)
         bs_count = chunks(batch_size, DM_count)
@@ -95,7 +95,7 @@ def main_radius_pre(DM_radius):
             ) for b in bs_nums
         ]
         dPsi_combined = np.array(
-            list(itertools.chain.from_iterable(dPsi_batches))
+            list(chain.from_iterable(dPsi_batches))
         )
         np.save(
             f'CubeSpace/dPsi_grid_snapshot_{snap}_{m0}Msun_{DM_radius}kpc.npy', dPsi_combined

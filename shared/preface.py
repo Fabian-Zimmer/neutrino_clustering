@@ -9,7 +9,7 @@ import random
 import gc
 import argparse
 import pathlib
-import itertools
+from itertools import chain
 from memory_profiler import profile
 
 # arrays and data packages
@@ -214,13 +214,13 @@ Z_START, Z_STOP, Z_AMOUNT = 0., 4., 100-1  # -1 to compensate np.insert of z=4
 Z_START_LOG = 1e-1
 zeds_pre = np.geomspace(Z_START_LOG, Z_STOP, Z_AMOUNT) - Z_START_LOG
 ZEDS = np.insert(zeds_pre, len(zeds_pre), 4.)
+S_STEPS = np.load(f'shared/S_STEPS.npy')
 
 # Control if simulation runs forwards (+1) or backwards (-1) in time. 
 TIME_FLOW = -1
 
 # Position of earth w.r.t Milky Way NFW halo center.
-# note: 
-# Earth is placed on x axis of coord. system.
+# note: Earth is placed on x axis of coord. system.
 X_SUN = np.array([8.5, 0., 0.])
 
 # Available halos.

@@ -291,18 +291,18 @@ def read_DM_halo_batch(
     
 
 def read_DM_positions(
-    snap_num, sim, halo_index, init_m, DM_radius_kpc
+    snap, sim, halo_index, init_m, DM_radius_kpc
     ):
 
     # Open data files.
     snaps = h5py.File(str(next(
         pathlib.Path(
-            f'{SIM_DATA}/{sim}').glob(f'**/snapshot_{snap_num}.hdf5'
+            f'{SIM_DATA}/{sim}').glob(f'**/snapshot_{snap}.hdf5'
         )
     )))
     props = h5py.File(str(next(
         pathlib.Path(
-            f'{SIM_DATA}/{sim}').glob(f'**/subhalo_{snap_num}.properties'
+            f'{SIM_DATA}/{sim}').glob(f'**/subhalo_{snap}.properties'
         )
     )))
 
@@ -337,7 +337,7 @@ def read_DM_positions(
 
     # Save positions relative to CoP (center of halo potential).
     np.save(
-        f'CubeSpace/DM_positions_{sim}_snapshot_{snap_num}_{init_m}Msun_{DM_radius_kpc}kpc.npy',
+        f'CubeSpace/DM_positions_{sim}_snap_{snap}_{init_m}Msun_{DM_radius_kpc}kpc.npy',
         particles_pos
     )
 
@@ -346,29 +346,29 @@ def read_DM_positions(
 
 def read_DM_positions_alt2(
     which_halos='halos', mass_select=12, mass_range=0.2, 
-    random=True, snap_num='0036', sim='L___N___', halo_index=0, init_m=0,
+    random=True, snap='0036', sim='L___N___', halo_index=0, init_m=0,
     save_params=False
     ):
 
     # Open data files.
     snaps = h5py.File(str(next(
         pathlib.Path(
-            f'{SIM_DATA}/{sim}').glob(f'**/snapshot_{snap_num}.hdf5'
+            f'{SIM_DATA}/{sim}').glob(f'**/snapshot_{snap}.hdf5'
         )
     )))
     group = h5py.File(str(next(
         pathlib.Path(
-            f'{SIM_DATA}/{sim}').glob(f'**/subhalo_{snap_num}.catalog_groups'
+            f'{SIM_DATA}/{sim}').glob(f'**/subhalo_{snap}.catalog_groups'
         )
     )))
     parts = h5py.File(str(next(
         pathlib.Path(
-            f'{SIM_DATA}/{sim}').glob(f'**/subhalo_{snap_num}.catalog_particles'
+            f'{SIM_DATA}/{sim}').glob(f'**/subhalo_{snap}.catalog_particles'
         )
     )))
     props = h5py.File(str(next(
         pathlib.Path(
-            f'{SIM_DATA}/{sim}').glob(f'**/subhalo_{snap_num}.properties'
+            f'{SIM_DATA}/{sim}').glob(f'**/subhalo_{snap}.properties'
         )
     )))
 
@@ -410,7 +410,7 @@ def read_DM_positions_alt2(
 
     # Save positions relative to CoP (center of halo potential).
     np.save(
-        f'CubeSpace/DM_positions_{sim}_snapshot_{snap_num}_{init_m}Msun.npy',
+        f'CubeSpace/DM_positions_{sim}_snap_{snap}_{init_m}Msun.npy',
         particles_pos
     )
     
@@ -423,29 +423,29 @@ def read_DM_positions_alt2(
 
 def read_DM_positions_alt(
     which_halos='halos', mass_select=12, mass_range=0.2, 
-    random=True, snap_num='0036', sim='L___N___', halo_index=0, init_m=0,
+    random=True, snap='0036', sim='L___N___', halo_index=0, init_m=0,
     save_params=False
     ):
 
     # Open data files.
     snaps = h5py.File(str(next(
         pathlib.Path(
-            f'{SIM_DATA}/{sim}').glob(f'**/snapshot_{snap_num}.hdf5'
+            f'{SIM_DATA}/{sim}').glob(f'**/snapshot_{snap}.hdf5'
         )
     )))
     group = h5py.File(str(next(
         pathlib.Path(
-            f'{SIM_DATA}/{sim}').glob(f'**/subhalo_{snap_num}.catalog_groups'
+            f'{SIM_DATA}/{sim}').glob(f'**/subhalo_{snap}.catalog_groups'
         )
     )))
     parts = h5py.File(str(next(
         pathlib.Path(
-            f'{SIM_DATA}/{sim}').glob(f'**/subhalo_{snap_num}.catalog_particles'
+            f'{SIM_DATA}/{sim}').glob(f'**/subhalo_{snap}.catalog_particles'
         )
     )))
     props = h5py.File(str(next(
         pathlib.Path(
-            f'{SIM_DATA}/{sim}').glob(f'**/subhalo_{snap_num}.properties'
+            f'{SIM_DATA}/{sim}').glob(f'**/subhalo_{snap}.properties'
         )
     )))
 
@@ -528,7 +528,7 @@ def read_DM_positions_alt(
         )
     else:
         np.save(
-            f'CubeSpace/DM_positions_{sim}_snapshot_{snap_num}_{init_m}Msun.npy',
+            f'CubeSpace/DM_positions_{sim}_snap_{snap}_{init_m}Msun.npy',
             particles_pos
         )
 
@@ -571,16 +571,16 @@ def grid_3D(l, s, origin_coords=[0.,0.,0.,]):
     return cent_coordPairs3D
 
 
-def check_grid(init_cc, DM_pos, parent_GRID_S, DM_lim, gen_count):
+def check_grid(init_grid, DM_pos, parent_GRID_S, DM_lim, gen_count):
     """
     Determine which cells have DM above threshold and thus need division.
     """
 
     # Center all DM positions w.r.t. center, for all cells.
-    DM_pos -= init_cc
+    DM_pos -= init_grid
 
     # Cell length of current grid generation, used to limit DM particles.
-    cell_len = np.ones((len(init_cc),1), dtype=np.float64)*parent_GRID_S/2.
+    cell_len = np.ones((len(init_grid),1), dtype=np.float64)*parent_GRID_S/2.
 
     # Select DM particles inside each cell based on cube length generation.
     DM_in_cell_IDs = np.asarray(
@@ -644,8 +644,8 @@ def check_grid(init_cc, DM_pos, parent_GRID_S, DM_lim, gen_count):
 
 
 def cell_division(
-    init_cc, DM_pos, parent_GRID_S, DM_lim, stable_cc, sim, snap_num, m0,
-    DM_incl_radius, test_names=False
+    init_grid, DM_pos, parent_GRID_S, DM_lim, stable_grid, sim, snap, 
+    halo_num=None, DM_radius=None, test_names=False
     ):
 
     if test_names:
@@ -655,97 +655,73 @@ def cell_division(
     thresh = 1
     cell_division_count = 0
 
-    DM_count_arr = []
-    cell_com_arr = []
-    cell_gen_arr = []
+    DM_count_l = []
+    cell_com_l = []
+    cell_gen_l = []
 
     while thresh > 0:
 
         DM_count, cell_com, stable_cells, DM_parent_cells, thresh = check_grid(
-            init_cc, DM_pos, parent_GRID_S, DM_lim, cell_division_count
+            init_grid, DM_pos, parent_GRID_S, DM_lim, cell_division_count
         )
 
         # Save DM count and c.o.m coords of stable cells.
-        DM_count_arr.append(DM_count)
-        cell_com_arr.append(cell_com)
+        DM_count_l.append(DM_count)
+        cell_com_l.append(cell_com)
 
         # If no cells are in need of division -> return final coords.
         if thresh == 0:
 
             # Append cell generation number of last iteration.
-            cell_gen_arr.append(
-                np.zeros(len(init_cc), int) + cell_division_count
+            cell_gen_l.append(
+                np.zeros(len(init_grid), int) + cell_division_count
             )
             
             # Convert nested lists to ndarrays.
-            cell_gen_np = np.array(
-                list(itertools.chain.from_iterable(cell_gen_arr))
-            )
-            DM_count_np = np.array(
-                list(itertools.chain.from_iterable(DM_count_arr))
-            )
-            cell_com_np = np.array(
-                list(itertools.chain.from_iterable(cell_com_arr))
-            )
+            cell_gen_np = np.array(list(chain.from_iterable(cell_gen_l)))
+            DM_count_np = np.array(list(chain.from_iterable(DM_count_l)))
+            cell_com_np = np.array(list(chain.from_iterable(cell_com_l)))
+
+            # Determine file names.
+            if DM_radius is None:
+                fname = f'snap_{snap}_halo{halo_num}'
+            else:
+                fname = f'snap_{snap}_{DM_radius}kpc'
 
             if cell_division_count > 0:
 
                 # The final iteration is a concatenation of the survival cells 
                 # from the previous iteration and the newest sub8 cell coords 
-                # (which are now init_cc).
-                final_cc = np.concatenate((stable_cc, init_cc), axis=0)
-                np.save(
-                    f'CubeSpace/adapted_cc_{sim}_snapshot_{snap_num}_{m0}Msun_{DM_incl_radius}kpc.npy', 
-                    final_cc
-                )
-                np.save(
-                    f'CubeSpace/DM_count_{sim}_snapshot_{snap_num}_{m0}Msun_{DM_incl_radius}kpc.npy',
-                    DM_count_np
-                )
-                np.save(
-                    f'CubeSpace/cell_com_{sim}_snapshot_{snap_num}_{m0}Msun_{DM_incl_radius}kpc.npy',
-                    cell_com_np
-                )
-                np.save(
-                    f'CubeSpace/cell_gen_{sim}_snapshot_{snap_num}_{m0}Msun_{DM_incl_radius}kpc.npy',
-                    cell_gen_np
-                )
-                return cell_division_count
-            else:
+                # (which are now init_grid).
+                final_cc = np.concatenate((stable_grid, init_grid), axis=0)
+                np.save(f'{sim}/fin_grid_{fname}.npy', final_cc)
 
+            else:
                 # Return initial grid itself, if it's fine-grained already.
-                np.save(
-                    f'CubeSpace/adapted_cc_{sim}_snapshot_{snap_num}_{m0}Msun_{DM_incl_radius}kpc.npy', 
-                    init_cc
-                )
-                np.save(
-                    f'CubeSpace/DM_count_{sim}_snapshot_{snap_num}_{m0}Msun_{DM_incl_radius}kpc.npy',
-                    DM_count_np
-                )
-                np.save(
-                    f'CubeSpace/cell_com_{sim}_snapshot_{snap_num}_{m0}Msun_{DM_incl_radius}kpc.npy',
-                    cell_com_np
-                )
-                np.save(
-                    f'CubeSpace/cell_gen_{sim}_snapshot_{snap_num}_{m0}Msun_{DM_incl_radius}kpc.npy',
-                    cell_gen_np
-                )
-                return cell_division_count
+                np.save(f'{sim}/fin_grid_{fname}.npy', init_grid)
+
+            # Save DM count, c.o.m. coord, and generation, for all cells.
+            np.save(f'{sim}/DM_count_{fname}.npy', DM_count_np)
+            np.save(f'{sim}/cell_com_{fname}.npy', cell_com_np)
+            np.save(f'{sim}/cell_gen_{fname}.npy', cell_gen_np)
+
+            return cell_division_count
+
 
         else:
             del DM_count, cell_com
             
             # Array containing all cells (i.e. their coords.), which need to
             # be divided into 8 "child cells", hence the name "parent cells".
-            parent_cells = np.delete(init_cc, stable_cells, axis=0)
+            parent_cells = np.delete(init_grid, stable_cells, axis=0)
             pcs = len(parent_cells)
 
             # Array containing all cells, which are "stable" and need no 
             # division, so excluding all parent cells.
-            no_parent_cells = np.delete(init_cc, ~stable_cells, axis=0)
+            no_parent_cells = np.delete(init_grid, ~stable_cells, axis=0)
 
             # Save generation index of stable cells.
-            cell_gen_arr.append(
+            cell_gen_l.append(
                 np.zeros(len(no_parent_cells), int) + cell_division_count
             )
 
@@ -777,56 +753,56 @@ def cell_division(
             del sub8_raw, sub8_temp, parent_cells
 
             if cell_division_count > 0:
-                stable_cc_so_far = np.concatenate(
-                    (stable_cc, no_parent_cells), axis=0
+                stable_grid_so_far = np.concatenate(
+                    (stable_grid, no_parent_cells), axis=0
                 )
             else:  # ending of first division loop
-                stable_cc_so_far = no_parent_cells
+                stable_grid_so_far = no_parent_cells
 
             # Overwrite variables for next loop.
-            init_cc       = sub8_coords
+            init_grid     = sub8_coords
             DM_pos        = DM_rep8
             parent_GRID_S = sub8_GRID_S
-            stable_cc     = stable_cc_so_far
+            stable_grid   = stable_grid_so_far
 
             cell_division_count += 1
 
 
 def manual_cell_division(
-    sim_id, snap_num, DM_raw, DM_lim_manual, 
+    sim_id, snap, DM_raw, DM_lim_manual, 
     GRID_L_manual, GRID_S_manual, m0, DM_radius
 ):
     
     # Initial grid and DM positions.
     grid = grid_3D(GRID_L_manual, GRID_S_manual)
-    init_cc = np.expand_dims(grid, axis=1)
+    init_grid = np.expand_dims(grid, axis=1)
     DM_pos = np.expand_dims(DM_raw, axis=0)
-    DM_ready = np.repeat(DM_pos, len(init_cc), axis=0)
-    print('Grid and DM shapes before division:', init_cc.shape, DM_ready.shape)
+    DM_ready = np.repeat(DM_pos, len(init_grid), axis=0)
+    print('Grid and DM shapes before division:', init_grid.shape, DM_ready.shape)
 
     cell_division_count = cell_division(
-        init_cc, DM_ready, GRID_S_manual, DM_lim_manual, 
-        stable_cc=None, sim=sim_id, snap_num=snap_num, m0=m0, 
-        DM_incl_radius=DM_radius,
+        init_grid, DM_ready, GRID_S_manual, DM_lim_manual, 
+        stable_grid=None, sim=sim_id, snap=snap, m0=m0, 
+        DM_radius=DM_radius,
         test_names=True  #! s.t. important files don't get changed
     )
     print(f'cell division rounds: {cell_division_count}')
 
     # Output.
-    adapted_cc = np.load(
-        f'CubeSpace/adapted_cc_TestFile_snapshot_{snap_num}_{m0}Msun_{DM_radius}kpc.npy')
+    fin_grid = np.load(
+        f'CubeSpace/fin_grid_TestFile_snap_{snap}_{m0}Msun_{DM_radius}kpc.npy')
     cell_gen = np.load(
-        f'CubeSpace/cell_gen_TestFile_snapshot_{snap_num}_{m0}Msun_{DM_radius}kpc.npy')
+        f'CubeSpace/cell_gen_TestFile_snap_{snap}_{m0}Msun_{DM_radius}kpc.npy')
     cell_com = np.load(
-        f'CubeSpace/cell_com_TestFile_snapshot_{snap_num}_{m0}Msun_{DM_radius}kpc.npy')
+        f'CubeSpace/cell_com_TestFile_snap_{snap}_{m0}Msun_{DM_radius}kpc.npy')
     DM_count = np.load(
-        f'CubeSpace/DM_count_TestFile_snapshot_{snap_num}_{m0}Msun_{DM_radius}kpc.npy')
+        f'CubeSpace/DM_count_TestFile_snap_{snap}_{m0}Msun_{DM_radius}kpc.npy')
 
-    print('Shapes of output files:', adapted_cc.shape, cell_gen.shape, cell_com.shape, DM_count.shape)
+    print('Shapes of output files:', fin_grid.shape, cell_gen.shape, cell_com.shape, DM_count.shape)
 
     print('Total DM count across all cells:', DM_count.sum())
 
-    return adapted_cc, cell_gen, cell_com, DM_count
+    return fin_grid, cell_gen, cell_com, DM_count
 
 
 @nb.njit
@@ -837,10 +813,10 @@ def outside_gravity(x_i, DM_tot):
     return pre*x_i/denom
 
 
-def cell_gravity_3D(
+def cell_gravity(
     cell_coords, cell_com, cell_gen, 
-    DM_pos, DM_count, m_DM, snap_num, m0,
-    long_range=True, test_names=False, batches=False, batch_num=0
+    DM_pos, DM_count, sim, snap, batch_num,
+    long_range=True, test_names=False
 ):
     # Center all DM positions w.r.t. cell center.
     DM_pos -= cell_coords
@@ -886,7 +862,7 @@ def cell_gravity_3D(
             np.power((DM_dis**2 + eps**2), 3./2.), copy=False, nan=1.0
         )
     del DM_in, DM_dis
-    dPsi_short = G*m_DM*np.sum(quot, axis=1)
+    dPsi_short = G*DM_SIM_MASS*np.sum(quot, axis=1)
     del quot
 
     if long_range:
@@ -926,7 +902,7 @@ def cell_gravity_3D(
 
         # Long-range gravity component for each cell (without including itself).
         quot_long = (cell_coords-com_del)/np.power(com_dis_sync, 3)
-        dPsi_long = G*m_DM*np.sum(DM_count_sync*quot_long, axis=1)
+        dPsi_long = G*DM_SIM_MASS*np.sum(DM_count_sync*quot_long, axis=1)
         del quot_long
 
         # Total derivative as short+long range.
@@ -939,30 +915,24 @@ def cell_gravity_3D(
 
     # Rename files when testing to not overwrite important files for sims.
     if test_names:
-        snap_num = 'TestFile'
+        snap = 'TestFile'
 
-    if batches:
-        np.save(
-            f'CubeSpace/dPsi_grid_snapshot_{snap_num}_batch{batch_num}.npy', dPsi_grid
-        )
-    else:
-        np.save(
-            f'CubeSpace/dPsi_grid_snapshot_{snap_num}_{m0}Msun.npy', dPsi_grid
-        )
+    np.save(
+        f'{sim}/dPsi_grid_snap_{snap}_batch{batch_num}.npy', dPsi_grid
+    )
 
-
-def load_grid(snap, sim, m0, DM_incl_radius, which):
+def load_grid(snap, sim, m0, DM_radius, which):
 
     if which == 'derivatives':
         # Load file with derivative grid of ID.
         grid = np.load(
-            f'CubeSpace/dPsi_grid_snapshot_{snap}_{m0}Msun_{DM_incl_radius}kpc.npy'
+            f'{sim}/dPsi_grid_snap_{snap}_{m0}Msun_{DM_radius}kpc.npy'
         )
 
     elif which == 'positions':
         # Load file with position grid of ID.
         grid = np.load(
-            f'CubeSpace/adapted_cc_{sim}_snapshot_{snap}_{m0}Msun_{DM_incl_radius}kpc.npy'
+            f'{sim}/fin_grid_{sim}_snap_{snap}_{m0}Msun_{DM_radius}kpc.npy'
         )
 
     return grid
@@ -976,7 +946,6 @@ def nu_in_which_cell(nu_coords, cell_coords):
     cell_idx = dist.argmin()
 
     return cell_idx
-
 
 
 #########################
@@ -1115,31 +1084,6 @@ def draw_ui(phi_points, theta_points):
     ui_array = np.array([[ux, uy, uz] for ux,uy,uz in zip(uxs,uys,uzs)])        
 
     return ui_array 
-
-
-def s_of_z(z):
-    """Convert redshift to time variable s with eqn. 4.1 in Mertsch et al.
-    (2020), keeping only Omega_m0 and Omega_Lambda0 in the Hubble eqn. for H(z).
-
-    Args:
-        z (float): redshift
-
-    Returns:
-        float: time variable s (in [seconds] if 1/H0 factor is included)
-    """    
-
-    def s_integrand(z):        
-
-        # We need value of H0 in units of 1/s.
-        H0_val = H0/(1/s)
-        a_dot = np.sqrt(Omega_M*(1.+z)**3 + Omega_L)/(1.+z)*H0_val
-        s_int = 1./a_dot
-
-        return s_int
-
-    s_of_z, _ = quad(s_integrand, 0., z)
-
-    return np.float64(s_of_z)
 
 
 @nb.njit
@@ -1332,6 +1276,30 @@ def number_density(p0, p1):
     n_cm3 = g/(2*Pi**2) * n_raw / (1/cm**3)
 
     return n_cm3
+
+
+def number_density_1_mass(u_all, m_nu_eV, output, average=False, z_average=0.):
+
+    n_nus = np.zeros(len(m_nu_eV))
+    for i, m_eV in enumerate(m_nu_eV):
+
+        # Get momenta.
+        p, _ = u_to_p_eV(u_all, m_eV)
+
+        if average and m_eV >= 0.01:
+            idx = np.array(np.where(ZEDS >= z_average)).flatten()
+
+            temp = np.zeros(len(idx))
+            for j,k in enumerate(idx):
+                val = number_density(p[:,0], p[:,k])
+                temp[j] = val
+
+            n_nus[i] = np.mean(temp)
+
+        else:
+            n_nus[i] = number_density(p[:,0], p[:,-1])
+
+    np.save(f'{output}', n_nus)
 
 
 #####################

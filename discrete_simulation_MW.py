@@ -2,7 +2,10 @@ from shared.preface import *
 import shared.functions as fct
 
 
-def EOMs(s_val, y):
+def EOMs(
+    s_val, y,     # key integration variables
+     # additional arguments
+    ):
 
     # Initialize vector.
     x_i, u_i = np.reshape(y, (2,3))
@@ -55,63 +58,59 @@ def backtrack_1_neutrino(y0_Nr):
     # Solve all 6 EOMs.
     sol = solve_ivp(
         fun=EOMs, t_span=[S_STEPS[0], S_STEPS[-1]], t_eval=S_STEPS,
-        y0=y0, method=SOLVER, vectorized=True
+        y0=y0, method=SOLVER, vectorized=True,
+        args=()
         )
     
     np.save(f'neutrino_vectors/nu_{int(Nr)}_CubeSpace.npy', np.array(sol.y.T))
 
 
+start = time.perf_counter()
 
-if __name__ == '__main__':
-    start = time.perf_counter()
-
-    # Integration steps.
-    S_STEPS = np.array([fct.s_of_z(z) for z in ZEDS])
-
-    # Draw initial velocities.
-    ui = fct.draw_ui(
-        phi_points   = PHIs,
-        theta_points = THETAs
-        )
-    
-    # Combine vectors and append neutrino particle number.
-    y0_Nr = np.array(
-        [np.concatenate((X_SUN, ui[i], [i+1])) for i in range(NUS)]
-        )
-
-    # Number of DM particles used for each snapshot.
-    NrDM_SNAPSHOTS = np.load('shared/NrDM_SNAPSHOTS.npy')
-
-    CPUs = 6
-
-    # Display parameters for simulation.
-    print(
-        '***Running simulation*** \n',
-        f'neutrinos={NUS} ; method=CubeSpace ; CPUs={CPUs} ; solver={SOLVER}'
+# Draw initial velocities.
+ui = fct.draw_ui(
+    phi_points   = PHIs,
+    theta_points = THETAs
     )
 
-    # Test 1 neutrino only.
-    # backtrack_1_neutrino(y0_Nr[0])
-
-    # '''
-    # Run simulation on multiple cores.
-    with ProcessPoolExecutor(CPUs) as ex:
-        ex.map(backtrack_1_neutrino, y0_Nr)  
-
-
-    # Compactify all neutrino vectors into 1 file.
-    Ns = np.arange(NUS, dtype=int)  # Nr. of neutrinos
-    nus = np.array(
-        [np.load(f'neutrino_vectors/nu_{Nr+1}_CubeSpace.npy') for Nr in Ns]
+# Combine vectors and append neutrino particle number.
+y0_Nr = np.array(
+    [np.concatenate((X_SUN, ui[i], [i+1])) for i in range(NUS)]
     )
-    np.save(
-        f'neutrino_vectors/nus_{NUS}_CubeSpace.npy',
-        nus
-        )  
-    fct.delete_temp_data('neutrino_vectors/nu_*CubeSpace.npy')    
-    # '''
 
-    seconds = time.perf_counter()-start
-    minutes = seconds/60.
-    hours = minutes/60.
-    print(f'Time sec/min/h: {seconds} sec, {minutes} min, {hours} h.')
+# Number of DM particles used for each snapshot.
+NrDM_SNAPSHOTS = np.load('shared/NrDM_SNAPSHOTS.npy')
+
+CPUs = 6
+
+# Display parameters for simulation.
+print(
+    '***Running simulation*** \n',
+    f'neutrinos={NUS} ; method=CubeSpace ; CPUs={CPUs} ; solver={SOLVER}'
+)
+
+# Test 1 neutrino only.
+# backtrack_1_neutrino(y0_Nr[0])
+
+# '''
+# Run simulation on multiple cores.
+with ProcessPoolExecutor(CPUs) as ex:
+    ex.map(backtrack_1_neutrino, y0_Nr)  
+
+
+# Compactify all neutrino vectors into 1 file.
+Ns = np.arange(NUS, dtype=int)  # Nr. of neutrinos
+nus = np.array(
+    [np.load(f'neutrino_vectors/nu_{Nr+1}_CubeSpace.npy') for Nr in Ns]
+)
+np.save(
+    f'neutrino_vectors/nus_{NUS}_CubeSpace.npy',
+    nus
+    )  
+fct.delete_temp_data('neutrino_vectors/nu_*CubeSpace.npy')    
+# '''
+
+seconds = time.perf_counter()-start
+minutes = seconds/60.
+hours = minutes/60.
+print(f'Time sec/min/h: {seconds} sec, {minutes} min, {hours} h.')

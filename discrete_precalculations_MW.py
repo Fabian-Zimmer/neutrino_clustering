@@ -48,8 +48,8 @@ def main_pre():
             )
 
         # Arrays produced by cell division algorithm.
-        adapted_cc = np.load(
-            f'CubeSpace/adapted_cc_{SIM_ID}_snapshot_{snap}_{m0}Msun.npy')
+        fin_grid = np.load(
+            f'CubeSpace/fin_grid_{SIM_ID}_snapshot_{snap}_{m0}Msun.npy')
         cell_gen = np.load(
             f'CubeSpace/cell_gen_{SIM_ID}_snapshot_{snap}_{m0}Msun.npy')
         cell_com = np.load(
@@ -57,11 +57,11 @@ def main_pre():
         DM_count = np.load(
             f'CubeSpace/DM_count_{SIM_ID}_snapshot_{snap}_{m0}Msun.npy')
         NrDM_snaps[j] = np.sum(DM_count)
-        # print(adapted_cc.shape, cell_gen.shape, cell_com.shape, DM_count.shape)
+        # print(fin_grid.shape, cell_gen.shape, cell_com.shape, DM_count.shape)
 
         # Generate gravity grid, in batches of cells, due to memory intensity.
         batch_size = 50
-        bs_cc = chunks(batch_size, adapted_cc)
+        bs_cc = chunks(batch_size, fin_grid)
         bs_gen = chunks(batch_size, cell_gen)
         bs_com = chunks(batch_size, cell_com)
         bs_count = chunks(batch_size, DM_count)
@@ -92,16 +92,16 @@ def main_pre():
             ) for b in bs_nums
         ]
         dPsi_combined = np.array(
-            list(itertools.chain.from_iterable(dPsi_batches))
+            list(chain.from_iterable(dPsi_batches))
         )
         np.save(f'CubeSpace/dPsi_grid_snapshot_{snap}_{m0}Msun.npy', dPsi_combined)
         fct.delete_temp_data('CubeSpace/dPsi_*batch*.npy') 
 
         '''
         # Calculate gravity in each cell.
-        adapted_DM = np.repeat(DM_pos, len(adapted_cc), axis=0)
+        adapted_DM = np.repeat(DM_pos, len(fin_grid), axis=0)
         fct.cell_gravity_3D(
-            adapted_cc, cell_com, cell_gen,
+            fin_grid, cell_com, cell_gen,
             adapted_DM, DM_count, DM_SIM_MASS, snap
         )
         '''
