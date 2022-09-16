@@ -2,92 +2,25 @@ from shared.preface import *
 import shared.functions as fct
 
 
-def EOMs(
-    s_val, y,     # key integration variables
-     # additional arguments
-    ):
-
-    # Initialize vector.
-    x_i, u_i = np.reshape(y, (2,3))
-
-    # Switch to "numerical reality" here.
-    x_i *= kpc
-    u_i *= (kpc/s)
-
-    # Find z corresponding to s via interpolation.
-    z = np.interp(s_val, S_STEPS, ZEDS)
-
-    # ID corresponding to current z.
-    idx = np.abs(ZEDS_SNAPSHOTS - z).argmin()
-    snap = NUMS_SNAPSHOTS[idx]
-    NrDM = NrDM_SNAPSHOTS[idx]
-
-    # Neutrino inside cell grid.
-    if np.all(np.abs(x_i)) <= GRID_L:
-
-        # Find which (pre-calculated) derivative grid to use at current z.
-        dPsi_grid = fct.load_grid(snap, SIM_ID, HALO_MASS, 'derivatives')
-        cell_grid = fct.load_grid(snap, SIM_ID, HALO_MASS, 'positions')
-
-        cell_idx = fct.nu_in_which_cell(x_i, cell_grid)  # index of cell
-        grad_tot = dPsi_grid[cell_idx,:]                 # derivative of cell
-
-    # Neutrino outside cell grid.
-    else:
-        grad_tot = fct.outside_gravity(x_i, NrDM)
-
-    # Switch to "physical reality" here.
-    grad_tot /= (kpc/s**2)
-    x_i /= kpc
-    u_i /= (kpc/s)
-
-    # Hamilton eqns. for integration.
-    dyds = TIME_FLOW * np.array([
-        u_i, 1./(1.+z)**2 * grad_tot
-    ])
-
-    return dyds
-
-
-def backtrack_1_neutrino(y0_Nr):
-    """Simulate trajectory of 1 neutrino."""
-
-    # Split input into initial vector and neutrino number.
-    y0, Nr = y0_Nr[0:-1], y0_Nr[-1]
-
-    # Solve all 6 EOMs.
-    sol = solve_ivp(
-        fun=EOMs, t_span=[S_STEPS[0], S_STEPS[-1]], t_eval=S_STEPS,
-        y0=y0, method=SOLVER, vectorized=True,
-        args=()
-        )
-    
-    np.save(f'temp_data/nu_{int(Nr)}_CubeSpace.npy', np.array(sol.y.T))
-
-
-
-
+# Simulation and halo batch parameters.
 sim = 'L006N188'
-snap = '0036'
-mass_gauge = 11
+mass_gauge = 11  # in log10 Msun
 mass_range = 1
 
-# Read DM positions and halo parameters of halo batch.
-fct.read_DM_halo_batch(sim, snap, mass_gauge, mass_range, 'halos')
-halo_params = np.load(
-    f'{sim}/halo_params_snap_{snap}_1e+{mass_gauge}Msun.npy'
-)
-print(halo_params)
-halo_num = len(halo_params)
+NrDM_snaps = np.zeros(len(NUMS_SNAPSHOTS))
+'''
+for snap in NUMS_SNAPSHOTS[::-1]:
 
-for j in range(halo_num):
+    # Read DM positions and halo parameters of halo batch for current snapshot.
+    fct.read_DM_halo_batch(sim, snap, mass_gauge, mass_range, 'halos')
+    hname = f'snap_{snap}_1e+{mass_gauge}Msun'
+    halo_params = np.load(f'{sim}/halo_params_{hname}.npy')
+    halo_num = len(halo_params)
 
-    NrDM_snaps = np.zeros(len(NUMS_SNAPSHOTS))
-    for snap in NUMS_SNAPSHOTS[::-1]:
+    for j in range(halo_num):
+
         # Load DM positions of halo.
-        DM_raw = np.load(
-            f'{sim}/DM_pos_snap_{snap}_1e+{mass_gauge}Msun_halo{j}.npy'
-        )
+        DM_raw = np.load(f'{sim}/DM_pos_{hname}_halo{j}.npy')
         
         # ---------------------- #
         # Cell division process. #
@@ -160,18 +93,84 @@ for j in range(halo_num):
         dPsi_fin = np.array(list(chain.from_iterable(dPsi_batches)))
         np.save(f'{sim}/dPsi_grid_{fname}.npy', dPsi_fin)
 
+        # Delete intermediate data.
+        fct.delete_temp_data(f'{sim}/dPsi_*batch*.npy') 
+    fct.delete_temp_data(f'{sim}/DM_pos_*halo*.npy')
+'''
 
-    # -------------------------------- #
-    # Run simulation for current halo. #
-    # -------------------------------- #
+# -------------------------------------- #
+# Run simulation for each halo in batch. #
+# -------------------------------------- #
+
+def EOMs(s_val, y):
+
+    # Initialize vector.
+    x_i, u_i = np.reshape(y, (2,3))
+
+    # Switch to "numerical reality" here.
+    x_i *= kpc
+    u_i *= (kpc/s)
+
+    # Find z corresponding to s via interpolation.
+    z = np.interp(s_val, S_STEPS, ZEDS)
+
+    # ID corresponding to current z.
+    idx = np.abs(ZEDS_SNAPSHOTS - z).argmin()
+    snap = NUMS_SNAPSHOTS[idx]
+    NrDM = NrDM_SNAPSHOTS[idx]
+
+    # Neutrino inside cell grid.
+    if np.all(np.abs(x_i)) <= GRID_L:
+
+        # Find which (pre-calculated) derivative grid to use at current z.
+        dPsi_grid = fct.load_grid(snap, sim, 'derivatives', halo_j)
+        cell_grid = fct.load_grid(snap, sim, 'positions',   halo_j)
+
+        cell_idx = fct.nu_in_which_cell(x_i, cell_grid)  # index of cell
+        grad_tot = dPsi_grid[cell_idx,:]                 # derivative of cell
+
+    # Neutrino outside cell grid.
+    else:
+        grad_tot = fct.outside_gravity(x_i, NrDM)
+
+    # Switch to "physical reality" here.
+    grad_tot /= (kpc/s**2)
+    x_i /= kpc
+    u_i /= (kpc/s)
+
+    # Hamilton eqns. for integration.
+    dyds = TIME_FLOW * np.array([
+        u_i, 1./(1.+z)**2 * grad_tot
+    ])
+
+    return dyds
+
+
+def backtrack_1_neutrino(y0_Nr):
+    """Simulate trajectory of 1 neutrino."""
+
+    # Split input into initial vector and neutrino number.
+    y0, Nr = y0_Nr[0:-1], y0_Nr[-1]
+
+    # Solve all 6 EOMs.
+    sol = solve_ivp(
+        fun=EOMs, t_span=[S_STEPS[0], S_STEPS[-1]], t_eval=S_STEPS,
+        y0=y0, method=SOLVER, vectorized=True,
+        args=()
+        )
+    
+    np.save(f'temp_data/nu_{int(Nr)}.npy', np.array(sol.y.T))
+
+
+hname = f'snap_0036_1e+{mass_gauge}Msun'
+halo_params = np.load(f'{sim}/halo_params_{hname}.npy')
+halo_num = len(halo_params)
+for halo_j in range(halo_num):
 
     start = time.perf_counter()
 
     # Draw initial velocities.
-    ui = fct.draw_ui(
-        phi_points   = PHIs,
-        theta_points = THETAs
-        )
+    ui = fct.draw_ui(phi_points = PHIs, theta_points = THETAs)
 
     # Combine vectors and append neutrino particle number.
     y0_Nr = np.array(
@@ -186,7 +185,7 @@ for j in range(halo_num):
     # Display parameters for simulation.
     print('***Running simulation***')
     print(
-        f'neutrinos={NUS}, halo={j}/{halo_num}, CPUs={CPUs}, solver={SOLVER}'
+        f'neutrinos={NUS}, halo={halo_j+1}/{halo_num}, CPUs={CPUs}, solver={SOLVER}'
     )
 
     # Test 1 neutrino only.
@@ -201,24 +200,12 @@ for j in range(halo_num):
     # Compactify all neutrino vectors into 1 file.
     Ns = np.arange(NUS, dtype=int)  # Nr. of neutrinos
     
-    nus = np.array(
-        [np.load(f'temp_data/nu_{Nr+1}_CubeSpace.npy') for Nr in Ns]
-    )
-    np.save(
-        f'neutrino_vectors/nus_{NUS}_CubeSpace.npy',
-        nus
-        )  
-    fct.delete_temp_data('neutrino_vectors/nu_*CubeSpace.npy')    
+    nus = np.array([np.load(f'temp_data/nu_{Nr+1}.npy') for Nr in Ns])
+    np.save(f'{sim}/{NUS}nus_{hname}.npy', nus)  
+    fct.delete_temp_data('temp_data/nu_*.npy')    
     # '''
 
     seconds = time.perf_counter()-start
     minutes = seconds/60.
     hours = minutes/60.
     print(f'Time sec/min/h: {seconds} sec, {minutes} min, {hours} h.')
-
-
-
-
-
-    # Clean up temporary files.
-    fct.delete_temp_data(f'{sim}/dPsi_*batch*.npy') 

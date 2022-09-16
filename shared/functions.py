@@ -256,6 +256,7 @@ def read_DM_halo_batch(
         select_halos = select_halos[rand_IDs]
 
     halo_params = np.zeros((len(select_halos), 3))
+    fname = f'snap_{snap}_1e+{mass_gauge}Msun'
     for j, halo_idx in enumerate(select_halos):
 
         # Start and stop index for current halo.
@@ -276,17 +277,14 @@ def read_DM_halo_batch(
         DM_pos = pos[indices_p, :]  # x,y,z of each DM particle
         DM_pos -= CoP[halo_idx, :]  # center DM on current halo
         DM_pos *= 1e3  # to kpc
-        np.save(
-            f'{sim}/DM_pos_snap_{snap}_1e+{mass_gauge}Msun_halo{j}.npy',
-            DM_pos
-        )
+        np.save(f'{sim}/DM_pos_{fname}_halo{j}.npy', DM_pos)
 
         # Save cNFW, rvir and Mvir of current halo.
         halo_params[j, 0] = rvir[halo_idx]
         halo_params[j, 1] = m200c[halo_idx]
         halo_params[j, 2] = cNFW[halo_idx]
 
-    np.save(f'{sim}/halo_params_snap_{snap}_1e+{mass_gauge}Msun', halo_params)
+    np.save(f'{sim}/halo_params_{fname}', halo_params)
 
     
 
@@ -649,7 +647,7 @@ def cell_division(
     ):
 
     if test_names:
-        sim = 'TestFile'
+        sim = 'test_data'
 
     # Initiate counters.
     thresh = 1
@@ -852,9 +850,8 @@ def cell_gravity(
     # Calculate short-range gravity. #
     # ------------------------------ #
 
-    # Cells can be as small as ~1kpc, offset of resolution of Camila's sim 
-    # (650 pc) is too high then, thus division by 10.
-    eps = 650*pc / 10.
+    # Offset DM positions by smoothening length of Camila's simulations.
+    eps = 650*pc
 
     # nan values to 0 for numerator, and 1 for denominator to avoid infinities.
     quot = np.nan_to_num(cell_coords - DM_in, copy=False, nan=0.0) / \
@@ -915,25 +912,25 @@ def cell_gravity(
 
     # Rename files when testing to not overwrite important files for sims.
     if test_names:
-        snap = 'TestFile'
+        sim = 'test_data'
 
     np.save(
         f'{sim}/dPsi_grid_snap_{snap}_batch{batch_num}.npy', dPsi_grid
     )
 
-def load_grid(snap, sim, m0, DM_radius, which):
+def load_grid(snap, sim, which, halo_num=None, DM_radius=None):
+
+    # Determine file names.
+    if DM_radius is None:
+        fname = f'snap_{snap}_halo{halo_num}'
+    else:
+        fname = f'snap_{snap}_{DM_radius}kpc'
 
     if which == 'derivatives':
-        # Load file with derivative grid of ID.
-        grid = np.load(
-            f'{sim}/dPsi_grid_snap_{snap}_{m0}Msun_{DM_radius}kpc.npy'
-        )
+        grid = np.load(f'{sim}/dPsi_grid_{fname}.npy')
 
     elif which == 'positions':
-        # Load file with position grid of ID.
-        grid = np.load(
-            f'{sim}/fin_grid_{sim}_snap_{snap}_{m0}Msun_{DM_radius}kpc.npy'
-        )
+        grid = np.load(f'{sim}/fin_grid_{fname}.npy')
 
     return grid
 
@@ -963,27 +960,19 @@ def delete_temp_data(path_to_wildcard_files):
             print("Error while deleting file (file not found")
 
 
-def load_u_sim(nr_of_nus, halos='MW', discrete=False, DM_radius=None):
-    """Loads neutrino velocities of simulation."""
+def load_sim_data(sim, fname, which):
+    """Loads neutrino positions or velocities of simulation."""
 
-    if discrete:
-        sim = np.load(f'neutrino_vectors/nus_{nr_of_nus}_CubeSpace.npy')
-        u_all = sim[:,:,3:6]
+    sim = np.load(f'{sim}/{fname}.npy')
 
-    elif discrete and DM_radius is not None:
-        m0 = HALO_MASS
-        sim = np.load(
-        f'neutrino_vectors/nus_{nr_of_nus}_CubeSpace_{m0}Msun_{DM_radius}kpc.npy'
-        )
-        u_all = sim[:,:,3:6]
+    # Return positions or velocities of neutrinos.
+    if which == 'positions':
+        data = sim[:,:,0:3]
+    elif which == 'velocities':
+        data = sim[:,:,3:6]
 
-    else:
-        sim = np.load(f'neutrino_vectors/nus_{nr_of_nus}_halos_{halos}.npy')
-        u_all = sim[:,:,3:6]
-
-    # u_all.shape = (nr_of_nus, len(ZEDS), 3) ; u_all.ndim = 3
-
-    return u_all
+    # data.shape = (nr_of_nus, len(ZEDS), 3) ; u_all.ndim = 3
+    return data
 
 
 def load_x_sim(nr_of_nus, halos='MW', discrete=False, DM_radius=None):
