@@ -235,9 +235,12 @@ SOLVER = 'RK23'
 ### Discrete simulation parameters ###
 ######################################
 ZEDS_SNAPSHOTS = np.load('shared/ZEDS_SNAPSHOTS.npy')
+ZEDS_SNAPSHOTS = ZEDS_SNAPSHOTS[1:]
 NUMS_SNAPSHOTS = np.load('shared/NUMS_SNAPSHOTS.npy')
+NUMS_SNAPSHOTS = NUMS_SNAPSHOTS[1:]
 
 SIM_ID = 'L006N188'
+# SIM_ID = 'L012N376'
 HALO_INDEX = 0 #! For L006N188 sim: 0 is ~1e12Msun, 1 & 2 are ~1e11Msun.
 
 if HALO_INDEX == 0:

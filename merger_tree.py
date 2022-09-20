@@ -39,7 +39,7 @@ def build_tree(sim_info, halo_index, output_file):
 
     # Starting snapshot is 36 (z=0).
     initial_snap = sim_info.initial_snap
-    final_snap = 10
+    final_snap = 12
 
     # How many haloes are we tracking?
     num_haloes = len(halo_index)

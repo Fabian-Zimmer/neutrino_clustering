@@ -149,23 +149,146 @@ def R_vir_fct(z, M_vir):
 ### Functions used in DISCRETE simulation ###
 #############################################
 
-def read_MergerTree(init_halo):
+def read_MergerTree(sim, init_halo):
     # Path to merger_tree file.
-    tree_path = f'{pathlib.Path.cwd().parent}/neutrino_clustering_output_local/MergerTree/MergerTree_{SIM_ID}.hdf5'
+    tree_path = f'{pathlib.Path.cwd().parent}/neutrino_clustering_output_local/MergerTree/MergerTree_{sim}.hdf5'
 
     with h5py.File(tree_path) as tree:
-        # Choice of index in snapshot_0036.
-        masses = tree['Assembly_history/Mass'][init_halo,:]
-        zeds = tree['Assembly_history/Redshift']
-
-        # Initial mass of traced halo.
-        m0 = f'{masses[0]:.2e}'
-
         # Progenitor index list.
-        prog_idx = tree['Assembly_history/Progenitor_index'][init_halo,:]
-        prog_idx = np.array(np.expand_dims(prog_idx, axis=1), dtype=int)
+        prog_IDs = tree['Assembly_history/Progenitor_index'][init_halo,:]
+        prog_IDs_np = np.array(np.expand_dims(prog_IDs, axis=1), dtype=int)
 
-    return m0, prog_idx
+    return prog_IDs_np
+
+
+def halo_batch_indices(sim, snap, mass_gauge, mass_range, halo_type, fname):
+
+    # ---------------------------------- #
+    # Read in parameters of halo in sim. #
+    # ---------------------------------- #
+
+    props = h5py.File(str(next(
+        pathlib.Path(
+            f'{SIM_DATA}/{sim}').glob(f'**/subhalo_{snap}.properties'
+        )
+    )))
+
+    # NFW concentration.
+    cNFW = props['cNFW_200crit'][:]
+
+    # Virial radius.
+    rvir = props['R_200crit'][:] *1e3 # to kpc units
+    
+    # Critical M_200.
+    m200c = props['Mass_200crit'][:] *1e10  # to Msun units
+
+    # Set neg. values to 1, i.e. 0 in np.log10.
+    m200c[m200c <= 0] = 1
+
+    # This gives exponents of 10^x, which reproduces m200c vals.
+    m200c = np.log10(m200c)  
+
+    # Center of Potential coordinates, for all halos.
+    CoP = np.zeros((len(m200c), 3))
+    CoP[:, 0] = props["Xcminpot"][:]
+    CoP[:, 1] = props["Ycminpot"][:]
+    CoP[:, 2] = props["Zcminpot"][:]
+
+
+    # -------------------------------------------------- #
+    # Select a halo sample based on mass and mass range. #
+    # -------------------------------------------------- #
+
+    select_halos = np.where(
+        (m200c >= mass_gauge-mass_range) & (m200c <= mass_gauge+mass_range)
+    )[0]
+
+    # Selecting subhalos or (host/main) halos.
+    subtype = props["Structuretype"][:]
+    if halo_type == 'subhalos':
+        select = np.where(subtype[select_halos] > 10)[0]
+        select_halos = select_halos[select]
+    else:
+        select = np.where(subtype[select_halos] == 10)[0]
+        select_halos = select_halos[select]
+
+    # Limit amount of halos to given size.
+    halo_number = len(select_halos)
+    halo_limit = 10
+    if halo_number >= halo_limit:
+        rand_IDs = np.random.randint(0, halo_number-1, size=(halo_limit))
+        select_halos = select_halos[rand_IDs]
+
+    # Save cNFW, rvir and Mvir of halos in batch.
+    halo_params = np.zeros((len(select_halos), 3))
+    for j, halo_idx in enumerate(select_halos):
+        halo_params[j, 0] = rvir[halo_idx]
+        halo_params[j, 1] = m200c[halo_idx]
+        halo_params[j, 2] = cNFW[halo_idx]
+
+    np.save(f'{sim}/halo_batch_{fname}_indices.npy', select_halos)
+    np.save(f'{sim}/halo_batch_{fname}_params.npy', halo_params)
+
+
+def read_DM_halo_index(sim, snap, halo_ID, fname):
+
+    # ---------------- #
+    # Open data files. #
+    # ---------------- #
+
+    snaps = h5py.File(str(next(
+        pathlib.Path(
+            f'{SIM_DATA}/{sim}').glob(f'**/snapshot_{snap}.hdf5'
+        )
+    )))
+    group = h5py.File(str(next(
+        pathlib.Path(
+            f'{SIM_DATA}/{sim}').glob(f'**/subhalo_{snap}.catalog_groups'
+        )
+    )))
+    parts = h5py.File(str(next(
+        pathlib.Path(
+            f'{SIM_DATA}/{sim}').glob(f'**/subhalo_{snap}.catalog_particles'
+        )
+    )))
+    props = h5py.File(str(next(
+        pathlib.Path(
+            f'{SIM_DATA}/{sim}').glob(f'**/subhalo_{snap}.properties'
+        )
+    )))
+
+    # Positions.
+    a = snaps["/Header"].attrs["Scale-factor"]
+    pos = snaps['PartType1/Coordinates'][:][:] * a
+    
+    # Critical M_200.
+    m200c = props['Mass_200crit'][:] * 1e10  # now in Msun
+    m200c[m200c <= 0] = 1
+    m200c = np.log10(m200c)  
+
+    # Center of Potential coordinates, for all halos.
+    CoP = np.zeros((len(m200c), 3))
+    CoP[:, 0] = props["Xcminpot"][:]
+    CoP[:, 1] = props["Ycminpot"][:]
+    CoP[:, 2] = props["Zcminpot"][:]
+
+    halo_start_pos = group["Offset"][halo_ID]
+    halo_end_pos = group["Offset"][halo_ID + 1]
+
+    particle_ids_in_halo = parts["Particle_IDs"][halo_start_pos:halo_end_pos]
+    particle_ids_from_snapshot = snaps["PartType1/ParticleIDs"][...]
+
+    # Get indices of elements, which are present in both arrays.
+    _, _, indices_p = np.intersect1d(
+        particle_ids_in_halo, particle_ids_from_snapshot, 
+        assume_unique=True, return_indices=True
+    )
+
+    # Save DM positions (centered on halo).
+    DM_pos = pos[indices_p, :]  # x,y,z of each DM particle
+    DM_pos -= CoP[halo_ID, :]  # center DM on current halo
+    DM_pos *= 1e3  # to kpc
+    np.save(f'{sim}/DM_pos_{fname}.npy', DM_pos)    
 
 
 def read_DM_halo_batch(
@@ -284,9 +407,9 @@ def read_DM_halo_batch(
         halo_params[j, 1] = m200c[halo_idx]
         halo_params[j, 2] = cNFW[halo_idx]
 
+    np.save(f'{sim}/halo_indices_{fname}', select_halos)
     np.save(f'{sim}/halo_params_{fname}', halo_params)
 
-    
 
 def read_DM_positions(
     snap, sim, halo_index, init_m, DM_radius_kpc
@@ -642,12 +765,10 @@ def check_grid(init_grid, DM_pos, parent_GRID_S, DM_lim, gen_count):
 
 
 def cell_division(
-    init_grid, DM_pos, parent_GRID_S, DM_lim, stable_grid, sim, snap, 
-    halo_num=None, DM_radius=None, test_names=False
+    init_grid, DM_pos, parent_GRID_S, DM_lim, stable_grid, 
+    sim, fname
     ):
 
-    if test_names:
-        sim = 'test_data'
 
     # Initiate counters.
     thresh = 1
@@ -679,12 +800,6 @@ def cell_division(
             cell_gen_np = np.array(list(chain.from_iterable(cell_gen_l)))
             DM_count_np = np.array(list(chain.from_iterable(DM_count_l)))
             cell_com_np = np.array(list(chain.from_iterable(cell_com_l)))
-
-            # Determine file names.
-            if DM_radius is None:
-                fname = f'snap_{snap}_halo{halo_num}'
-            else:
-                fname = f'snap_{snap}_{DM_radius}kpc'
 
             if cell_division_count > 0:
 
@@ -812,9 +927,8 @@ def outside_gravity(x_i, DM_tot):
 
 
 def cell_gravity(
-    cell_coords, cell_com, cell_gen, 
-    DM_pos, DM_count, sim, snap, batch_num,
-    long_range=True, test_names=False
+    cell_coords, cell_com, cell_gen, DM_pos, DM_count, 
+    sim, fname, long_range=True,
 ):
     # Center all DM positions w.r.t. cell center.
     DM_pos -= cell_coords
@@ -910,21 +1024,10 @@ def cell_gravity(
     # note: Minus sign, s.t. velocity changes correctly (see GoodNotes).
     dPsi_grid = np.asarray(-derivative, dtype=np.float64)
 
-    # Rename files when testing to not overwrite important files for sims.
-    if test_names:
-        sim = 'test_data'
+    np.save(f'{sim}/dPsi_grid_{fname}.npy', dPsi_grid)
 
-    np.save(
-        f'{sim}/dPsi_grid_snap_{snap}_batch{batch_num}.npy', dPsi_grid
-    )
 
-def load_grid(snap, sim, which, halo_num=None, DM_radius=None):
-
-    # Determine file names.
-    if DM_radius is None:
-        fname = f'snap_{snap}_halo{halo_num}'
-    else:
-        fname = f'snap_{snap}_{DM_radius}kpc'
+def load_grid(sim, which, fname):
 
     if which == 'derivatives':
         grid = np.load(f'{sim}/dPsi_grid_{fname}.npy')
