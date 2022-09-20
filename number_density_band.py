@@ -12,7 +12,7 @@ mass_gauge = 11.5  # in log10 Msun
 mass_range = 0.5
 
 hname = f'1e+{mass_gauge}_pm{mass_range}Msun'
-fct.halo_batch_indices(sim, snap, mass_gauge, mass_range, 'halos', hname)
+fct.halo_batch_indices(sim, snap, mass_gauge, mass_range, 'halos', 3, hname)
 halo_batch_IDs = np.load(f'{sim}/halo_batch_{hname}_indices.npy')
 halo_batch_params = np.load(f'{sim}/halo_batch_{hname}_params.npy')
 halo_num = len(halo_batch_params)
