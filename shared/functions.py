@@ -1370,7 +1370,9 @@ def number_density(p0, p1):
     return n_cm3
 
 
-def number_density_1_mass(u_all, m_nu_eV, output, average=False, z_average=0.):
+def number_density_1_mass(
+    u_all, m_nu_eV, output, average=False, m_average=0.01, z_average=0.
+):
 
     n_nus = np.zeros(len(m_nu_eV))
     for i, m_eV in enumerate(m_nu_eV):
@@ -1378,7 +1380,7 @@ def number_density_1_mass(u_all, m_nu_eV, output, average=False, z_average=0.):
         # Get momenta.
         p, _ = u_to_p_eV(u_all, m_eV)
 
-        if average and m_eV >= 0.01:
+        if average and m_eV >= m_average:
             idx = np.array(np.where(ZEDS >= z_average)).flatten()
 
             temp = np.zeros(len(idx))
