@@ -15,7 +15,11 @@ def EOMs(s_val, y):
 
 
     # Find z corresponding to s via interpolation.
-    z = np.interp(s_val, S_STEPS, ZEDS)
+    # z = np.interp(s_val, S_STEPS, ZEDS)
+
+    # For testing and comparing with CubeSpace simulation.
+    idx = np.abs(S_STEPS - s_val).argmin()
+    z = ZEDS[idx]
 
     # Sum gradients of each halo.
     grad_tot = np.zeros(len(x_i))
@@ -58,14 +62,13 @@ def backtrack_1_neutrino(y0_Nr):
         y0=y0, method=SOLVER, vectorized=True
         )
     
-    np.save(f'neutrino_vectors/nu_{int(Nr)}.npy', np.array(sol.y.T))
+    np.save(f'{sim_folder}/nu_{int(Nr)}.npy', np.array(sol.y.T))
 
 
 if __name__ == '__main__':
     start = time.perf_counter()
     
-    # Integration steps.
-    S_STEPS = np.array([fct.s_of_z(z) for z in ZEDS])
+    sim_folder = 'LinfNinf'
 
     # Draw initial velocities.
     ui = fct.draw_ui(
@@ -80,7 +83,7 @@ if __name__ == '__main__':
 
 
     halos = 'MW'*MW_HALO + '+VC'*VC_HALO + '+AG'*AG_HALO
-    CPUs = 8
+    CPUs = 6
 
     # Print out all relevant parameters for simulation.
     print(
@@ -114,16 +117,16 @@ if __name__ == '__main__':
 
     # Compactify all neutrino vectors into 1 file.
     Ns = np.arange(NUS, dtype=int)  # Nr. of neutrinos
-    nus = np.array([np.load(f'neutrino_vectors/nu_{Nr+1}.npy') for Nr in Ns])
+    nus = np.array([np.load(f'{sim_folder}/nu_{Nr+1}.npy') for Nr in Ns])
     
     np.save(
-        f'neutrino_vectors/nus_{NUS}_halos_{halos}_{SOLVER}.npy',
+        f'{sim_folder}/nus_{NUS}_halos_{halos}_{SOLVER}.npy',
         nus
         )
     
-    fct.delete_temp_data('neutrino_vectors/nu_*.npy')    
+    fct.delete_temp_data(f'{sim_folder}/nu_*.npy')    
 
     seconds = time.perf_counter()-start
     minutes = seconds/60.
     hours = minutes/60.
-    print(f'Time sec/min/h: {seconds} sec, {minutes} min, {hours} h.')
+    print(f'Time min/h: {minutes} min, {hours} h.')

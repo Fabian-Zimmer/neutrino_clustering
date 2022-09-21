@@ -12,7 +12,7 @@ mass_gauge = 11.5  # in log10 Msun
 mass_range = 0.5
 
 hname = f'1e+{mass_gauge}_pm{mass_range}Msun'
-fct.halo_batch_indices(sim, snap, mass_gauge, mass_range, 'halos', 3, hname)
+fct.halo_batch_indices(sim, snap, mass_gauge, mass_range, 'halos', 10, hname)
 halo_batch_IDs = np.load(f'{sim}/halo_batch_{hname}_indices.npy')
 halo_batch_params = np.load(f'{sim}/halo_batch_{hname}_params.npy')
 halo_num = len(halo_batch_params)
@@ -125,9 +125,9 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
             DM_pos_for_cell_division = np.repeat(DM_pos, len(init_grid), axis=0)
 
             # Cell division.
-            DM_lim = 5000
+            DM_lim_band = 5000
             cell_division_count = fct.cell_division(
-                init_grid, DM_pos_for_cell_division, GRID_L, DM_lim, None, 
+                init_grid, DM_pos_for_cell_division, GRID_L, DM_lim_band, None, 
                 sim, IDname
             )
 
@@ -169,7 +169,8 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
                 b_DM = np.repeat(DM_pos, len(b_cc), axis=0)
                 bname = f'batch{b}'
                 fct.cell_gravity(
-                    b_cc, b_com, b_gen, b_DM, b_count, 
+                    b_cc, b_com, b_gen, GRID_L,
+                    b_DM, b_count, DM_lim_band,
                     sim, bname
                 )
             bs_nums = np.array(b_nums)
@@ -182,7 +183,7 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
             np.save(f'{sim}/dPsi_grid_{IDname}.npy', dPsi_fin)
 
             # Delete intermediate data.
-            fct.delete_temp_data(f'{sim}/dPsi_*batch*.npy') 
+            fct.delete_temp_data(f'{sim}/dPsi_grid_batch*.npy') 
         fct.delete_temp_data(f'{sim}/DM_pos_*.npy')
 
 
@@ -212,7 +213,9 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
         )
 
         # Test 1 neutrino only.
-        backtrack_1_neutrino(y0_Nr[0])
+        # backtrack_1_neutrino(y0_Nr[0])
+        # backtrack_1_neutrino(y0_Nr[1])
+        # backtrack_1_neutrino(y0_Nr[2])
 
         # '''
         # Run simulation on multiple cores.
@@ -231,10 +234,10 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
 
         # Delete all temporary files.
         fct.delete_temp_data(f'{sim}/nu_*.npy')
-        fct.delete_temp_data(f'{sim}/fin_grid_*.npy')
-        fct.delete_temp_data(f'{sim}/DM_count_*.npy')
-        fct.delete_temp_data(f'{sim}/cell_com_*.npy')
-        fct.delete_temp_data(f'{sim}/cell_gen_*.npy')
+        # fct.delete_temp_data(f'{sim}/fin_grid_*.npy')
+        # fct.delete_temp_data(f'{sim}/DM_count_*.npy')
+        # fct.delete_temp_data(f'{sim}/cell_com_*.npy')
+        # fct.delete_temp_data(f'{sim}/cell_gen_*.npy')
         # '''
 
         seconds = time.perf_counter()-start
@@ -243,4 +246,5 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
         print(f'Sim time min/h: {minutes} min, {hours} h.')
 
     except ValueError:  # bad halo?
+        traceback.print_exc()
         continue

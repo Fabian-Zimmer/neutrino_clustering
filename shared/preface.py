@@ -11,6 +11,7 @@ import argparse
 import pathlib
 from itertools import chain
 from memory_profiler import profile
+import traceback
 
 # arrays and data packages
 import numpy as np
@@ -209,12 +210,36 @@ UPPER = 400.*T_CNB
 MOMENTA = np.geomspace(LOWER, UPPER, Vs)
 
 
+def s_of_z(z):
+    """Convert redshift to time variable s with eqn. 4.1 in Mertsch et al.
+    (2020), keeping only Omega_m0 and Omega_Lambda0 in the Hubble eqn. for H(z).
+
+    Args:
+        z (float): redshift
+
+    Returns:
+        float: time variable s (in [seconds] if 1/H0 factor is included)
+    """    
+
+    def s_integrand(z):        
+
+        # We need value of H0 in units of 1/s.
+        H0_val = H0/(1/s)
+        a_dot = np.sqrt(Omega_M*(1.+z)**3 + Omega_L)/(1.+z)*H0_val
+        s_int = 1./a_dot
+
+        return s_int
+
+    s_of_z, _ = quad(s_integrand, 0., z)
+
+    return np.float64(s_of_z)
+
+
 # Logarithmic redshift spacing.
-Z_START, Z_STOP, Z_AMOUNT = 0., 4., 100-1  # -1 to compensate np.insert of z=4
-Z_START_LOG = 1e-1
-zeds_pre = np.geomspace(Z_START_LOG, Z_STOP, Z_AMOUNT) - Z_START_LOG
+Z_AMOUNT = 100
+zeds_pre = np.geomspace(1e-1, 4., Z_AMOUNT-1) - 1e-1
 ZEDS = np.insert(zeds_pre, len(zeds_pre), 4.)
-S_STEPS = np.load(f'shared/S_STEPS.npy')
+S_STEPS = np.array([s_of_z(z) for z in ZEDS])
 
 # Control if simulation runs forwards (+1) or backwards (-1) in time. 
 TIME_FLOW = -1
@@ -234,23 +259,28 @@ SOLVER = 'RK23'
 ######################################
 ### Discrete simulation parameters ###
 ######################################
-ZEDS_SNAPSHOTS = np.load('shared/ZEDS_SNAPSHOTS.npy')
-ZEDS_SNAPSHOTS = ZEDS_SNAPSHOTS[1:]
-NUMS_SNAPSHOTS = np.load('shared/NUMS_SNAPSHOTS.npy')
-NUMS_SNAPSHOTS = NUMS_SNAPSHOTS[1:]
 
-SIM_ID = 'L006N188'
-# SIM_ID = 'L012N376'
-HALO_INDEX = 0 #! For L006N188 sim: 0 is ~1e12Msun, 1 & 2 are ~1e11Msun.
+sim = 'L012N376'
 
-if HALO_INDEX == 0:
-    GRID_L = 800*kpc
-    GRID_S = 800*kpc
-    DM_LIM = 5000
-    HALO_MASS = '1.89e+12'
-else:
-    GRID_L = 300*kpc
-    GRID_S = 300*kpc
-    DM_LIM = 3000
+zeds = np.zeros(25)
+nums = []
+for j, i in enumerate(range(12,37)):
+    snap_i = f'{i:04d}'
+    nums.append(snap_i)
 
-DM_SIM_MASS = 11502999*Msun
+    with h5py.File(str(next(
+        pathlib.Path(
+            f'{SIM_DATA}/{sim}').glob(f'**/snapshot_{snap_i}.hdf5'
+        )
+    ))) as snap:
+        zeds[j] = snap['Cosmology'].attrs['Redshift'][0]
+
+
+#? MergerTree script might need N+1 snapshots to trace halo back through 
+#? N snapshots? I forgot to download snapshot 0011 then, and thus I can only
+#? start at snapshot 0013, since it was traced back until then, and not 0012.
+ZEDS_SNAPSHOTS = np.asarray(zeds)[1:]
+NUMS_SNAPSHOTS = np.asarray(nums)[1:]
+
+# DM_SIM_MASS = 11502999*Msun
+DM_SIM_MASS = 1437874.9*Msun
