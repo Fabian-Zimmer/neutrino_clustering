@@ -610,8 +610,7 @@ def cell_gravity(
     # ------------------------------ #
 
     # Offset DM positions by smoothening length of Camila's simulations.
-    eps = 650*pc  # original
-    # eps = 2*kpc  # testing
+    eps = 650*pc
 
     # nan values to 0 for numerator, and 1 for denominator to avoid infinities.
     quot = np.nan_to_num(cell_coords - DM_in, copy=False, nan=0.0) / \

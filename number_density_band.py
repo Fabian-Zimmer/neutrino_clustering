@@ -8,8 +8,8 @@ import shared.functions as fct
 # Halo batch parameters.
 sim = 'L012N376'
 snap = '0036'
-mass_gauge = 11.5  # in log10 Msun
-mass_range = 0.5
+mass_gauge = 12.4  # in log10 Msun
+mass_range = 0.3
 
 hname = f'1e+{mass_gauge}_pm{mass_range}Msun'
 fct.halo_batch_indices(sim, snap, mass_gauge, mass_range, 'halos', 10, hname)
@@ -149,7 +149,7 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
             # Calculate gravity grid (in batches of cells). #
             # --------------------------------------------- #
 
-            batch_size = 50
+            batch_size = 30
             bs_cc = chunks(batch_size, fin_grid)
             bs_count = chunks(batch_size, DM_count)
             bs_com = chunks(batch_size, cell_com)
@@ -206,7 +206,7 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
 
 
         # Display parameters for simulation.
-        CPUs = 6
+        CPUs = 12
         print('***Running simulation***')
         print(
             f'neutrinos={NUS}, halo={halo_j+1}/{halo_num}, CPUs={CPUs}, solver={SOLVER}'
@@ -234,10 +234,10 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
 
         # Delete all temporary files.
         fct.delete_temp_data(f'{sim}/nu_*.npy')
-        # fct.delete_temp_data(f'{sim}/fin_grid_*.npy')
-        # fct.delete_temp_data(f'{sim}/DM_count_*.npy')
-        # fct.delete_temp_data(f'{sim}/cell_com_*.npy')
-        # fct.delete_temp_data(f'{sim}/cell_gen_*.npy')
+        fct.delete_temp_data(f'{sim}/fin_grid_*.npy')
+        fct.delete_temp_data(f'{sim}/DM_count_*.npy')
+        fct.delete_temp_data(f'{sim}/cell_com_*.npy')
+        fct.delete_temp_data(f'{sim}/cell_gen_*.npy')
         # '''
 
         seconds = time.perf_counter()-start

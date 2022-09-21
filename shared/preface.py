@@ -236,7 +236,7 @@ def s_of_z(z):
 
 
 # Logarithmic redshift spacing.
-Z_AMOUNT = 100
+Z_AMOUNT = 100  #todo run smooth sim with 25, and look at results_withHalo.ipynb
 zeds_pre = np.geomspace(1e-1, 4., Z_AMOUNT-1) - 1e-1
 ZEDS = np.insert(zeds_pre, len(zeds_pre), 4.)
 S_STEPS = np.array([s_of_z(z) for z in ZEDS])

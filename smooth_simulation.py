@@ -83,7 +83,7 @@ if __name__ == '__main__':
 
 
     halos = 'MW'*MW_HALO + '+VC'*VC_HALO + '+AG'*AG_HALO
-    CPUs = 6
+    CPUs = 12
 
     # Print out all relevant parameters for simulation.
     print(
