@@ -305,7 +305,7 @@ def read_DM_halo_index(sim, snap, halo_ID, fname):
     np.save(f'{sim}/DM_pos_{fname}.npy', DM_pos)    
 
 
-def read_DM_halos_inRange(sim, snap, halo_ID, DM_range, fname):
+def read_DM_halos_inRange(sim, snap, halo_ID, DM_range_parsec, fname):
 
     # ---------------- #
     # Open data files. #
@@ -337,24 +337,15 @@ def read_DM_halos_inRange(sim, snap, halo_ID, DM_range, fname):
     pos = snaps['PartType1/Coordinates'][:][:] * a
     
     # DM_range from physical to comoving.
-    DM_range *= a
+    DM_range_parsec *= (a/pc/1e3)
 
-    # ---------------------------------------------- #
-    # Find DM particles gravitationally bound to halo.
-    # ---------------------------------------------- #
-
-    halo_start_pos = group["Offset"][halo_ID]
-    halo_end_pos = group["Offset"][halo_ID + 1]
-
-    particle_ids_in_halo = parts["Particle_IDs"][halo_start_pos:halo_end_pos]
-    particle_ids_from_snapshot = snaps["PartType1/ParticleIDs"][...]
-
-    # Get indices of elements, which are present in both arrays.
-    _, _, indices_p = np.intersect1d(
-        particle_ids_in_halo, particle_ids_from_snapshot, 
-        assume_unique=True, return_indices=True
-    )
-
+    # Masses of all halos in sim.
+    m200c = props['Mass_200crit'][:]
+    # Center of Potential coordinates, for all halos.
+    CoP = np.zeros((len(m200c), 3))
+    CoP[:, 0] = props["Xcminpot"][:]
+    CoP[:, 1] = props["Ycminpot"][:]
+    CoP[:, 2] = props["Zcminpot"][:]
 
     # -------------------------------- #
     # Save Center of Potential coords. #
@@ -365,13 +356,6 @@ def read_DM_halos_inRange(sim, snap, halo_ID, DM_range, fname):
     # the simulation started at z~0!
 
     if snap == '0036':
-        # Center of Potential coordinates, for all halos.
-        m200c = props['Mass_200crit'][:]  # just for the shape of CoP
-        CoP = np.zeros((len(m200c), 3))
-        CoP[:, 0] = props["Xcminpot"][:]
-        CoP[:, 1] = props["Ycminpot"][:]
-        CoP[:, 2] = props["Zcminpot"][:]
-
         # Save CoP coords of halo at first (at z~0) snapshot.
         CoP_halo = CoP[halo_ID, :]
         np.save(f'{sim}/CoP_{fname}.npy', CoP_halo)
@@ -381,14 +365,51 @@ def read_DM_halos_inRange(sim, snap, halo_ID, DM_range, fname):
         CoP_halo = np.load(f'{sim}/CoP_{f0036}.npy')
 
 
-    # -------------------------------------- #
-    # Save DM positions, centered correctly. #
-    # -------------------------------------- #
+    # --------------------------------- #
+    # Combine DM of all halos in range. #
+    # --------------------------------- #
 
-    DM_pos = pos[indices_p, :]  # x,y,z of each DM particle
-    DM_pos -= CoP_halo  # center DM on halo at first (at z~0) snapshot
-    DM_pos *= 1e3  # to kpc
-    np.save(f'{sim}/DM_pos_{fname}.npy', DM_pos) 
+    CoP -= CoP_halo
+    halo_dis = np.sqrt(np.sum(CoP**2, axis=1))
+    select_halos = np.where(halo_dis <= DM_range_parsec)[0]
+
+    #! also filter select halos by substructure type, s.t. only subhalos are selected...
+
+    # Limit amount of halos in range to given size.
+    halo_number = len(select_halos)
+    halo_limit = 10
+    if halo_number >= halo_limit:
+        rand_IDs = np.random.randint(0, halo_number-2, size=(halo_limit))
+        all_IDs = np.insert(rand_IDs, 0, halo_ID)
+        select_halos = select_halos[all_IDs]
+        print('Amount of halos in range:', len(select_halos))
+
+    DM_total_l = []
+    for halo_idx in select_halos:
+
+        # Start and stop index for current halo.
+        halo_init = group["Offset"][halo_idx]
+        halo_stop = group["Offset"][halo_idx + 1]
+
+        # Particle IDs of halo and snapshot.
+        halo_Particle_IDs = parts["Particle_IDs"][halo_init:halo_stop]
+        snap_Particle_IDs = snaps["PartType1/ParticleIDs"][...]
+
+        # Particle IDs present in both above arrays.
+        _, _, indices_p = np.intersect1d(
+            halo_Particle_IDs, snap_Particle_IDs, 
+            assume_unique=True, return_indices=True
+        )
+
+        # Save DM positions (centered on halo).
+        DM_pos = pos[indices_p, :]  # x,y,z of each DM particle
+        DM_pos -= CoP_halo  # center DM on halo at first (at z~0) snapshot
+        DM_pos *= 1e3  # to kpc
+        DM_total_l.append(DM_pos)
+        
+    # Convert nested list to numpy array.
+    DM_total_np = np.array(list(chain.from_iterable(DM_total_l)))
+    np.save(f'{sim}/DM_pos_{fname}.npy', DM_total_np) 
 
 
 def read_DM_all_inRange(sim, snap, halo_ID, DM_range_parsec, fname):
@@ -450,7 +471,7 @@ def read_DM_all_inRange(sim, snap, halo_ID, DM_range_parsec, fname):
     np.save(f'{sim}/DM_pos_{fname}.npy', DM_pos)
 
     return rvir[halo_ID]
-    
+
 
 def grid_3D(l, s, origin_coords=[0.,0.,0.,]):
     """
