@@ -236,7 +236,7 @@ def s_of_z(z):
 
 
 # Logarithmic redshift spacing.
-Z_AMOUNT = 100  #todo run smooth sim with 25, and look at results_withHalo.ipynb
+Z_AMOUNT = 100
 zeds_pre = np.geomspace(1e-1, 4., Z_AMOUNT-1) - 1e-1
 ZEDS = np.insert(zeds_pre, len(zeds_pre), 4.)
 S_STEPS = np.array([s_of_z(z) for z in ZEDS])
@@ -260,6 +260,7 @@ SOLVER = 'RK23'
 ### Discrete simulation parameters ###
 ######################################
 
+# sim = 'L006N188'
 sim = 'L012N376'
 
 zeds = np.zeros(25)
@@ -274,15 +275,23 @@ for j, i in enumerate(range(12,37)):
         )
     ))) as snap:
         zeds[j] = snap['Cosmology'].attrs['Redshift'][0]
-        
+        if snap_i == '0036':
 
-#! DM mass changes with simulation, read this from the simulation
-DM_SIM_MASS = 1437874.9*Msun
+            # Get DM mass used in simulation box.
+            dm_mass = snap['PartType1/Masses'][:]*1e10*Msun
+            DM_SIM_MASS = np.unique(dm_mass)[0]
 
-#? MergerTree script might need N+1 snapshots to trace halo back through 
-#? N snapshots? I forgot to download snapshot 0011 then, and thus I can only
-#? start at snapshot 0013, since it was traced back until then, and not 0012.
+            # Get gravity smoothening length used in simulation box.
+            sl = snap['GravityScheme'].attrs[
+                'Maximal physical DM softening length (Plummer equivalent) [internal units]'
+            ][0]
+            SMOOTHENING_LENGTH = sl*1e6*pc
+
+
+# note:
+# MergerTree script needs N+1 snapshots to trace halo back through 
+# N snapshots. I forgot to download snapshot 0011 then, and thus I can only
+# start at snapshot 0013, since it was traced back until then, and not 0012,
+# hence the [1:].
 ZEDS_SNAPSHOTS = np.asarray(zeds)[1:]
 NUMS_SNAPSHOTS = np.asarray(nums)[1:]
-
-# DM_SIM_MASS = 11502999*Msun

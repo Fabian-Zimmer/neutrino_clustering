@@ -305,6 +305,153 @@ def read_DM_halo_index(sim, snap, halo_ID, fname):
     np.save(f'{sim}/DM_pos_{fname}.npy', DM_pos)    
 
 
+def read_DM_halos_inRange(sim, snap, halo_ID, DM_range, fname):
+
+    # ---------------- #
+    # Open data files. #
+    # ---------------- #
+
+    snaps = h5py.File(str(next(
+        pathlib.Path(
+            f'{SIM_DATA}/{sim}').glob(f'**/snapshot_{snap}.hdf5'
+        )
+    )))
+    group = h5py.File(str(next(
+        pathlib.Path(
+            f'{SIM_DATA}/{sim}').glob(f'**/subhalo_{snap}.catalog_groups'
+        )
+    )))
+    parts = h5py.File(str(next(
+        pathlib.Path(
+            f'{SIM_DATA}/{sim}').glob(f'**/subhalo_{snap}.catalog_particles'
+        )
+    )))
+    props = h5py.File(str(next(
+        pathlib.Path(
+            f'{SIM_DATA}/{sim}').glob(f'**/subhalo_{snap}.properties'
+        )
+    )))
+
+    # Positions.
+    a = snaps["/Header"].attrs["Scale-factor"]
+    pos = snaps['PartType1/Coordinates'][:][:] * a
+    
+    # DM_range from physical to comoving.
+    DM_range *= a
+
+    # ---------------------------------------------- #
+    # Find DM particles gravitationally bound to halo.
+    # ---------------------------------------------- #
+
+    halo_start_pos = group["Offset"][halo_ID]
+    halo_end_pos = group["Offset"][halo_ID + 1]
+
+    particle_ids_in_halo = parts["Particle_IDs"][halo_start_pos:halo_end_pos]
+    particle_ids_from_snapshot = snaps["PartType1/ParticleIDs"][...]
+
+    # Get indices of elements, which are present in both arrays.
+    _, _, indices_p = np.intersect1d(
+        particle_ids_in_halo, particle_ids_from_snapshot, 
+        assume_unique=True, return_indices=True
+    )
+
+
+    # -------------------------------- #
+    # Save Center of Potential coords. #
+    # -------------------------------- #
+    # note: 
+    # Neutrinos start w.r.t. the CoP of the halo at z~0. If the halo "moves", 
+    # the DM positions have to be centered with respect to the halo CoP, when 
+    # the simulation started at z~0!
+
+    if snap == '0036':
+        # Center of Potential coordinates, for all halos.
+        m200c = props['Mass_200crit'][:]  # just for the shape of CoP
+        CoP = np.zeros((len(m200c), 3))
+        CoP[:, 0] = props["Xcminpot"][:]
+        CoP[:, 1] = props["Ycminpot"][:]
+        CoP[:, 2] = props["Zcminpot"][:]
+
+        # Save CoP coords of halo at first (at z~0) snapshot.
+        CoP_halo = CoP[halo_ID, :]
+        np.save(f'{sim}/CoP_{fname}.npy', CoP_halo)
+    else:
+        split_str = re.split('_snap', fname)
+        f0036 = f'{split_str[0]}_snap_0036'
+        CoP_halo = np.load(f'{sim}/CoP_{f0036}.npy')
+
+
+    # -------------------------------------- #
+    # Save DM positions, centered correctly. #
+    # -------------------------------------- #
+
+    DM_pos = pos[indices_p, :]  # x,y,z of each DM particle
+    DM_pos -= CoP_halo  # center DM on halo at first (at z~0) snapshot
+    DM_pos *= 1e3  # to kpc
+    np.save(f'{sim}/DM_pos_{fname}.npy', DM_pos) 
+
+
+def read_DM_all_inRange(sim, snap, halo_ID, DM_range_parsec, fname):
+
+    # Open data files.
+    snaps = h5py.File(str(next(
+        pathlib.Path(
+            f'{SIM_DATA}/{sim}').glob(f'**/snapshot_{snap}.hdf5'
+        )
+    )))
+    props = h5py.File(str(next(
+        pathlib.Path(
+            f'{SIM_DATA}/{sim}').glob(f'**/subhalo_{snap}.properties'
+        )
+    )))
+
+    # Positions.
+    a = snaps["/Header"].attrs["Scale-factor"]
+    pos = snaps['PartType1/Coordinates'][:][:] * a
+
+    rvir = props['R_200crit'][:]*1e3 # Virial radius (to kpc with *1e3)
+
+    # DM_range from physical to comoving, and bring to Camila sim parsec units.
+    DM_range_parsec *= (a/pc/1e3)
+    
+    # -------------------------------- #
+    # Save Center of Potential coords. #
+    # -------------------------------- #
+    # note: 
+    # Neutrinos start w.r.t. the CoP of the halo at z~0. If the halo "moves", 
+    # the DM positions have to be centered with respect to the halo CoP, when 
+    # the simulation started at z~0!
+
+    if snap == '0036':
+        # Center of Potential coordinates, for all halos.
+        m200c = props['Mass_200crit'][:] # just for the shape of CoP
+        CoP = np.zeros((len(m200c), 3))
+        CoP[:, 0] = props["Xcminpot"][:]
+        CoP[:, 1] = props["Ycminpot"][:]
+        CoP[:, 2] = props["Zcminpot"][:]
+
+        # Save CoP coords of halo at first (at z~0) snapshot.
+        CoP_halo = CoP[halo_ID, :]
+        np.save(f'{sim}/CoP_{fname}.npy', CoP_halo)
+    else:
+        split_str = re.split('_snap', fname)
+        f0036 = f'{split_str[0]}_snap_0036'
+        CoP_halo = np.load(f'{sim}/CoP_{f0036}.npy')
+
+
+    # ------------------------------------------------------- #
+    # Include all DM particles in range (correctly centered). #
+    # ------------------------------------------------------- #
+
+    pos -= CoP_halo
+    DM_dis = np.sqrt(np.sum(pos**2, axis=1))
+    DM_pos = pos[DM_dis <= DM_range_parsec]
+    DM_pos *= 1e3
+    np.save(f'{sim}/DM_pos_{fname}.npy', DM_pos)
+
+    return rvir[halo_ID]
+    
+
 def grid_3D(l, s, origin_coords=[0.,0.,0.,]):
     """
     Generate 3D cell center coordinate grid (built around origin_coords) 
@@ -610,8 +757,7 @@ def cell_gravity(
     # ------------------------------ #
 
     # Offset DM positions by smoothening length of Camila's simulations.
-    #! varies wiht simulation, make dynamic as function input
-    eps = 650*pc
+    eps = SMOOTHENING_LENGTH / 2.
 
     # nan values to 0 for numerator, and 1 for denominator to avoid infinities.
     quot = np.nan_to_num(cell_coords - DM_in, copy=False, nan=0.0) / \
@@ -1025,7 +1171,7 @@ def number_density_1_mass(
 
 # Old versions of reading DM positions from halo(s).
 
-def read_DM_halo_batch(
+def read_DM_halo_batch_OLDOLD(
     sim, snap, mass_gauge, mass_range, halo_type
 ):
     """
@@ -1145,7 +1291,7 @@ def read_DM_halo_batch(
     np.save(f'{sim}/halo_params_{fname}', halo_params)
 
 
-def read_DM_positions(
+def read_DM_positions_OLDOLD(
     snap, sim, halo_index, init_m, DM_radius_kpc
     ):
 
@@ -1199,7 +1345,7 @@ def read_DM_positions(
     return halo_rvir
 
 
-def read_DM_positions_alt2(
+def read_DM_positions_alt2_OLDOLD(
     which_halos='halos', mass_select=12, mass_range=0.2, 
     random=True, snap='0036', sim='L___N___', halo_index=0, init_m=0,
     save_params=False
@@ -1276,7 +1422,7 @@ def read_DM_positions_alt2(
         return halo_cNFW, halo_rvir, halo_Mvir
 
 
-def read_DM_positions_alt(
+def read_DM_positions_alt_OLDOLD(
     which_halos='halos', mass_select=12, mass_range=0.2, 
     random=True, snap='0036', sim='L___N___', halo_index=0, init_m=0,
     save_params=False

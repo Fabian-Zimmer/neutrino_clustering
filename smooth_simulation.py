@@ -15,11 +15,11 @@ def EOMs(s_val, y):
 
 
     # Find z corresponding to s via interpolation.
-    # z = np.interp(s_val, S_STEPS, ZEDS)
+    z_interp = np.interp(s_val, S_STEPS, ZEDS)
 
     # For testing and comparing with CubeSpace simulation.
-    idx = np.abs(S_STEPS - s_val).argmin()
-    z = ZEDS[idx]
+    idx = np.abs(ZEDS_SNAPSHOTS - z_interp).argmin()
+    z = ZEDS_SNAPSHOTS[idx]
 
     # Sum gradients of each halo.
     grad_tot = np.zeros(len(x_i))
@@ -83,7 +83,7 @@ if __name__ == '__main__':
 
 
     halos = 'MW'*MW_HALO + '+VC'*VC_HALO + '+AG'*AG_HALO
-    CPUs = 12
+    CPUs = 6
 
     # Print out all relevant parameters for simulation.
     print(
@@ -98,7 +98,7 @@ if __name__ == '__main__':
 
     # Run simulation on multiple cores, in batches.
     #note: important for Rk45 solver, where memory of process increases alot
-    batch_size = 1000
+    batch_size = 2000
     ticks = np.arange(0, NUS/batch_size, dtype=int)
     for i in ticks:
 
