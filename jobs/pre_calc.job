@@ -5,11 +5,10 @@
 #SBATCH -N 1
 #SBATCH --tasks-per-node=1
 #SBATCH --cpus-per-task=1
-#SBATCH --mem-per-cpu=60000
 #SBATCH -o jobs/pre_calc.out
 #SBATCH -e jobs/pre_calc.err
 #SBATCH -v
-# SBATCH --exclusive
+#SBATCH --exclusive
 
 module purge
 source $HOME/.conda/envs/neutrino_clustering/bin/activate
