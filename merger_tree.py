@@ -152,7 +152,8 @@ def main(config: ArgumentParser):
 
 class Mock_ArgumentParser:
 
-    name_list = f'MergerTree_{SIM_ID}'
+    sim = 'L012N376'
+    name_list = f'MergerTree_{sim}'
 
     snapshot_list = [
         'snapshot_0036.hdf5', 
@@ -169,7 +170,7 @@ class Mock_ArgumentParser:
     if str(pathlib.Path.home()) == '/home/zimmer':
         home = '/home/zimmer'
         root = '/projects/0/einf180/Tango_sims'
-        directory_list = f'{root}/{SIM_ID}/DMONLY/SigmaConstant00/'
+        directory_list = f'{root}/{sim}/DMONLY/SigmaConstant00/'
         output_directory = f'{home}/neutrino_clustering_output_local/MergerTree/'
         number_of_inputs = len(snapshot_list)
 
@@ -177,7 +178,7 @@ class Mock_ArgumentParser:
     elif str(pathlib.Path.home()) == '/home/fabian':
         root = '/home/fabian'
         home = f'{root}/my_github_projects'
-        directory_list = f'{root}/ownCloud/snellius/{SIM_ID}/'
+        directory_list = f'{root}/ownCloud/snellius/{sim}/'
         output_directory = f'{home}/neutrino_clustering_output_local/MergerTree/'
         number_of_inputs = len(snapshot_list)
 

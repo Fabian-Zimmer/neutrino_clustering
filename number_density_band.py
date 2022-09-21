@@ -149,6 +149,8 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
             # Calculate gravity grid (in batches of cells). #
             # --------------------------------------------- #
 
+            #! multiprocess the batches for snellius!
+
             batch_size = 30
             bs_cc = chunks(batch_size, fin_grid)
             bs_count = chunks(batch_size, DM_count)

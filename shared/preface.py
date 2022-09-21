@@ -274,7 +274,10 @@ for j, i in enumerate(range(12,37)):
         )
     ))) as snap:
         zeds[j] = snap['Cosmology'].attrs['Redshift'][0]
+        
 
+#! DM mass changes with simulation, read this from the simulation
+DM_SIM_MASS = 1437874.9*Msun
 
 #? MergerTree script might need N+1 snapshots to trace halo back through 
 #? N snapshots? I forgot to download snapshot 0011 then, and thus I can only
@@ -283,4 +286,3 @@ ZEDS_SNAPSHOTS = np.asarray(zeds)[1:]
 NUMS_SNAPSHOTS = np.asarray(nums)[1:]
 
 # DM_SIM_MASS = 11502999*Msun
-DM_SIM_MASS = 1437874.9*Msun

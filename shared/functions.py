@@ -610,6 +610,7 @@ def cell_gravity(
     # ------------------------------ #
 
     # Offset DM positions by smoothening length of Camila's simulations.
+    #! varies wiht simulation, make dynamic as function input
     eps = 650*pc
 
     # nan values to 0 for numerator, and 1 for denominator to avoid infinities.
