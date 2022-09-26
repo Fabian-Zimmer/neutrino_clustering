@@ -150,6 +150,7 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
             # --------------------------------------------- #
 
             #todo: multiprocess the batches for snellius!
+            #todo: see CubeSpace notebook...finalize, test, etc.
 
             batch_size = 30
             bs_cc = chunks(batch_size, fin_grid)
