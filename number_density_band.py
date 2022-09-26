@@ -149,8 +149,16 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
             # Calculate gravity grid (in batches of cells). #
             # --------------------------------------------- #
 
-            #! multiprocess the batches for snellius!
+            #todo: multiprocess the batches for snellius!
 
+            batch_size = 30
+            bs_cc = chunks(batch_size, fin_grid)
+            bs_count = chunks(batch_size, DM_count)
+            bs_com = chunks(batch_size, cell_com)
+            bs_gen = chunks(batch_size, cell_gen)
+
+
+            # '''
             batch_size = 30
             bs_cc = chunks(batch_size, fin_grid)
             bs_count = chunks(batch_size, DM_count)
@@ -185,8 +193,10 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
             np.save(f'{sim}/dPsi_grid_{IDname}.npy', dPsi_fin)
 
             # Delete intermediate data.
-            fct.delete_temp_data(f'{sim}/dPsi_grid_batch*.npy') 
-        fct.delete_temp_data(f'{sim}/DM_pos_*.npy')
+            fct.delete_temp_data(f'{sim}/dPsi_*batch*.npy')
+            # '''
+
+        fct.delete_temp_data(f'{sim}/DM_pos_*halo*.npy')
 
 
         # ========================================= #
@@ -216,13 +226,13 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
 
         # Test 1 neutrino only.
         # backtrack_1_neutrino(y0_Nr[0])
-        # backtrack_1_neutrino(y0_Nr[1])
-        # backtrack_1_neutrino(y0_Nr[2])
 
         # '''
         # Run simulation on multiple cores.
         with ProcessPoolExecutor(CPUs) as ex:
             ex.map(backtrack_1_neutrino, y0_Nr)  
+            #todo: try if ex.map(backtrack_1_neutrino, y0_Nr, chunksize=???) 
+            #todo: decreases time, where ??? could be e.g. 100 or 1000...  
 
 
         # Compactify all neutrino vectors into 1 file.

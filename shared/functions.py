@@ -305,7 +305,9 @@ def read_DM_halo_index(sim, snap, halo_ID, fname):
     np.save(f'{sim}/DM_pos_{fname}.npy', DM_pos)    
 
 
-def read_DM_halos_inRange(sim, snap, halo_ID, DM_range_parsec, fname):
+def read_DM_halos_inRange(
+    sim, snap, halo_ID, DM_range_kpc, fname
+):
 
     # ---------------- #
     # Open data files. #
@@ -337,7 +339,7 @@ def read_DM_halos_inRange(sim, snap, halo_ID, DM_range_parsec, fname):
     pos = snaps['PartType1/Coordinates'][:][:] * a
     
     # DM_range from physical to comoving.
-    DM_range_parsec *= (a/pc/1e3)
+    DM_range_kpc *= (a/kpc/1e3)
 
     # Masses of all halos in sim.
     m200c = props['Mass_200crit'][:]
@@ -371,21 +373,21 @@ def read_DM_halos_inRange(sim, snap, halo_ID, DM_range_parsec, fname):
 
     CoP -= CoP_halo
     halo_dis = np.sqrt(np.sum(CoP**2, axis=1))
-    select_halos = np.where(halo_dis <= DM_range_parsec)[0]
+    select_halos = np.where(halo_dis <= DM_range_kpc)[0]
+    print(f'All halos in range: {len(select_halos)}')
 
-    #! also filter select halos by substructure type, s.t. only subhalos are selected...
+    # Limit amount of halos in range, select by mass.
+    halo_limit = 50
+    if halo_limit is not None:
+        halo_number = len(select_halos)
+        if halo_number >= halo_limit:
+            lim_IDs = select_halos[:halo_limit]
+            fin_IDs = np.delete(lim_IDs, np.s_[lim_IDs==halo_ID])
 
-    # Limit amount of halos in range to given size.
-    halo_number = len(select_halos)
-    halo_limit = 10
-    if halo_number >= halo_limit:
-        rand_IDs = np.random.randint(0, halo_number-2, size=(halo_limit))
-        all_IDs = np.insert(rand_IDs, 0, halo_ID)
-        select_halos = select_halos[all_IDs]
-        print('Amount of halos in range:', len(select_halos))
+    all_halos_inRange = np.insert(fin_IDs, 0, halo_ID)
 
     DM_total_l = []
-    for halo_idx in select_halos:
+    for halo_idx in all_halos_inRange:
 
         # Start and stop index for current halo.
         halo_init = group["Offset"][halo_idx]
@@ -412,7 +414,7 @@ def read_DM_halos_inRange(sim, snap, halo_ID, DM_range_parsec, fname):
     np.save(f'{sim}/DM_pos_{fname}.npy', DM_total_np) 
 
 
-def read_DM_all_inRange(sim, snap, halo_ID, DM_range_parsec, fname):
+def read_DM_all_inRange(sim, snap, halo_ID, DM_range_kpc, fname):
 
     # Open data files.
     snaps = h5py.File(str(next(
@@ -432,8 +434,8 @@ def read_DM_all_inRange(sim, snap, halo_ID, DM_range_parsec, fname):
 
     rvir = props['R_200crit'][:]*1e3 # Virial radius (to kpc with *1e3)
 
-    # DM_range from physical to comoving, and bring to Camila sim parsec units.
-    DM_range_parsec *= (a/pc/1e3)
+    # DM_range from physical to comoving, and bring to Camila sim units.
+    DM_range_kpc *= (a/kpc/1e3)
     
     # -------------------------------- #
     # Save Center of Potential coords. #
@@ -466,7 +468,7 @@ def read_DM_all_inRange(sim, snap, halo_ID, DM_range_parsec, fname):
 
     pos -= CoP_halo
     DM_dis = np.sqrt(np.sum(pos**2, axis=1))
-    DM_pos = pos[DM_dis <= DM_range_parsec]
+    DM_pos = pos[DM_dis <= DM_range_kpc]
     DM_pos *= 1e3
     np.save(f'{sim}/DM_pos_{fname}.npy', DM_pos)
 
