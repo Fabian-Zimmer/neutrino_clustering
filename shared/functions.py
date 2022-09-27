@@ -406,7 +406,7 @@ def read_DM_halos_inRange(
     print(f'All halos in range: {len(select_halos)}')
 
     # Limit amount of halos in range, select by mass.
-    halo_limit = 50
+    halo_limit = 100
     if halo_limit is not None:
         halo_number = len(select_halos)
         if halo_number >= halo_limit:
@@ -418,8 +418,8 @@ def read_DM_halos_inRange(
     # Arrays to only load once.
     snap_Particle_IDs = snaps["PartType1/ParticleIDs"][...]
 
-    snellius_CPUs = 2
-    with Pool(snellius_CPUs) as pool:
+    CPUs = 1
+    with Pool(CPUs) as pool:
         pool.starmap(halo_DM, zip(
             halo_IDs,
             repeat(sim), repeat(snap), repeat(pos), repeat(CoP_halo),
