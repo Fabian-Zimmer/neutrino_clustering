@@ -58,7 +58,8 @@ HOME = pathlib.Path.home()
 
 # Paths for FZ_snellius.
 if str(HOME) == '/home/zimmer':
-    SIM_DATA = '/projects/0/einf180/Tango_sims'
+    # SIM_DATA = '/projects/0/einf180/Tango_sims'
+    SIM_DATA = '/archive/ccorrea/Tango_sims'
 
 # Paths for FZ_desktop.
 elif str(HOME) == '/home/fabian':

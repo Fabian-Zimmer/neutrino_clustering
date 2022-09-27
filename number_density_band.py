@@ -9,9 +9,10 @@ import shared.functions as fct
 sim = 'L012N376'
 snap = '0036'  # "starting" snapshot to search for halos
 mass_gauge = 12.0  # in log10 Msun
-mass_range = 0.5
-size = 2
-DM_lim_batch = 8000
+mass_range = 0.8
+size = 10
+DM_lim_batch = 5000
+snellius_CPUs = 4
 
 hname = f'1e+{mass_gauge}_pm{mass_range}Msun'
 fct.halo_batch_indices(sim, snap, mass_gauge, mass_range, 'halos', size, hname)
@@ -179,7 +180,7 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
                     sim, bname
                 )
 
-            chunk_size = 20
+            chunk_size = 30
             grid_chunks = chunks(chunk_size, fin_grid)
             DMnr_chunks = chunks(chunk_size, DM_count)
             com_chunks = chunks(chunk_size, cell_com)
@@ -187,8 +188,7 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
             num_chunks = math.ceil(len(DM_count)/chunk_size)
             idx_chunks = np.arange(num_chunks)
 
-            CPUs = 6
-            with ProcessPoolExecutor(CPUs) as ex:
+            with ProcessPoolExecutor(snellius_CPUs) as ex:
                 ex.map(
                     batch_gravity, grid_chunks, DMnr_chunks, 
                     com_chunks, gen_chunks, idx_chunks
@@ -232,7 +232,7 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
 
 
         # Display parameters for simulation.
-        CPUs = 6
+        CPUs = snellius_CPUs
         print('***Running simulation***')
         print(
             f'neutrinos={NUS}, halo={halo_j+1}/{halo_num}, CPUs={CPUs}, solver={SOLVER}'

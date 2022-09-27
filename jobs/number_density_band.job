@@ -1,0 +1,17 @@
+#!/bin/bash
+#SBATCH --job-name=PreCalc
+#SBATCH -p thin
+#SBATCH -t 01:00:00
+#SBATCH -N 1
+#SBATCH --tasks-per-node=1
+#SBATCH --cpus-per-task=16
+#SBATCH --mem=56000
+#SBATCH -o jobs/number_density_band.out
+#SBATCH -e jobs/number_density_band.err
+#SBATCH -v
+
+module purge
+source $HOME/.conda/envs/neutrino_clustering/bin/activate
+
+# Run precalculations.
+python $HOME/neutrino_clustering_V2/number_density_band.py
