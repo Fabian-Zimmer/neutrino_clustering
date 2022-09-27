@@ -203,6 +203,7 @@ def halo_batch_indices(
     # Limit amount of halos to given size.
     halo_number = len(select_halos)
     if halo_number >= halo_limit:
+        np.random.seed(1)
         rand_IDs = np.random.randint(0, halo_number-1, size=(halo_limit))
         select_halos = select_halos[rand_IDs]
 
@@ -295,14 +296,51 @@ def read_DM_halo_index(sim, snap, halo_ID, fname):
         CoP_halo = np.load(f'{sim}/CoP_{f0036}.npy')
 
 
-    # -------------------------------------- #
-    # Save DM positions, centered correctly. #
-    # -------------------------------------- #
+    # --------------------------------------------------- #
+    # Save DM positions (and c.o.m.), centered correctly. #
+    # --------------------------------------------------- #
 
     DM_pos = pos[indices_p, :]  # x,y,z of each DM particle
     DM_pos -= CoP_halo  # center DM on halo at first (at z~0) snapshot
     DM_pos *= 1e3  # to kpc
-    np.save(f'{sim}/DM_pos_{fname}.npy', DM_pos)    
+    np.save(f'{sim}/DM_pos_{fname}.npy', DM_pos)
+
+    DM_particles = len(DM_pos)
+    DM_com_coord = np.sum(DM_pos, axis=0)/DM_particles
+    np.save(f'{sim}/DM_com_coord_{fname}.npy', DM_com_coord)
+
+
+def halo_DM(halo_idx, sim, snap, pos, CoP_halo, snap_Particle_IDs):
+
+    group = h5py.File(str(next(
+        pathlib.Path(
+            f'{SIM_DATA}/{sim}').glob(f'**/subhalo_{snap}.catalog_groups'
+        )
+    )))
+    parts = h5py.File(str(next(
+        pathlib.Path(
+            f'{SIM_DATA}/{sim}').glob(f'**/subhalo_{snap}.catalog_particles'
+        )
+    )))
+
+    # Start and stop index for current halo.
+    halo_init = group["Offset"][halo_idx]
+    halo_stop = group["Offset"][halo_idx + 1]
+
+    # Particle IDs of halo and snapshot.
+    halo_Particle_IDs = parts["Particle_IDs"][halo_init:halo_stop]
+
+    # Particle IDs present in both above arrays.
+    _, _, indices_p = np.intersect1d(
+        halo_Particle_IDs, snap_Particle_IDs, 
+        assume_unique=True, return_indices=True
+    )
+
+    # Save DM positions (centered on halo).
+    DM_pos = pos[indices_p, :]  # x,y,z of each DM particle
+    DM_pos -= CoP_halo  # center DM on halo at first (at z~0) snapshot
+    DM_pos *= 1e3  # to kpc
+    np.save(f'{sim}/DM_of_haloID{halo_idx}.npy', DM_pos)
 
 
 def read_DM_halos_inRange(
@@ -318,21 +356,12 @@ def read_DM_halos_inRange(
             f'{SIM_DATA}/{sim}').glob(f'**/snapshot_{snap}.hdf5'
         )
     )))
-    group = h5py.File(str(next(
-        pathlib.Path(
-            f'{SIM_DATA}/{sim}').glob(f'**/subhalo_{snap}.catalog_groups'
-        )
-    )))
-    parts = h5py.File(str(next(
-        pathlib.Path(
-            f'{SIM_DATA}/{sim}').glob(f'**/subhalo_{snap}.catalog_particles'
-        )
-    )))
     props = h5py.File(str(next(
         pathlib.Path(
             f'{SIM_DATA}/{sim}').glob(f'**/subhalo_{snap}.properties'
         )
     )))
+
 
     # Positions.
     a = snaps["/Header"].attrs["Scale-factor"]
@@ -384,34 +413,23 @@ def read_DM_halos_inRange(
             lim_IDs = select_halos[:halo_limit]
             fin_IDs = np.delete(lim_IDs, np.s_[lim_IDs==halo_ID])
 
-    all_halos_inRange = np.insert(fin_IDs, 0, halo_ID)
+    halo_IDs = np.insert(fin_IDs, 0, halo_ID)
 
-    DM_total_l = []
-    for halo_idx in all_halos_inRange:
+    # Arrays to only load once.
+    snap_Particle_IDs = snaps["PartType1/ParticleIDs"][...]
 
-        # Start and stop index for current halo.
-        halo_init = group["Offset"][halo_idx]
-        halo_stop = group["Offset"][halo_idx + 1]
-
-        # Particle IDs of halo and snapshot.
-        halo_Particle_IDs = parts["Particle_IDs"][halo_init:halo_stop]
-        snap_Particle_IDs = snaps["PartType1/ParticleIDs"][...]
-
-        # Particle IDs present in both above arrays.
-        _, _, indices_p = np.intersect1d(
-            halo_Particle_IDs, snap_Particle_IDs, 
-            assume_unique=True, return_indices=True
-        )
-
-        # Save DM positions (centered on halo).
-        DM_pos = pos[indices_p, :]  # x,y,z of each DM particle
-        DM_pos -= CoP_halo  # center DM on halo at first (at z~0) snapshot
-        DM_pos *= 1e3  # to kpc
-        DM_total_l.append(DM_pos)
+    snellius_CPUs = 2
+    with Pool(snellius_CPUs) as pool:
+        pool.starmap(halo_DM, zip(
+            halo_IDs,
+            repeat(sim), repeat(snap), repeat(pos), repeat(CoP_halo),
+            repeat(snap_Particle_IDs)
+        ))
         
-    # Convert nested list to numpy array.
-    DM_total_np = np.array(list(chain.from_iterable(DM_total_l)))
-    np.save(f'{sim}/DM_pos_{fname}.npy', DM_total_np) 
+    # Combine DM from all halos into 1 file.
+    DM_total = [np.load(f'{sim}/DM_of_haloID{i}.npy') for i in halo_IDs]
+    np.save(f'{sim}/DM_pos_{fname}.npy', np.concatenate(DM_total, axis=0)) 
+    delete_temp_data(f'{sim}/DM_of_haloID*.npy')
 
 
 def read_DM_all_inRange(sim, snap, halo_ID, DM_range_kpc, fname):
@@ -733,9 +751,9 @@ def manual_cell_division(
 
 
 @nb.njit
-def outside_gravity(x_i, DM_tot):
+def outside_gravity(x_i, com_DM, DM_tot):
     pre = G*DM_tot*DM_SIM_MASS
-    denom = np.sqrt(np.sum(x_i**2))**3
+    denom = np.sqrt(np.sum((x_i-com_DM)**2))**3
 
     return pre*x_i/denom
 

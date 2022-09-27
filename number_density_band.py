@@ -7,12 +7,14 @@ import shared.functions as fct
 
 # Halo batch parameters.
 sim = 'L012N376'
-snap = '0036'
-mass_gauge = 12.4  # in log10 Msun
-mass_range = 0.3
+snap = '0036'  # "starting" snapshot to search for halos
+mass_gauge = 12.0  # in log10 Msun
+mass_range = 0.5
+size = 2
+DM_lim_batch = 8000
 
 hname = f'1e+{mass_gauge}_pm{mass_range}Msun'
-fct.halo_batch_indices(sim, snap, mass_gauge, mass_range, 'halos', 10, hname)
+fct.halo_batch_indices(sim, snap, mass_gauge, mass_range, 'halos', size, hname)
 halo_batch_IDs = np.load(f'{sim}/halo_batch_{hname}_indices.npy')
 halo_batch_params = np.load(f'{sim}/halo_batch_{hname}_params.npy')
 halo_num = len(halo_batch_params)
@@ -35,13 +37,13 @@ def EOMs(s_val, y):
     # Find z corresponding to s via interpolation.
     z = np.interp(s_val, S_STEPS, ZEDS)
 
-    # ID corresponding to current z.
+    # Snapshot specific parameters.
     idx = np.abs(ZEDS_SNAPSHOTS - z).argmin()
     snap = NUMS_SNAPSHOTS[idx]
-    NrDM = NrDM_SNAPSHOTS[idx]
+    snap_GRID_L = snaps_GRID_L[idx]
 
     # Neutrino inside cell grid.
-    if np.all(np.abs(x_i)) <= GRID_L:
+    if np.all(np.abs(x_i)) <= snap_GRID_L:
 
         # Find which (pre-calculated) derivative grid to use at current z.
         simname = f'origID{halo_ID}_snap_{snap}'
@@ -53,7 +55,9 @@ def EOMs(s_val, y):
 
     # Neutrino outside cell grid.
     else:
-        grad_tot = fct.outside_gravity(x_i, NrDM)
+        NrDM = NrDM_SNAPSHOTS[idx]
+        com_DM = DM_COM_SNAPSHOTS[idx]
+        grad_tot = fct.outside_gravity(x_i, com_DM, NrDM)
 
     # Switch to "physical reality" here.
     grad_tot /= (kpc/s**2)
@@ -87,7 +91,7 @@ def backtrack_1_neutrino(y0_Nr):
 for halo_j, halo_ID in enumerate(halo_batch_IDs):
 
     try:
-
+        # '''
         # ============================================== #
         # Run precalculations for current halo in batch. #
         # ============================================== #
@@ -95,8 +99,12 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
         # Generate progenitor index array for current halo.
         proj_IDs = fct.read_MergerTree(sim, halo_ID)
 
-        NrDM_snaps = np.zeros(len(NUMS_SNAPSHOTS))
-        for j, (snap, proj_ID) in enumerate(zip(NUMS_SNAPSHOTS[::-1], proj_IDs)):
+        save_GRID_L = np.zeros(len(NUMS_SNAPSHOTS))
+        save_num_DM = np.zeros(len(NUMS_SNAPSHOTS))
+        save_DM_com = []
+        for j, (snap, proj_ID) in enumerate(zip(
+            NUMS_SNAPSHOTS[::-1], proj_IDs
+        )):
             print(f'halo {halo_j+1}/{halo_num} ; snapshot {snap}')
             
             proj_ID = int(proj_ID)
@@ -115,8 +123,8 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
             # ---------------------- #
 
             # Initialize grid.
-            GRID_L = (int(np.abs(DM_raw).max()) + 1)*kpc
-            raw_grid = fct.grid_3D(GRID_L, GRID_L)  # to get 8 all-covering cells
+            snap_GRID_L = (int(np.abs(DM_raw).max()) + 1)*kpc
+            raw_grid = fct.grid_3D(snap_GRID_L, snap_GRID_L)
             init_grid = np.expand_dims(raw_grid, axis=1)
 
             # Prepare arrays for cell division.
@@ -125,9 +133,8 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
             DM_pos_for_cell_division = np.repeat(DM_pos, len(init_grid), axis=0)
 
             # Cell division.
-            DM_lim_band = 5000
             cell_division_count = fct.cell_division(
-                init_grid, DM_pos_for_cell_division, GRID_L, DM_lim_band, None, 
+                init_grid, DM_pos_for_cell_division, snap_GRID_L, DM_lim_batch, None, 
                 sim, IDname
             )
 
@@ -136,7 +143,11 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
             DM_count = np.load(f'{sim}/DM_count_{IDname}.npy')
             cell_com = np.load(f'{sim}/cell_com_{IDname}.npy')
             cell_gen = np.load(f'{sim}/cell_gen_{IDname}.npy')
-            NrDM_snaps[j] = np.sum(DM_count)
+            
+            # Save snapshot specific parameters.
+            save_GRID_L[j] = snap_GRID_L
+            save_num_DM[j] = np.sum(DM_count)
+            save_DM_com.append(np.load(f'{sim}/DM_com_coord_{IDname}.npy'))
 
             # Optional printout.
             # print(fin_grid.shape, DM_count.shape, cell_com.shape, cell_gen.shape)
@@ -149,63 +160,65 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
             # Calculate gravity grid (in batches of cells). #
             # --------------------------------------------- #
 
-            #todo: multiprocess the batches for snellius!
-            #todo: see CubeSpace notebook...finalize, test, etc.
+            def batch_gravity(
+                grid_chunk, DMnr_chunk, com_chunk, gen_chunk, num_chunk
+                ):
 
-            batch_size = 30
-            bs_cc = chunks(batch_size, fin_grid)
-            bs_count = chunks(batch_size, DM_count)
-            bs_com = chunks(batch_size, cell_com)
-            bs_gen = chunks(batch_size, cell_gen)
-
-
-            # '''
-            batch_size = 30
-            bs_cc = chunks(batch_size, fin_grid)
-            bs_count = chunks(batch_size, DM_count)
-            bs_com = chunks(batch_size, cell_com)
-            bs_gen = chunks(batch_size, cell_gen)
-
-            b_nums = []
-            for b, (b_cc,  b_gen,  b_com,  b_count) in enumerate(
-                zip(bs_cc, bs_gen, bs_com, bs_count)
-            ):
-                b_nums.append(b)
-                b_cc = np.array(b_cc)
-                b_gen = np.array(b_gen)
-                b_com = np.array(b_com)
-                b_count = np.array(b_count)
+                b = int(num_chunk)
+                b_cc = np.array(grid_chunk)
+                b_com = np.array(com_chunk)
+                b_gen = np.array(gen_chunk)
+                b_count = np.array(DMnr_chunk)
 
                 # Calculate gravity in each cell in current batch.
                 b_DM = np.repeat(DM_pos, len(b_cc), axis=0)
                 bname = f'batch{b}'
                 fct.cell_gravity(
-                    b_cc, b_com, b_gen, GRID_L,
-                    b_DM, b_count, DM_lim_band,
+                    b_cc, b_com, b_gen, snap_GRID_L,
+                    b_DM, b_count, DM_lim_batch,
                     sim, bname
                 )
-            bs_nums = np.array(b_nums)
+
+            chunk_size = 20
+            grid_chunks = chunks(chunk_size, fin_grid)
+            DMnr_chunks = chunks(chunk_size, DM_count)
+            com_chunks = chunks(chunk_size, cell_com)
+            gen_chunks = chunks(chunk_size, cell_gen)
+            num_chunks = math.ceil(len(DM_count)/chunk_size)
+            idx_chunks = np.arange(num_chunks)
+
+            CPUs = 6
+            with ProcessPoolExecutor(CPUs) as ex:
+                ex.map(
+                    batch_gravity, grid_chunks, DMnr_chunks, 
+                    com_chunks, gen_chunks, idx_chunks
+                )
 
             # Combine and then delete batch files.
             dPsi_batches = [
-                np.load(f'{sim}/dPsi_grid_batch{b}.npy') for b in bs_nums
+                np.load(f'{sim}/dPsi_grid_batch{b}.npy') for b in idx_chunks
             ]
             dPsi_fin = np.array(list(chain.from_iterable(dPsi_batches)))
             np.save(f'{sim}/dPsi_grid_{IDname}.npy', dPsi_fin)
-
-            # Delete intermediate data.
             fct.delete_temp_data(f'{sim}/dPsi_*batch*.npy')
-            # '''
 
+        # Save snapshot and halo specific arrays.
+        np.save(f'{sim}/snaps_GRID_L_origID{halo_ID}.npy', save_GRID_L)
+        np.save(f'{sim}/NrDM_snaps_origID{halo_ID}.npy', save_num_DM)
+        np.save(f'{sim}/DM_com_origID{halo_ID}.npy', np.array(save_DM_com))
+
+        # Clean up.
         fct.delete_temp_data(f'{sim}/DM_pos_*halo*.npy')
-
+        # '''
 
         # ========================================= #
         # Run simulation for current halo in batch. #
         # ========================================= #
 
         # These arrays will be used EOMs function above.
-        NrDM_SNAPSHOTS = NrDM_snaps
+        snaps_GRID_L = np.load(f'{sim}/snaps_GRID_L_origID{halo_ID}.npy')
+        NrDM_SNAPSHOTS = np.load(f'{sim}/NrDM_snaps_origID{halo_ID}.npy')
+        DM_COM_SNAPSHOTS = np.load(f'{sim}/DM_com_origID{halo_ID}.npy')
 
         start = time.perf_counter()
 
@@ -219,44 +232,47 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
 
 
         # Display parameters for simulation.
-        CPUs = 12
+        CPUs = 6
         print('***Running simulation***')
         print(
             f'neutrinos={NUS}, halo={halo_j+1}/{halo_num}, CPUs={CPUs}, solver={SOLVER}'
         )
 
-        # Test 1 neutrino only.
-        # backtrack_1_neutrino(y0_Nr[0])
+        sim_testing = False
 
-        # '''
-        # Run simulation on multiple cores.
-        with ProcessPoolExecutor(CPUs) as ex:
-            ex.map(backtrack_1_neutrino, y0_Nr)  
-            #todo: try if ex.map(backtrack_1_neutrino, y0_Nr, chunksize=???) 
-            #todo: decreases time, where ??? could be e.g. 100 or 1000...  
+        if sim_testing:
+            # Test 1 neutrino only.
+            backtrack_1_neutrino(y0_Nr[0])
+            backtrack_1_neutrino(y0_Nr[1])
+
+        else:
+            # Run simulation on multiple cores.
+            with ProcessPoolExecutor(CPUs) as ex:
+                ex.map(backtrack_1_neutrino, y0_Nr)  
+                #todo: maybe ex.map(backtrack_1_neutrino, y0_Nr, chunksize=???) 
+                #todo: decreases time, where ??? could be e.g. 100 or 1000...  
 
 
-        # Compactify all neutrino vectors into 1 file.
-        Ns = np.arange(NUS, dtype=int)  # Nr. of neutrinos
-        
-        nus = np.array([np.load(f'{sim}/nu_{Nr+1}.npy') for Nr in Ns])
-        np.save(
-            f'{sim}/{NUS}nus_1e+{mass_gauge}_pm{mass_range}Msun_halo{halo_j}.npy', 
-            nus
-        )  
+            # Compactify all neutrino vectors into 1 file.
+            Ns = np.arange(NUS, dtype=int)  # Nr. of neutrinos
+            
+            nus = np.array([np.load(f'{sim}/nu_{Nr+1}.npy') for Nr in Ns])
+            np.save(
+                f'{sim}/{NUS}nus_1e+{mass_gauge}_pm{mass_range}Msun_halo{halo_j}.npy', 
+                nus
+            )  
 
-        # Delete all temporary files.
-        fct.delete_temp_data(f'{sim}/nu_*.npy')
-        fct.delete_temp_data(f'{sim}/fin_grid_*.npy')
-        fct.delete_temp_data(f'{sim}/DM_count_*.npy')
-        fct.delete_temp_data(f'{sim}/cell_com_*.npy')
-        fct.delete_temp_data(f'{sim}/cell_gen_*.npy')
-        # '''
+            # Delete all temporary files.
+            fct.delete_temp_data(f'{sim}/nu_*.npy')
+            fct.delete_temp_data(f'{sim}/fin_grid_*.npy')
+            fct.delete_temp_data(f'{sim}/DM_count_*.npy')
+            fct.delete_temp_data(f'{sim}/cell_com_*.npy')
+            fct.delete_temp_data(f'{sim}/cell_gen_*.npy')
 
-        seconds = time.perf_counter()-start
-        minutes = seconds/60.
-        hours = minutes/60.
-        print(f'Sim time min/h: {minutes} min, {hours} h.')
+            seconds = time.perf_counter()-start
+            minutes = seconds/60.
+            hours = minutes/60.
+            print(f'Sim time min/h: {minutes} min, {hours} h.')
 
     except ValueError:  # bad halo?
         traceback.print_exc()

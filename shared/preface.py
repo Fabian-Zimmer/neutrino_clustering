@@ -9,9 +9,10 @@ import random
 import gc
 import argparse
 import pathlib
-from itertools import chain
+from itertools import chain, repeat
 from memory_profiler import profile
 import traceback
+import math
 
 # arrays and data packages
 import numpy as np
@@ -27,7 +28,8 @@ import natpy as nat
 
 # speed improvement
 import numba as nb
-from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
+from concurrent.futures import ProcessPoolExecutor, as_completed
+from multiprocessing import Pool
 
 # scipy packages
 from scipy.integrate import solve_ivp, quad, simpson
