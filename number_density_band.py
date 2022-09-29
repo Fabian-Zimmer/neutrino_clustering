@@ -181,7 +181,7 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
                     sim, bname
                 )
 
-            chunk_size = 10
+            chunk_size = 20
             grid_chunks = chunks(chunk_size, fin_grid)
             DMnr_chunks = chunks(chunk_size, DM_count)
             com_chunks = chunks(chunk_size, cell_com)
