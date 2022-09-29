@@ -203,7 +203,10 @@ def halo_batch_indices(
     # Limit amount of halos to given size.
     halo_number = len(select_halos)
     if halo_number >= halo_limit:
+
+        # Fix choice of halos.
         np.random.seed(1)
+        
         rand_IDs = np.random.randint(0, halo_number-1, size=(halo_limit))
         select_halos = select_halos[rand_IDs]
 
@@ -310,7 +313,7 @@ def read_DM_halo_index(sim, snap, halo_ID, fname):
     np.save(f'{sim}/DM_com_coord_{fname}.npy', DM_com_coord)
 
 
-def halo_DM(halo_idx, sim, snap, pos, CoP_halo, snap_Particle_IDs):
+def halo_DM(halo_idx, sim, snap, pos, snap_Particle_IDs):
 
     group = h5py.File(str(next(
         pathlib.Path(
@@ -336,15 +339,13 @@ def halo_DM(halo_idx, sim, snap, pos, CoP_halo, snap_Particle_IDs):
         assume_unique=True, return_indices=True
     )
 
-    # Save DM positions (centered on halo).
+    # Save DM positions.
     DM_pos = pos[indices_p, :]  # x,y,z of each DM particle
-    DM_pos -= CoP_halo  # center DM on halo at first (at z~0) snapshot
-    DM_pos *= 1e3  # to kpc
     np.save(f'{sim}/DM_of_haloID{halo_idx}.npy', DM_pos)
 
 
 def read_DM_halos_inRange(
-    sim, snap, halo_ID, DM_range_kpc, fname
+    sim, snap, halo_ID, DM_range_kpc, halo_limit, fname
 ):
 
     # ---------------- #
@@ -400,13 +401,12 @@ def read_DM_halos_inRange(
     # Combine DM of all halos in range. #
     # --------------------------------- #
 
-    CoP -= CoP_halo
-    halo_dis = np.sqrt(np.sum(CoP**2, axis=1))
+    CoP_cent = CoP - CoP_halo
+    halo_dis = np.sqrt(np.sum(CoP_cent**2, axis=1))
     select_halos = np.where(halo_dis <= DM_range_kpc)[0]
     print(f'All halos in range: {len(select_halos)}')
 
     # Limit amount of halos in range, select by mass.
-    halo_limit = 100
     if halo_limit is not None:
         halo_number = len(select_halos)
         if halo_number >= halo_limit:
@@ -422,13 +422,21 @@ def read_DM_halos_inRange(
     with Pool(CPUs) as pool:
         pool.starmap(halo_DM, zip(
             halo_IDs,
-            repeat(sim), repeat(snap), repeat(pos), repeat(CoP_halo),
-            repeat(snap_Particle_IDs)
+            repeat(sim), repeat(snap), repeat(pos), repeat(snap_Particle_IDs)
         ))
         
     # Combine DM from all halos into 1 file.
-    DM_total = [np.load(f'{sim}/DM_of_haloID{i}.npy') for i in halo_IDs]
-    np.save(f'{sim}/DM_pos_{fname}.npy', np.concatenate(DM_total, axis=0)) 
+    DM_halos = [np.load(f'{sim}/DM_of_haloID{i}.npy') for i in halo_IDs]
+
+    DM_lengths = np.zeros(len(DM_halos))
+    for i, DM_elem in enumerate(DM_halos):
+        DM_lengths[i] = len(DM_elem)
+    np.save(f'{sim}/DM_lengths_{fname}.npy', DM_lengths)
+
+    DM_total = np.concatenate(DM_halos, axis=0)
+    DM_total -= CoP_halo
+    DM_total *= 1e3
+    np.save(f'{sim}/DM_pos_{fname}.npy', DM_total) 
     delete_temp_data(f'{sim}/DM_of_haloID*.npy')
 
 

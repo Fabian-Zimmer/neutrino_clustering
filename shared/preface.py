@@ -42,6 +42,7 @@ import matplotlib.colors as colors
 import matplotlib.ticker as ticker
 import matplotlib.patches as mpatches
 from mpl_toolkits import mplot3d
+import colorcet as cc
 # import imageio
 
 
@@ -201,8 +202,8 @@ NU_MASSES = np.array([0.01, 0.05, 0.1, 0.3])*eV
 # using the analytical expression for Fermions.
 N0 = 2*zeta(3.)/Pi**2 *T_CNB**3 *(3./4.) /(1/cm**3)
 
-PHIs = 10
-THETAs = 10
+PHIs = 20
+THETAs = 20
 Vs = 100
 NUS = PHIs*THETAs*Vs
 

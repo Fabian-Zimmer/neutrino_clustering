@@ -11,7 +11,7 @@ snap = '0036'  # "starting" snapshot to search for halos
 mass_gauge = 12.0  # in log10 Msun
 mass_range = 0.46
 size = 10
-DM_lim_batch = 3000
+DM_lim_batch = 1000
 CPUs_for_gravity = 4
 CPUs_for_sim = 6
 
@@ -181,7 +181,7 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
                     sim, bname
                 )
 
-            chunk_size = 20
+            chunk_size = 10
             grid_chunks = chunks(chunk_size, fin_grid)
             DMnr_chunks = chunks(chunk_size, DM_count)
             com_chunks = chunks(chunk_size, cell_com)
