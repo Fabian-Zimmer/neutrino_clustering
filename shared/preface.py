@@ -204,14 +204,15 @@ N0 = 2*zeta(3.)/Pi**2 *T_CNB**3 *(3./4.) /(1/cm**3)
 
 PHIs = 10
 THETAs = 10
-Vs = 100
+Vs = 400
 NUS = PHIs*THETAs*Vs
 
 LOWER = 0.01*T_CNB
 UPPER = 400.*T_CNB
 
 # Momentum range.
-MOMENTA = np.geomspace(LOWER, UPPER, Vs)
+# MOMENTA = np.geomspace(LOWER, UPPER, Vs)
+MOMENTA = np.linspace(LOWER, UPPER, Vs)
 
 
 def s_of_z(z):

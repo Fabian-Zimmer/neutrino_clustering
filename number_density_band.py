@@ -5,15 +5,17 @@ import shared.functions as fct
 # Find starting IDs for halo batch. #
 # --------------------------------- #
 
+total_start = time.perf_counter()
+
 # Halo batch parameters.
 sim = 'L012N376'
 snap = '0036'  # "starting" snapshot to search for halos
 mass_gauge = 12.0  # in log10 Msun
 mass_range = 0.46
 size = 10
-DM_lim_batch = 8000
+DM_lim_batch = 1000
 CPUs_for_gravity = 4
-CPUs_for_sim = 12
+CPUs_for_sim = 6
 
 hname = f'1e+{mass_gauge}_pm{mass_range}Msun'
 fct.halo_batch_indices(sim, snap, mass_gauge, mass_range, 'halos', size, hname)
@@ -90,9 +92,7 @@ def backtrack_1_neutrino(y0_Nr):
     np.save(f'{sim}/nu_{int(Nr)}.npy', np.array(sol.y.T))
 
 
-for halo_j, halo_ID in enumerate(halo_batch_IDs[4:]):
-
-    halo_j += 4
+for halo_j, halo_ID in enumerate(halo_batch_IDs):
 
     try:
         # '''
@@ -183,7 +183,7 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs[4:]):
                     sim, bname
                 )
 
-            chunk_size = 30
+            chunk_size = 20
             grid_chunks = chunks(chunk_size, fin_grid)
             DMnr_chunks = chunks(chunk_size, DM_count)
             com_chunks = chunks(chunk_size, cell_com)
@@ -276,6 +276,10 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs[4:]):
             hours = minutes/60.
             print(f'Sim time min/h: {minutes} min, {hours} h.')
 
-    except ValueError:  # bad halo?
+    except:  # bad halo?
         traceback.print_exc()
         continue
+
+
+total_time = time.perf_counter()-total_start
+print(f'Total time: {total_time/60.} min, {total_time/(60**2)} h.')
