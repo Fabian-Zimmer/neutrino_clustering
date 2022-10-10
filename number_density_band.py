@@ -12,8 +12,8 @@ sim = 'L012N376'
 snap = '0036'  # "starting" snapshot to search for halos
 # mass_gauge = 12.0  # in log10 Msun
 # mass_range = 0.46
-mass_gauge = 11.5  # in log10 Msun
-mass_range = 0.1
+mass_gauge = 12.0  # in log10 Msun
+mass_range = 0.3
 size = 1
 DM_lim_batch = 1000
 
