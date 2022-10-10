@@ -25,6 +25,7 @@ from funcy import chunks
 from astropy import units as unit
 from astropy import constants as const
 import natpy as nat
+import healpy as hp
 
 # speed improvement
 import numba as nb

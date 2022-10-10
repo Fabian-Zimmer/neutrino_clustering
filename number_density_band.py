@@ -18,7 +18,7 @@ size = 1
 DM_lim_batch = 1000
 
 hname = f'1e+{mass_gauge}_pm{mass_range}Msun'
-file_folder = f'{}'
+file_folder = f'{SIM_DATA_ROOT}/{sim}/{SIM_DATA_NEST}'
 fct.halo_batch_indices(
     sim, snap, mass_gauge, mass_range, 'halos', size, 
     hname, file_folder
@@ -122,7 +122,7 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
             # --------------------------- #
 
             IDname = f'origID{halo_ID}_snap_{snap}'
-            fct.read_DM_halo_index(sim, snap, proj_ID, IDname)
+            fct.read_DM_halo_index(sim, snap, proj_ID, IDname, file_folder)
             DM_raw = np.load(f'{sim}/DM_pos_{IDname}.npy')
             
 
