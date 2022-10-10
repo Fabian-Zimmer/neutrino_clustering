@@ -20,7 +20,11 @@ CPUs_for_gravity = 4
 CPUs_for_sim = 6
 
 hname = f'1e+{mass_gauge}_pm{mass_range}Msun'
-fct.halo_batch_indices(sim, snap, mass_gauge, mass_range, 'halos', size, hname)
+file_folder = f'{}'
+fct.halo_batch_indices(
+    sim, snap, mass_gauge, mass_range, 'halos', size, 
+    hname, file_folder
+)
 halo_batch_IDs = np.load(f'{sim}/halo_batch_{hname}_indices.npy')
 halo_batch_params = np.load(f'{sim}/halo_batch_{hname}_params.npy')
 halo_num = len(halo_batch_params)

@@ -217,32 +217,17 @@ def halo_batch_indices(
     np.save(f'{sim}/halo_batch_{fname}_params.npy', halo_params)
 
 
-def read_DM_halo_index(sim, snap, halo_ID, fname):
+def read_DM_halo_index(sim, snap, halo_ID, fname, file_folder):
 
     # ---------------- #
     # Open data files. #
     # ---------------- #
 
-    snaps = h5py.File(str(next(
-        pathlib.Path(
-            f'{SIM_DATA}/{sim}').glob(f'**/snapshot_{snap}.hdf5'
-        )
-    )))
-    group = h5py.File(str(next(
-        pathlib.Path(
-            f'{SIM_DATA}/{sim}').glob(f'**/subhalo_{snap}.catalog_groups'
-        )
-    )))
-    parts = h5py.File(str(next(
-        pathlib.Path(
-            f'{SIM_DATA}/{sim}').glob(f'**/subhalo_{snap}.catalog_particles'
-        )
-    )))
-    props = h5py.File(str(next(
-        pathlib.Path(
-            f'{SIM_DATA}/{sim}').glob(f'**/subhalo_{snap}.properties'
-        )
-    )))
+    snaps = h5py.File(f'{file_folder}/snapshot_{snap}.hdf5')
+    group = h5py.File(f'{file_folder}/subhalo_{snap}.catalog_groups')
+    parts = h5py.File(f'{file_folder}/subhalo_{snap}.catalog_particles')
+    props = h5py.File(f'{file_folder}/subhalo_{snap}.properties')
+
 
     # Positions.
     a = snaps["/Header"].attrs["Scale-factor"]
@@ -309,18 +294,11 @@ def read_DM_halo_index(sim, snap, halo_ID, fname):
     np.save(f'{sim}/DM_com_coord_{fname}.npy', DM_com_coord)
 
 
-def halo_DM(halo_idx, sim, snap, pos, snap_Particle_IDs):
+def halo_DM(halo_idx, sim, snap, pos, snap_Particle_IDs, file_folder):
 
-    group = h5py.File(str(next(
-        pathlib.Path(
-            f'{SIM_DATA}/{sim}').glob(f'**/subhalo_{snap}.catalog_groups'
-        )
-    )))
-    parts = h5py.File(str(next(
-        pathlib.Path(
-            f'{SIM_DATA}/{sim}').glob(f'**/subhalo_{snap}.catalog_particles'
-        )
-    )))
+    # Open data files.
+    group = h5py.File(f'{file_folder}/subhalo_{snap}.catalog_groups')
+    parts = h5py.File(f'{file_folder}/subhalo_{snap}.catalog_particles')
 
     # Start and stop index for current halo.
     halo_init = group["Offset"][halo_idx]
@@ -341,23 +319,15 @@ def halo_DM(halo_idx, sim, snap, pos, snap_Particle_IDs):
 
 
 def read_DM_halos_inRange(
-    sim, snap, halo_ID, DM_range_kpc, halo_limit, fname
+    sim, snap, halo_ID, DM_range_kpc, halo_limit, fname, file_folder
 ):
 
     # ---------------- #
     # Open data files. #
     # ---------------- #
 
-    snaps = h5py.File(str(next(
-        pathlib.Path(
-            f'{SIM_DATA}/{sim}').glob(f'**/snapshot_{snap}.hdf5'
-        )
-    )))
-    props = h5py.File(str(next(
-        pathlib.Path(
-            f'{SIM_DATA}/{sim}').glob(f'**/subhalo_{snap}.properties'
-        )
-    )))
+    snaps = h5py.File(f'{file_folder}/snapshot_{snap}.hdf5')
+    props = h5py.File(f'{file_folder}/subhalo_{snap}.properties')
 
 
     # Positions.
@@ -374,6 +344,7 @@ def read_DM_halos_inRange(
     CoP[:, 0] = props["Xcminpot"][:]
     CoP[:, 1] = props["Ycminpot"][:]
     CoP[:, 2] = props["Zcminpot"][:]
+
 
     # -------------------------------- #
     # Save Center of Potential coords. #
@@ -436,19 +407,11 @@ def read_DM_halos_inRange(
     delete_temp_data(f'{sim}/DM_of_haloID*.npy')
 
 
-def read_DM_all_inRange(sim, snap, halo_ID, DM_range_kpc, fname):
+def read_DM_all_inRange(sim, snap, halo_ID, DM_range_kpc, fname, file_folder):
 
     # Open data files.
-    snaps = h5py.File(str(next(
-        pathlib.Path(
-            f'{SIM_DATA}/{sim}').glob(f'**/snapshot_{snap}.hdf5'
-        )
-    )))
-    props = h5py.File(str(next(
-        pathlib.Path(
-            f'{SIM_DATA}/{sim}').glob(f'**/subhalo_{snap}.properties'
-        )
-    )))
+    snaps = h5py.File(f'{file_folder}/snapshot_{snap}.hdf5')
+    props = h5py.File(f'{file_folder}/subhalo_{snap}.properties')
 
     # Positions.
     a = snaps["/Header"].attrs["Scale-factor"]
@@ -459,6 +422,7 @@ def read_DM_all_inRange(sim, snap, halo_ID, DM_range_kpc, fname):
     # DM_range from physical to comoving, and bring to Camila sim units.
     DM_range_kpc *= (a/kpc/1e3)
     
+
     # -------------------------------- #
     # Save Center of Potential coords. #
     # -------------------------------- #
