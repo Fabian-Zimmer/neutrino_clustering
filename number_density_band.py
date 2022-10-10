@@ -16,8 +16,6 @@ mass_gauge = 11.5  # in log10 Msun
 mass_range = 0.1
 size = 1
 DM_lim_batch = 1000
-CPUs_for_gravity = 4
-CPUs_for_sim = 6
 
 hname = f'1e+{mass_gauge}_pm{mass_range}Msun'
 file_folder = f'{}'
@@ -197,7 +195,7 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
             num_chunks = math.ceil(len(DM_count)/chunk_size)
             idx_chunks = np.arange(num_chunks)
 
-            with ProcessPoolExecutor(CPUs_for_gravity) as ex:
+            with ProcessPoolExecutor(CPUs_FOR_PRE) as ex:
                 ex.map(
                     batch_gravity, grid_chunks, DMnr_chunks, 
                     com_chunks, gen_chunks, idx_chunks
@@ -243,7 +241,7 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
         # Display parameters for simulation.
         print('***Running simulation***')
         print(
-            f'neutrinos={NUS}, halo={halo_j+1}/{halo_num}, CPUs={CPUs_for_sim}, solver={SOLVER}'
+            f'neutrinos={NUS}, halo={halo_j+1}/{halo_num}, CPUs={CPUs_FOR_SIM}, solver={SOLVER}'
         )
 
         sim_testing = False
@@ -255,7 +253,7 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
 
         else:
             # Run simulation on multiple cores.
-            with ProcessPoolExecutor(CPUs_for_sim) as ex:
+            with ProcessPoolExecutor(CPUs_FOR_SIM) as ex:
                 ex.map(backtrack_1_neutrino, y0_Nr)  
                 #todo: maybe ex.map(backtrack_1_neutrino, y0_Nr, chunksize=???) 
                 #todo: decreases time, where ??? could be e.g. 100 or 1000...  

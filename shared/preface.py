@@ -59,16 +59,25 @@ HOME = pathlib.Path.home()
 
 # Paths for FZ_snellius.
 if str(HOME) == '/home/zimmer':
-    # SIM_DATA = '/projects/0/einf180/Tango_sims'
-    SIM_DATA = '/archive/ccorrea/Tango_sims'
+    # SIM_DATA_ROOT = '/projects/0/einf180/Tango_sims'
+    SIM_DATA_ROOT = '/archive/ccorrea/Tango_sims'
+    SIM_DATA_NEST = 'DMONLY/SigmaConstant00'
+    CPUs_FOR_PRE = 14
+    CPUs_FOR_SIM = 128
 
 # Paths for FZ_desktop.
 elif str(HOME) == '/home/fabian':
-    SIM_DATA = f'{HOME}/ownCloud/snellius'
+    SIM_DATA_ROOT = f'{HOME}/ownCloud/snellius'
+    SIM_DATA_NEST = 'DMONLY'
+    CPUs_FOR_PRE = 4
+    CPUs_FOR_SIM = 6
 
 # Paths for FZ_laptop.
 elif str(HOME) == '/home/fpc':
-    SIM_DATA = f'{HOME}/SURFdrive/snellius'
+    SIM_DATA_ROOT = f'{HOME}/SURFdrive/snellius'
+    SIM_DATA_NEST = 'DMONLY'
+    CPUs_FOR_PRE = 4
+    CPUs_FOR_SIM = 6
 
 
 #############
@@ -274,11 +283,9 @@ for j, i in enumerate(range(12,37)):
     snap_i = f'{i:04d}'
     nums.append(snap_i)
 
-    with h5py.File(str(next(
-        pathlib.Path(
-            f'{SIM_DATA}/{sim}').glob(f'**/snapshot_{snap_i}.hdf5'
-        )
-    ))) as snap:
+    with h5py.File(
+        f'{SIM_DATA_ROOT}/{sim}/{SIM_DATA_NEST}/snapshot_{snap_i}.hdf5'
+    ) as snap:
         zeds[j] = snap['Cosmology'].attrs['Redshift'][0]
         if snap_i == '0036':
 
