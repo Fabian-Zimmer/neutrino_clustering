@@ -1,5 +1,5 @@
 ###############
-### Imports ###
+### Imports ### #SNELLIUS TEST
 ###############
 import sys, os
 from sys import getsizeof
@@ -242,8 +242,8 @@ def s_of_z(z):
 
 # Logarithmic redshift spacing.
 Z_AMOUNT = 100
-zeds_pre = np.geomspace(1e-1, 4., Z_AMOUNT-1) - 1e-1
-ZEDS = np.insert(zeds_pre, len(zeds_pre), 4.)
+z_shift = 1e-1
+ZEDS = np.geomspace(z_shift, 4.+z_shift, Z_AMOUNT) - z_shift
 S_STEPS = np.array([s_of_z(z) for z in ZEDS])
 
 # Control if simulation runs forwards (+1) or backwards (-1) in time. 
