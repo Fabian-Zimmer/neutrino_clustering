@@ -163,18 +163,14 @@ def read_MergerTree(sim, init_halo):
 
 def halo_batch_indices(
     sim, snap, mass_gauge, mass_range, 
-    halo_type, halo_limit, fname
+    halo_type, halo_limit, fname, file_folder
 ):
 
     # ---------------------------------- #
     # Read in parameters of halo in sim. #
     # ---------------------------------- #
 
-    props = h5py.File(str(next(
-        pathlib.Path(
-            f'{SIM_DATA}/{sim}').glob(f'**/subhalo_{snap}.properties'
-        )
-    )))
+    props = h5py.File(f'{file_folder}/subhalo_{snap}.properties')
 
     cNFW = props['cNFW_200crit'][:]  # NFW concentration.
     rvir = props['R_200crit'][:]*1e3 # Virial radius (to kpc with *1e3)
