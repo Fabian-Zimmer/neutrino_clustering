@@ -942,14 +942,17 @@ def draw_ui(phi_points, theta_points):
     # Split up this magnitude into velocity components.
     # note: Done by using spher. coords. trafos, which act as "weights".
     eps = 0.01  # shift in theta, so poles are not included
-    ps = np.linspace(0., 2.*Pi, phi_points)
     ts = np.linspace(0.+eps, Pi-eps, theta_points)
+    ps = np.linspace(0., 2.*Pi, phi_points)
 
     # Minus signs due to choice of coord. system setup (see notes/drawings).
     #                              (<-- outer loops, --> inner loops)
-    uxs = [-v*np.cos(p)*np.sin(t) for p in ps for t in ts for v in v_kpc]
-    uys = [-v*np.sin(p)*np.sin(t) for p in ps for t in ts for v in v_kpc]
-    uzs = [-v*np.cos(t) for _ in ps for t in ts for v in v_kpc]
+    # uxs = [-v*np.cos(p)*np.sin(t) for p in ps for t in ts for v in v_kpc]
+    # uys = [-v*np.sin(p)*np.sin(t) for p in ps for t in ts for v in v_kpc]
+    # uzs = [-v*np.cos(t) for _ in ps for t in ts for v in v_kpc]
+    uxs = [-v*np.cos(p)*np.sin(t) for t in ts for p in ps for v in v_kpc]
+    uys = [-v*np.sin(p)*np.sin(t) for t in ts for p in ps for v in v_kpc]
+    uzs = [-v*np.cos(t) for t in ts for _ in ps for v in v_kpc]
 
     ui_array = np.array([[ux, uy, uz] for ux,uy,uz in zip(uxs,uys,uzs)])        
 
