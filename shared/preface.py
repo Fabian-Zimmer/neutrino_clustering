@@ -182,18 +182,6 @@ NU_MASSES = np.array([0.01, 0.05, 0.1, 0.3])*eV
 # using the analytical expression for Fermions.
 N0 = 2*zeta(3.)/Pi**2 *T_CNB**3 *(3./4.) /(1/cm**3)
 
-PHIs = 10
-THETAs = 10
-Vs = 100
-NUS = PHIs*THETAs*Vs
-
-LOWER = 0.01*T_CNB
-UPPER = 400.*T_CNB
-
-# Momentum range.
-# MOMENTA = np.geomspace(LOWER, UPPER, Vs)
-MOMENTA = np.linspace(LOWER, UPPER, Vs)
-
 
 def s_of_z(z):
     """Convert redshift to time variable s with eqn. 4.1 in Mertsch et al.
@@ -261,7 +249,7 @@ elif str(HOME) == '/home/fabian':
     # SIM_DATA_NEST = 'DMONLY'
     SIM_DATA_NEST = 'CDM_TF50'
     CPUs_FOR_PRE = 4
-    CPUs_FOR_SIM = 12
+    CPUs_FOR_SIM = 6
 
 # Paths for FZ_laptop.
 elif str(HOME) == '/home/fpc':
@@ -275,39 +263,62 @@ elif str(HOME) == '/home/fpc':
 ### Discrete simulation parameters ###
 ######################################
 
-# sim = 'L006N188'
-sim = 'L012N376'
-snapshot_resolution = np.arange(12,62+1)
-first_snap = '0036'
+class PRE:
 
-zeds = np.zeros(len(snapshot_resolution))
-nums = []
-# note: range has to be adjusted to sim snapshot resolution
-for j, i in enumerate(snapshot_resolution):
-    snap_i = f'{i:04d}'
-    nums.append(snap_i)
+    def __init__(
+        self, sim, z0_snap, z4_snap, DM_lim,
+        sim_dir, sim_ver, out_dir,
+        phis, thetas, vels, 
+        pre_CPUs, sim_CPUs
+        ):
 
-    with h5py.File(
-        f'{SIM_DATA_ROOT}/{sim}/{SIM_DATA_NEST}/snapshot_{snap_i}.hdf5'
-    ) as snap:
-        zeds[j] = snap['Cosmology'].attrs['Redshift'][0]
-        if snap_i == first_snap:
+        # Initial conditions for neutrinos.
+        self.PHIs = phis
+        self.THETAs = thetas
+        self.Vs = vels
+        self.NUS = phis*thetas*vels
+        self.LOWER = 0.01*T_CNB
+        self.UPPER = 400.*T_CNB
+        self.MOMENTA = np.linspace(self.LOWER, self.UPPER, vels)
 
-            # Get DM mass used in simulation box.
-            dm_mass = snap['PartType1/Masses'][:]*1e10*Msun
-            DM_SIM_MASS = np.unique(dm_mass)[0]
+        # Simulation parameters.
+        self.PRE_CPUs = pre_CPUs
+        self.SIM_CPUs = sim_CPUs
+        self.DM_LIM = DM_lim
+        self.Z0_STR = f'{z0_snap:04d}'
+        self.Z4_STR = f'{z4_snap:04d}'
+        snaps = np.arange(z4_snap, z0_snap+1)
+        zeds = np.zeros(len(snaps))
+        nums = np.zeros(len(snaps))
 
-            # Get gravity smoothening length used in simulation box.
-            sl = snap['GravityScheme'].attrs[
-                'Maximal physical DM softening length (Plummer equivalent) [internal units]'
-            ][0]
-            SMOOTHENING_LENGTH = sl*1e6*pc
+        # File management.
+        self.SIM = sim
+        self.SIM_DIR = f'{sim_dir}/{sim}/{sim_ver}'
+        self.OUT_DIR = out_dir
+        #? construct out dir? with creating folders relative to where scripts is running if it doesn't exist, etc. -> full auto.
 
+        # Store parameters unique to each simulation box.
+        for j, i in enumerate(snaps):
+            snap_zi = f'{i:04d}'
+            snap_z0 = f'{snaps[-1]:04d}'
+            nums.append(snap_zi)
 
-# note: removed the [1:], need to download some more files for older scripts.
-# MergerTree script needs N+1 snapshots to trace halo back through 
-# N snapshots. I forgot to download snapshot 0011 then, and thus I can only
-# start at snapshot 0013, since it was traced back until then, and not 0012,
-# hence the [1:].
-ZEDS_SNAPSHOTS = np.asarray(zeds)
-NUMS_SNAPSHOTS = np.asarray(nums)
+            with h5py.File(f'{self.SIM_DIR}/snapshot_{snap_zi}.hdf5') as snap:
+                
+                # Store redshifts.
+                zeds[j] = snap['Cosmology'].attrs['Redshift'][0]
+
+                if snap_zi == snap_z0:
+
+                    # DM mass.
+                    dm_mass = snap['PartType1/Masses'][:]*1e10*Msun
+                    self.DM_SIM_MASS = np.unique(dm_mass)[0]
+
+                    # Gravity smoothening length.
+                    sl = snap['GravityScheme'].attrs[
+                        'Maximal physical DM softening length (Plummer equivalent) [internal units]'
+                    ][0]
+                    self.SMOOTHENING_LENGTH = sl*1e6*pc
+
+        self.ZEDS_SNAPS = np.asarray(zeds)
+        self.NUMS_SNAPS = np.asarray(nums)
