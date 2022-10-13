@@ -48,37 +48,7 @@ import colorcet as cc
 
 
 # Fix random seeds.
-SEED = 1
-
-
-
-#######################
-### Path Management ###
-#######################
-
-HOME = pathlib.Path.home()
-
-# Paths for FZ_snellius.
-if str(HOME) == '/home/zimmer':
-    # SIM_DATA_ROOT = '/projects/0/einf180/Tango_sims'
-    SIM_DATA_ROOT = '/archive/ccorrea/Tango_sims'
-    SIM_DATA_NEST = 'DMONLY/SigmaConstant00'
-    CPUs_FOR_PRE = 14
-    CPUs_FOR_SIM = 128
-
-# Paths for FZ_desktop.
-elif str(HOME) == '/home/fabian':
-    SIM_DATA_ROOT = f'{HOME}/ownCloud/snellius'
-    SIM_DATA_NEST = 'DMONLY'
-    CPUs_FOR_PRE = 4
-    CPUs_FOR_SIM = 6
-
-# Paths for FZ_laptop.
-elif str(HOME) == '/home/fpc':
-    SIM_DATA_ROOT = f'{HOME}/SURFdrive/snellius'
-    SIM_DATA_NEST = 'DMONLY'
-    CPUs_FOR_PRE = 4
-    CPUs_FOR_SIM = 6
+# SEED = 1
 
 
 #############
@@ -271,16 +241,49 @@ AG_HALO = False
 SOLVER = 'RK23'
 
 
+#######################
+### Path Management ###
+#######################
+
+HOME = pathlib.Path.home()
+
+# Paths for FZ_snellius.
+if str(HOME) == '/home/zimmer':
+    # SIM_DATA_ROOT = '/projects/0/einf180/Tango_sims'
+    SIM_DATA_ROOT = '/archive/ccorrea/Tango_sims'
+    SIM_DATA_NEST = 'DMONLY/SigmaConstant00'
+    CPUs_FOR_PRE = 14
+    CPUs_FOR_SIM = 128
+
+# Paths for FZ_desktop.
+elif str(HOME) == '/home/fabian':
+    SIM_DATA_ROOT = f'{HOME}/ownCloud/snellius'
+    # SIM_DATA_NEST = 'DMONLY'
+    SIM_DATA_NEST = 'CDM_TF50'
+    CPUs_FOR_PRE = 4
+    CPUs_FOR_SIM = 12
+
+# Paths for FZ_laptop.
+elif str(HOME) == '/home/fpc':
+    SIM_DATA_ROOT = f'{HOME}/SURFdrive/snellius'
+    SIM_DATA_NEST = 'DMONLY'
+    CPUs_FOR_PRE = 4
+    CPUs_FOR_SIM = 6
+
+
 ######################################
 ### Discrete simulation parameters ###
 ######################################
 
 # sim = 'L006N188'
 sim = 'L012N376'
+snapshot_resolution = np.arange(12,62+1)
+first_snap = '0036'
 
-zeds = np.zeros(25)
+zeds = np.zeros(len(snapshot_resolution))
 nums = []
-for j, i in enumerate(range(12,37)):
+# note: range has to be adjusted to sim snapshot resolution
+for j, i in enumerate(snapshot_resolution):
     snap_i = f'{i:04d}'
     nums.append(snap_i)
 
@@ -288,7 +291,7 @@ for j, i in enumerate(range(12,37)):
         f'{SIM_DATA_ROOT}/{sim}/{SIM_DATA_NEST}/snapshot_{snap_i}.hdf5'
     ) as snap:
         zeds[j] = snap['Cosmology'].attrs['Redshift'][0]
-        if snap_i == '0036':
+        if snap_i == first_snap:
 
             # Get DM mass used in simulation box.
             dm_mass = snap['PartType1/Masses'][:]*1e10*Msun
@@ -301,10 +304,10 @@ for j, i in enumerate(range(12,37)):
             SMOOTHENING_LENGTH = sl*1e6*pc
 
 
-# note:
+# note: removed the [1:], need to download some more files for older scripts.
 # MergerTree script needs N+1 snapshots to trace halo back through 
 # N snapshots. I forgot to download snapshot 0011 then, and thus I can only
 # start at snapshot 0013, since it was traced back until then, and not 0012,
 # hence the [1:].
-ZEDS_SNAPSHOTS = np.asarray(zeds)[1:]
-NUMS_SNAPSHOTS = np.asarray(nums)[1:]
+ZEDS_SNAPSHOTS = np.asarray(zeds)
+NUMS_SNAPSHOTS = np.asarray(nums)

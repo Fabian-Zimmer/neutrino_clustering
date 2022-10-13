@@ -151,7 +151,7 @@ def R_vir_fct(z, M_vir):
 
 def read_MergerTree(sim, init_halo):
     # Path to merger_tree file.
-    tree_path = f'{pathlib.Path.cwd().parent}/neutrino_clustering_output_local/MergerTree/MergerTree_{sim}.hdf5'
+    tree_path = f'{pathlib.Path.cwd().parent}/neutrino_clustering_output_local/MergerTree/MergerTree_{sim}_{SIM_DATA_NEST}.hdf5'
 
     with h5py.File(tree_path) as tree:
         # Progenitor index list.

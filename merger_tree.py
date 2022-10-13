@@ -37,9 +37,8 @@ def build_tree(sim_info, halo_index, output_file):
 
     # This function builds the merger tree of your halo selection and stores it in a file
 
-    # Starting snapshot is 36 (z=0).
     initial_snap = sim_info.initial_snap
-    final_snap = 12
+    final_snap = 0
 
     # How many haloes are we tracking?
     num_haloes = len(halo_index)
@@ -153,34 +152,26 @@ def main(config: ArgumentParser):
 class Mock_ArgumentParser:
 
     sim = 'L012N376'
-    name_list = f'MergerTree_{sim}'
+    name_list = f'MergerTree_{sim}_{SIM_DATA_NEST}'
+    first_snap = '0062'
+    #note: final_snap has to be adjusted in above function build_tree
 
-    snapshot_list = [
-        'snapshot_0036.hdf5', 
-        # 'snapshot_0035.hdf5', 
-        # 'snapshot_0034.hdf5'
-    ]
-    catalogue_list = [
-        'subhalo_0036.properties', 
-        # 'subhalo_0035.properties', 
-        # 'subhalo_0034.properties'
-    ]
+    snapshot_list = [f'snapshot_{first_snap}.hdf5',]
+    catalogue_list = [f'subhalo_{first_snap}.properties',]
 
     # Paths for FZ_snellius.
-    if str(pathlib.Path.home()) == '/home/zimmer':
-        home = '/home/zimmer'
+    if str(HOME) == '/home/zimmer':
         root = '/projects/0/einf180/Tango_sims'
         directory_list = f'{root}/{sim}/DMONLY/SigmaConstant00/'
-        output_directory = f'{home}/neutrino_clustering_output_local/MergerTree/'
+        output_directory = f'{HOME}/neutrino_clustering_output_local/MergerTree/'
         number_of_inputs = len(snapshot_list)
 
     # Paths for FZ_desktop.
-    elif str(pathlib.Path.home()) == '/home/fabian':
-        root = '/home/fabian'
-        home = f'{root}/my_github_projects'
-        directory_list = f'{root}/ownCloud/snellius/{sim}/'
-        output_directory = f'{home}/neutrino_clustering_output_local/MergerTree/'
+    elif str(HOME) == '/home/fabian':
+        directory_list = f'{HOME}/ownCloud/snellius/{sim}/{SIM_DATA_NEST}'
+        output_directory = f'{HOME}/my_github_projects/neutrino_clustering_output_local/MergerTree/'
         number_of_inputs = len(snapshot_list)
+
 
 config_parameters = Mock_ArgumentParser()
 main(config_parameters)

@@ -9,10 +9,10 @@ total_start = time.perf_counter()
 
 # Halo batch parameters.
 sim = 'L012N376'
-snap = '0036'  # "starting" snapshot to search for halos
-mass_gauge = 12.0  # in log10 Msun
-mass_range = 0.46
-size = 10
+snap = '0062'  # "starting" snapshot to search for halos
+mass_gauge = 12.1  # in log10 Msun
+mass_range = 0.3
+size = 1
 DM_lim_batch = 1000
 
 hname = f'1e+{mass_gauge}_pm{mass_range}Msun'
