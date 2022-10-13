@@ -237,26 +237,20 @@ HOME = pathlib.Path.home()
 
 # Paths for FZ_snellius.
 if str(HOME) == '/home/zimmer':
-    # SIM_DATA_ROOT = '/projects/0/einf180/Tango_sims'
-    SIM_DATA_ROOT = '/archive/ccorrea/Tango_sims'
-    SIM_DATA_NEST = 'DMONLY/SigmaConstant00'
-    CPUs_FOR_PRE = 14
-    CPUs_FOR_SIM = 128
+    # SIM_ROOT = '/projects/0/einf180/Tango_sims'
+    SIM_ROOT = '/archive/ccorrea/Tango_sims'
+    SIM_TYPE = 'DMONLY/SigmaConstant00'
 
 # Paths for FZ_desktop.
 elif str(HOME) == '/home/fabian':
-    SIM_DATA_ROOT = f'{HOME}/ownCloud/snellius'
-    # SIM_DATA_NEST = 'DMONLY'
-    SIM_DATA_NEST = 'CDM_TF50'
-    CPUs_FOR_PRE = 4
-    CPUs_FOR_SIM = 6
+    SIM_ROOT = f'{HOME}/ownCloud/snellius'
+    # SIM_TYPE = 'DMONLY'
+    SIM_TYPE = 'CDM_TF50'
 
 # Paths for FZ_laptop.
 elif str(HOME) == '/home/fpc':
-    SIM_DATA_ROOT = f'{HOME}/SURFdrive/snellius'
-    SIM_DATA_NEST = 'DMONLY'
-    CPUs_FOR_PRE = 4
-    CPUs_FOR_SIM = 6
+    SIM_ROOT = f'{HOME}/SURFdrive/snellius'
+    SIM_TYPE = 'DMONLY'
 
 
 ######################################

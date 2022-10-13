@@ -719,8 +719,8 @@ def manual_cell_division(
 
 
 @nb.njit
-def outside_gravity(x_i, com_DM, DM_tot):
-    pre = G*DM_tot*DM_SIM_MASS
+def outside_gravity(x_i, com_DM, DM_tot, DM_sim_mass):
+    pre = G*DM_tot*DM_sim_mass
     denom = np.sqrt(np.sum((x_i-com_DM)**2))**3
 
     return pre*x_i/denom
@@ -728,7 +728,7 @@ def outside_gravity(x_i, com_DM, DM_tot):
 
 def cell_gravity(
     cell_coords, cell_com, cell_gen, init_GRID_S,
-    DM_pos, DM_count, DM_lim,
+    DM_pos, DM_count, DM_lim, DM_sim_mass, smooth_l,
     sim, fname, long_range=True,
 ):
     # Center all DM positions w.r.t. cell center.
@@ -766,7 +766,7 @@ def cell_gravity(
     # ------------------------------ #
 
     # Offset DM positions by smoothening length of Camila's simulations.
-    eps = SMOOTHENING_LENGTH / 2.
+    eps = smooth_l / 2.
 
     # nan values to 0 for numerator, and 1 for denominator to avoid infinities.
     quot = np.nan_to_num(cell_coords - DM_in, copy=False, nan=0.0) / \
@@ -774,7 +774,7 @@ def cell_gravity(
             np.power((DM_dis**2 + eps**2), 3./2.), copy=False, nan=1.0
         )
     del DM_in, DM_dis
-    dPsi_short = G*DM_SIM_MASS*np.sum(quot, axis=1)
+    dPsi_short = G*DM_sim_mass*np.sum(quot, axis=1)
     del quot
 
     if long_range:
@@ -814,7 +814,7 @@ def cell_gravity(
 
         # Long-range gravity component for each cell (without including itself).
         quot_long = (cell_coords-com_del)/np.power((com_dis_sync**2 + eps**2), 3./2.)
-        dPsi_long = G*DM_SIM_MASS*np.sum(DM_count_sync*quot_long, axis=1)
+        dPsi_long = G*DM_sim_mass*np.sum(DM_count_sync*quot_long, axis=1)
         del quot_long
 
         # Total derivative as short+long range.
@@ -930,14 +930,14 @@ def y_fmt(value, tick_number):
 ### Main functions ###
 ######################
 
-def draw_ui(phi_points, theta_points):
+def draw_ui(phi_points, theta_points, momenta):
     """Get initial velocities for the neutrinos."""
 
     # Convert momenta to initial velocity magnitudes, in units of [kpc/s].
     # note: since the max. velocity in the sim is ~20% of c, the difference
     # note: between the non-rel. and rel. treatment is negligible (~1%)
     # v_kpc = MOMENTA / NU_MASS / (kpc/s)  # non-rel formula
-    v_kpc = 1/np.sqrt(NU_MASS**2/MOMENTA**2 + 1) / (kpc/s)  # rel. formula
+    v_kpc = 1/np.sqrt(NU_MASS**2/momenta**2 + 1) / (kpc/s)  # rel. formula
 
     # Split up this magnitude into velocity components.
     # note: Done by using spher. coords. trafos, which act as "weights".
@@ -1175,380 +1175,4 @@ def number_density_1_mass(
             n_nus[i] = number_density(p[:,0], p[:,-1])
 
     np.save(f'{output}', n_nus)
-
-
-#####################
-### Archived Code ###
-#####################
-
-# Old versions of reading DM positions from halo(s).
-
-def read_DM_halo_batch_OLDOLD(
-    sim, snap, mass_gauge, mass_range, halo_type
-):
-    """
-    Selects a batch of halos from simulation, depending on given mass gauge and mass range values. Saves halo parameters and DM positions.
-    """
-
-    # ---------------- #
-    # Open data files. #
-    # ---------------- #
-
-    snaps = h5py.File(str(next(
-        pathlib.Path(
-            f'{SIM_DATA}/{sim}').glob(f'**/snapshot_{snap}.hdf5'
-        )
-    )))
-    group = h5py.File(str(next(
-        pathlib.Path(
-            f'{SIM_DATA}/{sim}').glob(f'**/subhalo_{snap}.catalog_groups'
-        )
-    )))
-    parts = h5py.File(str(next(
-        pathlib.Path(
-            f'{SIM_DATA}/{sim}').glob(f'**/subhalo_{snap}.catalog_particles'
-        )
-    )))
-    props = h5py.File(str(next(
-        pathlib.Path(
-            f'{SIM_DATA}/{sim}').glob(f'**/subhalo_{snap}.properties'
-        )
-    )))
-
-
-    # ---------------------------------- #
-    # Read in parameters of halo in sim. #
-    # ---------------------------------- #
-
-    # DM particle positions.
-    a = snaps["/Header"].attrs["Scale-factor"]
-    pos = snaps['PartType1/Coordinates'][:][:] *a  # comoving to physical
-
-    # NFW concentration.
-    cNFW = props['cNFW_200crit'][:]
-
-    # Virial radius.
-    rvir = props['R_200crit'][:] *1e3 # to kpc units
-    
-    # Critical M_200.
-    m200c = props['Mass_200crit'][:] *1e10  # to Msun units
-
-    # Set neg. values to 1, i.e. 0 in np.log10.
-    m200c[m200c <= 0] = 1
-
-    # This gives exponents of 10^x, which reproduces m200c vals.
-    m200c = np.log10(m200c)  
-
-    # Center of Potential coordinates, for all halos.
-    CoP = np.zeros((len(m200c), 3))
-    CoP[:, 0] = props["Xcminpot"][:]
-    CoP[:, 1] = props["Ycminpot"][:]
-    CoP[:, 2] = props["Zcminpot"][:]
-
-
-    # -------------------------------------------------- #
-    # Select a halo sample based on mass and mass range. #
-    # -------------------------------------------------- #
-
-    select_halos = np.where(
-        (m200c >= mass_gauge-mass_range) & (m200c <= mass_gauge+mass_range)
-    )[0]
-
-    # Selecting subhalos or (host/main) halos.
-    subtype = props["Structuretype"][:]
-    if halo_type == 'subhalos':
-        select = np.where(subtype[select_halos] > 10)[0]
-        select_halos = select_halos[select]
-    else:
-        select = np.where(subtype[select_halos] == 10)[0]
-        select_halos = select_halos[select]
-
-    # Limit amount of halos to given size.
-    halo_number = len(select_halos)
-    halo_limit = 10
-    if halo_number >= halo_limit:
-        rand_IDs = np.random.randint(0, halo_number-1, size=(halo_limit))
-        select_halos = select_halos[rand_IDs]
-
-    halo_params = np.zeros((len(select_halos), 3))
-    fname = f'snap_{snap}_1e+{mass_gauge}Msun'
-    for j, halo_idx in enumerate(select_halos):
-
-        # Start and stop index for current halo.
-        halo_init = group["Offset"][halo_idx]
-        halo_stop = group["Offset"][halo_idx + 1]
-
-        # Particle IDs of halo and snapshot.
-        halo_Particle_IDs = parts["Particle_IDs"][halo_init:halo_stop]
-        snap_Particle_IDs = snaps["PartType1/ParticleIDs"][...]
-
-        # Particle IDs present in both above arrays.
-        _, _, indices_p = np.intersect1d(
-            halo_Particle_IDs, snap_Particle_IDs, 
-            assume_unique=True, return_indices=True
-        )
-
-        # Save DM positions (centered on halo).
-        DM_pos = pos[indices_p, :]  # x,y,z of each DM particle
-        DM_pos -= CoP[halo_idx, :]  # center DM on current halo
-        DM_pos *= 1e3  # to kpc
-        np.save(f'{sim}/DM_pos_{fname}_halo{j}.npy', DM_pos)
-
-        # Save cNFW, rvir and Mvir of current halo.
-        halo_params[j, 0] = rvir[halo_idx]
-        halo_params[j, 1] = m200c[halo_idx]
-        halo_params[j, 2] = cNFW[halo_idx]
-
-    np.save(f'{sim}/halo_indices_{fname}', select_halos)
-    np.save(f'{sim}/halo_params_{fname}', halo_params)
-
-
-def read_DM_positions_OLDOLD(
-    snap, sim, halo_index, init_m, DM_radius_kpc
-    ):
-
-    # Open data files.
-    snaps = h5py.File(str(next(
-        pathlib.Path(
-            f'{SIM_DATA}/{sim}').glob(f'**/snapshot_{snap}.hdf5'
-        )
-    )))
-    props = h5py.File(str(next(
-        pathlib.Path(
-            f'{SIM_DATA}/{sim}').glob(f'**/subhalo_{snap}.properties'
-        )
-    )))
-
-    # Positions.
-    a = snaps["/Header"].attrs["Scale-factor"]
-    pos = snaps['PartType1/Coordinates'][:][:] * a
-
-    # Virial radius.
-    rvir = props['R_200crit'][:] 
-    halo_rvir = rvir[halo_index] * 1e3
-    
-    # Critical M_200.
-    m200c = props['Mass_200crit'][:] * 1e10  # now in Msun
-
-    # Set neg. values to 1, i.e. 0 in np.log10.
-    m200c[m200c <= 0] = 1
-
-    # This gives exponents of 10^x, which reproduces m200c vals.
-    m200c = np.log10(m200c)  
-
-    # Center of Potential coordinates, for all halos.
-    CoP = np.zeros((len(m200c), 3))
-    CoP[:, 0] = props["Xcminpot"][:]
-    CoP[:, 1] = props["Ycminpot"][:]
-    CoP[:, 2] = props["Zcminpot"][:]
-
-    # Include all DM particles within certain radius.
-    pos -= CoP[halo_index, :]
-    dis = np.sqrt(np.sum(pos**2, axis=1))
-    particles_pos = pos[dis <= DM_radius_kpc/1e3]
-    particles_pos *= 1e3
-
-    # Save positions relative to CoP (center of halo potential).
-    np.save(
-        f'CubeSpace/DM_positions_{sim}_snap_{snap}_{init_m}Msun_{DM_radius_kpc}kpc.npy',
-        particles_pos
-    )
-
-    return halo_rvir
-
-
-def read_DM_positions_alt2_OLDOLD(
-    which_halos='halos', mass_select=12, mass_range=0.2, 
-    random=True, snap='0036', sim='L___N___', halo_index=0, init_m=0,
-    save_params=False
-    ):
-
-    # Open data files.
-    snaps = h5py.File(str(next(
-        pathlib.Path(
-            f'{SIM_DATA}/{sim}').glob(f'**/snapshot_{snap}.hdf5'
-        )
-    )))
-    group = h5py.File(str(next(
-        pathlib.Path(
-            f'{SIM_DATA}/{sim}').glob(f'**/subhalo_{snap}.catalog_groups'
-        )
-    )))
-    parts = h5py.File(str(next(
-        pathlib.Path(
-            f'{SIM_DATA}/{sim}').glob(f'**/subhalo_{snap}.catalog_particles'
-        )
-    )))
-    props = h5py.File(str(next(
-        pathlib.Path(
-            f'{SIM_DATA}/{sim}').glob(f'**/subhalo_{snap}.properties'
-        )
-    )))
-
-    ### Properties of DM particles.
-
-    # Positions.
-    a = snaps["/Header"].attrs["Scale-factor"]
-    pos = snaps['PartType1/Coordinates'][:][:] * a
-
-    # NFW concentration parameter.
-    cNFW = props['cNFW_200crit'][:]
-
-    # Virial radius.
-    rvir = props['R_200crit'][:]
-    
-    # Critical M_200.
-    m200c = props['Mass_200crit'][:] * 1e10  # now in Msun
-
-    # Set neg. values to 1, i.e. 0 in np.log10.
-    m200c[m200c <= 0] = 1
-
-    # This gives exponents of 10^x, which reproduces m200c vals.
-    m200c = np.log10(m200c)  
-
-    # Center of Potential coordinates, for all halos.
-    CoP = np.zeros((len(m200c), 3))
-    CoP[:, 0] = props["Xcminpot"][:]
-    CoP[:, 1] = props["Ycminpot"][:]
-    CoP[:, 2] = props["Zcminpot"][:]
-
-    # Include all DM particles within certain radius.
-    halo_rvir = rvir[halo_index]
-    pos -= CoP[halo_index, :]
-    dis = np.sqrt(np.sum(pos**2, axis=1))
-    particles_pos = pos[dis <= halo_rvir]  # adjust to virial radius
-    # particles_pos = pos[dis <= 500/1e3]  # fixed DM inclusion radius
-    particles_pos *= 1e3
-    halo_rvir *= 1e3
-
-    # Save positions relative to CoP (center of halo potential).
-    np.save(
-        f'CubeSpace/DM_positions_{sim}_snap_{snap}_{init_m}Msun.npy',
-        particles_pos
-    )
-    
-    if save_params:
-        # Select corresponding cNFW, rvir and Mvir of chosen halo.
-        halo_cNFW = cNFW[halo_index]
-        halo_Mvir = m200c[halo_index]
-        return halo_cNFW, halo_rvir, halo_Mvir
-
-
-def read_DM_positions_alt_OLDOLD(
-    which_halos='halos', mass_select=12, mass_range=0.2, 
-    random=True, snap='0036', sim='L___N___', halo_index=0, init_m=0,
-    save_params=False
-    ):
-
-    # Open data files.
-    snaps = h5py.File(str(next(
-        pathlib.Path(
-            f'{SIM_DATA}/{sim}').glob(f'**/snapshot_{snap}.hdf5'
-        )
-    )))
-    group = h5py.File(str(next(
-        pathlib.Path(
-            f'{SIM_DATA}/{sim}').glob(f'**/subhalo_{snap}.catalog_groups'
-        )
-    )))
-    parts = h5py.File(str(next(
-        pathlib.Path(
-            f'{SIM_DATA}/{sim}').glob(f'**/subhalo_{snap}.catalog_particles'
-        )
-    )))
-    props = h5py.File(str(next(
-        pathlib.Path(
-            f'{SIM_DATA}/{sim}').glob(f'**/subhalo_{snap}.properties'
-        )
-    )))
-
-    ### Properties of DM particles.
-
-    # Positions.
-    a = snaps["/Header"].attrs["Scale-factor"]
-    pos = snaps['PartType1/Coordinates'][:][:] * a  
-    #! comoving to physical (pc) with a, then *1e3 to go to kpc (later)
-
-    # NFW concentration parameter.
-    cNFW = props['cNFW_200crit'][:]
-
-    # Virial radius.
-    rvir = props['R_200crit'][:] *1e3 # now in kpc
-    
-    # Critical M_200.
-    m200c = props['Mass_200crit'][:] * 1e10  # now in Msun
-
-    # Set neg. values to 1, i.e. 0 in np.log10.
-    m200c[m200c <= 0] = 1
-
-    # This gives exponents of 10^x, which reproduces m200c vals.
-    m200c = np.log10(m200c)  
-
-    # Center of Potential coordinates, for all halos.
-    CoP = np.zeros((len(m200c), 3))
-    CoP[:, 0] = props["Xcminpot"][:]
-    CoP[:, 1] = props["Ycminpot"][:]
-    CoP[:, 2] = props["Zcminpot"][:]
-
-
-    if random:
-        # Select halos based on exponent, i.e. mass_select input parameter.
-        select_halos = np.where(
-            (m200c >= mass_select-mass_range) & (m200c <= mass_select+mass_range)
-        )[0]
-
-        # Selecting subhalos or halos.
-        subtype = props["Structuretype"][:]
-        if which_halos == 'subhalos':
-            select = np.where(subtype[select_halos] > 10)[0]
-            select_halos = select_halos[select]
-        else:
-            select = np.where(subtype[select_halos] == 10)[0]
-            select_halos = select_halos[select]
-
-        # Select 1 random halo.
-        np.random.seed(1)
-        select_random = np.random.randint(len(select_halos) - 1, size=(1))
-        halo_index = select_halos[select_random]
-
-        # Grab the start position in the particles file to read from
-        halo_start_pos = group["Offset"][halo_index][0]
-        halo_end_pos = group["Offset"][halo_index + 1][0]
-
-    else:
-        halo_start_pos = group["Offset"][halo_index]#[0]
-        halo_end_pos = group["Offset"][halo_index + 1]#[0]
-
-    particle_ids_in_halo = parts["Particle_IDs"][halo_start_pos:halo_end_pos]
-    particle_ids_from_snapshot = snaps["PartType1/ParticleIDs"][...]
-
-    # Get indices of elements, which are present in both arrays.
-    _, _, indices_p = np.intersect1d(
-        particle_ids_in_halo, particle_ids_from_snapshot, 
-        assume_unique=True, return_indices=True
-    )
-
-    # particles_mass = mass[indices_p]
-    particles_pos = pos[indices_p, :]  # : grabs all 3 spatial positions.
-    particles_pos -= CoP[halo_index, :]  # centering, w.r.t halo they're part of
-    particles_pos *= 1e3  # to kpc
-
-    # Save positions relative to CoP (center of halo potential).
-    if random:
-        np.save(
-            f'CubeSpace/DM_positions_{which_halos}_M{mass_select}.npy',
-            particles_pos,
-        )
-    else:
-        np.save(
-            f'CubeSpace/DM_positions_{sim}_snap_{snap}_{init_m}Msun.npy',
-            particles_pos
-        )
-
-    if save_params:
-        # Select corresponding cNFW, rvir and Mvir of chosen halo.
-        halo_cNFW = cNFW[halo_index]
-        halo_rvir = rvir[halo_index]
-        halo_Mvir = m200c[halo_index]
-        return halo_cNFW, halo_rvir, halo_Mvir
 

@@ -10,6 +10,7 @@ total_start = time.perf_counter()
 # Initialize parameters and files.
 PRE = PRE(
     sim='L012N376', z0_snap=36, z4_snap=12, DM_lim=1000,
+    sim_dir=SIM_ROOT, sim_ver=SIM_TYPE, out_dir=,
     phis=10, thetas=10, vels=100,
     pre_CPUs=4, sim_CPUs=6
 )
