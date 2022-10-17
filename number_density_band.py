@@ -9,8 +9,10 @@ total_start = time.perf_counter()
 
 # Initialize parameters and files.
 PRE = PRE(
-    sim='L012N376', z0_snap=36, z4_snap=12, DM_lim=1000,
-    sim_dir=SIM_ROOT, sim_ver=SIM_TYPE, out_dir=,
+    sim='L006N188', 
+    # sim='L012N376', 
+    z0_snap=36, z4_snap=12, DM_lim=1000,
+    sim_dir=SIM_ROOT, sim_ver=SIM_TYPE,
     phis=10, thetas=10, vels=100,
     pre_CPUs=4, sim_CPUs=6
 )
@@ -93,7 +95,7 @@ def backtrack_1_neutrino(y0_Nr):
         args=()
         )
     
-    np.save(f'{PRE.SIM}/nu_{int(Nr)}.npy', np.array(sol.y.T))
+    np.save(f'{PRE.OUT_DIR}/nu_{int(Nr)}.npy', np.array(sol.y.T))
 
 
 for halo_j, halo_ID in enumerate(halo_batch_IDs):
@@ -195,7 +197,7 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
             num_chunks = math.ceil(len(DM_count)/chunk_size)
             idx_chunks = np.arange(num_chunks)
 
-            with ProcessPoolExecutor(CPUs_FOR_PRE) as ex:
+            with ProcessPoolExecutor(PRE.PRE_CPUs) as ex:
                 ex.map(
                     batch_gravity, grid_chunks, DMnr_chunks, 
                     com_chunks, gen_chunks, idx_chunks
@@ -213,16 +215,13 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
         np.save(f'{PRE.SIM}/snaps_GRID_L_origID{halo_ID}.npy', save_GRID_L)
         np.save(f'{PRE.SIM}/NrDM_snaps_origID{halo_ID}.npy', save_num_DM)
         np.save(f'{PRE.SIM}/DM_com_origID{halo_ID}.npy', np.array(save_DM_com))
-
-        # Clean up.
-        fct.delete_temp_data(f'{PRE.SIM}/DM_pos_*halo*.npy')
         # '''
 
         # ========================================= #
         # Run simulation for current halo in batch. #
         # ========================================= #
 
-        # These arrays will be used EOMs function above.
+        # These arrays will be used in EOMs function above.
         snaps_GRID_L = np.load(f'{PRE.SIM}/snaps_GRID_L_origID{halo_ID}.npy')
         NrDM_SNAPSHOTS = np.load(f'{PRE.SIM}/NrDM_snaps_origID{halo_ID}.npy')
         DM_COM_SNAPSHOTS = np.load(f'{PRE.SIM}/DM_com_origID{halo_ID}.npy')
@@ -240,40 +239,43 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
 
         # Display parameters for simulation.
         print('***Running simulation***')
-        print(
-            f'neutrinos={PRE.NUS}, halo={halo_j+1}/{halo_num}, CPUs={CPUs_FOR_SIM}, solver={SOLVER}'
-        )
+        print(f'halo={halo_j+1}/{halo_num}, CPUs={PRE.SIM_CPUs}')
 
         sim_testing = False
 
         if sim_testing:
             # Test 1 neutrino only.
             backtrack_1_neutrino(y0_Nr[0])
-            backtrack_1_neutrino(y0_Nr[1])
 
         else:
             # Run simulation on multiple cores.
-            with ProcessPoolExecutor(CPUs_FOR_SIM) as ex:
+            with ProcessPoolExecutor(PRE.SIM_CPUs) as ex:
                 ex.map(backtrack_1_neutrino, y0_Nr)  
                 #todo: maybe ex.map(backtrack_1_neutrino, y0_Nr, chunksize=???) 
                 #todo: decreases time, where ??? could be e.g. 100 or 1000...  
 
 
             # Compactify all neutrino vectors into 1 file.
-            Ns = np.arange(PRE.NUS, dtype=int)  # Nr. of neutrinos
-            
-            nus = np.array([np.load(f'{PRE.SIM}/nu_{Nr+1}.npy') for Nr in Ns])
+            Ns = np.arange(PRE.NUS, dtype=int)            
+            nus = [np.load(f'{PRE.OUT_DIR}/nu_{Nr+1}.npy') for Nr in Ns]
             np.save(
-                f'{PRE.SIM}/{PRE.NUS}nus_1e+{mass_gauge}_pm{mass_range}Msun_halo{halo_j}.npy', 
-                nus
-            )  
+                f'{PRE.OUT_DIR}/{PRE.NUS}nus_{hname}_halo{halo_j}.npy', 
+                np.array(nus)
+            )
 
             # Delete all temporary files.
-            fct.delete_temp_data(f'{PRE.SIM}/nu_*.npy')
-            fct.delete_temp_data(f'{PRE.SIM}/fin_grid_*.npy')
-            fct.delete_temp_data(f'{PRE.SIM}/DM_count_*.npy')
-            fct.delete_temp_data(f'{PRE.SIM}/cell_com_*.npy')
-            fct.delete_temp_data(f'{PRE.SIM}/cell_gen_*.npy')
+            fct.delete_temp_data(f'{PRE.OUT_DIR}/nu_*.npy')
+            fct.delete_temp_data(f'{PRE.OUT_DIR}/NrDM_*.npy')
+            fct.delete_temp_data(f'{PRE.OUT_DIR}/fin_grid_*.npy')
+            fct.delete_temp_data(f'{PRE.OUT_DIR}/DM_count_*.npy')
+            fct.delete_temp_data(f'{PRE.OUT_DIR}/DM_pos_*.npy')
+            fct.delete_temp_data(f'{PRE.OUT_DIR}/cell_com_*.npy')
+            fct.delete_temp_data(f'{PRE.OUT_DIR}/DM_com_coord*.npy')
+            fct.delete_temp_data(f'{PRE.OUT_DIR}/cell_gen_*.npy')
+            fct.delete_temp_data(f'{PRE.OUT_DIR}/CoP_*.npy')
+            fct.delete_temp_data(f'{PRE.OUT_DIR}/snaps_GRID_L_*.npy')
+            fct.delete_temp_data(f'{PRE.OUT_DIR}/halo_params_*.npy')
+            fct.delete_temp_data(f'{PRE.OUT_DIR}/halo_batch_*.npy')
 
             seconds = time.perf_counter()-start
             minutes = seconds/60.

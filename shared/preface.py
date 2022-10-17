@@ -237,8 +237,8 @@ HOME = pathlib.Path.home()
 
 # Paths for FZ_snellius.
 if str(HOME) == '/home/zimmer':
-    # SIM_ROOT = '/projects/0/einf180/Tango_sims'
-    SIM_ROOT = '/archive/ccorrea/Tango_sims'
+    SIM_ROOT = '/projects/0/einf180/Tango_sims'
+    # SIM_ROOT = '/archive/ccorrea/Tango_sims' #! can't read from archive
     SIM_TYPE = 'DMONLY/SigmaConstant00'
 
 # Paths for FZ_desktop.
@@ -261,7 +261,7 @@ class PRE:
 
     def __init__(
         self, sim, z0_snap, z4_snap, DM_lim,
-        sim_dir, sim_ver, out_dir,
+        sim_dir, sim_ver,
         phis, thetas, vels, 
         pre_CPUs, sim_CPUs
         ):
@@ -288,14 +288,13 @@ class PRE:
         # File management.
         self.SIM = sim
         self.SIM_DIR = f'{sim_dir}/{sim}/{sim_ver}'
-        self.OUT_DIR = out_dir
-        #? construct out dir? with creating folders relative to where scripts is running if it doesn't exist, etc. -> full auto.
+        self.OUT_DIR = f'{os.getcwd()}/{sim}/{sim_ver}'
 
         # Store parameters unique to each simulation box.
         for j, i in enumerate(snaps):
             snap_zi = f'{i:04d}'
             snap_z0 = f'{snaps[-1]:04d}'
-            nums.append(snap_zi)
+            nums[j] = snap_zi
 
             with h5py.File(f'{self.SIM_DIR}/snapshot_{snap_zi}.hdf5') as snap:
                 
@@ -316,3 +315,22 @@ class PRE:
 
         self.ZEDS_SNAPS = np.asarray(zeds)
         self.NUMS_SNAPS = np.asarray(nums)
+
+        # Display summary message.
+        print('********************* Initialization *********************')
+        
+        print('# Initial conditions for neutrinos:')
+        print(f'PHIs = {self.PHIs}, THETAs={self.THETAs}, Vs={self.Vs}')
+        print(f'Total neutrinos: {self.NUS}')
+
+        print('# Simulation parameters:')
+        print(f'Simulation box: {self.SIM}')
+        print(f'Snapshot from {self.Z0_STR} (z=0) to {self.Z4_STR} (z=4)')
+        print(f'Pre/Sim CPUs {self.PRE_CPUs}/{self.SIM_CPUs}')
+        print(f'DM limit for cells: {self.DM_LIM}')
+
+        print('# File management:')
+        print(f'Box files directory: {self.SIM_DIR}')
+        print(f'Output directory: {self.OUT_DIR}')
+
+        print('**********************************************************')
