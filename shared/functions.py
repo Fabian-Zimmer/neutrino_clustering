@@ -163,15 +163,15 @@ def read_MergerTree(tree_dir, sim, init_halo):
 
 
 def halo_batch_indices(
-    sim, snap, mass_gauge, mass_range, 
-    halo_type, halo_limit, fname, file_folder
+    snap, mass_gauge, mass_range, 
+    halo_type, halo_limit, fname, sim_dir, out_dir
 ):
 
     # ---------------------------------- #
     # Read in parameters of halo in sim. #
     # ---------------------------------- #
 
-    props = h5py.File(f'{file_folder}/subhalo_{snap}.properties')
+    props = h5py.File(f'{sim_dir}/subhalo_{snap}.properties')
 
     cNFW = props['cNFW_200crit'][:]  # NFW concentration.
     rvir = props['R_200crit'][:]*1e3 # Virial radius (to kpc with *1e3)
@@ -214,8 +214,8 @@ def halo_batch_indices(
         halo_params[j, 1] = m200c[halo_idx]
         halo_params[j, 2] = cNFW[halo_idx]
 
-    np.save(f'{sim}/halo_batch_{fname}_indices.npy', select_halos)
-    np.save(f'{sim}/halo_batch_{fname}_params.npy', halo_params)
+    np.save(f'{out_dir}/halo_batch_{fname}_indices.npy', select_halos)
+    np.save(f'{out_dir}/halo_batch_{fname}_params.npy', halo_params)
 
 
 def read_DM_halo_index(snap, z0_snap, halo_ID, fname, sim_dir, out_dir):
@@ -896,11 +896,11 @@ def u_to_p_eV(u_sim, m_target):
 
     # From velocity (magnitude) in kpc/s to momentum in eV.
 
-    # p_sim = mag_sim*(kpc/s) * NU_MASS #! only for non-rel neutrinos...
+    p_sim = mag_sim*(kpc/s) * NU_MASS #! only for non-rel neutrinos...
 
     #! The correct treatment is:
-    gamma_L = 1/np.sqrt(1-mag_sim**2)
-    p_sim = gamma_L * mag_sim*(kpc/s) * NU_MASS
+    # gamma_L = 1/np.sqrt(1-mag_sim**2)
+    # p_sim = gamma_L * mag_sim*(kpc/s) * NU_MASS
 
     #note: as max. velocity is ~20% of c, the difference is not significant!
 
@@ -932,7 +932,7 @@ def y_fmt(value, tick_number):
 ### Main functions ###
 ######################
 
-def draw_ui(phi_points, theta_points, momenta):
+def init_velocities(phi_points, theta_points, lower, upper, vels, momenta):
     """Get initial velocities for the neutrinos."""
 
     # Convert momenta to initial velocity magnitudes, in units of [kpc/s].
@@ -940,6 +940,11 @@ def draw_ui(phi_points, theta_points, momenta):
     # note: between the non-rel. and rel. treatment is negligible (~1%)
     v_kpc = momenta / NU_MASS / (kpc/s)  # non-rel formula
     # v_kpc = 1/np.sqrt(NU_MASS**2/momenta**2 + 1) / (kpc/s)  # rel. formula
+
+    # Directly in velocity space.
+    # v_min = 1/np.sqrt(NU_MASSES[-1]**2/lower**2 + 1) / (kpc/s)
+    # v_max = 1/np.sqrt(NU_MASSES[0]**2/upper**2 + 1) / (kpc/s)
+    # v_kpc = np.geomspace(v_min, v_max, vels)
 
     # Split up this magnitude into velocity components.
     # note: Done by using spher. coords. trafos, which act as "weights".

@@ -17,16 +17,16 @@ PRE = PRE(
     pre_CPUs=6, sim_CPUs=6
 )
 
-mass_gauge = 12.1
+mass_gauge = 12.3
 mass_range = 0.3
 size = 1
 hname = f'1e+{mass_gauge}_pm{mass_range}Msun'
 fct.halo_batch_indices(
-    PRE.SIM, PRE.Z0_STR, mass_gauge, mass_range, 'halos', size, 
-    hname, PRE.SIM_DIR
+    PRE.Z0_STR, mass_gauge, mass_range, 'halos', size, 
+    hname, PRE.SIM_DIR, PRE.OUT_DIR
 )
-halo_batch_IDs = np.load(f'{PRE.SIM}/halo_batch_{hname}_indices.npy')
-halo_batch_params = np.load(f'{PRE.SIM}/halo_batch_{hname}_params.npy')
+halo_batch_IDs = np.load(f'{PRE.OUT_DIR}/halo_batch_{hname}_indices.npy')
+halo_batch_params = np.load(f'{PRE.OUT_DIR}/halo_batch_{hname}_params.npy')
 halo_num = len(halo_batch_params)
 
 print('********Number density band********')
@@ -192,7 +192,7 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
                     PRE.OUT_DIR, bname
                 )
 
-            chunk_size = 30
+            chunk_size = 20
             grid_chunks = chunks(chunk_size, fin_grid)
             DMnr_chunks = chunks(chunk_size, DM_count)
             com_chunks = chunks(chunk_size, cell_com)
@@ -236,8 +236,8 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
         start = time.perf_counter()
 
         # Draw initial velocities.
-        ui = fct.draw_ui(
-            phi_points=PRE.PHIs, theta_points=PRE.THETAs, momenta=PRE.MOMENTA
+        ui = fct.init_velocities(
+            PRE.PHIs, PRE.THETAs, PRE.LOWER, PRE.UPPER, PRE.Vs, PRE.MOMENTA
         )
 
         # Combine vectors and append neutrino particle number.
