@@ -149,9 +149,10 @@ def R_vir_fct(z, M_vir):
 ### Functions used in DISCRETE simulation ###
 #############################################
 
-def read_MergerTree(sim, init_halo):
+def read_MergerTree(tree_dir, sim, init_halo):
+
     # Path to merger_tree file.
-    tree_path = f'{pathlib.Path.cwd().parent}/neutrino_clustering_output_local/MergerTree/MergerTree_{sim}_{SIM_DATA_NEST}.hdf5'
+    tree_path = f'{tree_dir}/MergerTree_{sim}_{SIM_TYPE}.hdf5'
 
     with h5py.File(tree_path) as tree:
         # Progenitor index list.
@@ -217,16 +218,16 @@ def halo_batch_indices(
     np.save(f'{sim}/halo_batch_{fname}_params.npy', halo_params)
 
 
-def read_DM_halo_index(sim, snap, halo_ID, fname, file_folder):
+def read_DM_halo_index(snap, z0_snap, halo_ID, fname, sim_dir, out_dir):
 
     # ---------------- #
     # Open data files. #
     # ---------------- #
 
-    snaps = h5py.File(f'{file_folder}/snapshot_{snap}.hdf5')
-    group = h5py.File(f'{file_folder}/subhalo_{snap}.catalog_groups')
-    parts = h5py.File(f'{file_folder}/subhalo_{snap}.catalog_particles')
-    props = h5py.File(f'{file_folder}/subhalo_{snap}.properties')
+    snaps = h5py.File(f'{sim_dir}/snapshot_{snap}.hdf5')
+    group = h5py.File(f'{sim_dir}/subhalo_{snap}.catalog_groups')
+    parts = h5py.File(f'{sim_dir}/subhalo_{snap}.catalog_particles')
+    props = h5py.File(f'{sim_dir}/subhalo_{snap}.properties')
 
 
     # Positions.
@@ -264,7 +265,7 @@ def read_DM_halo_index(sim, snap, halo_ID, fname, file_folder):
     # the DM positions have to be centered with respect to the halo CoP, when 
     # the simulation started at z~0!
 
-    if snap == '0036':
+    if snap == z0_snap:
         # Center of Potential coordinates, for all halos.
         CoP = np.zeros((len(m200c), 3))
         CoP[:, 0] = props["Xcminpot"][:]
@@ -273,11 +274,11 @@ def read_DM_halo_index(sim, snap, halo_ID, fname, file_folder):
 
         # Save CoP coords of halo at first (at z~0) snapshot.
         CoP_halo = CoP[halo_ID, :]
-        np.save(f'{sim}/CoP_{fname}.npy', CoP_halo)
+        np.save(f'{out_dir}/CoP_{fname}.npy', CoP_halo)
     else:
         split_str = re.split('_snap', fname)
-        f0036 = f'{split_str[0]}_snap_0036'
-        CoP_halo = np.load(f'{sim}/CoP_{f0036}.npy')
+        z0_fname = f'{split_str[0]}_snap_{z0_snap}'
+        CoP_halo = np.load(f'{out_dir}/CoP_{z0_fname}.npy')
 
 
     # --------------------------------------------------- #
@@ -287,11 +288,11 @@ def read_DM_halo_index(sim, snap, halo_ID, fname, file_folder):
     DM_pos = pos[indices_p, :]  # x,y,z of each DM particle
     DM_pos -= CoP_halo  # center DM on halo at first (at z~0) snapshot
     DM_pos *= 1e3  # to kpc
-    np.save(f'{sim}/DM_pos_{fname}.npy', DM_pos)
+    np.save(f'{out_dir}/DM_pos_{fname}.npy', DM_pos)
 
     DM_particles = len(DM_pos)
     DM_com_coord = np.sum(DM_pos, axis=0)/DM_particles
-    np.save(f'{sim}/DM_com_coord_{fname}.npy', DM_com_coord)
+    np.save(f'{out_dir}/DM_com_coord_{fname}.npy', DM_com_coord)
 
 
 def halo_DM(halo_idx, sim, snap, pos, snap_Particle_IDs, file_folder):
@@ -319,8 +320,10 @@ def halo_DM(halo_idx, sim, snap, pos, snap_Particle_IDs, file_folder):
 
 
 def read_DM_halos_inRange(
-    sim, snap, halo_ID, DM_range_kpc, halo_limit, fname, file_folder
+    sim, snap, z0_snap, halo_ID, DM_range_kpc, halo_limit, fname, file_folder
 ):
+
+    # todo: adjust with new input, sim to out_dir, file_folder is sim_dir, etc.
 
     # ---------------- #
     # Open data files. #
@@ -354,15 +357,14 @@ def read_DM_halos_inRange(
     # the DM positions have to be centered with respect to the halo CoP, when 
     # the simulation started at z~0!
 
-    if snap == '0036':
+    if snap == z0_snap:
         # Save CoP coords of halo at first (at z~0) snapshot.
         CoP_halo = CoP[halo_ID, :]
         np.save(f'{sim}/CoP_{fname}.npy', CoP_halo)
     else:
         split_str = re.split('_snap', fname)
-        f0036 = f'{split_str[0]}_snap_0036'
-        CoP_halo = np.load(f'{sim}/CoP_{f0036}.npy')
-
+        z0_fname = f'{split_str[0]}_snap_{z0_snap}'
+        CoP_halo = np.load(f'{out_dir}/CoP_{z0_fname}.npy')
 
     # --------------------------------- #
     # Combine DM of all halos in range. #
@@ -565,8 +567,8 @@ def check_grid(init_grid, DM_pos, parent_GRID_S, DM_lim, gen_count):
 
 
 def cell_division(
-    init_grid, DM_pos, parent_GRID_S, DM_lim, stable_grid, 
-    sim, fname
+    init_grid, DM_pos, parent_GRID_S, DM_lim, 
+    stable_grid, out_dir, fname
     ):
 
 
@@ -607,16 +609,16 @@ def cell_division(
                 # from the previous iteration and the newest sub8 cell coords 
                 # (which are now init_grid).
                 final_cc = np.concatenate((stable_grid, init_grid), axis=0)
-                np.save(f'{sim}/fin_grid_{fname}.npy', final_cc)
+                np.save(f'{out_dir}/fin_grid_{fname}.npy', final_cc)
 
             else:
                 # Return initial grid itself, if it's fine-grained already.
-                np.save(f'{sim}/fin_grid_{fname}.npy', init_grid)
+                np.save(f'{out_dir}/fin_grid_{fname}.npy', init_grid)
 
             # Save DM count, c.o.m. coord, and generation, for all cells.
-            np.save(f'{sim}/DM_count_{fname}.npy', DM_count_np)
-            np.save(f'{sim}/cell_com_{fname}.npy', cell_com_np)
-            np.save(f'{sim}/cell_gen_{fname}.npy', cell_gen_np)
+            np.save(f'{out_dir}/DM_count_{fname}.npy', DM_count_np)
+            np.save(f'{out_dir}/cell_com_{fname}.npy', cell_com_np)
+            np.save(f'{out_dir}/cell_gen_{fname}.npy', cell_gen_np)
 
             return cell_division_count
 
@@ -729,7 +731,7 @@ def outside_gravity(x_i, com_DM, DM_tot, DM_sim_mass):
 def cell_gravity(
     cell_coords, cell_com, cell_gen, init_GRID_S,
     DM_pos, DM_count, DM_lim, DM_sim_mass, smooth_l,
-    sim, fname, long_range=True,
+    out_dir, fname, long_range=True,
 ):
     # Center all DM positions w.r.t. cell center.
     DM_pos -= cell_coords
@@ -825,16 +827,16 @@ def cell_gravity(
     # note: Minus sign, s.t. velocity changes correctly (see GoodNotes).
     dPsi_grid = np.asarray(-derivative, dtype=np.float64)
 
-    np.save(f'{sim}/dPsi_grid_{fname}.npy', dPsi_grid)
+    np.save(f'{out_dir}/dPsi_grid_{fname}.npy', dPsi_grid)
 
 
-def load_grid(sim, which, fname):
+def load_grid(root_dir, which, fname):
 
     if which == 'derivatives':
-        grid = np.load(f'{sim}/dPsi_grid_{fname}.npy')
+        grid = np.load(f'{root_dir}/dPsi_grid_{fname}.npy')
 
     elif which == 'positions':
-        grid = np.load(f'{sim}/fin_grid_{fname}.npy')
+        grid = np.load(f'{root_dir}/fin_grid_{fname}.npy')
 
     return grid
 
@@ -864,10 +866,10 @@ def delete_temp_data(path_to_wildcard_files):
             print("Error while deleting file (file not found")
 
 
-def load_sim_data(sim, fname, which):
+def load_sim_data(out_dir, fname, which):
     """Loads neutrino positions or velocities of simulation."""
 
-    sim = np.load(f'{sim}/{fname}.npy')
+    sim = np.load(f'{out_dir}/{fname}.npy')
 
     # Return positions or velocities of neutrinos.
     if which == 'positions':
@@ -936,8 +938,8 @@ def draw_ui(phi_points, theta_points, momenta):
     # Convert momenta to initial velocity magnitudes, in units of [kpc/s].
     # note: since the max. velocity in the sim is ~20% of c, the difference
     # note: between the non-rel. and rel. treatment is negligible (~1%)
-    # v_kpc = MOMENTA / NU_MASS / (kpc/s)  # non-rel formula
-    v_kpc = 1/np.sqrt(NU_MASS**2/momenta**2 + 1) / (kpc/s)  # rel. formula
+    v_kpc = momenta / NU_MASS / (kpc/s)  # non-rel formula
+    # v_kpc = 1/np.sqrt(NU_MASS**2/momenta**2 + 1) / (kpc/s)  # rel. formula
 
     # Split up this magnitude into velocity components.
     # note: Done by using spher. coords. trafos, which act as "weights".
@@ -1152,7 +1154,7 @@ def number_density(p0, p1):
 
 
 def number_density_1_mass(
-    u_all, m_nu_eV, output, average=False, m_average=0.01, z_average=0.
+    u_all, m_nu_eV, out_file, average=False, m_average=0.01, z_average=0.
 ):
 
     n_nus = np.zeros(len(m_nu_eV))
@@ -1174,5 +1176,5 @@ def number_density_1_mass(
         else:
             n_nus[i] = number_density(p[:,0], p[:,-1])
 
-    np.save(f'{output}', n_nus)
+    np.save(f'{out_file}', n_nus)
 

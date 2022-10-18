@@ -35,10 +35,10 @@ def look_for_progenitor_index(progenitor_offset, num_progenitors, progenitors_ID
 
 def build_tree(sim_info, halo_index, output_file):
 
-    # This function builds the merger tree of your halo selection and stores it in a file
+    # Builds the merger tree of your halo selection and stores it in a file.
 
     initial_snap = sim_info.initial_snap
-    final_snap = 0
+    final_snap = 12
 
     # How many haloes are we tracking?
     num_haloes = len(halo_index)
@@ -152,25 +152,18 @@ def main(config: ArgumentParser):
 class Mock_ArgumentParser:
 
     sim = 'L012N376'
-    name_list = f'MergerTree_{sim}_{SIM_DATA_NEST}'
+    name_list = f'MergerTree_{sim}_{SIM_TYPE}'
     first_snap = '0062'
     #note: final_snap has to be adjusted in above function build_tree
 
     snapshot_list = [f'snapshot_{first_snap}.hdf5',]
     catalogue_list = [f'subhalo_{first_snap}.properties',]
 
-    # Paths for FZ_snellius.
-    if str(HOME) == '/home/zimmer':
-        root = '/projects/0/einf180/Tango_sims'
-        directory_list = f'{root}/{sim}/DMONLY/SigmaConstant00/'
-        output_directory = f'{HOME}/neutrino_clustering_output_local/MergerTree/'
-        number_of_inputs = len(snapshot_list)
-
-    # Paths for FZ_desktop.
-    elif str(HOME) == '/home/fabian':
-        directory_list = f'{HOME}/ownCloud/snellius/{sim}/{SIM_DATA_NEST}'
-        output_directory = f'{HOME}/my_github_projects/neutrino_clustering_output_local/MergerTree/'
-        number_of_inputs = len(snapshot_list)
+    directory_list = f'{SIM_ROOT}/{sim}/{SIM_TYPE}'
+    output_directory = f'{os.getcwd()}/{sim}/{SIM_TYPE}'
+    number_of_inputs = len(snapshot_list)
+    print(directory_list)
+    print(output_directory)
 
 
 config_parameters = Mock_ArgumentParser()

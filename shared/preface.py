@@ -116,6 +116,7 @@ sr     = 1.                         # Steradian
 #################
 ### Constants ###
 #################
+# note: should these be read from the simulation box?
 h = 0.674
 H0 = h * 100 * km/s/Mpc
 Omega_R = 9.23640e-5  # not used in simulation
@@ -174,7 +175,8 @@ X_AG    = np.array([632.29742673, -377.40315121, -288.27006757])
 # Using heaviest mass in conjunction with high momentum range covers
 # velocity range sufficient for whole mass range. And in this way, the fastest 
 # neutrino travels at ~22% of the speed of light.
-NU_MASS = 0.3*eV  
+# NU_MASS = 0.3*eV  
+NU_MASS = 0.05*eV  
 NU_MASS_KG = NU_MASS/kg
 NU_MASSES = np.array([0.01, 0.05, 0.1, 0.3])*eV
 
@@ -213,9 +215,6 @@ Z_AMOUNT = 100
 z_shift = 1e-1
 ZEDS = np.geomspace(z_shift, 4.+z_shift, Z_AMOUNT) - z_shift
 S_STEPS = np.array([s_of_z(z) for z in ZEDS])
-
-# Control if simulation runs forwards (+1) or backwards (-1) in time. 
-TIME_FLOW = -1
 
 # Position of earth w.r.t Milky Way NFW halo center.
 # note: Earth is placed on x axis of coord. system.
@@ -271,19 +270,24 @@ class PRE:
         self.THETAs = thetas
         self.Vs = vels
         self.NUS = phis*thetas*vels
+        # self.LOWER = 0.01*T_CNB
+        # self.UPPER = 400.*T_CNB
         self.LOWER = 0.01*T_CNB
-        self.UPPER = 400.*T_CNB
-        self.MOMENTA = np.linspace(self.LOWER, self.UPPER, vels)
+        self.UPPER = 100.*T_CNB
+        # self.MOMENTA = np.linspace(self.LOWER, self.UPPER, vels)
+        self.MOMENTA = np.geomspace(self.LOWER, self.UPPER, vels)
 
         # Simulation parameters.
         self.PRE_CPUs = pre_CPUs
         self.SIM_CPUs = sim_CPUs
         self.DM_LIM = DM_lim
+        self.Z0_INT = int(z0_snap)
+        self.Z4_INT = int(z4_snap)
         self.Z0_STR = f'{z0_snap:04d}'
         self.Z4_STR = f'{z4_snap:04d}'
         snaps = np.arange(z4_snap, z0_snap+1)
         zeds = np.zeros(len(snaps))
-        nums = np.zeros(len(snaps))
+        nums = []
 
         # File management.
         self.SIM = sim
@@ -294,7 +298,7 @@ class PRE:
         for j, i in enumerate(snaps):
             snap_zi = f'{i:04d}'
             snap_z0 = f'{snaps[-1]:04d}'
-            nums[j] = snap_zi
+            nums.append(snap_zi)
 
             with h5py.File(f'{self.SIM_DIR}/snapshot_{snap_zi}.hdf5') as snap:
                 
@@ -311,7 +315,7 @@ class PRE:
                     sl = snap['GravityScheme'].attrs[
                         'Maximal physical DM softening length (Plummer equivalent) [internal units]'
                     ][0]
-                    self.SMOOTHENING_LENGTH = sl*1e6*pc
+                    self.SMOOTH_L = sl*1e6*pc
 
         self.ZEDS_SNAPS = np.asarray(zeds)
         self.NUMS_SNAPS = np.asarray(nums)
@@ -330,7 +334,7 @@ class PRE:
         print(f'DM limit for cells: {self.DM_LIM}')
 
         print('# File management:')
-        print(f'Box files directory: {self.SIM_DIR}')
-        print(f'Output directory: {self.OUT_DIR}')
+        print(f'Box files directory: \n {self.SIM_DIR}')
+        print(f'Output directory: \n {self.OUT_DIR}')
 
         print('**********************************************************')
