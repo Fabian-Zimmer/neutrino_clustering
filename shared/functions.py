@@ -768,7 +768,7 @@ def cell_gravity(
     # ------------------------------ #
 
     # Offset DM positions by smoothening length of Camila's simulations.
-    eps = smooth_l / 2.
+    eps = smooth_l
 
     # nan values to 0 for numerator, and 1 for denominator to avoid infinities.
     quot = np.nan_to_num(cell_coords - DM_in, copy=False, nan=0.0) / \
@@ -895,14 +895,8 @@ def u_to_p_eV(u_sim, m_target):
         mag_sim = np.sqrt(np.sum(u_sim**2, axis=1))
 
     # From velocity (magnitude) in kpc/s to momentum in eV.
-
-    p_sim = mag_sim*(kpc/s) * NU_MASS #! only for non-rel neutrinos...
-
-    #! The correct treatment is:
-    # gamma_L = 1/np.sqrt(1-mag_sim**2)
-    # p_sim = gamma_L * mag_sim*(kpc/s) * NU_MASS
-
-    #note: as max. velocity is ~20% of c, the difference is not significant!
+    p_sim = 1/np.sqrt(1-mag_sim**2) * mag_sim*(kpc/s) * NU_MASS # rel. formula
+    # p_sim = mag_sim*(kpc/s) * NU_MASS # non-rel. formula
 
     # From p_sim to p_target.
     p_target = p_sim * m_target/NU_MASS
@@ -932,19 +926,12 @@ def y_fmt(value, tick_number):
 ### Main functions ###
 ######################
 
-def init_velocities(phi_points, theta_points, lower, upper, vels, momenta):
+def init_velocities(phi_points, theta_points, momenta):
     """Get initial velocities for the neutrinos."""
 
     # Convert momenta to initial velocity magnitudes, in units of [kpc/s].
-    # note: since the max. velocity in the sim is ~20% of c, the difference
-    # note: between the non-rel. and rel. treatment is negligible (~1%)
-    v_kpc = momenta / NU_MASS / (kpc/s)  # non-rel formula
-    # v_kpc = 1/np.sqrt(NU_MASS**2/momenta**2 + 1) / (kpc/s)  # rel. formula
-
-    # Directly in velocity space.
-    # v_min = 1/np.sqrt(NU_MASSES[-1]**2/lower**2 + 1) / (kpc/s)
-    # v_max = 1/np.sqrt(NU_MASSES[0]**2/upper**2 + 1) / (kpc/s)
-    # v_kpc = np.geomspace(v_min, v_max, vels)
+    v_kpc = 1/np.sqrt(NU_MASS**2/momenta**2 + 1) / (kpc/s)  # rel. formula
+    # v_kpc = momenta / NU_MASS / (kpc/s)  # non-rel formula
 
     # Split up this magnitude into velocity components.
     # note: Done by using spher. coords. trafos, which act as "weights".
@@ -954,9 +941,6 @@ def init_velocities(phi_points, theta_points, lower, upper, vels, momenta):
 
     # Minus signs due to choice of coord. system setup (see notes/drawings).
     #                              (<-- outer loops, --> inner loops)
-    # uxs = [-v*np.cos(p)*np.sin(t) for p in ps for t in ts for v in v_kpc]
-    # uys = [-v*np.sin(p)*np.sin(t) for p in ps for t in ts for v in v_kpc]
-    # uzs = [-v*np.cos(t) for _ in ps for t in ts for v in v_kpc]
     uxs = [-v*np.cos(p)*np.sin(t) for t in ts for p in ps for v in v_kpc]
     uys = [-v*np.sin(p)*np.sin(t) for t in ts for p in ps for v in v_kpc]
     uzs = [-v*np.cos(t) for t in ts for _ in ps for v in v_kpc]
@@ -1158,6 +1142,38 @@ def number_density(p0, p1):
     return n_cm3
 
 
+def number_density_discrete(u_all, m_nu_eV, out_file, z_back):
+
+    n_nus = np.zeros(len(m_nu_eV))
+    for i, m_eV in enumerate(m_nu_eV):
+
+        # Get momenta.
+        p, _ = u_to_p_eV(u_all, m_eV)
+        p0 = p[:,0]
+
+        p1 = p0
+
+        g = 2.  # 2 degrees of freedom per flavour: particle and anti-particle
+        
+        ind = p0.argsort()
+        p0_sort, p1_sort = p0[ind], p1[ind]
+
+        # Fermi-Dirac value with momentum at end of sim.
+        FDvals = Fermi_Dirac(p1_sort)
+
+        # Calculate number density.
+        y = p0_sort**2 * FDvals
+        x = p0_sort
+        n_raw = np.trapz(y, x)
+
+        # Multiply by remaining g/(2*Pi^2) and convert to 1/cm**3
+        n_cm3 = g/(2*Pi**2) * n_raw / (1/cm**3)
+
+        n_nus[i] = n_cm3
+
+    np.save(f'{out_file}', n_nus)
+
+
 def number_density_1_mass(
     u_all, m_nu_eV, out_file, average=False, m_average=0.01, z_average=0.
 ):
@@ -1183,3 +1199,84 @@ def number_density_1_mass(
 
     np.save(f'{out_file}', n_nus)
 
+
+def number_density_1_mass_median(
+    u_all, ms_eV, out_file,
+    phis, thetas, vels
+):
+    
+
+    nr_densities = np.zeros(len(ms_eV))
+    for i, m_eV in enumerate(ms_eV):
+
+        # Convert to first and last momenta (of each neutrino).
+        p0, _ = u_to_p_eV(u_all[:,0], m_eV)
+        p1, _ = u_to_p_eV(u_all[:,-1], m_eV)
+
+        # Sort momenta.
+        ind = p0.argsort()
+        p0_sort, p1_sort = p0[ind], p1[ind]
+
+        # Take median of each momentum batch as clustering statistic.
+        p1_blocks = p1_sort.reshape((vels, phis*thetas))
+        p1_final = np.min(p1_blocks, axis=1)
+        p0_blocks = p0_sort.reshape((vels, phis*thetas))
+        p0_final = np.min(p0_blocks, axis=1)
+
+        nr_densities[i] = number_density(p0_final, p1_final)
+    
+    np.save(f'{out_file}', nr_densities)
+
+
+
+def plot_eta_band(eta_arr, m_nu_range, out_dir, fname, show=False):
+
+    fig, ax = plt.subplots(1,1)
+    fig.patch.set_facecolor('cornflowerblue')
+
+    nus_median = np.median(eta_arr, axis=0)
+    nus_perc2p5 = np.percentile(eta_arr, q=2.5, axis=0)
+    nus_perc97p5 = np.percentile(eta_arr, q=97.5, axis=0)
+    nus_perc16 = np.percentile(eta_arr, q=16, axis=0)
+    nus_perc84 = np.percentile(eta_arr, q=84, axis=0)
+
+    ax.plot(
+        m_nu_range*1e3, (nus_median-1), color='blue', 
+        label='medians'
+    )
+    ax.fill_between(
+        m_nu_range*1e3, (nus_perc2p5-1), (nus_perc97p5-1), 
+        color='blue', alpha=0.2, label='2.5-97.5 %')
+    ax.fill_between(
+        m_nu_range*1e3, (nus_perc16-1), (nus_perc84-1), 
+        color='blue', alpha=0.3, label='16-84 %')
+
+    ax.set_xscale('log')
+    ax.set_yscale('log')
+    ax.set_title(f'Overdensity band')
+    ax.set_xlabel(r'$m_{\nu}$ [meV]')
+    ax.set_ylabel(r'$n_{\nu} / n_{\nu, 0}$')
+    # ax.set_ylim(1e-3, 1e1)
+    plt.grid(True, which="both", ls="-")
+    plt.legend(loc='lower right')
+
+    ax.yaxis.set_major_formatter(ticker.FuncFormatter(y_fmt))
+
+    fig_out = f'{out_dir}/eta_band_{fname}.pdf'
+    plt.savefig(
+        fig_out, facecolor=fig.get_facecolor(), edgecolor='none', 
+        bbox_inches='tight'
+    )
+
+    if show:
+        plt.show()
+
+
+def plot_z_dependence():
+    ...
+
+def plot_phase_space_distribution():
+    ...
+
+def plot_number_density_integral():
+    ...

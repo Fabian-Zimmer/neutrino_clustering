@@ -171,8 +171,7 @@ X_AG    = np.array([632.29742673, -377.40315121, -288.27006757])
 ######################
 ### Control Center ###
 ######################
-NU_MASS = 0.1*eV  
-# NU_MASS = 0.01*eV  
+NU_MASS = 0.3*eV  
 NU_MASS_KG = NU_MASS/kg
 NU_MASSES = np.array([0.01, 0.05, 0.1, 0.3])*eV
 
@@ -266,10 +265,8 @@ class PRE:
         self.THETAs = thetas
         self.Vs = vels
         self.NUS = phis*thetas*vels
-        # self.LOWER = 0.01*T_CNB
-        # self.UPPER = 400.*T_CNB
-        self.LOWER = 0.01*T_CNB
-        self.UPPER = 100.*T_CNB
+        self.LOWER = 0.1*T_CNB
+        self.UPPER = 400.*T_CNB
         # self.MOMENTA = np.linspace(self.LOWER, self.UPPER, vels)
         self.MOMENTA = np.geomspace(self.LOWER, self.UPPER, vels)
 

@@ -11,9 +11,9 @@ total_start = time.perf_counter()
 PRE = PRE(
     # sim='L006N188', 
     sim='L012N376', 
-    z0_snap=62, z4_snap=13, DM_lim=3000,
+    z0_snap=62, z4_snap=13, DM_lim=1000,
     sim_dir=SIM_ROOT, sim_ver=SIM_TYPE,
-    phis=20, thetas=20, vels=200,
+    phis=10, thetas=10, vels=400,
     pre_CPUs=6, sim_CPUs=6
 )
 
@@ -236,9 +236,7 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
         start = time.perf_counter()
 
         # Draw initial velocities.
-        ui = fct.init_velocities(
-            PRE.PHIs, PRE.THETAs, PRE.LOWER, PRE.UPPER, PRE.Vs, PRE.MOMENTA
-        )
+        ui = fct.init_velocities(PRE.PHIs, PRE.THETAs, PRE.MOMENTA)
 
         # Combine vectors and append neutrino particle number.
         y0_Nr = np.array(
@@ -259,9 +257,7 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
         else:
             # Run simulation on multiple cores.
             with ProcessPoolExecutor(PRE.SIM_CPUs) as ex:
-                ex.map(backtrack_1_neutrino, y0_Nr)  
-                #todo: maybe ex.map(backtrack_1_neutrino, y0_Nr, chunksize=???) 
-                #todo: decreases time, where ??? could be e.g. 100 or 1000...  
+                ex.map(backtrack_1_neutrino, y0_Nr)
 
 
             # Compactify all neutrino vectors into 1 file.
