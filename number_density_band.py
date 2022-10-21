@@ -13,7 +13,7 @@ PRE = PRE(
     sim='L012N376', 
     z0_snap=62, z4_snap=13, DM_lim=1000,
     sim_dir=SIM_ROOT, sim_ver=SIM_TYPE,
-    phis=10, thetas=10, vels=400,
+    phis=10, thetas=10, vels=100,
     pre_CPUs=6, sim_CPUs=6
 )
 
@@ -66,8 +66,9 @@ def EOMs(s_val, y):
     # Neutrino outside cell grid.
     else:
         NrDM = NrDM_SNAPSHOTS[idx]
-        com_DM = DM_COM_SNAPSHOTS[idx]
-        grad_tot = fct.outside_gravity(x_i, com_DM, NrDM, PRE.DM_SIM_MASS)
+        # com_DM = DM_COM_SNAPSHOTS[idx]
+        # grad_tot = fct.outside_gravity_com(x_i, com_DM, NrDM, PRE.DM_SIM_MASS)
+        grad_tot = fct.outside_gravity(x_i, NrDM, PRE.DM_SIM_MASS)
 
     # Switch to "physical reality" here.
     grad_tot /= (kpc/s**2)
@@ -192,7 +193,7 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
                     PRE.OUT_DIR, bname
                 )
 
-            chunk_size = 20
+            chunk_size = 40
             grid_chunks = chunks(chunk_size, fin_grid)
             DMnr_chunks = chunks(chunk_size, DM_count)
             com_chunks = chunks(chunk_size, cell_com)
@@ -230,8 +231,8 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
             f'{PRE.OUT_DIR}/snaps_GRID_L_origID{halo_ID}.npy')
         NrDM_SNAPSHOTS = np.load(
             f'{PRE.OUT_DIR}/NrDM_snaps_origID{halo_ID}.npy')
-        DM_COM_SNAPSHOTS = np.load(
-            f'{PRE.OUT_DIR}/DM_com_origID{halo_ID}.npy')
+        # DM_COM_SNAPSHOTS = np.load(
+        #     f'{PRE.OUT_DIR}/DM_com_origID{halo_ID}.npy')
 
         start = time.perf_counter()
 

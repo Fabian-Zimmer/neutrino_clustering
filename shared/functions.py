@@ -265,20 +265,26 @@ def read_DM_halo_index(snap, z0_snap, halo_ID, fname, sim_dir, out_dir):
     # the DM positions have to be centered with respect to the halo CoP, when 
     # the simulation started at z~0!
 
-    if snap == z0_snap:
-        # Center of Potential coordinates, for all halos.
-        CoP = np.zeros((len(m200c), 3))
-        CoP[:, 0] = props["Xcminpot"][:]
-        CoP[:, 1] = props["Ycminpot"][:]
-        CoP[:, 2] = props["Zcminpot"][:]
+    CoP = np.zeros((len(m200c), 3))
+    CoP[:, 0] = props["Xcminpot"][:]
+    CoP[:, 1] = props["Ycminpot"][:]
+    CoP[:, 2] = props["Zcminpot"][:]
+    CoP_halo = CoP[halo_ID, :]
 
-        # Save CoP coords of halo at first (at z~0) snapshot.
-        CoP_halo = CoP[halo_ID, :]
-        np.save(f'{out_dir}/CoP_{fname}.npy', CoP_halo)
-    else:
-        split_str = re.split('_snap', fname)
-        z0_fname = f'{split_str[0]}_snap_{z0_snap}'
-        CoP_halo = np.load(f'{out_dir}/CoP_{z0_fname}.npy')
+    # if snap == z0_snap:
+    #     # Center of Potential coordinates, for all halos.
+    #     CoP = np.zeros((len(m200c), 3))
+    #     CoP[:, 0] = props["Xcminpot"][:]
+    #     CoP[:, 1] = props["Ycminpot"][:]
+    #     CoP[:, 2] = props["Zcminpot"][:]
+
+    #     # Save CoP coords of halo at first (at z~0) snapshot.
+    #     CoP_halo = CoP[halo_ID, :]
+    #     np.save(f'{out_dir}/CoP_{fname}.npy', CoP_halo)
+    # else:
+    #     split_str = re.split('_snap', fname)
+    #     z0_fname = f'{split_str[0]}_snap_{z0_snap}'
+    #     CoP_halo = np.load(f'{out_dir}/CoP_{z0_fname}.npy')
 
 
     # --------------------------------------------------- #
@@ -290,9 +296,9 @@ def read_DM_halo_index(snap, z0_snap, halo_ID, fname, sim_dir, out_dir):
     DM_pos *= 1e3  # to kpc
     np.save(f'{out_dir}/DM_pos_{fname}.npy', DM_pos)
 
-    DM_particles = len(DM_pos)
-    DM_com_coord = np.sum(DM_pos, axis=0)/DM_particles
-    np.save(f'{out_dir}/DM_com_coord_{fname}.npy', DM_com_coord)
+    # DM_particles = len(DM_pos)
+    # DM_com_coord = np.sum(DM_pos, axis=0)/DM_particles
+    # np.save(f'{out_dir}/DM_com_coord_{fname}.npy', DM_com_coord)
 
 
 def halo_DM(halo_idx, sim, snap, pos, snap_Particle_IDs, file_folder):
@@ -721,7 +727,14 @@ def manual_cell_division(
 
 
 @nb.njit
-def outside_gravity(x_i, com_DM, DM_tot, DM_sim_mass):
+def outside_gravity(x_i, DM_tot, DM_sim_mass):
+    pre = G*DM_tot*DM_sim_mass
+    denom = np.sqrt(np.sum((x_i)**2))**3
+
+    return pre*x_i/denom
+
+@nb.njit
+def outside_gravity_com(x_i, com_DM, DM_tot, DM_sim_mass):
     pre = G*DM_tot*DM_sim_mass
     denom = np.sqrt(np.sum((x_i-com_DM)**2))**3
 
@@ -881,30 +894,31 @@ def load_sim_data(out_dir, fname, which):
     return data
 
 
-def u_to_p_eV(u_sim, m_target):
-    """Converts velocities (x,y,z from simulation) to 
+def velocity_to_momentum(sim_vels, m_arr):
+    """
+    Converts velocities (x,y,z from simulation) to 
     magnitude of momentum [eV] and ratio y=p/T_nu, according to desired
-    target mass (and mass used in simulation)."""
+    target mass (and mass used in simulation).
+    """
 
-    # Magnitude of velocity
-    if u_sim.ndim in (0,1):
-        mag_sim = np.sqrt(np.sum(u_sim**2))
-    elif u_sim.ndim == 3:
-        mag_sim = np.sqrt(np.sum(u_sim**2, axis=2))
-    else:
-        mag_sim = np.sqrt(np.sum(u_sim**2, axis=1))
+    # Magnitudes of velocity.
+    mags_sim = np.sqrt(np.sum(sim_vels**2, axis=-1))
+    mags_dim = np.repeat(np.expand_dims(mags_sim, axis=0), len(m_arr), axis=0)
+
+    # Adjust neutrino target mass array dimensionally.
+    m_dim = np.expand_dims(
+        np.repeat(
+            np.expand_dims(m_arr, axis=1), mags_dim.shape[1], axis=1),
+        axis=2
+    )
 
     # From velocity (magnitude) in kpc/s to momentum in eV.
-    p_sim = 1/np.sqrt(1-mag_sim**2) * mag_sim*(kpc/s) * NU_MASS # rel. formula
-    # p_sim = mag_sim*(kpc/s) * NU_MASS # non-rel. formula
-
-    # From p_sim to p_target.
-    p_target = p_sim * m_target/NU_MASS
+    p_dim = 1/np.sqrt(1-mags_dim**2) * mags_dim*(kpc/s) * m_dim
 
     # p/T_CNB ratio.
-    y = p_target/T_CNB
+    y = p_dim/T_CNB
 
-    return p_target, y
+    return p_dim, y
 
 
 def y_fmt(value, tick_number):
@@ -1062,19 +1076,33 @@ def dPsi_dxi_NFW(x_i, z, rho_0, M_vir, R_vir, R_s, halo:str):
 
 
 @nb.njit
-def grav_pot(x_i, z, rho_0, M_vir, R_vir, R_s):
-
-    # Compute values dependent on redshift.
-    r_vir = R_vir_fct(z, M_vir)
-    r_s = r_vir / c_vir(z, M_vir, R_vir, R_s)
+def grav_pot(x_i, z, rho_0, M_vir, R_vir, R_s, halo:str):
     
-    # Distance from halo center with current coords. x_i.
-    r = np.sqrt(np.sum(x_i**2))
+    if halo in ('MW', 'VC', 'AG'):
+        # Compute values dependent on redshift.
+        r_vir = R_vir_fct(z, M_vir)
+        r_s = r_vir / c_vir(z, M_vir, R_vir, R_s)
+    else:
+        # If function is used to calculate NFW gravity for arbitrary halo.
+        r_vir = R_vir
+        r_s = R_s
+        x_i_cent = x_i
+        r = np.sqrt(np.sum(x_i_cent**2))
 
-    m = np.minimum(r, r_vir)
-    M = np.maximum(r, r_vir)
+    # Distance from respective halo center with current coords. x_i.
+    if halo == 'MW':
+        x_i_cent = x_i  # x_i - X_GC, but GC is coord. center, i.e. [0,0,0].
+        r = np.sqrt(np.sum(x_i_cent**2))
+    elif halo == 'VC':
+        x_i_cent = x_i - (X_VC*kpc)  # center w.r.t. Virgo Cluster
+        r = np.sqrt(np.sum(x_i_cent**2))
+    elif halo == 'AG':
+        x_i_cent = x_i - (X_AG*kpc)  # center w.r.t. Andromeda Galaxy
+        r = np.sqrt(np.sum(x_i_cent**2))
 
     # Gravitational potential in compact notation with m and M.
+    m = np.minimum(r, r_vir)
+    M = np.maximum(r, r_vir)
     prefactor = -4.*Pi*G*rho_0*r_s**2
     term1 = np.log(1. + (m/r_s)) / (r/r_s)
     term2 = (r_vir/M) / (1. + (r_vir/r_s))
@@ -1083,13 +1111,13 @@ def grav_pot(x_i, z, rho_0, M_vir, R_vir, R_s):
     return np.asarray(potential, dtype=np.float64)
 
 
-def escape_momentum(x_i, z, rho_0, M_vir, R_vir, R_s, m):
+def escape_momentum(x_i, z, rho_0, M_vir, R_vir, R_s, m_nu, halo:str):
 
     # Gravitational potential at position x_i.
-    grav = grav_pot(x_i, z, rho_0, M_vir, R_vir, R_s)
+    grav = grav_pot(x_i, z, rho_0, M_vir, R_vir, R_s, halo)
 
     # Escape momentum formula from Ringwald & Wong (2004).
-    p_esc = np.sqrt(2*np.abs(grav)) * m/NU_MASS
+    p_esc = np.sqrt(2*np.abs(grav)) * m_nu/NU_MASS
     y_esc = p_esc/T_CNB
 
     return p_esc, y_esc
@@ -1119,14 +1147,15 @@ def number_density(p0, p1):
         p1 (array): neutrino momentum at z_back (final redshift in sim.)
 
     Returns:
-        array: Value of relic neutrino number density.
+        array: Value of relic neutrino number density in (1/cm^3).
     """    
 
     g = 2.  # 2 degrees of freedom per flavour: particle and anti-particle
     
-    #NOTE: trapz integral method needs sorted (ascending) arrays
-    ind = p0.argsort()
-    p0_sort, p1_sort = p0[ind], p1[ind]
+    # note: trapz integral method needs sorted (ascending) "x-axis" array.
+    ind = p0.argsort(axis=-1)
+    p0_sort = np.take_along_axis(p0, ind, axis=-1)
+    p1_sort = np.take_along_axis(p1, ind, axis=-1)
 
     # Fermi-Dirac value with momentum at end of sim.
     FDvals = Fermi_Dirac(p1_sort)
@@ -1134,7 +1163,7 @@ def number_density(p0, p1):
     # Calculate number density.
     y = p0_sort**2 * FDvals
     x = p0_sort
-    n_raw = np.trapz(y, x)
+    n_raw = np.trapz(y, x, axis=-1)
 
     # Multiply by remaining g/(2*Pi^2) and convert to 1/cm**3
     n_cm3 = g/(2*Pi**2) * n_raw / (1/cm**3)
@@ -1142,114 +1171,62 @@ def number_density(p0, p1):
     return n_cm3
 
 
-def number_density_discrete(u_all, m_nu_eV, out_file, z_back):
-
-    n_nus = np.zeros(len(m_nu_eV))
-    for i, m_eV in enumerate(m_nu_eV):
-
-        # Get momenta.
-        p, _ = u_to_p_eV(u_all, m_eV)
-        p0 = p[:,0]
-
-        p1 = p0
-
-        g = 2.  # 2 degrees of freedom per flavour: particle and anti-particle
-        
-        ind = p0.argsort()
-        p0_sort, p1_sort = p0[ind], p1[ind]
-
-        # Fermi-Dirac value with momentum at end of sim.
-        FDvals = Fermi_Dirac(p1_sort)
-
-        # Calculate number density.
-        y = p0_sort**2 * FDvals
-        x = p0_sort
-        n_raw = np.trapz(y, x)
-
-        # Multiply by remaining g/(2*Pi^2) and convert to 1/cm**3
-        n_cm3 = g/(2*Pi**2) * n_raw / (1/cm**3)
-
-        n_nus[i] = n_cm3
-
-    np.save(f'{out_file}', n_nus)
-
-
-def number_density_1_mass(
-    u_all, m_nu_eV, out_file, average=False, m_average=0.01, z_average=0.
-):
-
-    n_nus = np.zeros(len(m_nu_eV))
-    for i, m_eV in enumerate(m_nu_eV):
-
-        # Get momenta.
-        p, _ = u_to_p_eV(u_all, m_eV)
-
-        if average and m_eV >= m_average:
-            idx = np.array(np.where(ZEDS >= z_average)).flatten()
-
-            temp = np.zeros(len(idx))
-            for j,k in enumerate(idx):
-                val = number_density(p[:,0], p[:,k])
-                temp[j] = val
-
-            n_nus[i] = np.mean(temp)
-
-        else:
-            n_nus[i] = number_density(p[:,0], p[:,-1])
-
-    np.save(f'{out_file}', n_nus)
-
-
-def number_density_1_mass_median(
-    u_all, ms_eV, out_file,
-    phis, thetas, vels
+def number_densities_mass_range(
+    sim_vels, nu_masses, out_file,
+    average=False, m_start=0.01, z_start=0.
 ):
     
+    # Convert velocities to momenta.
+    p_arr, _ = velocity_to_momentum(sim_vels, nu_masses)
 
-    nr_densities = np.zeros(len(ms_eV))
-    for i, m_eV in enumerate(ms_eV):
+    if average:
+        inds = np.array(np.where(ZEDS >= z_start)).flatten()
+        temp = [number_density(p_arr[...,0], p_arr[...,k]) for k in inds]
+        num_densities = np.mean(np.array(temp.T), axis=-1)
+    else:
+        num_densities = number_density(p_arr[...,0], p_arr[...,-1])
 
-        # Convert to first and last momenta (of each neutrino).
-        p0, _ = u_to_p_eV(u_all[:,0], m_eV)
-        p1, _ = u_to_p_eV(u_all[:,-1], m_eV)
-
-        # Sort momenta.
-        ind = p0.argsort()
-        p0_sort, p1_sort = p0[ind], p1[ind]
-
-        # Take median of each momentum batch as clustering statistic.
-        p1_blocks = p1_sort.reshape((vels, phis*thetas))
-        p1_final = np.min(p1_blocks, axis=1)
-        p0_blocks = p0_sort.reshape((vels, phis*thetas))
-        p0_final = np.min(p0_blocks, axis=1)
-
-        nr_densities[i] = number_density(p0_final, p1_final)
-    
-    np.save(f'{out_file}', nr_densities)
+    np.save(f'{out_file}', num_densities)
 
 
-
-def plot_eta_band(eta_arr, m_nu_range, out_dir, fname, show=False):
+def plot_eta_band(
+    etas_sim, etas_smooth, 
+    m_nu_range, fig_dir, fname, show=False, Mertsch=False
+):
 
     fig, ax = plt.subplots(1,1)
     fig.patch.set_facecolor('cornflowerblue')
 
-    nus_median = np.median(eta_arr, axis=0)
-    nus_perc2p5 = np.percentile(eta_arr, q=2.5, axis=0)
-    nus_perc97p5 = np.percentile(eta_arr, q=97.5, axis=0)
-    nus_perc16 = np.percentile(eta_arr, q=16, axis=0)
-    nus_perc84 = np.percentile(eta_arr, q=84, axis=0)
+    # Plot smooth simulation.
+    ax.plot(
+        m_nu_range*1e3, (etas_smooth-1), color='red', ls='solid', 
+        label='Analytical simulation'
+    )
 
+    # Plot dicrete simulation.
+    nus_median = np.median(etas_sim, axis=0)
+    nus_perc2p5 = np.percentile(etas_sim, q=2.5, axis=0)
+    nus_perc97p5 = np.percentile(etas_sim, q=97.5, axis=0)
+    nus_perc16 = np.percentile(etas_sim, q=16, axis=0)
+    nus_perc84 = np.percentile(etas_sim, q=84, axis=0)
     ax.plot(
         m_nu_range*1e3, (nus_median-1), color='blue', 
         label='medians'
     )
     ax.fill_between(
         m_nu_range*1e3, (nus_perc2p5-1), (nus_perc97p5-1), 
-        color='blue', alpha=0.2, label='2.5-97.5 %')
+        color='blue', alpha=0.2, label='2.5-97.5 %'
+    )
     ax.fill_between(
         m_nu_range*1e3, (nus_perc16-1), (nus_perc84-1), 
-        color='blue', alpha=0.3, label='16-84 %')
+        color='blue', alpha=0.3, label='16-84 %'
+    )
+
+    if Mertsch:
+        # Plot endpoint values from Mertsch et al.
+        x_ends = [1e1, 3*1e2]
+        y_ends = [3*1e-3, 4]
+        ax.scatter(x_ends, y_ends, marker='x', s=15, color='orange')
 
     ax.set_xscale('log')
     ax.set_yscale('log')
@@ -1262,21 +1239,140 @@ def plot_eta_band(eta_arr, m_nu_range, out_dir, fname, show=False):
 
     ax.yaxis.set_major_formatter(ticker.FuncFormatter(y_fmt))
 
-    fig_out = f'{out_dir}/eta_band_{fname}.pdf'
+    fig_out = f'{fig_dir}/etas_band_{fname}.pdf'
     plt.savefig(
         fig_out, facecolor=fig.get_facecolor(), edgecolor='none', 
         bbox_inches='tight'
     )
-
     if show:
         plt.show()
+    else:
+        plt.close()
 
 
-def plot_z_dependence():
-    ...
+def plot_eta_z_back_1Halo(sim_vels, nu_masses, fig_dir, fname, show=False):
+    
+    # Convert to momenta. 
+    p_arr, _ = velocity_to_momentum(sim_vels, nu_masses)
 
-def plot_phase_space_distribution():
-    ...
+    # Overdensities for each z_back.
+    inds = np.arange(p_arr.shape[-1])
+    etas_zeds = np.array(
+        [number_density(p_arr[...,0], p_arr[...,z]) for z in inds]
+    ).T/N0
 
-def plot_number_density_integral():
-    ...
+    fig, ax = plt.subplots(1,1, figsize=(8,12))
+    fig.patch.set_facecolor('cornflowerblue')
+
+
+    colors = ['blue', 'orange', 'green', 'red']
+    for j, m in enumerate(nu_masses):
+        ax.semilogy(ZEDS, etas_zeds[j]-1, c=colors[j], label=f'{m:.3f} eV')
+
+    ax.set_title('Overdensities evolution')
+    ax.set_xlabel('z')
+    ax.set_ylabel(r'$n_{\nu} / n_{\nu, 0}$')
+    ax.set_ylim(1e-3, 3e1)
+
+    ax.yaxis.set_major_formatter(ticker.FuncFormatter(y_fmt))
+    plt.legend()
+
+    fig_out = f'{fig_dir}/eta_z_back_{fname}.pdf'
+    plt.savefig(
+        fig_out, facecolor=fig.get_facecolor(), edgecolor='none', 
+        bbox_inches='tight'
+    )
+    if show:
+        plt.show()
+    else:
+        plt.close()
+
+
+def plot_phase_space_1Halo(
+    sim_vels, nu_masses, halo_param_arr, 
+    vels, phis, thetas, lower, upper,
+    fig_dir, fname, show=False
+):
+
+    # Convert to momenta.
+    p_arr, y_arr = velocity_to_momentum(sim_vels, nu_masses)
+    p0_arr, p1_arr, y0_arr = p_arr[...,0], p_arr[...,-1], y_arr[...,0]
+
+    # Sort.
+    ind = p0_arr.argsort(axis=-1)
+    p1_sort = np.take_along_axis(p1_arr, ind, axis=-1)
+    y0_sort = np.take_along_axis(y0_arr, ind, axis=-1)
+
+
+    curtain_behaviour = False
+
+    if curtain_behaviour:
+        p1_final = p1_sort
+        y0_final = y0_sort
+    else:
+        # Each velocity has a batch of neutrinos.
+        # (min. of each to represent most clustered ones)
+        m_len = (len(nu_masses))
+        p1_blocks = p1_sort.reshape((m_len, vels, phis*thetas))
+        p1_final = np.min(p1_blocks, axis=-1)
+        y0_blocks = y0_sort.reshape((m_len, vels, phis*thetas))
+        y0_final = y0_blocks[...,0]
+
+    # Fermi Dirac of the smoothed final momenta.
+    FDvals = Fermi_Dirac(p1_final)
+
+    fig, axs = plt.subplots(2,2, figsize=(12,12))
+    fig.suptitle(
+        'Phase-space distr. "today" compared to Fermi-Dirac' ,
+        fontsize=18
+    )
+
+    for j, m_nu in enumerate(nu_masses):
+
+        k = j
+        i = 0
+        if j in (2,3):
+            i = 1
+            j -= 2
+
+        # Simulation phase-space distr. of neutrinos today.
+        axs[i,j].loglog(
+            y0_final[k], FDvals[k], label='PS today (from sim)', c='red', alpha=0.9
+        )
+
+        # Fermi-Dirac phase-space distr.
+        pOG = np.geomspace(lower, upper, FDvals.shape[-1])
+        FDvalsOG = Fermi_Dirac(pOG)
+        yOG = pOG/T_CNB
+        axs[i,j].loglog(yOG, FDvalsOG, label='PS Fermi-Dirac', c='blue', alpha=0.7)
+
+        # Escape momentum.
+        Rvir_halo = halo_param_arr[0]*kpc
+        Mvir_halo = 10**(halo_param_arr[1])*Msun
+        cNFW_halo = halo_param_arr[2]
+        rho0_halo = scale_density_NFW(0., cNFW_halo)*(Msun/kpc**3)
+        rs_halo = Rvir_halo/cNFW_halo
+        _, y_esc = escape_momentum(
+            X_SUN, 0., rho0_halo, Mvir_halo, Rvir_halo, rs_halo, m_nu, 'none'
+        )
+        axs[i,j].axvline(y_esc, c='k', ls='-.', label='y_esc')
+
+        # Plot styling.
+        axs[i,j].set_title(f'{m_nu} eV')
+        axs[i,j].set_ylabel('FD(p)')
+        axs[i,j].set_xlabel(r'$y = p / T_{\nu,0}$')
+        axs[i,j].legend(loc='lower left')
+        axs[i,j].set_ylim(1e-5, 1e0)
+        axs[i,j].set_xlim(lower/T_CNB, 1e2)
+
+
+    fig_out = f'{fig_dir}/phase_space_{fname}.pdf'
+    plt.savefig(
+        fig_out, facecolor=fig.get_facecolor(), edgecolor='none', 
+        bbox_inches='tight'
+    )
+    if show:
+        plt.show()
+    else:
+        plt.close()
+

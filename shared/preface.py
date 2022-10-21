@@ -267,7 +267,6 @@ class PRE:
         self.NUS = phis*thetas*vels
         self.LOWER = 0.1*T_CNB
         self.UPPER = 400.*T_CNB
-        # self.MOMENTA = np.linspace(self.LOWER, self.UPPER, vels)
         self.MOMENTA = np.geomspace(self.LOWER, self.UPPER, vels)
 
         # Simulation parameters.
@@ -287,6 +286,9 @@ class PRE:
         self.SIM_DIR = f'{sim_dir}/{sim}/{sim_ver}'
         self.OUT_DIR = f'{os.getcwd()}/{sim}/{sim_ver}'
 
+        #! No Halo tests.
+        # self.OUT_DIR = f'{os.getcwd()}/{sim}/{sim_ver}_noHalo'
+
         # Store parameters unique to each simulation box.
         for j, i in enumerate(snaps):
             snap_zi = f'{i:04d}'
@@ -303,6 +305,9 @@ class PRE:
                     # DM mass.
                     dm_mass = snap['PartType1/Masses'][:]*1e10*Msun
                     self.DM_SIM_MASS = np.unique(dm_mass)[0]
+
+                    #! No Halo tests.
+                    # self.DM_SIM_MASS = 0.
 
                     # Gravity smoothening length.
                     sl = snap['GravityScheme'].attrs[
