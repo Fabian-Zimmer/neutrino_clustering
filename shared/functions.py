@@ -1376,3 +1376,92 @@ def plot_phase_space_1Halo(
     else:
         plt.close()
 
+
+def plot_number_density_integral(
+    sim_vels, nu_masses, 
+    vels, phis, thetas, lower, upper,
+    fig_dir, fname, show=False
+):
+
+    # Convert to first and last momenta (of each neutrino).
+    p_arr, _ = velocity_to_momentum(sim_vels, nu_masses)
+    p0_arr, p1_arr = p_arr[...,0], p_arr[...,-1]
+
+    # Sort.
+    ind = p0_arr.argsort(axis=-1)
+    p0_sort = np.take_along_axis(p0_arr, ind, axis=-1)
+    p1_sort = np.take_along_axis(p1_arr, ind, axis=-1)
+
+    curtain_behaviour = False
+
+    if curtain_behaviour:
+        p0_final = p0_sort
+        p1_final = p1_sort
+    else:
+        # Each velocity has a batch of neutrinos.
+        # Take median as statistic of how much clustering shifts it.
+        m_len = (len(nu_masses))
+        p0_blocks = p0_sort.reshape((m_len, vels, phis*thetas))
+        p0_final = p0_blocks[...,0]
+        p1_blocks = p1_sort.reshape((m_len, vels, phis*thetas))
+        p1_final = np.median(p1_blocks, axis=-1)
+
+
+    print(p0_final.shape, p1_final.shape)
+
+    # Fermi-Dirac value with momentum at end of sim.
+    FDvals = Fermi_Dirac(p1_final)
+
+    # What number density function integrates.
+    y_axis_int = FDvals * p0_final**2 
+    x_axis_int = p0_final
+
+
+
+    fig, axs = plt.subplots(2,2, figsize=(12,12))
+    fig.suptitle(
+        'Inegral for number density visualized' ,
+        fontsize=18
+    )
+
+    for j, m_nu in enumerate(nu_masses):
+
+        k = j
+        i = 0
+        if j in (2,3):
+            i = 1
+            j -= 2
+
+        # Using all velocities of sim.
+        axs[i,j].semilogx(
+            x_axis_int[k]/T_CNB, y_axis_int[k], 
+            alpha=0.7, c='red')
+
+        # Fermi-Dirac phase-space distr.
+        pOG = np.geomspace(lower, upper, FDvals.shape[-1])
+        integrand_FD = Fermi_Dirac(pOG) * pOG**2
+        axs[i,j].semilogx(
+            pOG/T_CNB, integrand_FD, 
+            label='PS Fermi-Dirac', c='blue', alpha=0.7, ls=':'
+        )
+
+        # Plot settings.
+        axs[i,j].set_title(f'{m_nu} eV')
+        axs[i,j].set_xlabel(r'y = $p_0/T_{CNB}$')
+        axs[i,j].set_ylabel(r'$FD(p_1) \cdot p_0^2$')
+        
+        if k==3:
+            axs[i,j].set_ylim(0, 0.9*1e-7)
+        else:
+            axs[i,j].set_ylim(0, 2*1e-8)
+
+
+    fig_out = f'{fig_dir}/number_density_integral_{fname}.pdf'
+    plt.savefig(
+        fig_out, facecolor=fig.get_facecolor(), edgecolor='none', 
+        bbox_inches='tight'
+    )
+    if show:
+        plt.show()
+    else:
+        plt.close()
