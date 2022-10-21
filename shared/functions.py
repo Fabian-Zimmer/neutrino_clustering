@@ -781,7 +781,7 @@ def cell_gravity(
     # ------------------------------ #
 
     # Offset DM positions by smoothening length of Camila's simulations.
-    eps = smooth_l
+    eps = smooth_l / 2.
 
     # nan values to 0 for numerator, and 1 for denominator to avoid infinities.
     quot = np.nan_to_num(cell_coords - DM_in, copy=False, nan=0.0) / \
@@ -940,18 +940,21 @@ def y_fmt(value, tick_number):
 ### Main functions ###
 ######################
 
-def init_velocities(phi_points, theta_points, momenta):
+def init_velocities(phi_points, theta_points, momenta, all_sky=False):
     """Get initial velocities for the neutrinos."""
 
     # Convert momenta to initial velocity magnitudes, in units of [kpc/s].
-    v_kpc = 1/np.sqrt(NU_MASS**2/momenta**2 + 1) / (kpc/s)  # rel. formula
-    # v_kpc = momenta / NU_MASS / (kpc/s)  # non-rel formula
+    v_kpc = 1/np.sqrt(NU_MASS**2/momenta**2 + 1) / (kpc/s)
 
-    # Split up this magnitude into velocity components.
-    # note: Done by using spher. coords. trafos, which act as "weights".
-    eps = 0.01  # shift in theta, so poles are not included
-    ts = np.linspace(0.+eps, Pi-eps, theta_points)
-    ps = np.linspace(0., 2.*Pi, phi_points)
+    if all_sky:
+        ts = theta_points
+        ps = phi_points
+    else:
+        # Split up this magnitude into velocity components, by using spher. 
+        # coords. trafos, which act as "weights" for each direction.
+        eps = 0.01  # shift in theta, so poles are not included
+        ts = np.linspace(0.+eps, Pi-eps, theta_points)
+        ps = np.linspace(0., 2.*Pi, phi_points)
 
     # Minus signs due to choice of coord. system setup (see notes/drawings).
     #                              (<-- outer loops, --> inner loops)

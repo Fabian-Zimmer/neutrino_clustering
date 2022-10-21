@@ -11,7 +11,7 @@ total_start = time.perf_counter()
 PRE = PRE(
     # sim='L006N188', 
     sim='L012N376', 
-    z0_snap=62, z4_snap=13, DM_lim=1000,
+    z0_snap=36, z4_snap=13, DM_lim=1000,
     sim_dir=SIM_ROOT, sim_ver=SIM_TYPE,
     phis=10, thetas=10, vels=100,
     pre_CPUs=6, sim_CPUs=6
@@ -112,7 +112,7 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
 
         save_GRID_L = np.zeros(len(PRE.NUMS_SNAPS))
         save_num_DM = np.zeros(len(PRE.NUMS_SNAPS))
-        save_DM_com = []
+        # save_DM_com = []
         for j, (snap, proj_ID) in enumerate(zip(
             PRE.NUMS_SNAPS[::-1], proj_IDs
         )):
@@ -159,9 +159,9 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
             # Save snapshot specific parameters.
             save_GRID_L[j] = snap_GRID_L
             save_num_DM[j] = np.sum(DM_count)
-            save_DM_com.append(
-                np.load(f'{PRE.OUT_DIR}/DM_com_coord_{IDname}.npy')
-            )
+            # save_DM_com.append(
+            #     np.load(f'{PRE.OUT_DIR}/DM_com_coord_{IDname}.npy')
+            # )
 
             # Optional printout.
             # print(fin_grid.shape, DM_count.shape, cell_com.shape, cell_gen.shape)
@@ -193,7 +193,7 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
                     PRE.OUT_DIR, bname
                 )
 
-            chunk_size = 40
+            chunk_size = 20
             grid_chunks = chunks(chunk_size, fin_grid)
             DMnr_chunks = chunks(chunk_size, DM_count)
             com_chunks = chunks(chunk_size, cell_com)
@@ -216,8 +216,8 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
             fct.delete_temp_data(f'{PRE.OUT_DIR}/dPsi_*batch*.npy')
 
         # Save snapshot and halo specific arrays.
-        save_DM_com_np = np.array(save_DM_com)
-        np.save(f'{PRE.OUT_DIR}/DM_com_origID{halo_ID}.npy', save_DM_com_np)
+        # save_DM_com_np = np.array(save_DM_com)
+        # np.save(f'{PRE.OUT_DIR}/DM_com_origID{halo_ID}.npy', save_DM_com_np)
         np.save(f'{PRE.OUT_DIR}/snaps_GRID_L_origID{halo_ID}.npy', save_GRID_L)
         np.save(f'{PRE.OUT_DIR}/NrDM_snaps_origID{halo_ID}.npy', save_num_DM)
         # '''
