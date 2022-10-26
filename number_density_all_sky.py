@@ -4,19 +4,19 @@ import shared.functions as fct
 total_start = time.perf_counter()
 
 # Generate (phi, theta) coord. pairs based on desired healpy map.
-Nside = 2**2              # Specify nside parameter
+Nside = 2**1              # Specify nside parameter
 Npix = 12 * Nside**2      # Number of pixels
 pix_sr = (4*np.pi)/Npix   # Pixel size  [sr]
 print(f'Healpy parameters: Nside={Nside}, Npix={Npix}, pix_sr={pix_sr}')
-hp_ts, hp_ps = np.array(hp.pixelfunc.pix2ang(Nside, np.arange(Npix)))
+hp_thetas, hp_phis = np.array(hp.pixelfunc.pix2ang(Nside, np.arange(Npix)))
 
 # Initialize parameters and files.
 PRE = PRE(
     # sim='L006N188', 
     sim='L012N376', 
-    z0_snap=36, z4_snap=13, DM_lim=1000,
+    z0_snap=36, z4_snap=13, DM_lim=10000,
     sim_dir=SIM_ROOT, sim_ver=SIM_TYPE,
-    phis=hp_ps, thetas=hp_ts, vels=1000,
+    phis=hp_phis, thetas=hp_thetas, vels=10,
     pre_CPUs=6, sim_CPUs=6
 )
 
@@ -102,12 +102,12 @@ def backtrack_1_neutrino(y0_Nr):
     np.save(f'{PRE.OUT_DIR}/nu_{int(Nr)}.npy', np.array(sol.y.T))
 
 
-# '''
 # =============================================== #
 # Run precalculations for selected halo in batch. #
 # =============================================== #
 halo_j, halo_ID = 0, halo_batch_IDs[0]
 
+'''
 # Generate progenitor index array for current halo.
 proj_IDs = fct.read_MergerTree(PRE.OUT_DIR, PRE.SIM, halo_ID)
 
@@ -235,56 +235,66 @@ NrDM_SNAPSHOTS = np.load(
 # DM_COM_SNAPSHOTS = np.load(
 #     f'{PRE.OUT_DIR}/DM_com_origID{halo_ID}.npy')
 
-start = time.perf_counter()
 
-# Draw initial velocities.
-ui = fct.init_velocities(PRE.PHIs, PRE.THETAs, PRE.MOMENTA, all_sky=True)
+print(f'***Running simulation with {PRE.SIM_CPUs} CPUs***')
+for i, (phi, theta) in enumerate(zip(hp_phis, hp_thetas)):
 
-# Combine vectors and append neutrino particle number.
-y0_Nr = np.array(
-    [np.concatenate((X_SUN, ui[i], [i+1])) for i in range(PRE.NUS)]
-    )
+    start = time.perf_counter()
+
+    print(f'Coord. pair {i+1}/{len(hp_phis)}')
+
+    # Draw initial velocities.
+    ui = fct.init_velocities(phi, theta, PRE.MOMENTA, all_sky=True)
+
+    # Combine vectors and append neutrino particle number.
+    y0_Nr = np.array(
+        [np.concatenate((X_SUN, ui[k], [k+1])) for k in range(PRE.Vs)]
+        )
+    
+    sim_testing = False
+
+    if sim_testing:
+        # Test 1 neutrino only.
+        backtrack_1_neutrino(y0_Nr[0])
+
+    else:
+        # Run simulation on multiple cores.
+        with ProcessPoolExecutor(PRE.SIM_CPUs) as ex:
+            ex.map(backtrack_1_neutrino, y0_Nr)
 
 
-# Display parameters for simulation.
-print('***Running simulation***')
-print(f'halo={halo_j+1}/{halo_num}, CPUs={PRE.SIM_CPUs}')
+        # Compactify all neutrino vectors into 1 file.
+        Ns = np.arange(PRE.Vs, dtype=int)            
+        nus = [np.load(f'{PRE.OUT_DIR}/nu_{Nr+1}.npy') for Nr in Ns]
+        CPname = f'{PRE.NUS}nus_{hname}_CoordPair{i+1}'
+        np.save(f'{PRE.OUT_DIR}/{CPname}.npy', np.array(nus))
 
-sim_testing = False
+        # Calculate local overdensity.
+        nu_mass_range = np.geomspace(0.01, 0.3, 100)*eV
+        vels_CoordPair = fct.load_sim_data(PRE.OUT_DIR, CPname, 'velocities')
+        out_file = f'{PRE.OUT_DIR}/number_densities_{CPname}.npy'
+        fct.number_densities_mass_range(
+            vels_CoordPair, nu_mass_range, out_file, pix_sr
+        )
 
-if sim_testing:
-    # Test 1 neutrino only.
-    backtrack_1_neutrino(y0_Nr[0])
+        # Now delete velocities and distances of this coord. pair. neutrinos.
+        fct.delete_temp_data(f'{PRE.OUT_DIR}/{CPname}.npy')
 
-else:
-    # Run simulation on multiple cores.
-    with ProcessPoolExecutor(PRE.SIM_CPUs) as ex:
-        ex.map(backtrack_1_neutrino, y0_Nr)
+        # Delete all other temporary files.
+        fct.delete_temp_data(f'{PRE.OUT_DIR}/nu_*.npy')
+        # fct.delete_temp_data(f'{PRE.OUT_DIR}/NrDM_*.npy')
+        # fct.delete_temp_data(f'{PRE.OUT_DIR}/fin_grid_*.npy')
+        # fct.delete_temp_data(f'{PRE.OUT_DIR}/DM_count_*.npy')
+        # fct.delete_temp_data(f'{PRE.OUT_DIR}/DM_pos_*.npy')
+        # fct.delete_temp_data(f'{PRE.OUT_DIR}/cell_com_*.npy')
+        # fct.delete_temp_data(f'{PRE.OUT_DIR}/DM_com_coord*.npy')
+        # fct.delete_temp_data(f'{PRE.OUT_DIR}/cell_gen_*.npy')
+        # fct.delete_temp_data(f'{PRE.OUT_DIR}/CoP_*.npy')
+        # fct.delete_temp_data(f'{PRE.OUT_DIR}/snaps_GRID_L_*.npy')
+        # fct.delete_temp_data(f'{PRE.OUT_DIR}/halo_params_*.npy')
+        # fct.delete_temp_data(f'{PRE.OUT_DIR}/halo_batch_*.npy')
 
-
-    # Compactify all neutrino vectors into 1 file.
-    Ns = np.arange(PRE.NUS, dtype=int)            
-    nus = [np.load(f'{PRE.OUT_DIR}/nu_{Nr+1}.npy') for Nr in Ns]
-    np.save(
-        f'{PRE.OUT_DIR}/{PRE.NUS}nus_{hname}_halo{halo_j}.npy', 
-        np.array(nus)
-    )
-
-    # Delete all temporary files.
-    # fct.delete_temp_data(f'{PRE.OUT_DIR}/nu_*.npy')
-    # fct.delete_temp_data(f'{PRE.OUT_DIR}/NrDM_*.npy')
-    # fct.delete_temp_data(f'{PRE.OUT_DIR}/fin_grid_*.npy')
-    # fct.delete_temp_data(f'{PRE.OUT_DIR}/DM_count_*.npy')
-    # fct.delete_temp_data(f'{PRE.OUT_DIR}/DM_pos_*.npy')
-    # fct.delete_temp_data(f'{PRE.OUT_DIR}/cell_com_*.npy')
-    # fct.delete_temp_data(f'{PRE.OUT_DIR}/DM_com_coord*.npy')
-    # fct.delete_temp_data(f'{PRE.OUT_DIR}/cell_gen_*.npy')
-    # fct.delete_temp_data(f'{PRE.OUT_DIR}/CoP_*.npy')
-    # fct.delete_temp_data(f'{PRE.OUT_DIR}/snaps_GRID_L_*.npy')
-    # fct.delete_temp_data(f'{PRE.OUT_DIR}/halo_params_*.npy')
-    # fct.delete_temp_data(f'{PRE.OUT_DIR}/halo_batch_*.npy')
-
-    seconds = time.perf_counter()-start
-    minutes = seconds/60.
-    hours = minutes/60.
-    print(f'Sim time min/h: {minutes} min, {hours} h.')
+        seconds = time.perf_counter()-start
+        minutes = seconds/60.
+        hours = minutes/60.
+        print(f'Sim time min/h: {minutes} min, {hours} h.')

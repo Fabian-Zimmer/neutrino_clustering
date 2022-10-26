@@ -238,8 +238,8 @@ if str(HOME) == '/home/zimmer':
 # Paths for FZ_desktop.
 elif str(HOME) == '/home/fabian':
     SIM_ROOT = f'{HOME}/ownCloud/snellius'
-    # SIM_TYPE = 'DMONLY'
-    SIM_TYPE = 'CDM_TF50'
+    SIM_TYPE = 'DMONLY'
+    # SIM_TYPE = 'CDM_TF50'
 
 # Paths for FZ_laptop.
 elif str(HOME) == '/home/fpc':
@@ -264,7 +264,10 @@ class PRE:
         self.PHIs = phis
         self.THETAs = thetas
         self.Vs = vels
-        self.NUS = phis*thetas*vels
+        if isinstance(phis, int):
+            self.NUS = phis*thetas*vels
+        else:
+            self.NUS = len(phis)*len(thetas)*vels
         self.LOWER = 0.1*T_CNB
         self.UPPER = 400.*T_CNB
         self.MOMENTA = np.geomspace(self.LOWER, self.UPPER, vels)
@@ -322,7 +325,11 @@ class PRE:
         print('********************* Initialization *********************')
         
         print('# Initial conditions for neutrinos:')
-        print(f'PHIs = {self.PHIs}, THETAs={self.THETAs}, Vs={self.Vs}')
+        if isinstance(self.PHIs, int):
+            print(f'PHIs = {self.PHIs}, THETAs={self.THETAs}, Vs={self.Vs}')
+        else:
+            print(f'PHIs = {len(self.PHIs)}, THETAs={len(self.THETAs)}, Vs={self.Vs}')
+
         print(f'Total neutrinos: {self.NUS}')
 
         print('# Simulation parameters:')

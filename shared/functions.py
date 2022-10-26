@@ -948,8 +948,18 @@ def init_velocities(phi_points, theta_points, momenta, all_sky=False):
     v_kpc = 1/np.sqrt(NU_MASS**2/momenta**2 + 1) / (kpc/s)
 
     if all_sky:
-        ts = theta_points
-        ps = phi_points
+        # For all_sky script, input is just one coord. pair
+        t, p = theta_points, phi_points
+
+        # Each coord. pair gets whole momentum, i.e. velocity range.
+        uxs = [-v*np.cos(p)*np.sin(t) for v in v_kpc]
+        uys = [-v*np.sin(p)*np.sin(t) for v in v_kpc]
+        uzs = [-v*np.cos(t) for v in v_kpc]
+
+        ui_array = np.array(
+            [[ux, uy, uz] for ux,uy,uz in zip(uxs,uys,uzs)]
+        )
+
     else:
         # Split up this magnitude into velocity components, by using spher. 
         # coords. trafos, which act as "weights" for each direction.
@@ -957,13 +967,15 @@ def init_velocities(phi_points, theta_points, momenta, all_sky=False):
         ts = np.linspace(0.+eps, Pi-eps, theta_points)
         ps = np.linspace(0., 2.*Pi, phi_points)
 
-    # Minus signs due to choice of coord. system setup (see notes/drawings).
-    #                              (<-- outer loops, --> inner loops)
-    uxs = [-v*np.cos(p)*np.sin(t) for t in ts for p in ps for v in v_kpc]
-    uys = [-v*np.sin(p)*np.sin(t) for t in ts for p in ps for v in v_kpc]
-    uzs = [-v*np.cos(t) for t in ts for _ in ps for v in v_kpc]
+        # Minus signs due to choice of coord. system setup (see notes/drawings).
+        #                              (<-- outer loops, --> inner loops)
+        uxs = [-v*np.cos(p)*np.sin(t) for t in ts for p in ps for v in v_kpc]
+        uys = [-v*np.sin(p)*np.sin(t) for t in ts for p in ps for v in v_kpc]
+        uzs = [-v*np.cos(t) for t in ts for _ in ps for v in v_kpc]
 
-    ui_array = np.array([[ux, uy, uz] for ux,uy,uz in zip(uxs,uys,uzs)])        
+        ui_array = np.array(
+            [[ux, uy, uz] for ux,uy,uz in zip(uxs,uys,uzs)]
+        )
 
     return ui_array 
 
@@ -1176,7 +1188,7 @@ def number_density(p0, p1, pix_sr=4*Pi):
 
 
 def number_densities_mass_range(
-    sim_vels, nu_masses, out_file,
+    sim_vels, nu_masses, out_file, pix_sr=4*Pi,
     average=False, m_start=0.01, z_start=0.
 ):
     
@@ -1185,10 +1197,12 @@ def number_densities_mass_range(
 
     if average:
         inds = np.array(np.where(ZEDS >= z_start)).flatten()
-        temp = [number_density(p_arr[...,0], p_arr[...,k]) for k in inds]
+        temp = [
+            number_density(p_arr[...,0], p_arr[...,k], pix_sr) for k in inds
+        ]
         num_densities = np.mean(np.array(temp.T), axis=-1)
     else:
-        num_densities = number_density(p_arr[...,0], p_arr[...,-1])
+        num_densities = number_density(p_arr[...,0], p_arr[...,-1], pix_sr)
 
     np.save(f'{out_file}', num_densities)
 
