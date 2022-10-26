@@ -348,6 +348,7 @@ def read_DM_halos_inRange(
 
     # Masses of all halos in sim.
     m200c = props['Mass_200crit'][:]
+
     # Center of Potential coordinates, for all halos.
     CoP = np.zeros((len(m200c), 3))
     CoP[:, 0] = props["Xcminpot"][:]
@@ -1142,7 +1143,7 @@ def Fermi_Dirac(p):
     return expit(-p/T_CNB) 
 
 
-def number_density(p0, p1):
+def number_density(p0, p1, pix_sr=4*Pi):
     """Neutrino number density obtained by integration over initial momenta.
 
     Args:
@@ -1168,8 +1169,8 @@ def number_density(p0, p1):
     x = p0_sort
     n_raw = np.trapz(y, x, axis=-1)
 
-    # Multiply by remaining g/(2*Pi^2) and convert to 1/cm**3
-    n_cm3 = g/(2*Pi**2) * n_raw / (1/cm**3)
+    # Multiply by constants and/or solid angles and convert to 1/cm**3.
+    n_cm3 = pix_sr * g/((2*Pi)**3) * n_raw / (1/cm**3)
 
     return n_cm3
 
@@ -1468,3 +1469,5 @@ def plot_number_density_integral(
         plt.show()
     else:
         plt.close()
+
+

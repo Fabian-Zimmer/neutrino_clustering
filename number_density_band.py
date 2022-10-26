@@ -17,9 +17,16 @@ PRE = PRE(
     pre_CPUs=6, sim_CPUs=6
 )
 
-mass_gauge = 12.3
-mass_range = 0.3
-size = 1
+Testing=True
+if Testing:
+    mass_gauge = 12.3
+    mass_range = 0.3
+    size = 1
+else:
+    mass_gauge = 12.0
+    mass_range = 0.5
+    size = 10
+
 hname = f'1e+{mass_gauge}_pm{mass_range}Msun'
 fct.halo_batch_indices(
     PRE.Z0_STR, mass_gauge, mass_range, 'halos', size, 
@@ -102,7 +109,7 @@ def backtrack_1_neutrino(y0_Nr):
 for halo_j, halo_ID in enumerate(halo_batch_IDs):
 
     try:
-        '''
+        # '''
         # ============================================== #
         # Run precalculations for current halo in batch. #
         # ============================================== #
@@ -270,18 +277,18 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
             )
 
             # Delete all temporary files.
-            # fct.delete_temp_data(f'{PRE.OUT_DIR}/nu_*.npy')
-            # fct.delete_temp_data(f'{PRE.OUT_DIR}/NrDM_*.npy')
-            # fct.delete_temp_data(f'{PRE.OUT_DIR}/fin_grid_*.npy')
-            # fct.delete_temp_data(f'{PRE.OUT_DIR}/DM_count_*.npy')
-            # fct.delete_temp_data(f'{PRE.OUT_DIR}/DM_pos_*.npy')
-            # fct.delete_temp_data(f'{PRE.OUT_DIR}/cell_com_*.npy')
-            # fct.delete_temp_data(f'{PRE.OUT_DIR}/DM_com_coord*.npy')
-            # fct.delete_temp_data(f'{PRE.OUT_DIR}/cell_gen_*.npy')
-            # fct.delete_temp_data(f'{PRE.OUT_DIR}/CoP_*.npy')
-            # fct.delete_temp_data(f'{PRE.OUT_DIR}/snaps_GRID_L_*.npy')
-            # fct.delete_temp_data(f'{PRE.OUT_DIR}/halo_params_*.npy')
-            # fct.delete_temp_data(f'{PRE.OUT_DIR}/halo_batch_*.npy')
+            fct.delete_temp_data(f'{PRE.OUT_DIR}/nu_*.npy')
+            fct.delete_temp_data(f'{PRE.OUT_DIR}/NrDM_*.npy')
+            fct.delete_temp_data(f'{PRE.OUT_DIR}/fin_grid_*.npy')
+            fct.delete_temp_data(f'{PRE.OUT_DIR}/DM_count_*.npy')
+            fct.delete_temp_data(f'{PRE.OUT_DIR}/DM_pos_*.npy')
+            fct.delete_temp_data(f'{PRE.OUT_DIR}/cell_com_*.npy')
+            fct.delete_temp_data(f'{PRE.OUT_DIR}/DM_com_coord*.npy')
+            fct.delete_temp_data(f'{PRE.OUT_DIR}/cell_gen_*.npy')
+            fct.delete_temp_data(f'{PRE.OUT_DIR}/CoP_*.npy')
+            fct.delete_temp_data(f'{PRE.OUT_DIR}/snaps_GRID_L_*.npy')
+            fct.delete_temp_data(f'{PRE.OUT_DIR}/halo_params_*.npy')
+            fct.delete_temp_data(f'{PRE.OUT_DIR}/halo_batch_*.npy')
 
             seconds = time.perf_counter()-start
             minutes = seconds/60.

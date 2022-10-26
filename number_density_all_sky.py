@@ -3,15 +3,14 @@ import shared.functions as fct
 
 total_start = time.perf_counter()
 
-# Initialize parameters and files.
-
-# (phi, theta) coord. pairs based on desired healpy map.
+# Generate (phi, theta) coord. pairs based on desired healpy map.
 Nside = 2**2              # Specify nside parameter
 Npix = 12 * Nside**2      # Number of pixels
 pix_sr = (4*np.pi)/Npix   # Pixel size  [sr]
 print(f'Healpy parameters: Nside={Nside}, Npix={Npix}, pix_sr={pix_sr}')
 hp_ts, hp_ps = np.array(hp.pixelfunc.pix2ang(Nside, np.arange(Npix)))
 
+# Initialize parameters and files.
 PRE = PRE(
     # sim='L006N188', 
     sim='L012N376', 
@@ -103,13 +102,11 @@ def backtrack_1_neutrino(y0_Nr):
     np.save(f'{PRE.OUT_DIR}/nu_{int(Nr)}.npy', np.array(sol.y.T))
 
 
-
+# '''
+# =============================================== #
+# Run precalculations for selected halo in batch. #
+# =============================================== #
 halo_j, halo_ID = 0, halo_batch_IDs[0]
-
-'''
-# ============================================== #
-# Run precalculations for current halo in batch. #
-# ============================================== #
 
 # Generate progenitor index array for current halo.
 proj_IDs = fct.read_MergerTree(PRE.OUT_DIR, PRE.SIM, halo_ID)
