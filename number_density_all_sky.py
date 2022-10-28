@@ -4,7 +4,7 @@ import shared.functions as fct
 total_start = time.perf_counter()
 
 # Generate (phi, theta) coord. pairs based on desired healpy map.
-Nside = 2**1              # Specify nside parameter
+Nside = 2**2              # Specify nside parameter
 Npix = 12 * Nside**2      # Number of pixels
 pix_sr = (4*np.pi)/Npix   # Pixel size  [sr]
 print(f'Healpy parameters: Nside={Nside}, Npix={Npix}, pix_sr={pix_sr}')
@@ -12,12 +12,11 @@ hp_thetas, hp_phis = np.array(hp.pixelfunc.pix2ang(Nside, np.arange(Npix)))
 
 # Initialize parameters and files.
 PRE = PRE(
-    # sim='L006N188', 
     sim='L012N376', 
-    z0_snap=36, z4_snap=13, DM_lim=10000,
+    z0_snap=62, z4_snap=13, DM_lim=1000,
     sim_dir=SIM_ROOT, sim_ver=SIM_TYPE,
-    phis=hp_phis, thetas=hp_thetas, vels=10,
-    pre_CPUs=6, sim_CPUs=6
+    phis=hp_phis, thetas=hp_thetas, vels=10000,
+    pre_CPUs=96, sim_CPUs=128
 )
 
 mass_gauge = 12.3
@@ -69,8 +68,6 @@ def EOMs(s_val, y):
     # Neutrino outside cell grid.
     else:
         NrDM = NrDM_SNAPSHOTS[idx]
-        # com_DM = DM_COM_SNAPSHOTS[idx]
-        # grad_tot = fct.outside_gravity_com(x_i, com_DM, NrDM, PRE.DM_SIM_MASS)
         grad_tot = fct.outside_gravity(x_i, NrDM, PRE.DM_SIM_MASS)
 
     # Switch to "physical reality" here.
@@ -107,13 +104,14 @@ def backtrack_1_neutrino(y0_Nr):
 # =============================================== #
 halo_j, halo_ID = 0, halo_batch_IDs[0]
 
-'''
+# '''
 # Generate progenitor index array for current halo.
-proj_IDs = fct.read_MergerTree(PRE.OUT_DIR, PRE.SIM, halo_ID)
+splits = re.split('/', SIM_TYPE)
+MTname = f'{PRE.SIM}_{splits[0]}_{splits[1]}'
+proj_IDs = fct.read_MergerTree(PRE.OUT_DIR, MTname, halo_ID)
 
 save_GRID_L = np.zeros(len(PRE.NUMS_SNAPS))
 save_num_DM = np.zeros(len(PRE.NUMS_SNAPS))
-# save_DM_com = []
 for j, (snap, proj_ID) in enumerate(zip(
     PRE.NUMS_SNAPS[::-1], proj_IDs
 )):
@@ -127,7 +125,7 @@ for j, (snap, proj_ID) in enumerate(zip(
 
     IDname = f'origID{halo_ID}_snap_{snap}'
     fct.read_DM_halo_index(
-        snap, PRE.Z0_STR, proj_ID, IDname, PRE.SIM_DIR, PRE.OUT_DIR
+        snap, proj_ID, IDname, PRE.SIM_DIR, PRE.OUT_DIR
     )
     DM_raw = np.load(f'{PRE.OUT_DIR}/DM_pos_{IDname}.npy')
     
@@ -160,15 +158,6 @@ for j, (snap, proj_ID) in enumerate(zip(
     # Save snapshot specific parameters.
     save_GRID_L[j] = snap_GRID_L
     save_num_DM[j] = np.sum(DM_count)
-    # save_DM_com.append(
-    #     np.load(f'{PRE.OUT_DIR}/DM_com_coord_{IDname}.npy')
-    # )
-
-    # Optional printout.
-    # print(fin_grid.shape, DM_count.shape, cell_com.shape, cell_gen.shape)
-    # print(DM_count.sum() - len(DM_raw))
-    # note: 1 DM particle is "missing" in grid
-    # print(f'snapshot {snap} : cell division rounds: {cell_division_count}')
 
 
     # --------------------------------------------- #
@@ -194,7 +183,7 @@ for j, (snap, proj_ID) in enumerate(zip(
             PRE.OUT_DIR, bname
         )
 
-    chunk_size = 20
+    chunk_size = 10
     grid_chunks = chunks(chunk_size, fin_grid)
     DMnr_chunks = chunks(chunk_size, DM_count)
     com_chunks = chunks(chunk_size, cell_com)
@@ -217,8 +206,6 @@ for j, (snap, proj_ID) in enumerate(zip(
     fct.delete_temp_data(f'{PRE.OUT_DIR}/dPsi_*batch*.npy')
 
 # Save snapshot and halo specific arrays.
-# save_DM_com_np = np.array(save_DM_com)
-# np.save(f'{PRE.OUT_DIR}/DM_com_origID{halo_ID}.npy', save_DM_com_np)
 np.save(f'{PRE.OUT_DIR}/snaps_GRID_L_origID{halo_ID}.npy', save_GRID_L)
 np.save(f'{PRE.OUT_DIR}/NrDM_snaps_origID{halo_ID}.npy', save_num_DM)
 # '''
@@ -232,14 +219,12 @@ snaps_GRID_L = np.load(
     f'{PRE.OUT_DIR}/snaps_GRID_L_origID{halo_ID}.npy')
 NrDM_SNAPSHOTS = np.load(
     f'{PRE.OUT_DIR}/NrDM_snaps_origID{halo_ID}.npy')
-# DM_COM_SNAPSHOTS = np.load(
-#     f'{PRE.OUT_DIR}/DM_com_origID{halo_ID}.npy')
 
 
 print(f'***Running simulation with {PRE.SIM_CPUs} CPUs***')
 for i, (phi, theta) in enumerate(zip(hp_phis, hp_thetas)):
 
-    start = time.perf_counter()
+    sim_start = time.perf_counter()
 
     print(f'Coord. pair {i+1}/{len(hp_phis)}')
 
@@ -279,22 +264,27 @@ for i, (phi, theta) in enumerate(zip(hp_phis, hp_thetas)):
 
         # Now delete velocities and distances of this coord. pair. neutrinos.
         fct.delete_temp_data(f'{PRE.OUT_DIR}/{CPname}.npy')
-
-        # Delete all other temporary files.
         fct.delete_temp_data(f'{PRE.OUT_DIR}/nu_*.npy')
-        # fct.delete_temp_data(f'{PRE.OUT_DIR}/NrDM_*.npy')
-        # fct.delete_temp_data(f'{PRE.OUT_DIR}/fin_grid_*.npy')
-        # fct.delete_temp_data(f'{PRE.OUT_DIR}/DM_count_*.npy')
-        # fct.delete_temp_data(f'{PRE.OUT_DIR}/DM_pos_*.npy')
-        # fct.delete_temp_data(f'{PRE.OUT_DIR}/cell_com_*.npy')
-        # fct.delete_temp_data(f'{PRE.OUT_DIR}/DM_com_coord*.npy')
-        # fct.delete_temp_data(f'{PRE.OUT_DIR}/cell_gen_*.npy')
-        # fct.delete_temp_data(f'{PRE.OUT_DIR}/CoP_*.npy')
-        # fct.delete_temp_data(f'{PRE.OUT_DIR}/snaps_GRID_L_*.npy')
-        # fct.delete_temp_data(f'{PRE.OUT_DIR}/halo_params_*.npy')
-        # fct.delete_temp_data(f'{PRE.OUT_DIR}/halo_batch_*.npy')
 
-        seconds = time.perf_counter()-start
+
+        seconds = time.perf_counter()-sim_start
         minutes = seconds/60.
         hours = minutes/60.
         print(f'Sim time min/h: {minutes} min, {hours} h.')
+
+
+# Delete all other temporary files.
+# fct.delete_temp_data(f'{PRE.OUT_DIR}/NrDM_*.npy')
+# fct.delete_temp_data(f'{PRE.OUT_DIR}/fin_grid_*.npy')
+# fct.delete_temp_data(f'{PRE.OUT_DIR}/DM_count_*.npy')
+# fct.delete_temp_data(f'{PRE.OUT_DIR}/DM_pos_*.npy')
+# fct.delete_temp_data(f'{PRE.OUT_DIR}/cell_com_*.npy')
+# fct.delete_temp_data(f'{PRE.OUT_DIR}/cell_gen_*.npy')
+# fct.delete_temp_data(f'{PRE.OUT_DIR}/CoP_*.npy')
+# fct.delete_temp_data(f'{PRE.OUT_DIR}/snaps_GRID_L_*.npy')
+# fct.delete_temp_data(f'{PRE.OUT_DIR}/halo_params_*.npy')
+# fct.delete_temp_data(f'{PRE.OUT_DIR}/halo_batch_*.npy')
+
+
+total_time = time.perf_counter()-total_start
+print(f'Total time: {total_time/60.} min, {total_time/(60**2)} h.')

@@ -149,10 +149,10 @@ def R_vir_fct(z, M_vir):
 ### Functions used in DISCRETE simulation ###
 #############################################
 
-def read_MergerTree(tree_dir, sim, init_halo):
+def read_MergerTree(tree_dir, fname, init_halo):
 
     # Path to merger_tree file.
-    tree_path = f'{tree_dir}/MergerTree_{sim}_{SIM_TYPE}.hdf5'
+    tree_path = f'{tree_dir}/MergerTree_{fname}.hdf5'
 
     with h5py.File(tree_path) as tree:
         # Progenitor index list.
@@ -218,7 +218,7 @@ def halo_batch_indices(
     np.save(f'{out_dir}/halo_batch_{fname}_params.npy', halo_params)
 
 
-def read_DM_halo_index(snap, z0_snap, halo_ID, fname, sim_dir, out_dir):
+def read_DM_halo_index(snap, halo_ID, fname, sim_dir, out_dir):
 
     # ---------------- #
     # Open data files. #
@@ -228,7 +228,6 @@ def read_DM_halo_index(snap, z0_snap, halo_ID, fname, sim_dir, out_dir):
     group = h5py.File(f'{sim_dir}/subhalo_{snap}.catalog_groups')
     parts = h5py.File(f'{sim_dir}/subhalo_{snap}.catalog_particles')
     props = h5py.File(f'{sim_dir}/subhalo_{snap}.properties')
-
 
     # Positions.
     a = snaps["/Header"].attrs["Scale-factor"]
@@ -240,9 +239,9 @@ def read_DM_halo_index(snap, z0_snap, halo_ID, fname, sim_dir, out_dir):
     m200c = np.log10(m200c)  
 
 
-    # ---------------------------------------------- #
-    # Find DM particles gravitationally bound to halo.
-    # ---------------------------------------------- #
+    # ------------------------------------------------ #
+    # Find DM particles gravitationally bound to halo. #
+    # ------------------------------------------------ #
 
     halo_start_pos = group["Offset"][halo_ID]
     halo_end_pos = group["Offset"][halo_ID + 1]
@@ -257,13 +256,9 @@ def read_DM_halo_index(snap, z0_snap, halo_ID, fname, sim_dir, out_dir):
     )
 
 
-    # -------------------------------- #
-    # Save Center of Potential coords. #
-    # -------------------------------- #
-    # note: 
-    # Neutrinos start w.r.t. the CoP of the halo at z~0. If the halo "moves", 
-    # the DM positions have to be centered with respect to the halo CoP, when 
-    # the simulation started at z~0!
+    # ------------------------------------------ #
+    # Save DM positions centered on CoP of halo. #
+    # ------------------------------------------ #
 
     CoP = np.zeros((len(m200c), 3))
     CoP[:, 0] = props["Xcminpot"][:]
@@ -271,41 +266,17 @@ def read_DM_halo_index(snap, z0_snap, halo_ID, fname, sim_dir, out_dir):
     CoP[:, 2] = props["Zcminpot"][:]
     CoP_halo = CoP[halo_ID, :]
 
-    # if snap == z0_snap:
-    #     # Center of Potential coordinates, for all halos.
-    #     CoP = np.zeros((len(m200c), 3))
-    #     CoP[:, 0] = props["Xcminpot"][:]
-    #     CoP[:, 1] = props["Ycminpot"][:]
-    #     CoP[:, 2] = props["Zcminpot"][:]
-
-    #     # Save CoP coords of halo at first (at z~0) snapshot.
-    #     CoP_halo = CoP[halo_ID, :]
-    #     np.save(f'{out_dir}/CoP_{fname}.npy', CoP_halo)
-    # else:
-    #     split_str = re.split('_snap', fname)
-    #     z0_fname = f'{split_str[0]}_snap_{z0_snap}'
-    #     CoP_halo = np.load(f'{out_dir}/CoP_{z0_fname}.npy')
-
-
-    # --------------------------------------------------- #
-    # Save DM positions (and c.o.m.), centered correctly. #
-    # --------------------------------------------------- #
-
     DM_pos = pos[indices_p, :]  # x,y,z of each DM particle
     DM_pos -= CoP_halo  # center DM on halo at first (at z~0) snapshot
     DM_pos *= 1e3  # to kpc
     np.save(f'{out_dir}/DM_pos_{fname}.npy', DM_pos)
 
-    # DM_particles = len(DM_pos)
-    # DM_com_coord = np.sum(DM_pos, axis=0)/DM_particles
-    # np.save(f'{out_dir}/DM_com_coord_{fname}.npy', DM_com_coord)
 
-
-def halo_DM(halo_idx, sim, snap, pos, snap_Particle_IDs, file_folder):
+def halo_DM(halo_idx, snap, pos, snap_Particle_IDs, sim_dir, out_dir):
 
     # Open data files.
-    group = h5py.File(f'{file_folder}/subhalo_{snap}.catalog_groups')
-    parts = h5py.File(f'{file_folder}/subhalo_{snap}.catalog_particles')
+    group = h5py.File(f'{sim_dir}/subhalo_{snap}.catalog_groups')
+    parts = h5py.File(f'{sim_dir}/subhalo_{snap}.catalog_particles')
 
     # Start and stop index for current halo.
     halo_init = group["Offset"][halo_idx]
@@ -322,21 +293,19 @@ def halo_DM(halo_idx, sim, snap, pos, snap_Particle_IDs, file_folder):
 
     # Save DM positions.
     DM_pos = pos[indices_p, :]  # x,y,z of each DM particle
-    np.save(f'{sim}/DM_of_haloID{halo_idx}.npy', DM_pos)
+    np.save(f'{out_dir}/DM_of_haloID{halo_idx}.npy', DM_pos)
 
 
 def read_DM_halos_inRange(
-    sim, snap, z0_snap, halo_ID, DM_range_kpc, halo_limit, fname, file_folder
+    snap, halo_ID, DM_range, halo_limit, fname, sim_dir, out_dir, CPUs
 ):
-
-    # todo: adjust with new input, sim to out_dir, file_folder is sim_dir, etc.
 
     # ---------------- #
     # Open data files. #
     # ---------------- #
 
-    snaps = h5py.File(f'{file_folder}/snapshot_{snap}.hdf5')
-    props = h5py.File(f'{file_folder}/subhalo_{snap}.properties')
+    snaps = h5py.File(f'{sim_dir}/snapshot_{snap}.hdf5')
+    props = h5py.File(f'{sim_dir}/subhalo_{snap}.properties')
 
 
     # Positions.
@@ -344,7 +313,7 @@ def read_DM_halos_inRange(
     pos = snaps['PartType1/Coordinates'][:][:] * a
     
     # DM_range from physical to comoving.
-    DM_range_kpc *= (a/kpc/1e3)
+    DM_range *= (a/kpc/1e3)
 
     # Masses of all halos in sim.
     m200c = props['Mass_200crit'][:]
@@ -354,24 +323,8 @@ def read_DM_halos_inRange(
     CoP[:, 0] = props["Xcminpot"][:]
     CoP[:, 1] = props["Ycminpot"][:]
     CoP[:, 2] = props["Zcminpot"][:]
+    CoP_halo = CoP[halo_ID, :]
 
-
-    # -------------------------------- #
-    # Save Center of Potential coords. #
-    # -------------------------------- #
-    # note: 
-    # Neutrinos start w.r.t. the CoP of the halo at z~0. If the halo "moves", 
-    # the DM positions have to be centered with respect to the halo CoP, when 
-    # the simulation started at z~0!
-
-    if snap == z0_snap:
-        # Save CoP coords of halo at first (at z~0) snapshot.
-        CoP_halo = CoP[halo_ID, :]
-        np.save(f'{sim}/CoP_{fname}.npy', CoP_halo)
-    else:
-        split_str = re.split('_snap', fname)
-        z0_fname = f'{split_str[0]}_snap_{z0_snap}'
-        CoP_halo = np.load(f'{out_dir}/CoP_{z0_fname}.npy')
 
     # --------------------------------- #
     # Combine DM of all halos in range. #
@@ -379,7 +332,7 @@ def read_DM_halos_inRange(
 
     CoP_cent = CoP - CoP_halo
     halo_dis = np.sqrt(np.sum(CoP_cent**2, axis=1))
-    select_halos = np.where(halo_dis <= DM_range_kpc)[0]
+    select_halos = np.where(halo_dis <= DM_range)[0]
     print(f'All halos in range: {len(select_halos)}')
 
     # Limit amount of halos in range, select by mass.
@@ -394,26 +347,32 @@ def read_DM_halos_inRange(
     # Arrays to only load once.
     snap_Particle_IDs = snaps["PartType1/ParticleIDs"][...]
 
-    CPUs = 1
     with Pool(CPUs) as pool:
         pool.starmap(halo_DM, zip(
             halo_IDs,
-            repeat(sim), repeat(snap), repeat(pos), repeat(snap_Particle_IDs)
+            repeat(snap), repeat(pos), repeat(snap_Particle_IDs),
+            repeat(sim_dir), repeat(out_dir)
         ))
         
     # Combine DM from all halos into 1 file.
-    DM_halos = [np.load(f'{sim}/DM_of_haloID{i}.npy') for i in halo_IDs]
+    DM_halos = [np.load(f'{out_dir}/DM_of_haloID{i}.npy') for i in halo_IDs]
 
+    # note: This I needed for plotting I think...maybe still useful
     DM_lengths = np.zeros(len(DM_halos))
     for i, DM_elem in enumerate(DM_halos):
         DM_lengths[i] = len(DM_elem)
-    np.save(f'{sim}/DM_lengths_{fname}.npy', DM_lengths)
+    np.save(f'{out_dir}/DM_lengths_{fname}.npy', DM_lengths)
 
+    # Combine all DM particles from selected halos into one file.
     DM_total = np.concatenate(DM_halos, axis=0)
     DM_total -= CoP_halo
     DM_total *= 1e3
-    np.save(f'{sim}/DM_pos_{fname}.npy', DM_total) 
-    delete_temp_data(f'{sim}/DM_of_haloID*.npy')
+    np.save(f'{out_dir}/DM_pos_{fname}.npy', DM_total) 
+    delete_temp_data(f'{out_dir}/DM_of_haloID*.npy')
+
+    # Save c.o.m. coord of all DM particles (used for outside_gravity fct.).
+    DM_com_coord = np.sum(DM_total, axis=0)/len(DM_total)
+    np.save(f'{out_dir}/DM_com_coord_{fname}.npy', DM_com_coord)
 
 
 def read_DM_all_inRange(sim, snap, halo_ID, DM_range_kpc, fname, file_folder):

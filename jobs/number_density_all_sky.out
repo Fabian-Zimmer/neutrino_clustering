@@ -1,0 +1,470 @@
+Healpy parameters: Nside=4, Npix=192, pix_sr=0.06544984694978735
+********************* Initialization *********************
+# Initial conditions for neutrinos:
+PHIs = 192, THETAs=192, Vs=10000
+Total neutrinos: 368640000
+# Simulation parameters:
+Simulation box: L012N376
+Snapshot from 0062 (z=0) to 0013 (z=4)
+Pre/Sim CPUs 96/128
+DM limit for cells: 1000
+# File management:
+Box files directory: 
+ /projects/0/einf180/Tango_sims/L012N376/DMONLY/CDM_TF50
+Output directory: 
+ /gpfs/home4/zimmer/neutrino_clustering_V2/L012N376/DMONLY/CDM_TF50
+**********************************************************
+********Number density band********
+Halo batch params (Rvir,Mvir,cNFW):
+[[299.54209457  12.45775108   8.69090077]]
+***********************************
+halo 1/1 ; snapshot 0062
+halo 1/1 ; snapshot 0061
+halo 1/1 ; snapshot 0060
+halo 1/1 ; snapshot 0059
+halo 1/1 ; snapshot 0058
+halo 1/1 ; snapshot 0057
+halo 1/1 ; snapshot 0056
+halo 1/1 ; snapshot 0055
+halo 1/1 ; snapshot 0054
+halo 1/1 ; snapshot 0053
+halo 1/1 ; snapshot 0052
+halo 1/1 ; snapshot 0051
+halo 1/1 ; snapshot 0050
+halo 1/1 ; snapshot 0049
+halo 1/1 ; snapshot 0048
+halo 1/1 ; snapshot 0047
+halo 1/1 ; snapshot 0046
+halo 1/1 ; snapshot 0045
+halo 1/1 ; snapshot 0044
+halo 1/1 ; snapshot 0043
+halo 1/1 ; snapshot 0042
+halo 1/1 ; snapshot 0041
+halo 1/1 ; snapshot 0040
+halo 1/1 ; snapshot 0039
+halo 1/1 ; snapshot 0038
+halo 1/1 ; snapshot 0037
+halo 1/1 ; snapshot 0036
+halo 1/1 ; snapshot 0035
+halo 1/1 ; snapshot 0034
+halo 1/1 ; snapshot 0033
+halo 1/1 ; snapshot 0032
+halo 1/1 ; snapshot 0031
+halo 1/1 ; snapshot 0030
+halo 1/1 ; snapshot 0029
+halo 1/1 ; snapshot 0028
+halo 1/1 ; snapshot 0027
+halo 1/1 ; snapshot 0026
+halo 1/1 ; snapshot 0025
+halo 1/1 ; snapshot 0024
+halo 1/1 ; snapshot 0023
+halo 1/1 ; snapshot 0022
+halo 1/1 ; snapshot 0021
+halo 1/1 ; snapshot 0020
+halo 1/1 ; snapshot 0019
+halo 1/1 ; snapshot 0018
+halo 1/1 ; snapshot 0017
+halo 1/1 ; snapshot 0016
+halo 1/1 ; snapshot 0015
+halo 1/1 ; snapshot 0014
+halo 1/1 ; snapshot 0013
+***Running simulation with 128 CPUs***
+Coord. pair 1/192
+Sim time min/h: 2.165176170299916 min, 0.0360862695049986 h.
+Coord. pair 2/192
+Sim time min/h: 2.052317853766726 min, 0.03420529756277877 h.
+Coord. pair 3/192
+Sim time min/h: 2.002509555965662 min, 0.03337515926609436 h.
+Coord. pair 4/192
+Sim time min/h: 1.9620738347837081 min, 0.03270123057972847 h.
+Coord. pair 5/192
+Sim time min/h: 2.0092198191501667 min, 0.03348699698583611 h.
+Coord. pair 6/192
+Sim time min/h: 1.9202915844332893 min, 0.03200485974055482 h.
+Coord. pair 7/192
+Sim time min/h: 1.9323027251831566 min, 0.032205045419719275 h.
+Coord. pair 8/192
+Sim time min/h: 2.008517778748258 min, 0.03347529631247097 h.
+Coord. pair 9/192
+Sim time min/h: 2.046394475850199 min, 0.03410657459750332 h.
+Coord. pair 10/192
+Sim time min/h: 1.8685257596662268 min, 0.031142095994437114 h.
+Coord. pair 11/192
+Sim time min/h: 1.8334597101338053 min, 0.03055766183556342 h.
+Coord. pair 12/192
+Sim time min/h: 1.9490060716498798 min, 0.032483434527497995 h.
+Coord. pair 13/192
+Sim time min/h: 2.0472245423006825 min, 0.03412040903834471 h.
+Coord. pair 14/192
+Sim time min/h: 1.880363193883871 min, 0.03133938656473118 h.
+Coord. pair 15/192
+Sim time min/h: 1.9209336103328194 min, 0.03201556017221366 h.
+Coord. pair 16/192
+Sim time min/h: 1.923256065583943 min, 0.032054267759732386 h.
+Coord. pair 17/192
+Sim time min/h: 2.009368508281962 min, 0.0334894751380327 h.
+Coord. pair 18/192
+Sim time min/h: 2.0259383406819933 min, 0.033765639011366554 h.
+Coord. pair 19/192
+Sim time min/h: 2.1158588515012524 min, 0.03526431419168754 h.
+Coord. pair 20/192
+Sim time min/h: 1.8375880675991842 min, 0.030626467793319737 h.
+Coord. pair 21/192
+Sim time min/h: 1.9123083029834864 min, 0.031871805049724776 h.
+Coord. pair 22/192
+Sim time min/h: 1.817363166748934 min, 0.030289386112482233 h.
+Coord. pair 23/192
+Sim time min/h: 1.8928151885668436 min, 0.03154691980944739 h.
+Coord. pair 24/192
+Sim time min/h: 1.944671422582663 min, 0.03241119037637771 h.
+Coord. pair 25/192
+Sim time min/h: 2.1261957293162896 min, 0.035436595488604825 h.
+Coord. pair 26/192
+Sim time min/h: 1.9498464895489935 min, 0.03249744149248322 h.
+Coord. pair 27/192
+Sim time min/h: 1.8708733821326555 min, 0.03118122303554426 h.
+Coord. pair 28/192
+Sim time min/h: 1.8411956878340183 min, 0.030686594797233638 h.
+Coord. pair 29/192
+Sim time min/h: 1.927068887866335 min, 0.032117814797772246 h.
+Coord. pair 30/192
+Sim time min/h: 1.919592509083062 min, 0.0319932084847177 h.
+Coord. pair 31/192
+Sim time min/h: 2.008862920567238 min, 0.03348104867612064 h.
+Coord. pair 32/192
+Sim time min/h: 2.037782836817981 min, 0.03396304728029968 h.
+Coord. pair 33/192
+Sim time min/h: 2.1334778602506654 min, 0.03555796433751109 h.
+Coord. pair 34/192
+Sim time min/h: 1.910075473533167 min, 0.03183459122555279 h.
+Coord. pair 35/192
+Sim time min/h: 1.9343321734845327 min, 0.03223886955807555 h.
+Coord. pair 36/192
+Sim time min/h: 1.8190889055995891 min, 0.030318148426659818 h.
+Coord. pair 37/192
+Sim time min/h: 1.8270574955347305 min, 0.030450958258912177 h.
+Coord. pair 38/192
+Sim time min/h: 1.8768578356170715 min, 0.03128096392695119 h.
+Coord. pair 39/192
+Sim time min/h: 1.9751494375503778 min, 0.032919157292506294 h.
+Coord. pair 40/192
+Sim time min/h: 2.0357944548498685 min, 0.03392990758083114 h.
+Coord. pair 41/192
+Sim time min/h: 4.497921044883939 min, 0.07496535074806565 h.
+Coord. pair 42/192
+Sim time min/h: 1.9812761891012391 min, 0.03302126981835399 h.
+Coord. pair 43/192
+Sim time min/h: 1.9629064823830655 min, 0.03271510803971776 h.
+Coord. pair 44/192
+Sim time min/h: 1.9060648591820306 min, 0.03176774765303384 h.
+Coord. pair 45/192
+Sim time min/h: 2.002079541851223 min, 0.033367992364187055 h.
+Coord. pair 46/192
+Sim time min/h: 1.9308977785171009 min, 0.03218162964195168 h.
+Coord. pair 47/192
+Sim time min/h: 2.0186452818995653 min, 0.03364408803165942 h.
+Coord. pair 48/192
+Sim time min/h: 2.042147574115855 min, 0.034035792901930914 h.
+Coord. pair 49/192
+Sim time min/h: 4.161151934682858 min, 0.0693525322447143 h.
+Coord. pair 50/192
+Sim time min/h: 1.9857987311338852 min, 0.033096645518898085 h.
+Coord. pair 51/192
+Sim time min/h: 1.9384961943665986 min, 0.03230826990610998 h.
+Coord. pair 52/192
+Sim time min/h: 1.8474161274828171 min, 0.030790268791380287 h.
+Coord. pair 53/192
+Sim time min/h: 1.8353931558667682 min, 0.030589885931112802 h.
+Coord. pair 54/192
+Sim time min/h: 1.799483538834223 min, 0.029991392313903718 h.
+Coord. pair 55/192
+Sim time min/h: 1.9218087648507207 min, 0.03203014608084535 h.
+Coord. pair 56/192
+Sim time min/h: 2.0172058163986852 min, 0.03362009693997809 h.
+Coord. pair 57/192
+Sim time min/h: 2.200298778448875 min, 0.036671646307481244 h.
+Coord. pair 58/192
+Sim time min/h: 1.980222566598483 min, 0.03300370944330805 h.
+Coord. pair 59/192
+Sim time min/h: 2.054816491517704 min, 0.03424694152529507 h.
+Coord. pair 60/192
+Sim time min/h: 1.9713959385834945 min, 0.03285659897639157 h.
+Coord. pair 61/192
+Sim time min/h: 2.0130912439490203 min, 0.03355152073248367 h.
+Coord. pair 62/192
+Sim time min/h: 1.9507373616332189 min, 0.03251228936055365 h.
+Coord. pair 63/192
+Sim time min/h: 2.0795516318331164 min, 0.034659193863885274 h.
+Coord. pair 64/192
+Sim time min/h: 2.0735489411163144 min, 0.03455914901860524 h.
+Coord. pair 65/192
+Sim time min/h: 2.2306515526007087 min, 0.037177525876678476 h.
+Coord. pair 66/192
+Sim time min/h: 2.0057219969671376 min, 0.033428699949452294 h.
+Coord. pair 67/192
+Sim time min/h: 1.970753136232573 min, 0.03284588560387622 h.
+Coord. pair 68/192
+Sim time min/h: 1.915291681383193 min, 0.03192152802305322 h.
+Coord. pair 69/192
+Sim time min/h: 1.9221813897990312 min, 0.03203635649665052 h.
+Coord. pair 70/192
+Sim time min/h: 1.853604851917286 min, 0.030893414198621436 h.
+Coord. pair 71/192
+Sim time min/h: 1.9729389775001134 min, 0.03288231629166856 h.
+Coord. pair 72/192
+Sim time min/h: 2.088118166916926 min, 0.03480196944861544 h.
+Coord. pair 73/192
+Sim time min/h: 4.265876560832839 min, 0.07109794268054732 h.
+Coord. pair 74/192
+Sim time min/h: 2.097408326383447 min, 0.03495680543972412 h.
+Coord. pair 75/192
+Sim time min/h: 2.1061709879819923 min, 0.035102849799699874 h.
+Coord. pair 76/192
+Sim time min/h: 2.0239945824995327 min, 0.03373324304165888 h.
+Coord. pair 77/192
+Sim time min/h: 2.042590227201193 min, 0.03404317045335322 h.
+Coord. pair 78/192
+Sim time min/h: 2.017641322450557 min, 0.03362735537417595 h.
+Coord. pair 79/192
+Sim time min/h: 2.0896472049838244 min, 0.03482745341639707 h.
+Coord. pair 80/192
+Sim time min/h: 2.068278919767666 min, 0.0344713153294611 h.
+Coord. pair 81/192
+Sim time min/h: 3.983568578349271 min, 0.06639280963915452 h.
+Coord. pair 82/192
+Sim time min/h: 2.220117391482927 min, 0.037001956524715454 h.
+Coord. pair 83/192
+Sim time min/h: 2.1155189188818135 min, 0.03525864864803022 h.
+Coord. pair 84/192
+Sim time min/h: 2.0694315105851273 min, 0.03449052517641879 h.
+Coord. pair 85/192
+Sim time min/h: 2.0841815141340096 min, 0.03473635856890016 h.
+Coord. pair 86/192
+Sim time min/h: 1.915914468317836 min, 0.03193190780529727 h.
+Coord. pair 87/192
+Sim time min/h: 1.980712446566516 min, 0.03301187410944193 h.
+Coord. pair 88/192
+Sim time min/h: 2.0352134584992503 min, 0.03392022430832084 h.
+Coord. pair 89/192
+Sim time min/h: 3.5709040427502865 min, 0.05951506737917144 h.
+Coord. pair 90/192
+Sim time min/h: 3.604524180601584 min, 0.0600754030100264 h.
+Coord. pair 91/192
+Sim time min/h: 3.841262586050046 min, 0.06402104310083409 h.
+Coord. pair 92/192
+Sim time min/h: 4.139014143667494 min, 0.0689835690611249 h.
+Coord. pair 93/192
+Sim time min/h: 4.095013483215977 min, 0.06825022472026629 h.
+Coord. pair 94/192
+Sim time min/h: 3.8502935487485956 min, 0.06417155914580992 h.
+Coord. pair 95/192
+Sim time min/h: 3.979411036216576 min, 0.06632351727027627 h.
+Coord. pair 96/192
+Sim time min/h: 3.8340643337675524 min, 0.0639010722294592 h.
+Coord. pair 97/192
+Sim time min/h: 4.724604613766617 min, 0.07874341022944362 h.
+Coord. pair 98/192
+Sim time min/h: 4.777355347851214 min, 0.07962258913085356 h.
+Coord. pair 99/192
+Sim time min/h: 4.129096848333332 min, 0.06881828080555553 h.
+Coord. pair 100/192
+Sim time min/h: 3.8900567213170385 min, 0.06483427868861731 h.
+Coord. pair 101/192
+Sim time min/h: 4.195136990549509 min, 0.06991894984249182 h.
+Coord. pair 102/192
+Sim time min/h: 3.7396473139660276 min, 0.06232745523276713 h.
+Coord. pair 103/192
+Sim time min/h: 3.7076607544673608 min, 0.061794345907789344 h.
+Coord. pair 104/192
+Sim time min/h: 3.587732401600806 min, 0.0597955400266801 h.
+Coord. pair 105/192
+Sim time min/h: 4.154938362084795 min, 0.06924897270141324 h.
+Coord. pair 106/192
+Sim time min/h: 2.0697076015174387 min, 0.03449512669195731 h.
+Coord. pair 107/192
+Sim time min/h: 2.0550905920002456 min, 0.03425150986667076 h.
+Coord. pair 108/192
+Sim time min/h: 1.9545224285820344 min, 0.032575373809700575 h.
+Coord. pair 109/192
+Sim time min/h: 2.0366943454001256 min, 0.03394490575666876 h.
+Coord. pair 110/192
+Sim time min/h: 1.9867028856494775 min, 0.033111714760824626 h.
+Coord. pair 111/192
+Sim time min/h: 2.1095354986338255 min, 0.03515892497723042 h.
+Coord. pair 112/192
+Sim time min/h: 2.160269308266773 min, 0.036004488471112886 h.
+Coord. pair 113/192
+Sim time min/h: 4.373570234283883 min, 0.07289283723806471 h.
+Coord. pair 114/192
+Sim time min/h: 2.098459955149641 min, 0.03497433258582735 h.
+Coord. pair 115/192
+Sim time min/h: 2.0853006786996655 min, 0.034755011311661095 h.
+Coord. pair 116/192
+Sim time min/h: 2.05066306971712 min, 0.03417771782861867 h.
+Coord. pair 117/192
+Sim time min/h: 2.1655809977654523 min, 0.036093016629424206 h.
+Coord. pair 118/192
+Sim time min/h: 2.0658398464341494 min, 0.034430664107235824 h.
+Coord. pair 119/192
+Sim time min/h: 1.982146613484171 min, 0.03303577689140285 h.
+Coord. pair 120/192
+Sim time min/h: 2.1119861077982933 min, 0.03519976846330489 h.
+Coord. pair 121/192
+Sim time min/h: 2.113465535349678 min, 0.0352244255891613 h.
+Coord. pair 122/192
+Sim time min/h: 1.9947620370677517 min, 0.0332460339511292 h.
+Coord. pair 123/192
+Sim time min/h: 2.0317122807512837 min, 0.03386187134585473 h.
+Coord. pair 124/192
+Sim time min/h: 1.942814285500208 min, 0.032380238091670135 h.
+Coord. pair 125/192
+Sim time min/h: 2.0020873493495555 min, 0.033368122489159255 h.
+Coord. pair 126/192
+Sim time min/h: 1.9269587138512483 min, 0.03211597856418747 h.
+Coord. pair 127/192
+Sim time min/h: 2.0511668154659373 min, 0.03418611359109895 h.
+Coord. pair 128/192
+Sim time min/h: 2.135028613851561 min, 0.035583810230859346 h.
+Coord. pair 129/192
+Sim time min/h: 2.1250055271336654 min, 0.03541675878556109 h.
+Coord. pair 130/192
+Sim time min/h: 1.8837720881487863 min, 0.031396201469146436 h.
+Coord. pair 131/192
+Sim time min/h: 1.9855214266843784 min, 0.03309202377807297 h.
+Coord. pair 132/192
+Sim time min/h: 2.034227801632369 min, 0.03390379669387281 h.
+Coord. pair 133/192
+Sim time min/h: 2.1313872491164756 min, 0.03552312081860793 h.
+Coord. pair 134/192
+Sim time min/h: 2.027961448933153 min, 0.03379935748221922 h.
+Coord. pair 135/192
+Sim time min/h: 2.085190479067387 min, 0.03475317465112312 h.
+Coord. pair 136/192
+Sim time min/h: 2.1850808668183164 min, 0.03641801444697194 h.
+Coord. pair 137/192
+Sim time min/h: 4.19549690206574 min, 0.06992494836776234 h.
+Coord. pair 138/192
+Sim time min/h: 1.9167401659671062 min, 0.0319456694327851 h.
+Coord. pair 139/192
+Sim time min/h: 2.0088191145002687 min, 0.03348031857500448 h.
+Coord. pair 140/192
+Sim time min/h: 1.8744867058335026 min, 0.031241445097225044 h.
+Coord. pair 141/192
+Sim time min/h: 1.936918910901295 min, 0.032281981848354915 h.
+Coord. pair 142/192
+Sim time min/h: 1.9056097145677389 min, 0.03176016190946231 h.
+Coord. pair 143/192
+Sim time min/h: 1.9739014146655487 min, 0.032898356911092476 h.
+Coord. pair 144/192
+Sim time min/h: 1.9848989250836895 min, 0.033081648751394827 h.
+Coord. pair 145/192
+Sim time min/h: 4.238259559433208 min, 0.07063765932388681 h.
+Coord. pair 146/192
+Sim time min/h: 1.9031911541843631 min, 0.03171985256973939 h.
+Coord. pair 147/192
+Sim time min/h: 1.835893512464827 min, 0.030598225207747118 h.
+Coord. pair 148/192
+Sim time min/h: 1.8746228578675073 min, 0.031243714297791787 h.
+Coord. pair 149/192
+Sim time min/h: 2.1056790404836647 min, 0.035094650674727744 h.
+Coord. pair 150/192
+Sim time min/h: 2.0602019041330397 min, 0.03433669840221733 h.
+Coord. pair 151/192
+Sim time min/h: 1.959968032699544 min, 0.03266613387832573 h.
+Coord. pair 152/192
+Sim time min/h: 2.050819202248628 min, 0.03418032003747713 h.
+Coord. pair 153/192
+Sim time min/h: 2.1011329509337275 min, 0.03501888251556213 h.
+Coord. pair 154/192
+Sim time min/h: 1.9468570221661745 min, 0.03244761703610291 h.
+Coord. pair 155/192
+Sim time min/h: 1.954409296315862 min, 0.03257348827193103 h.
+Coord. pair 156/192
+Sim time min/h: 1.889033239534668 min, 0.0314838873255778 h.
+Coord. pair 157/192
+Sim time min/h: 1.8957599972820995 min, 0.03159599995470166 h.
+Coord. pair 158/192
+Sim time min/h: 1.8747201490487593 min, 0.031245335817479323 h.
+Coord. pair 159/192
+Sim time min/h: 1.914096813466555 min, 0.03190161355777592 h.
+Coord. pair 160/192
+Sim time min/h: 2.0304236427007707 min, 0.033840394045012843 h.
+Coord. pair 161/192
+Sim time min/h: 1.9924436640169005 min, 0.03320739440028168 h.
+Coord. pair 162/192
+Sim time min/h: 1.8520417406669973 min, 0.030867362344449957 h.
+Coord. pair 163/192
+Sim time min/h: 1.7907685463685388 min, 0.029846142439475646 h.
+Coord. pair 164/192
+Sim time min/h: 1.7925067291168186 min, 0.029875112151946978 h.
+Coord. pair 165/192
+Sim time min/h: 1.953526233417991 min, 0.032558770556966515 h.
+Coord. pair 166/192
+Sim time min/h: 1.9101673908822705 min, 0.031836123181371176 h.
+Coord. pair 167/192
+Sim time min/h: 2.0034460358845534 min, 0.033390767264742556 h.
+Coord. pair 168/192
+Sim time min/h: 2.08033310790003 min, 0.034672218465000494 h.
+Coord. pair 169/192
+Sim time min/h: 2.1162481465842573 min, 0.03527080244307095 h.
+Coord. pair 170/192
+Sim time min/h: 1.9125942218486065 min, 0.031876570364143444 h.
+Coord. pair 171/192
+Sim time min/h: 1.8342504706000908 min, 0.03057084117666818 h.
+Coord. pair 172/192
+Sim time min/h: 1.7988167956820689 min, 0.02998027992803448 h.
+Coord. pair 173/192
+Sim time min/h: 1.9320686909835785 min, 0.03220114484972631 h.
+Coord. pair 174/192
+Sim time min/h: 2.0582150899164846 min, 0.03430358483194141 h.
+Coord. pair 175/192
+Sim time min/h: 1.9997505027160514 min, 0.03332917504526752 h.
+Coord. pair 176/192
+Sim time min/h: 1.9554046878494167 min, 0.03259007813082361 h.
+Coord. pair 177/192
+Sim time min/h: 1.8918694947167145 min, 0.03153115824527857 h.
+Coord. pair 178/192
+Sim time min/h: 1.9671218142514892 min, 0.03278536357085816 h.
+Coord. pair 179/192
+Sim time min/h: 2.078602241749953 min, 0.03464337069583255 h.
+Coord. pair 180/192
+Sim time min/h: 2.049339315132238 min, 0.034155655252203966 h.
+Coord. pair 181/192
+Sim time min/h: 2.1337690678832586 min, 0.03556281779805431 h.
+Coord. pair 182/192
+Sim time min/h: 1.875901692182136 min, 0.0312650282030356 h.
+Coord. pair 183/192
+Sim time min/h: 1.9263079450155298 min, 0.032105132416925496 h.
+Coord. pair 184/192
+Sim time min/h: 1.9662256696494296 min, 0.03277042782749049 h.
+Coord. pair 185/192
+Sim time min/h: 2.060817703065307 min, 0.034346961717755115 h.
+Coord. pair 186/192
+Sim time min/h: 1.944916646250446 min, 0.03241527743750743 h.
+Coord. pair 187/192
+Sim time min/h: 2.0687725647158612 min, 0.03447954274526435 h.
+Coord. pair 188/192
+Sim time min/h: 2.064096652165366 min, 0.03440161086942276 h.
+Coord. pair 189/192
+Sim time min/h: 2.1115658627667773 min, 0.03519276437944629 h.
+Coord. pair 190/192
+Sim time min/h: 2.038709568148867 min, 0.033978492802481115 h.
+Coord. pair 191/192
+Sim time min/h: 2.052456799665621 min, 0.03420761332776035 h.
+Coord. pair 192/192
+Sim time min/h: 2.0153052283334545 min, 0.03358842047222424 h.
+
+JOB STATISTICS
+==============
+Job ID: 1759561
+Cluster: snellius
+User/Group: zimmer/zimmer
+State: RUNNING
+Nodes: 1
+Cores per node: 128
+CPU Utilized: 00:00:00
+CPU Efficiency: 0.00% of 40-01:25:20 core-walltime
+Job Wall-clock time: 07:30:40
+Memory Utilized: 0.00 MB (estimated maximum)
+Memory Efficiency: 0.00% of 218.75 GB (218.75 GB/node)
+WARNING: Efficiency statistics may be misleading for RUNNING jobs.

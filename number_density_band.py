@@ -9,7 +9,6 @@ total_start = time.perf_counter()
 
 # Initialize parameters and files.
 PRE = PRE(
-    # sim='L006N188', 
     sim='L012N376', 
     z0_snap=36, z4_snap=13, DM_lim=1000,
     sim_dir=SIM_ROOT, sim_ver=SIM_TYPE,
@@ -73,8 +72,6 @@ def EOMs(s_val, y):
     # Neutrino outside cell grid.
     else:
         NrDM = NrDM_SNAPSHOTS[idx]
-        # com_DM = DM_COM_SNAPSHOTS[idx]
-        # grad_tot = fct.outside_gravity_com(x_i, com_DM, NrDM, PRE.DM_SIM_MASS)
         grad_tot = fct.outside_gravity(x_i, NrDM, PRE.DM_SIM_MASS)
 
     # Switch to "physical reality" here.
@@ -115,11 +112,12 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
         # ============================================== #
 
         # Generate progenitor index array for current halo.
-        proj_IDs = fct.read_MergerTree(PRE.OUT_DIR, PRE.SIM, halo_ID)
+        splits = re.split('/', SIM_TYPE)
+        MTname = f'{PRE.SIM}_{splits[0]}_{splits[1]}'
+        proj_IDs = fct.read_MergerTree(PRE.OUT_DIR, MTname, halo_ID)
 
         save_GRID_L = np.zeros(len(PRE.NUMS_SNAPS))
         save_num_DM = np.zeros(len(PRE.NUMS_SNAPS))
-        # save_DM_com = []
         for j, (snap, proj_ID) in enumerate(zip(
             PRE.NUMS_SNAPS[::-1], proj_IDs
         )):
@@ -127,13 +125,14 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
             
             proj_ID = int(proj_ID)
 
+
             # --------------------------- #
             # Read and load DM positions. #
             # --------------------------- #
 
             IDname = f'origID{halo_ID}_snap_{snap}'
             fct.read_DM_halo_index(
-                snap, PRE.Z0_STR, proj_ID, IDname, PRE.SIM_DIR, PRE.OUT_DIR
+                snap, proj_ID, IDname, PRE.SIM_DIR, PRE.OUT_DIR
             )
             DM_raw = np.load(f'{PRE.OUT_DIR}/DM_pos_{IDname}.npy')
             
@@ -166,15 +165,6 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
             # Save snapshot specific parameters.
             save_GRID_L[j] = snap_GRID_L
             save_num_DM[j] = np.sum(DM_count)
-            # save_DM_com.append(
-            #     np.load(f'{PRE.OUT_DIR}/DM_com_coord_{IDname}.npy')
-            # )
-
-            # Optional printout.
-            # print(fin_grid.shape, DM_count.shape, cell_com.shape, cell_gen.shape)
-            # print(DM_count.sum() - len(DM_raw))
-            # note: 1 DM particle is "missing" in grid
-            # print(f'snapshot {snap} : cell division rounds: {cell_division_count}')
 
 
             # --------------------------------------------- #
@@ -223,8 +213,6 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
             fct.delete_temp_data(f'{PRE.OUT_DIR}/dPsi_*batch*.npy')
 
         # Save snapshot and halo specific arrays.
-        # save_DM_com_np = np.array(save_DM_com)
-        # np.save(f'{PRE.OUT_DIR}/DM_com_origID{halo_ID}.npy', save_DM_com_np)
         np.save(f'{PRE.OUT_DIR}/snaps_GRID_L_origID{halo_ID}.npy', save_GRID_L)
         np.save(f'{PRE.OUT_DIR}/NrDM_snaps_origID{halo_ID}.npy', save_num_DM)
         # '''
@@ -238,8 +226,6 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
             f'{PRE.OUT_DIR}/snaps_GRID_L_origID{halo_ID}.npy')
         NrDM_SNAPSHOTS = np.load(
             f'{PRE.OUT_DIR}/NrDM_snaps_origID{halo_ID}.npy')
-        # DM_COM_SNAPSHOTS = np.load(
-        #     f'{PRE.OUT_DIR}/DM_com_origID{halo_ID}.npy')
 
         start = time.perf_counter()
 
@@ -283,7 +269,6 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
             fct.delete_temp_data(f'{PRE.OUT_DIR}/DM_count_*.npy')
             fct.delete_temp_data(f'{PRE.OUT_DIR}/DM_pos_*.npy')
             fct.delete_temp_data(f'{PRE.OUT_DIR}/cell_com_*.npy')
-            fct.delete_temp_data(f'{PRE.OUT_DIR}/DM_com_coord*.npy')
             fct.delete_temp_data(f'{PRE.OUT_DIR}/cell_gen_*.npy')
             fct.delete_temp_data(f'{PRE.OUT_DIR}/CoP_*.npy')
             fct.delete_temp_data(f'{PRE.OUT_DIR}/snaps_GRID_L_*.npy')

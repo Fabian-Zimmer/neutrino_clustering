@@ -107,7 +107,9 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
         # ============================================== #
 
         # Generate progenitor index array for current halo.
-        proj_IDs = fct.read_MergerTree(PRE.OUT_DIR, PRE.SIM, halo_ID)
+        splits = re.split('/', SIM_TYPE)
+        MTname = f'{PRE.SIM}_{splits[0]}_{splits[1]}'
+        proj_IDs = fct.read_MergerTree(PRE.OUT_DIR, MTname, halo_ID)
 
         save_GRID_L = np.zeros(len(PRE.NUMS_SNAPS))
         save_num_DM = np.zeros(len(PRE.NUMS_SNAPS))

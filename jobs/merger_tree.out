@@ -1,0 +1,68 @@
+/projects/0/einf180/Tango_sims/L012N376/DMONLY/CDM_TF50
+/gpfs/home4/zimmer/neutrino_clustering_V2/L012N376/DMONLY/CDM_TF50
+Could not find gas gamma, assuming 5./3.
+Data from run 'MergerTree_L012N376_DMONLY_CDM_TF50' has been loaded! 
+
+Could not find gas gamma, assuming 5./3.
+Could not find gas gamma, assuming 5./3.
+Could not find gas gamma, assuming 5./3.
+Could not find gas gamma, assuming 5./3.
+Could not find gas gamma, assuming 5./3.
+Could not find gas gamma, assuming 5./3.
+Could not find gas gamma, assuming 5./3.
+Could not find gas gamma, assuming 5./3.
+Could not find gas gamma, assuming 5./3.
+Could not find gas gamma, assuming 5./3.
+Could not find gas gamma, assuming 5./3.
+Could not find gas gamma, assuming 5./3.
+Could not find gas gamma, assuming 5./3.
+Could not find gas gamma, assuming 5./3.
+Could not find gas gamma, assuming 5./3.
+Could not find gas gamma, assuming 5./3.
+Could not find gas gamma, assuming 5./3.
+Could not find gas gamma, assuming 5./3.
+Could not find gas gamma, assuming 5./3.
+Could not find gas gamma, assuming 5./3.
+Could not find gas gamma, assuming 5./3.
+Could not find gas gamma, assuming 5./3.
+Could not find gas gamma, assuming 5./3.
+Could not find gas gamma, assuming 5./3.
+Could not find gas gamma, assuming 5./3.
+Could not find gas gamma, assuming 5./3.
+Could not find gas gamma, assuming 5./3.
+Could not find gas gamma, assuming 5./3.
+Could not find gas gamma, assuming 5./3.
+Could not find gas gamma, assuming 5./3.
+Could not find gas gamma, assuming 5./3.
+Could not find gas gamma, assuming 5./3.
+Could not find gas gamma, assuming 5./3.
+Could not find gas gamma, assuming 5./3.
+Could not find gas gamma, assuming 5./3.
+Could not find gas gamma, assuming 5./3.
+Could not find gas gamma, assuming 5./3.
+Could not find gas gamma, assuming 5./3.
+Could not find gas gamma, assuming 5./3.
+Could not find gas gamma, assuming 5./3.
+Could not find gas gamma, assuming 5./3.
+Could not find gas gamma, assuming 5./3.
+Could not find gas gamma, assuming 5./3.
+Could not find gas gamma, assuming 5./3.
+Could not find gas gamma, assuming 5./3.
+Could not find gas gamma, assuming 5./3.
+Could not find gas gamma, assuming 5./3.
+Could not find gas gamma, assuming 5./3.
+Could not find gas gamma, assuming 5./3.
+
+JOB STATISTICS
+==============
+Job ID: 1759291
+Cluster: snellius
+User/Group: zimmer/zimmer
+State: COMPLETED (exit code 0)
+Nodes: 1
+Cores per node: 32
+CPU Utilized: 00:00:13
+CPU Efficiency: 0.62% of 00:34:40 core-walltime
+Job Wall-clock time: 00:01:05
+Memory Utilized: 267.83 MB
+Memory Efficiency: 0.47% of 56.00 GB

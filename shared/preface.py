@@ -1,11 +1,12 @@
 ###############
-### Imports ### #SNELLIUS TEST
+### Imports ###
 ###############
-import sys, os
-from sys import getsizeof
+
+import sys, os, shutil
 import time
 import glob
 import random
+import string
 import gc
 import argparse
 import pathlib
@@ -47,13 +48,10 @@ import colorcet as cc
 # import imageio
 
 
-# Fix random seeds.
-# SEED = 1
-
-
 #############
 ### Plots ###
 #############
+
 SMALL_SIZE = 12
 MEDIUM_SIZE = 14
 BIGGER_SIZE = 16
@@ -68,10 +66,10 @@ plt.rc('legend', fontsize=SMALL_SIZE)    # legend fontsize
 plt.rc('figure', titlesize=BIGGER_SIZE)  # fontsize of the figure title
 
 
-
 #############
 ### Units ###
 #############
+
 Pi = np.pi
 hc_val = (const.h/(2*Pi)*const.c).convert(unit.eV*unit.cm).value
 
@@ -112,10 +110,10 @@ arcsec = arcmin/60.                 # Arcsecond
 sr     = 1.                         # Steradian
 
 
-
 #################
 ### Constants ###
 #################
+
 # note: should these be read from the simulation box?
 h = 0.674
 H0 = h * 100 * km/s/Mpc
@@ -125,7 +123,6 @@ Omega_L = 1.-Omega_M  # since we don't use Omega_R
 
 T_CMB = 2.72548*K
 T_CNB = np.power(4/11, 1/3)*T_CMB
-
 
 
 ##########################################
@@ -167,10 +164,10 @@ DIST_AG = 0.784e3*kpc                              # Distance
 X_AG    = np.array([632.29742673, -377.40315121, -288.27006757])
 
 
-
 ######################
 ### Control Center ###
 ######################
+
 NU_MASS = 0.3*eV  
 NU_MASS_KG = NU_MASS/kg
 NU_MASSES = np.array([0.01, 0.05, 0.1, 0.3])*eV
@@ -233,13 +230,14 @@ HOME = pathlib.Path.home()
 if str(HOME) == '/home/zimmer':
     SIM_ROOT = '/projects/0/einf180/Tango_sims'
     # SIM_ROOT = '/archive/ccorrea/Tango_sims' #! can't read from archive
-    SIM_TYPE = 'DMONLY/SigmaConstant00'
+    # SIM_TYPE = 'DMONLY/SigmaConstant00'
+    SIM_TYPE = 'DMONLY/CDM_TF50'
 
 # Paths for FZ_desktop.
 elif str(HOME) == '/home/fabian':
     SIM_ROOT = f'{HOME}/ownCloud/snellius'
-    SIM_TYPE = 'DMONLY'
-    # SIM_TYPE = 'CDM_TF50'
+    SIM_TYPE = 'DMONLY/SigmaConstant00'
+    # SIM_TYPE = 'DMONLY/CDM_TF50'
 
 # Paths for FZ_laptop.
 elif str(HOME) == '/home/fpc':

@@ -1,0 +1,37 @@
+Healpy parameters: Nside=2, Npix=48, pix_sr=0.2617993877991494
+********************* Initialization *********************
+# Initial conditions for neutrinos:
+PHIs = 48, THETAs=48, Vs=10000
+Total neutrinos: 23040000
+# Simulation parameters:
+Simulation box: L012N376
+Snapshot from 0062 (z=0) to 0013 (z=4)
+Pre/Sim CPUs 10/32
+DM limit for cells: 1000
+# File management:
+Box files directory: 
+ /projects/0/einf180/Tango_sims/L012N376/DMONLY/CDM_TF50
+Output directory: 
+ /gpfs/home4/zimmer/neutrino_clustering_V2/L012N376/DMONLY/CDM_TF50
+**********************************************************
+********Number density band********
+Halo batch params (Rvir,Mvir,cNFW):
+[[299.54209457  12.45775108   8.69090077]]
+***********************************
+halo 1/1 ; snapshot 0062
+All halos in range: 40963
+
+JOB STATISTICS
+==============
+Job ID: 1760520
+Cluster: snellius
+User/Group: zimmer/zimmer
+State: RUNNING
+Nodes: 1
+Cores per node: 128
+CPU Utilized: 00:00:00
+CPU Efficiency: 0.00% of 1-09:40:16 core-walltime
+Job Wall-clock time: 00:15:47
+Memory Utilized: 0.00 MB (estimated maximum)
+Memory Efficiency: 0.00% of 218.75 GB (218.75 GB/node)
+WARNING: Efficiency statistics may be misleading for RUNNING jobs.

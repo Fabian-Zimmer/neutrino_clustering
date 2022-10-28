@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=PreCalc
+#SBATCH --job-name=Band
 #SBATCH -p thin
 #SBATCH -t 01:00:00
 #SBATCH -N 1
