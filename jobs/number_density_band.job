@@ -11,7 +11,7 @@
 #SBATCH -v
 
 module purge
+
 source $HOME/.conda/envs/neutrino_clustering/bin/activate
 
-# Run precalculations.
 python $HOME/neutrino_clustering_V2/number_density_band.py

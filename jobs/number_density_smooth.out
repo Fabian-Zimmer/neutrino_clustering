@@ -1,0 +1,30 @@
+********************* Initialization *********************
+# Initial conditions for neutrinos:
+PHIs = 10, THETAs=10, Vs=100
+Total neutrinos: 10000
+# Simulation parameters:
+Simulation box: LinfNinf
+Sim CPUs 56
+Output directory: 
+ /gpfs/home4/zimmer/neutrino_clustering_V2/LinfNinf
+**********************************************************
+From 1 to and incl. 5000
+Batch 1/2 done!
+From 5001 to and incl. 10000
+Batch 2/2 done!
+Time min/h: 1.8398468054831028 min, 0.03066411342471838 h.
+
+JOB STATISTICS
+==============
+Job ID: 1763693
+Cluster: snellius
+User/Group: zimmer/zimmer
+State: RUNNING
+Nodes: 1
+Cores per node: 128
+CPU Utilized: 00:00:00
+CPU Efficiency: 0.00% of 04:43:44 core-walltime
+Job Wall-clock time: 00:02:13
+Memory Utilized: 0.00 MB (estimated maximum)
+Memory Efficiency: 0.00% of 218.75 GB (218.75 GB/node)
+WARNING: Efficiency statistics may be misleading for RUNNING jobs.

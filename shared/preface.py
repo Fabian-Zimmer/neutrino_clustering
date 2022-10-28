@@ -252,11 +252,22 @@ elif str(HOME) == '/home/fpc':
 class PRE:
 
     def __init__(
-        self, sim, z0_snap, z4_snap, DM_lim,
-        sim_dir, sim_ver,
+        self, sim, z0_snap=0, z4_snap=0, 
+        sim_dir=None, sim_ver=None, DM_lim=None,
         phis=0, thetas=0, vels=0, 
-        pre_CPUs=0, sim_CPUs=0
+        pre_CPUs=0, sim_CPUs=0,
+        MW_HALO=False, VC_HALO=False, AG_HALO=False
         ):
+
+        # File management.
+        self.SIM = sim
+
+        if sim_ver is None:
+            self.HALOS = 'MW'*MW_HALO + '+VC'*VC_HALO + '+AG'*AG_HALO
+            self.OUT_DIR = f'{os.getcwd()}/{sim}'
+        else:
+            self.SIM_DIR = f'{sim_dir}/{sim}/{sim_ver}'
+            self.OUT_DIR = f'{os.getcwd()}/{sim}/{sim_ver}'
 
         # Initial conditions for neutrinos.
         self.PHIs = phis
@@ -271,53 +282,53 @@ class PRE:
         self.MOMENTA = np.geomspace(self.LOWER, self.UPPER, vels)
 
         # Simulation parameters.
-        self.PRE_CPUs = pre_CPUs
         self.SIM_CPUs = sim_CPUs
-        self.DM_LIM = DM_lim
-        self.Z0_INT = int(z0_snap)
-        self.Z4_INT = int(z4_snap)
-        self.Z0_STR = f'{z0_snap:04d}'
-        self.Z4_STR = f'{z4_snap:04d}'
-        snaps = np.arange(z4_snap, z0_snap+1)
-        zeds = np.zeros(len(snaps))
-        nums = []
 
-        # File management.
-        self.SIM = sim
-        self.SIM_DIR = f'{sim_dir}/{sim}/{sim_ver}'
-        self.OUT_DIR = f'{os.getcwd()}/{sim}/{sim_ver}'
+        if sim_ver is None:
+            ...
+        else:
+            self.PRE_CPUs = pre_CPUs
+            self.DM_LIM = DM_lim
+            self.Z0_INT = int(z0_snap)
+            self.Z4_INT = int(z4_snap)
+            self.Z0_STR = f'{z0_snap:04d}'
+            self.Z4_STR = f'{z4_snap:04d}'
+            snaps = np.arange(z4_snap, z0_snap+1)
+            zeds = np.zeros(len(snaps))
+            nums = []
 
-        #! No Halo tests.
-        # self.OUT_DIR = f'{os.getcwd()}/{sim}/{sim_ver}_noHalo'
+            #! No Halo tests.
+            # self.OUT_DIR = f'{os.getcwd()}/{sim}/{sim_ver}_noHalo'
 
-        # Store parameters unique to each simulation box.
-        for j, i in enumerate(snaps):
-            snap_zi = f'{i:04d}'
-            snap_z0 = f'{snaps[-1]:04d}'
-            nums.append(snap_zi)
+            # Store parameters unique to each simulation box.
+            for j, i in enumerate(snaps):
+                snap_zi = f'{i:04d}'
+                snap_z0 = f'{snaps[-1]:04d}'
+                nums.append(snap_zi)
 
-            with h5py.File(f'{self.SIM_DIR}/snapshot_{snap_zi}.hdf5') as snap:
-                
-                # Store redshifts.
-                zeds[j] = snap['Cosmology'].attrs['Redshift'][0]
+                with h5py.File(f'{self.SIM_DIR}/snapshot_{snap_zi}.hdf5') as snap:
+                    
+                    # Store redshifts.
+                    zeds[j] = snap['Cosmology'].attrs['Redshift'][0]
 
-                if snap_zi == snap_z0:
+                    if snap_zi == snap_z0:
 
-                    # DM mass.
-                    dm_mass = snap['PartType1/Masses'][:]*1e10*Msun
-                    self.DM_SIM_MASS = np.unique(dm_mass)[0]
+                        # DM mass.
+                        dm_mass = snap['PartType1/Masses'][:]*1e10*Msun
+                        self.DM_SIM_MASS = np.unique(dm_mass)[0]
 
-                    #! No Halo tests.
-                    # self.DM_SIM_MASS = 0.
+                        #! No Halo tests.
+                        # self.DM_SIM_MASS = 0.
 
-                    # Gravity smoothening length.
-                    sl = snap['GravityScheme'].attrs[
-                        'Maximal physical DM softening length (Plummer equivalent) [internal units]'
-                    ][0]
-                    self.SMOOTH_L = sl*1e6*pc
+                        # Gravity smoothening length.
+                        sl = snap['GravityScheme'].attrs[
+                            'Maximal physical DM softening length (Plummer equivalent) [internal units]'
+                        ][0]
+                        self.SMOOTH_L = sl*1e6*pc
 
-        self.ZEDS_SNAPS = np.asarray(zeds)
-        self.NUMS_SNAPS = np.asarray(nums)
+            self.ZEDS_SNAPS = np.asarray(zeds)
+            self.NUMS_SNAPS = np.asarray(nums)
+
 
         # Display summary message.
         print('********************* Initialization *********************')
@@ -332,12 +343,17 @@ class PRE:
 
         print('# Simulation parameters:')
         print(f'Simulation box: {self.SIM}')
-        print(f'Snapshot from {self.Z0_STR} (z=0) to {self.Z4_STR} (z=4)')
-        print(f'Pre/Sim CPUs {self.PRE_CPUs}/{self.SIM_CPUs}')
-        print(f'DM limit for cells: {self.DM_LIM}')
 
-        print('# File management:')
-        print(f'Box files directory: \n {self.SIM_DIR}')
-        print(f'Output directory: \n {self.OUT_DIR}')
+        if sim_ver is None:
+            print(f'Sim CPUs {self.SIM_CPUs}')
+            print(f'Output directory: \n {self.OUT_DIR}')
+        else:
+            print(f'Snapshot from {self.Z0_STR} (z=0) to {self.Z4_STR} (z=4)')
+            print(f'Pre/Sim CPUs {self.PRE_CPUs}/{self.SIM_CPUs}')
+            print(f'DM limit for cells: {self.DM_LIM}')
+
+            print('# File management:')
+            print(f'Box files directory: \n {self.SIM_DIR}')
+            print(f'Output directory: \n {self.OUT_DIR}')
 
         print('**********************************************************')
