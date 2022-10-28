@@ -261,9 +261,9 @@ class PRE:
 
         # File management.
         self.SIM = sim
+        self.HALOS = 'MW'*MW_HALO + '+VC'*VC_HALO + '+AG'*AG_HALO
 
         if sim_ver is None:
-            self.HALOS = 'MW'*MW_HALO + '+VC'*VC_HALO + '+AG'*AG_HALO
             self.OUT_DIR = f'{os.getcwd()}/{sim}'
         else:
             self.SIM_DIR = f'{sim_dir}/{sim}/{sim_ver}'
