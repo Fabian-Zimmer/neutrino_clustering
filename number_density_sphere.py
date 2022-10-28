@@ -5,7 +5,7 @@ import shared.functions as fct
 total_start = time.perf_counter()
 
 # Generate (phi, theta) coord. pairs based on desired healpy map.
-Nside = 2**1              # Specify nside parameter
+Nside = 2**2              # Specify nside parameter
 Npix = 12 * Nside**2      # Number of pixels
 pix_sr = (4*np.pi)/Npix   # Pixel size  [sr]
 print(f'Healpy parameters: Nside={Nside}, Npix={Npix}, pix_sr={pix_sr}')
@@ -16,9 +16,10 @@ PRE = PRE(
     sim='L012N376', 
     z0_snap=62, z4_snap=13, DM_lim=1000,
     sim_dir=SIM_ROOT, sim_ver=SIM_TYPE,
-    phis=hp_phis, thetas=hp_thetas, vels=10000,
+    phis=hp_phis, thetas=hp_thetas, vels=100,
     pre_CPUs=10, sim_CPUs=32
 )
+
 
 # Make temporary folder to store files, s.t. parallel runs don't clash.
 rand_code = ''.join(
@@ -43,6 +44,11 @@ print('********Number density band********')
 print('Halo batch params (Rvir,Mvir,cNFW):')
 print(halo_batch_params)
 print('***********************************')
+
+
+Rvir_halo = halo_batch_params[0,0]
+DM_range_kpc = 2*Rvir_halo*kpc
+halos_inRange_lim = 40/2
 
 
 def EOMs(s_val, y):
@@ -137,8 +143,6 @@ for j, (snap, proj_ID) in enumerate(zip(
     # --------------------------- #
 
     IDname = f'origID{halo_ID}_snap_{snap}'
-    DM_range_kpc = 16*Mpc
-    halos_inRange_lim = 1
     fct.read_DM_halos_inRange(
         snap, proj_ID, DM_range_kpc, halos_inRange_lim, 
         IDname, PRE.SIM_DIR, TEMP_DIR, CPUs=2
@@ -284,7 +288,7 @@ for i, (phi, theta) in enumerate(zip(hp_phis, hp_thetas)):
         vels_CoordPair = fct.load_sim_data(TEMP_DIR, CPname, 'velocities')
 
         # note: The final number density is not stored in the temporary folder.
-        out_file = f'{PRE.OUT_DIR}/number_densities_{CPname}.npy'
+        out_file = f'{PRE.OUT_DIR}/number_densities_{CPname}_DMrange_{DM_range_kpc}.npy'
         fct.number_densities_mass_range(
             vels_CoordPair, nu_mass_range, out_file, pix_sr
         )
