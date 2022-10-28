@@ -1,0 +1,796 @@
+Healpy parameters: Nside=4, Npix=192, pix_sr=0.06544984694978735
+********************* Initialization *********************
+# Initial conditions for neutrinos:
+PHIs = 192, THETAs=192, Vs=10000
+Total neutrinos: 368640000
+# Simulation parameters:
+Simulation box: LinfNinf
+Sim CPUs 128
+Output directory: 
+ /gpfs/home4/zimmer/neutrino_clustering_V2/LinfNinf
+**********************************************************
+***Running simulation with 128 CPUs***
+Coord. pair 1/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 1.1411844964158566 min, 0.019019741606930943 h.
+Coord. pair 2/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 1.0960816986490196 min, 0.018268028310816992 h.
+Coord. pair 3/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 1.0983744480317303 min, 0.01830624080052884 h.
+Coord. pair 4/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 1.1043448534153868 min, 0.018405747556923112 h.
+Coord. pair 5/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 1.0160329167323652 min, 0.01693388194553942 h.
+Coord. pair 6/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 1.0996529197494964 min, 0.018327548662491606 h.
+Coord. pair 7/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 1.1005776966844374 min, 0.01834296161140729 h.
+Coord. pair 8/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 1.0251380800657595 min, 0.017085634667762657 h.
+Coord. pair 9/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 1.0121955784658592 min, 0.016869926307764318 h.
+Coord. pair 10/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 1.088246927066939 min, 0.018137448784448985 h.
+Coord. pair 11/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 1.0935344871502215 min, 0.018225574785837025 h.
+Coord. pair 12/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 1.0134648140675078 min, 0.016891080234458462 h.
+Coord. pair 13/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.9473365103496083 min, 0.015788941839160138 h.
+Coord. pair 14/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 1.0006779415164297 min, 0.016677965691940497 h.
+Coord. pair 15/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 1.1044169467660443 min, 0.018406949112767405 h.
+Coord. pair 16/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 1.0914260041337305 min, 0.018190433402228843 h.
+Coord. pair 17/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.998670248015939 min, 0.016644504133598984 h.
+Coord. pair 18/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.9445486427168361 min, 0.015742477378613937 h.
+Coord. pair 19/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.9454769765511931 min, 0.015757949609186552 h.
+Coord. pair 20/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 1.0071076840007056 min, 0.016785128066678427 h.
+Coord. pair 21/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 1.0997061671165285 min, 0.018328436118608807 h.
+Coord. pair 22/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 1.1024771689320914 min, 0.018374619482201524 h.
+Coord. pair 23/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.9992536683004194 min, 0.01665422780500699 h.
+Coord. pair 24/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.9459673756500706 min, 0.015766122927501177 h.
+Coord. pair 25/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.8801898568829832 min, 0.01466983094804972 h.
+Coord. pair 26/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.9148422979342286 min, 0.015247371632237142 h.
+Coord. pair 27/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.9971884394336181 min, 0.016619807323893634 h.
+Coord. pair 28/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 1.0979790947341825 min, 0.018299651578903044 h.
+Coord. pair 29/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 1.1036870939172028 min, 0.018394784898620047 h.
+Coord. pair 30/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 1.0347524000001915 min, 0.017245873333336527 h.
+Coord. pair 31/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.9283729854505509 min, 0.015472883090842516 h.
+Coord. pair 32/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.8793093221320305 min, 0.014655155368867174 h.
+Coord. pair 33/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.8773707779493027 min, 0.014622846299155046 h.
+Coord. pair 34/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.9278659192825823 min, 0.015464431988043039 h.
+Coord. pair 35/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.9950211165841514 min, 0.016583685276402523 h.
+Coord. pair 36/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 1.0961529467332487 min, 0.018269215778887477 h.
+Coord. pair 37/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 1.095723231266796 min, 0.0182620538544466 h.
+Coord. pair 38/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.9960378716680377 min, 0.016600631194467294 h.
+Coord. pair 39/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.9228003615823884 min, 0.01538000602637314 h.
+Coord. pair 40/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.8791278166832247 min, 0.014652130278053744 h.
+Coord. pair 41/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.7004542214155662 min, 0.01167423702359277 h.
+Coord. pair 42/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.8520635791336342 min, 0.014201059652227236 h.
+Coord. pair 43/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.9204252854649287 min, 0.015340421424415478 h.
+Coord. pair 44/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 1.0291217976327365 min, 0.017152029960545608 h.
+Coord. pair 45/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 1.1663530727984228 min, 0.019439217879973714 h.
+Coord. pair 46/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 1.0531691347171241 min, 0.01755281891195207 h.
+Coord. pair 47/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.9277938103846585 min, 0.01546323017307764 h.
+Coord. pair 48/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.8531523576161514 min, 0.01421920596026919 h.
+Coord. pair 49/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.7057226771314162 min, 0.011762044618856937 h.
+Coord. pair 50/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.8508998769665292 min, 0.01418166461610882 h.
+Coord. pair 51/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.9214449632660641 min, 0.015357416054434402 h.
+Coord. pair 52/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 1.0340451558838444 min, 0.017234085931397407 h.
+Coord. pair 53/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 1.1491755002333472 min, 0.01915292500388912 h.
+Coord. pair 54/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 1.0261868812667672 min, 0.017103114687779454 h.
+Coord. pair 55/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.9238350035506301 min, 0.015397250059177168 h.
+Coord. pair 56/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.8510281124676112 min, 0.014183801874460188 h.
+Coord. pair 57/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.7764626177512886 min, 0.012941043629188142 h.
+Coord. pair 58/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.8620215196492306 min, 0.014367025327487177 h.
+Coord. pair 59/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.9595421242003794 min, 0.01599236873667299 h.
+Coord. pair 60/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 1.082360321568558 min, 0.0180393386928093 h.
+Coord. pair 61/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 1.1262498827166079 min, 0.01877083137861013 h.
+Coord. pair 62/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.9557694035330011 min, 0.01592949005888335 h.
+Coord. pair 63/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.8544122120831161 min, 0.014240203534718603 h.
+Coord. pair 64/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.7718804697835974 min, 0.012864674496393289 h.
+Coord. pair 65/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.780467281267435 min, 0.013007788021123918 h.
+Coord. pair 66/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.863452929048799 min, 0.014390882150813317 h.
+Coord. pair 67/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.96354669938252 min, 0.016059111656375333 h.
+Coord. pair 68/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 1.1070142949504467 min, 0.018450238249174113 h.
+Coord. pair 69/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 1.0886656994504544 min, 0.01814442832417424 h.
+Coord. pair 70/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.9554929050675127 min, 0.015924881751125212 h.
+Coord. pair 71/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.8543026161826371 min, 0.014238376936377285 h.
+Coord. pair 72/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.7733075351842369 min, 0.012888458919737281 h.
+Coord. pair 73/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.6074474998342339 min, 0.01012412499723723 h.
+Coord. pair 74/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.7830721014159887 min, 0.013051201690266478 h.
+Coord. pair 75/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.8848349346333028 min, 0.014747248910555046 h.
+Coord. pair 76/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 1.0116340678495666 min, 0.016860567797492777 h.
+Coord. pair 77/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 1.1496863189327997 min, 0.019161438648879994 h.
+Coord. pair 78/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 1.0169818416334844 min, 0.016949697360558073 h.
+Coord. pair 79/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.8921411170003315 min, 0.014869018616672192 h.
+Coord. pair 80/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.7761115603828027 min, 0.012935192673046712 h.
+Coord. pair 81/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.6054360729661615 min, 0.010090601216102692 h.
+Coord. pair 82/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.7820113412317975 min, 0.013033522353863292 h.
+Coord. pair 83/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.8922993621517283 min, 0.014871656035862138 h.
+Coord. pair 84/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 1.0109325123329957 min, 0.01684887520554993 h.
+Coord. pair 85/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 1.1550089642502523 min, 0.01925014940417087 h.
+Coord. pair 86/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 1.0117555911672147 min, 0.016862593186120246 h.
+Coord. pair 87/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.894569092282715 min, 0.014909484871378583 h.
+Coord. pair 88/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.7809849915657348 min, 0.01301641652609558 h.
+Coord. pair 89/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.6150914379997023 min, 0.010251523966661706 h.
+Coord. pair 90/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.717712370599232 min, 0.011961872843320533 h.
+Coord. pair 91/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.8183419624847981 min, 0.013639032708079969 h.
+Coord. pair 92/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.9397858769826901 min, 0.0156630979497115 h.
+Coord. pair 93/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.9367643060996973 min, 0.015612738434994954 h.
+Coord. pair 94/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.813084256000972 min, 0.013551404266682866 h.
+Coord. pair 95/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.7190524699826104 min, 0.011984207833043508 h.
+Coord. pair 96/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.6858241585665382 min, 0.011430402642775638 h.
+Coord. pair 97/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.6204742892839324 min, 0.010341238154732207 h.
+Coord. pair 98/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.7194045345337751 min, 0.011990075575562918 h.
+Coord. pair 99/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.8140926379846254 min, 0.01356821063307709 h.
+Coord. pair 100/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.9424710029658551 min, 0.015707850049430917 h.
+Coord. pair 101/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.9358758233992073 min, 0.015597930389986787 h.
+Coord. pair 102/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.8150523525682123 min, 0.013584205876136872 h.
+Coord. pair 103/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.7169135220504056 min, 0.011948558700840094 h.
+Coord. pair 104/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.6135649946673463 min, 0.01022608324445577 h.
+Coord. pair 105/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.6067236149664192 min, 0.01011206024944032 h.
+Coord. pair 106/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.7826747471660686 min, 0.013044579119434475 h.
+Coord. pair 107/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.8907441797336408 min, 0.014845736328894014 h.
+Coord. pair 108/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 1.0104950697006037 min, 0.01684158449501006 h.
+Coord. pair 109/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 1.1444304978998843 min, 0.01907384163166474 h.
+Coord. pair 110/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 1.0085972564003896 min, 0.016809954273339825 h.
+Coord. pair 111/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.8956677569328652 min, 0.014927795948881085 h.
+Coord. pair 112/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.7849566317997717 min, 0.013082610529996196 h.
+Coord. pair 113/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.6107796521837978 min, 0.010179660869729963 h.
+Coord. pair 114/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.8009452363165717 min, 0.013349087271942861 h.
+Coord. pair 115/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.8923592663176048 min, 0.014872654438626747 h.
+Coord. pair 116/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 1.0132875040658595 min, 0.016888125067764326 h.
+Coord. pair 117/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 1.159609455667669 min, 0.019326824261127817 h.
+Coord. pair 118/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 1.0114521327331507 min, 0.016857535545552513 h.
+Coord. pair 119/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.8921413801668677 min, 0.014869023002781128 h.
+Coord. pair 120/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.7749473307999627 min, 0.012915788846666046 h.
+Coord. pair 121/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.7727303993674771 min, 0.012878839989457953 h.
+Coord. pair 122/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.8499295443005395 min, 0.014165492405008992 h.
+Coord. pair 123/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.9496011993013478 min, 0.015826686655022463 h.
+Coord. pair 124/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 1.0829085173512187 min, 0.018048475289186978 h.
+Coord. pair 125/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 1.0909238880015133 min, 0.01818206480002522 h.
+Coord. pair 126/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.960864482431983 min, 0.01601440804053305 h.
+Coord. pair 127/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.8503044269998402 min, 0.014171740449997337 h.
+Coord. pair 128/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.7663602166828544 min, 0.012772670278047573 h.
+Coord. pair 129/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.7707851869500397 min, 0.012846419782500663 h.
+Coord. pair 130/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.9208923248321904 min, 0.01534820541386984 h.
+Coord. pair 131/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.9567198752988285 min, 0.015945331254980474 h.
+Coord. pair 132/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 1.0738875795175167 min, 0.017898126325291943 h.
+Coord. pair 133/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 1.0842864550999365 min, 0.018071440918332276 h.
+Coord. pair 134/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.96161882931677 min, 0.016026980488612834 h.
+Coord. pair 135/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.851638772066993 min, 0.014193979534449884 h.
+Coord. pair 136/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.7669561805164752 min, 0.01278260300860792 h.
+Coord. pair 137/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.7004369308822789 min, 0.011673948848037982 h.
+Coord. pair 138/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.840850519532493 min, 0.01401417532554155 h.
+Coord. pair 139/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.9250612223501472 min, 0.01541768703916912 h.
+Coord. pair 140/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 1.0265212999676199 min, 0.017108688332793665 h.
+Coord. pair 141/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 1.1395507827672797 min, 0.018992513046121328 h.
+Coord. pair 142/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 1.019236856784361 min, 0.016987280946406016 h.
+Coord. pair 143/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.9270872819004581 min, 0.015451454698340968 h.
+Coord. pair 144/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.8451183053994706 min, 0.014085305089991177 h.
+Coord. pair 145/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.7005614081999132 min, 0.011676023469998553 h.
+Coord. pair 146/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.8455910436828465 min, 0.014093184061380775 h.
+Coord. pair 147/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.930314488800165 min, 0.01550524148000275 h.
+Coord. pair 148/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 1.0231987941505698 min, 0.01705331323584283 h.
+Coord. pair 149/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 1.1431840091846728 min, 0.019053066819744547 h.
+Coord. pair 150/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 1.0274603003674807 min, 0.017124338339458013 h.
+Coord. pair 151/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.9299619007816848 min, 0.015499365013028081 h.
+Coord. pair 152/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.8427870615831732 min, 0.01404645102638622 h.
+Coord. pair 153/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.8786796390835662 min, 0.01464466065139277 h.
+Coord. pair 154/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.9201995742681902 min, 0.015336659571136503 h.
+Coord. pair 155/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.9945708349502335 min, 0.01657618058250389 h.
+Coord. pair 156/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 1.0987128800149852 min, 0.018311881333583087 h.
+Coord. pair 157/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 1.0971424474846572 min, 0.01828570745807762 h.
+Coord. pair 158/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 1.0026769935172828 min, 0.016711283225288046 h.
+Coord. pair 159/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.9256568073159239 min, 0.015427613455265398 h.
+Coord. pair 160/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.879300947766751 min, 0.014655015796112518 h.
+Coord. pair 161/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.8820019868648766 min, 0.014700033114414611 h.
+Coord. pair 162/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.9345971983838051 min, 0.015576619973063418 h.
+Coord. pair 163/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.992786488198908 min, 0.016546441469981802 h.
+Coord. pair 164/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 1.095542206968336 min, 0.0182590367828056 h.
+Coord. pair 165/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 1.0880084711165787 min, 0.018133474518609645 h.
+Coord. pair 166/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.9984959152992815 min, 0.016641598588321357 h.
+Coord. pair 167/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.9273379063175525 min, 0.01545563177195921 h.
+Coord. pair 168/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.8718952055011565 min, 0.014531586758352609 h.
+Coord. pair 169/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.9384839799332743 min, 0.01564139966555457 h.
+Coord. pair 170/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.9902965398000864 min, 0.01650494233000144 h.
+Coord. pair 171/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 1.0961908545500287 min, 0.018269847575833813 h.
+Coord. pair 172/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 1.093202791766574 min, 0.018220046529442903 h.
+Coord. pair 173/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 1.0043635743495543 min, 0.016739392905825903 h.
+Coord. pair 174/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.9564537946678077 min, 0.015940896577796796 h.
+Coord. pair 175/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.9441822032327764 min, 0.015736370053879605 h.
+Coord. pair 176/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 1.0206251863331999 min, 0.01701041977222 h.
+Coord. pair 177/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 1.0976785588990121 min, 0.01829464264831687 h.
+Coord. pair 178/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 1.0967837646836416 min, 0.018279729411394028 h.
+Coord. pair 179/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 1.0003232665340571 min, 0.016672054442234286 h.
+Coord. pair 180/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 0.9416639728335819 min, 0.015694399547226366 h.
+Coord. pair 181/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 1.0144464746835486 min, 0.01690744124472581 h.
+Coord. pair 182/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 1.0921511181494377 min, 0.01820251863582396 h.
+Coord. pair 183/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 1.0950467694182104 min, 0.018250779490303508 h.
+Coord. pair 184/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 1.0092262446841536 min, 0.01682043741140256 h.
+Coord. pair 185/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 1.0191675439845616 min, 0.016986125733076025 h.
+Coord. pair 186/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 1.1012598961009643 min, 0.01835433160168274 h.
+Coord. pair 187/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 1.1019700102993133 min, 0.018366166838321887 h.
+Coord. pair 188/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 1.032520907917448 min, 0.017208681798624132 h.
+Coord. pair 189/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 1.093474615799884 min, 0.018224576929998067 h.
+Coord. pair 190/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 1.0982951225654687 min, 0.018304918709424477 h.
+Coord. pair 191/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 1.1083699951161785 min, 0.01847283325193631 h.
+Coord. pair 192/192
+From 1 to and incl. 10000
+Batch 1/1 done!
+Sim time min/h: 1.0935007207328453 min, 0.01822501201221409 h.
+Total time: 181.65503321536818 min, 3.0275838869228027 h.
+
+JOB STATISTICS
+==============
+Job ID: 1764019
+Cluster: snellius
+User/Group: zimmer/zimmer
+State: RUNNING
+Nodes: 1
+Cores per node: 128
+CPU Utilized: 00:00:00
+CPU Efficiency: 0.00% of 16-04:33:04 core-walltime
+Job Wall-clock time: 03:02:08
+Memory Utilized: 0.00 MB (estimated maximum)
+Memory Efficiency: 0.00% of 218.75 GB (218.75 GB/node)
+WARNING: Efficiency statistics may be misleading for RUNNING jobs.

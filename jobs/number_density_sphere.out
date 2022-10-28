@@ -1,12 +1,11 @@
-Healpy parameters: Nside=2, Npix=48, pix_sr=0.2617993877991494
 ********************* Initialization *********************
 # Initial conditions for neutrinos:
-PHIs = 48, THETAs=48, Vs=10000
-Total neutrinos: 23040000
+PHIs = 10, THETAs=10, Vs=100
+Total neutrinos: 10000
 # Simulation parameters:
 Simulation box: L012N376
 Snapshot from 0062 (z=0) to 0013 (z=4)
-Pre/Sim CPUs 10/32
+Pre/Sim CPUs 10/128
 DM limit for cells: 1000
 # File management:
 Box files directory: 
@@ -19,19 +18,98 @@ Halo batch params (Rvir,Mvir,cNFW):
 [[299.54209457  12.45775108   8.69090077]]
 ***********************************
 halo 1/1 ; snapshot 0062
-All halos in range: 40963
-
-JOB STATISTICS
-==============
-Job ID: 1760520
-Cluster: snellius
-User/Group: zimmer/zimmer
-State: RUNNING
-Nodes: 1
-Cores per node: 128
-CPU Utilized: 00:00:00
-CPU Efficiency: 0.00% of 1-09:40:16 core-walltime
-Job Wall-clock time: 00:15:47
-Memory Utilized: 0.00 MB (estimated maximum)
-Memory Efficiency: 0.00% of 218.75 GB (218.75 GB/node)
-WARNING: Efficiency statistics may be misleading for RUNNING jobs.
+All halos in range: 690
+halo 1/1 ; snapshot 0061
+All halos in range: 688
+halo 1/1 ; snapshot 0060
+All halos in range: 697
+halo 1/1 ; snapshot 0059
+All halos in range: 680
+halo 1/1 ; snapshot 0058
+All halos in range: 675
+halo 1/1 ; snapshot 0057
+All halos in range: 697
+halo 1/1 ; snapshot 0056
+All halos in range: 672
+halo 1/1 ; snapshot 0055
+All halos in range: 690
+halo 1/1 ; snapshot 0054
+All halos in range: 702
+halo 1/1 ; snapshot 0053
+All halos in range: 716
+halo 1/1 ; snapshot 0052
+All halos in range: 699
+halo 1/1 ; snapshot 0051
+All halos in range: 704
+halo 1/1 ; snapshot 0050
+All halos in range: 709
+halo 1/1 ; snapshot 0049
+All halos in range: 729
+halo 1/1 ; snapshot 0048
+All halos in range: 704
+halo 1/1 ; snapshot 0047
+All halos in range: 701
+halo 1/1 ; snapshot 0046
+All halos in range: 713
+halo 1/1 ; snapshot 0045
+All halos in range: 692
+halo 1/1 ; snapshot 0044
+All halos in range: 708
+halo 1/1 ; snapshot 0043
+All halos in range: 679
+halo 1/1 ; snapshot 0042
+All halos in range: 666
+halo 1/1 ; snapshot 0041
+All halos in range: 662
+halo 1/1 ; snapshot 0040
+All halos in range: 694
+halo 1/1 ; snapshot 0039
+All halos in range: 688
+halo 1/1 ; snapshot 0038
+All halos in range: 663
+halo 1/1 ; snapshot 0037
+All halos in range: 685
+halo 1/1 ; snapshot 0036
+All halos in range: 678
+halo 1/1 ; snapshot 0035
+All halos in range: 644
+halo 1/1 ; snapshot 0034
+All halos in range: 640
+halo 1/1 ; snapshot 0033
+All halos in range: 600
+halo 1/1 ; snapshot 0032
+All halos in range: 594
+halo 1/1 ; snapshot 0031
+All halos in range: 582
+halo 1/1 ; snapshot 0030
+All halos in range: 581
+halo 1/1 ; snapshot 0029
+All halos in range: 531
+halo 1/1 ; snapshot 0028
+All halos in range: 481
+halo 1/1 ; snapshot 0027
+All halos in range: 432
+halo 1/1 ; snapshot 0026
+All halos in range: 362
+halo 1/1 ; snapshot 0025
+All halos in range: 358
+halo 1/1 ; snapshot 0024
+All halos in range: 339
+halo 1/1 ; snapshot 0023
+All halos in range: 325
+halo 1/1 ; snapshot 0022
+All halos in range: 335
+halo 1/1 ; snapshot 0021
+All halos in range: 309
+halo 1/1 ; snapshot 0020
+All halos in range: 300
+halo 1/1 ; snapshot 0019
+All halos in range: 279
+halo 1/1 ; snapshot 0018
+All halos in range: 270
+halo 1/1 ; snapshot 0017
+All halos in range: 300
+halo 1/1 ; snapshot 0016
+All halos in range: 272
+halo 1/1 ; snapshot 0015
+All halos in range: 250

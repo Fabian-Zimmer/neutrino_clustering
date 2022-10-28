@@ -1,2 +1,0 @@
-/var/spool/slurm/slurmd/job1760520/slurm_script: line 18: 2263681 Killed                  python $HOME/neutrino_clustering_V2/number_density_sphere.py
-slurmstepd: error: Detected 1 oom-kill event(s) in StepId=1760520.batch. Some of your processes may have been killed by the cgroup out-of-memory handler.

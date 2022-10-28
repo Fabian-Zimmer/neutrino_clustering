@@ -4,7 +4,7 @@
 #SBATCH -t 12:00:00
 #SBATCH -N 1
 #SBATCH --tasks-per-node=1
-#SBATCH --cpus-per-task=32
+#SBATCH --cpus-per-task=128
 #SBATCH --mem=224000
 #SBATCH -o jobs/number_density_sphere.out
 #SBATCH -e jobs/number_density_sphere.err

@@ -5,7 +5,7 @@ import shared.functions as fct
 # Initialize parameters and files.
 PRE = PRE(
     sim='LinfNinf', phis=10, thetas=10, vels=100,
-    sim_CPUs=56, MW_HALO=True
+    sim_CPUs=128, MW_HALO=True
 )
 
 # Make temporary folder to store files, s.t. parallel runs don't clash.
@@ -96,7 +96,7 @@ if __name__ == '__main__':
 
         # Run simulation on multiple cores, in batches.
         # (important for other solvers (e.g. Rk45), due to memory increase)
-        batch_size = 5000
+        batch_size = 10000
         ticks = np.arange(0, PRE.NUS/batch_size, dtype=int)
         for i in ticks:
 
