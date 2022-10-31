@@ -1174,30 +1174,30 @@ def plot_eta_band(
     fig, ax = plt.subplots(1,1)
     fig.patch.set_facecolor('cornflowerblue')
 
-    # Plot smooth simulation.
-    ax.plot(
-        m_nu_range*1e3, (etas_smooth-1), color='red', ls='solid', 
-        label='Analytical simulation'
-    )
-
     # Plot dicrete simulation.
-    nus_median = np.median(etas_sim, axis=0)
-    nus_perc2p5 = np.percentile(etas_sim, q=2.5, axis=0)
-    nus_perc97p5 = np.percentile(etas_sim, q=97.5, axis=0)
-    nus_perc16 = np.percentile(etas_sim, q=16, axis=0)
-    nus_perc84 = np.percentile(etas_sim, q=84, axis=0)
-    ax.plot(
-        m_nu_range*1e3, (nus_median-1), color='blue', 
-        label='medians'
-    )
-    ax.fill_between(
-        m_nu_range*1e3, (nus_perc2p5-1), (nus_perc97p5-1), 
-        color='blue', alpha=0.2, label='2.5-97.5 %'
-    )
-    ax.fill_between(
-        m_nu_range*1e3, (nus_perc16-1), (nus_perc84-1), 
-        color='blue', alpha=0.3, label='16-84 %'
-    )
+    if etas_sim.ndim <= 1:
+        ax.plot(
+            m_nu_range*1e3, (etas_sim-1), color='blue', 
+            label='medians'
+        )
+    else:
+        nus_median = np.median(etas_sim, axis=0)
+        nus_perc2p5 = np.percentile(etas_sim, q=2.5, axis=0)
+        nus_perc97p5 = np.percentile(etas_sim, q=97.5, axis=0)
+        nus_perc16 = np.percentile(etas_sim, q=16, axis=0)
+        nus_perc84 = np.percentile(etas_sim, q=84, axis=0)
+        ax.plot(
+            m_nu_range*1e3, (nus_median-1), color='blue', 
+            label='medians'
+        )
+        ax.fill_between(
+            m_nu_range*1e3, (nus_perc2p5-1), (nus_perc97p5-1), 
+            color='blue', alpha=0.2, label='2.5-97.5 %'
+        )
+        ax.fill_between(
+            m_nu_range*1e3, (nus_perc16-1), (nus_perc84-1), 
+            color='blue', alpha=0.3, label='16-84 %'
+        )
 
     if Mertsch:
         # Plot endpoint values from Mertsch et al.
