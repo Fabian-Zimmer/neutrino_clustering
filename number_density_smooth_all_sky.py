@@ -14,7 +14,7 @@ hp_thetas, hp_phis = np.array(hp.pixelfunc.pix2ang(Nside, np.arange(Npix)))
 # Initialize parameters and files.
 PRE = PRE(
     sim='LinfNinf', phis=hp_phis, thetas=hp_thetas, vels=10000,
-    sim_CPUs=128, MW_HALO=True
+    sim_CPUs=128, MW_HALO=True, VC_HALO=True
 )
 
 # Make temporary folder to store files, s.t. parallel runs don't clash.

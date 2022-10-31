@@ -347,6 +347,7 @@ class PRE:
         if sim_ver is None:
             print(f'Sim CPUs {self.SIM_CPUs}')
             print(f'Output directory: \n {self.OUT_DIR}')
+            print(f'Halos in smooth sim: {self.HALOS}')
         else:
             print(f'Snapshot from {self.Z0_STR} (z=0) to {self.Z4_STR} (z=4)')
             print(f'Pre/Sim CPUs {self.PRE_CPUs}/{self.SIM_CPUs}')
