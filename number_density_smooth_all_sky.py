@@ -97,52 +97,41 @@ for i, (phi, theta) in enumerate(zip(hp_phis, hp_thetas)):
         [np.concatenate((X_SUN, ui[k], [k+1])) for k in range(PRE.Vs)]
         )
 
+    # Run simulation on multiple cores, in batches.
+    # (important for other solvers (e.g. Rk45), due to memory increase)
+    batch_size = 10000
+    ticks = np.arange(0, PRE.Vs/batch_size, dtype=int)
+    for j in ticks:
 
-    sim_testing = False
+        id_min = (j*batch_size) + 1
+        id_max = ((j+1)*batch_size) + 1
+        print(f'From {id_min} to and incl. {id_max-1}')
 
-    if sim_testing:
-        # Test 1 neutrino only.
-        backtrack_1_neutrino(y0_Nr[0])
-        backtrack_1_neutrino(y0_Nr[1])
-        backtrack_1_neutrino(y0_Nr[2])
+        if j == 0:
+            id_min = 0
 
-    else:
+        with ProcessPoolExecutor(PRE.SIM_CPUs) as ex:
+            ex.map(backtrack_1_neutrino, y0_Nr[id_min:id_max])
 
-        # Run simulation on multiple cores, in batches.
-        # (important for other solvers (e.g. Rk45), due to memory increase)
-        batch_size = 10000
-        ticks = np.arange(0, PRE.Vs/batch_size, dtype=int)
-        for i in ticks:
-
-            id_min = (i*batch_size) + 1
-            id_max = ((i+1)*batch_size) + 1
-            print(f'From {id_min} to and incl. {id_max-1}')
-
-            if i == 0:
-                id_min = 0
-
-            with ProcessPoolExecutor(PRE.SIM_CPUs) as ex:
-                ex.map(backtrack_1_neutrino, y0_Nr[id_min:id_max])
-
-            print(f'Batch {i+1}/{len(ticks)} done!')
+        print(f'Batch {j+1}/{len(ticks)} done!')
 
 
-        # Compactify all neutrino vectors into 1 file.
-        Ns = np.arange(PRE.Vs, dtype=int)
-        nus = [np.load(f'{TEMP_DIR}/nu_{Nr+1}.npy') for Nr in Ns]
-        CPname = f'{PRE.NUS}nus_smooth_{PRE.HALOS}_{SOLVER}_CoordPair{i+1}'
-        np.save(f'{PRE.OUT_DIR}/{CPname}.npy', np.array(nus))
+    # Compactify all neutrino vectors into 1 file.
+    Ns = np.arange(PRE.Vs, dtype=int)
+    nus = [np.load(f'{TEMP_DIR}/nu_{Nr+1}.npy') for Nr in Ns]
+    CPname = f'{PRE.NUS}nus_smooth_{PRE.HALOS}_{SOLVER}_CoordPair{i+1}'
+    np.save(f'{PRE.OUT_DIR}/{CPname}.npy', np.array(nus))
 
-        # Calculate local overdensity.
-        nu_mass_range = np.geomspace(0.01, 0.3, 100)*eV
-        vels_CoordPair = fct.load_sim_data(PRE.OUT_DIR, CPname, 'velocities')
-        out_file = f'{PRE.OUT_DIR}/number_densities_{CPname}.npy'
-        fct.number_densities_mass_range(
-            vels_CoordPair, nu_mass_range, out_file, pix_sr
-        )
+    # Calculate local overdensity.
+    nu_mass_range = np.geomspace(0.01, 0.3, 100)*eV
+    vels_CoordPair = fct.load_sim_data(PRE.OUT_DIR, CPname, 'velocities')
+    out_file = f'{PRE.OUT_DIR}/number_densities_{CPname}.npy'
+    fct.number_densities_mass_range(
+        vels_CoordPair, nu_mass_range, out_file, pix_sr
+    )
 
-        # Now delete velocities and distances of this coord. pair. neutrinos.
-        fct.delete_temp_data(f'{PRE.OUT_DIR}/{CPname}.npy')
+    # Now delete velocities and distances of this coord. pair. neutrinos.
+    fct.delete_temp_data(f'{PRE.OUT_DIR}/{CPname}.npy')
 
     seconds = time.perf_counter()-sim_start
     minutes = seconds/60.

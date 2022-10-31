@@ -20,14 +20,14 @@ rand_code = ''.join(
 TEMP_DIR = f'{PRE.OUT_DIR}/temp_data_{rand_code}'
 os.makedirs(TEMP_DIR)
 
-Testing=True
+Testing=False
 if Testing:
     mass_gauge = 12.3
     mass_range = 0.3
     size = 1
 else:
     mass_gauge = 12.0
-    mass_range = 0.5
+    mass_range = 0.46
     size = 10
 
 hname = f'1e+{mass_gauge}_pm{mass_range}Msun'
@@ -45,8 +45,8 @@ print(halo_batch_params)
 print('***********************************')
 
 Rvir_halo = halo_batch_params[0,0]
-DM_range_kpc = 2*Rvir_halo*kpc
-halos_inRange_lim = 10
+DM_range_kpc = 16*Rvir_halo*kpc
+halos_inRange_lim = 20
 
 
 def EOMs(s_val, y):
@@ -274,7 +274,7 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
         # Compactify all neutrino vectors into 1 file.
         Ns = np.arange(PRE.Vs, dtype=int)            
         nus = [np.load(f'{TEMP_DIR}/nu_{Nr+1}.npy') for Nr in Ns]
-        CPname = f'{PRE.NUS}nus_{hname}_sphere'
+        CPname = f'{PRE.NUS}nus_{hname}_halo{halo_j}_sphere'
         np.save(f'{TEMP_DIR}/{CPname}.npy', np.array(nus))
 
         # Calculate local overdensity.
@@ -282,7 +282,7 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
         vels_CoordPair = fct.load_sim_data(TEMP_DIR, CPname, 'velocities')
 
         # note: The final number density is not stored in the temporary folder.
-        out_file = f'{PRE.OUT_DIR}/number_densities_{CPname}_DMrange_{DM_range_kpc}.npy'
+        out_file = f'{PRE.OUT_DIR}/number_densities_{CPname}_DMrange_{int(DM_range_kpc/kpc)}kpc.npy'
         fct.number_densities_mass_range(
             vels_CoordPair, nu_mass_range, out_file
         )
