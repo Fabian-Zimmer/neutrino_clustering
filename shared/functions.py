@@ -1174,6 +1174,12 @@ def plot_eta_band(
     fig, ax = plt.subplots(1,1)
     fig.patch.set_facecolor('cornflowerblue')
 
+    # Plot smooth simulation.
+    ax.plot(
+        m_nu_range*1e3, (etas_smooth-1), color='red', ls='solid', 
+        label='Analytical simulation'
+    )
+
     # Plot dicrete simulation.
     if etas_sim.ndim <= 1:
         ax.plot(
