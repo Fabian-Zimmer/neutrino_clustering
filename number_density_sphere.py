@@ -44,9 +44,7 @@ print('Halo batch params (Rvir,Mvir,cNFW):')
 print(halo_batch_params)
 print('***********************************')
 
-Rvir_halo = halo_batch_params[0,0]
-DM_range_kpc = 16*Rvir_halo*kpc
-halos_inRange_lim = 20
+
 
 
 def EOMs(s_val, y):
@@ -115,6 +113,13 @@ def backtrack_1_neutrino(y0_Nr):
 
 
 for halo_j, halo_ID in enumerate(halo_batch_IDs):
+
+    # Manually adjust DM inclusion radius and number of halos.
+    # (for manual job submissions on snellius)
+    Rvir_halo = halo_batch_params[halo_j,0]
+    Rvir_multiplier = 16  # 2,4,8,16 x Rvir
+    DM_range_kpc = Rvir_multiplier*Rvir_halo*kpc  
+    halos_inRange_lim = 20
 
     # '''
     # =============================================== #
@@ -282,7 +287,7 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
         vels_CoordPair = fct.load_sim_data(TEMP_DIR, CPname, 'velocities')
 
         # note: The final number density is not stored in the temporary folder.
-        out_file = f'{PRE.OUT_DIR}/number_densities_{CPname}_DMrange_{int(DM_range_kpc/kpc)}kpc.npy'
+        out_file = f'{PRE.OUT_DIR}/number_densities_{CPname}_DMrange_{(DM_range_kpc/kpc):.2f}kpc.npy'
         fct.number_densities_mass_range(
             vels_CoordPair, nu_mass_range, out_file
         )

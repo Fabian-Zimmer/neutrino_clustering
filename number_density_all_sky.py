@@ -19,9 +19,23 @@ PRE = PRE(
     pre_CPUs=96, sim_CPUs=128
 )
 
-mass_gauge = 12.3
-mass_range = 0.3
-size = 1
+# Make temporary folder to store files, s.t. parallel runs don't clash.
+rand_code = ''.join(
+    random.choices(string.ascii_uppercase + string.digits, k=4)
+)
+TEMP_DIR = f'{PRE.OUT_DIR}/temp_data_{rand_code}'
+os.makedirs(TEMP_DIR)
+
+Testing=False
+if Testing:
+    mass_gauge = 12.3
+    mass_range = 0.3
+    size = 1
+else:
+    mass_gauge = 12.0
+    mass_range = 0.46
+    size = 10
+
 hname = f'1e+{mass_gauge}_pm{mass_range}Msun'
 fct.halo_batch_indices(
     PRE.Z0_STR, mass_gauge, mass_range, 'halos', size, 
@@ -102,7 +116,8 @@ def backtrack_1_neutrino(y0_Nr):
 # =============================================== #
 # Run precalculations for selected halo in batch. #
 # =============================================== #
-halo_j, halo_ID = 0, halo_batch_IDs[0]
+manual_halo_index = 0  # 0 to 9, for submitting jobs manually
+halo_j, halo_ID = manual_halo_index, halo_batch_IDs[manual_halo_index]
 
 # '''
 # Generate progenitor index array for current halo.
