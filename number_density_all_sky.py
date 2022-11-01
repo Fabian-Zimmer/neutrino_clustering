@@ -39,10 +39,10 @@ else:
 hname = f'1e+{mass_gauge}_pm{mass_range}Msun'
 fct.halo_batch_indices(
     PRE.Z0_STR, mass_gauge, mass_range, 'halos', size, 
-    hname, PRE.SIM_DIR, PRE.OUT_DIR
+    hname, PRE.SIM_DIR, TEMP_DIR
 )
-halo_batch_IDs = np.load(f'{PRE.OUT_DIR}/halo_batch_{hname}_indices.npy')
-halo_batch_params = np.load(f'{PRE.OUT_DIR}/halo_batch_{hname}_params.npy')
+halo_batch_IDs = np.load(f'{TEMP_DIR}/halo_batch_{hname}_indices.npy')
+halo_batch_params = np.load(f'{TEMP_DIR}/halo_batch_{hname}_params.npy')
 halo_num = len(halo_batch_params)
 
 print('********Number density band********')
@@ -73,8 +73,8 @@ def EOMs(s_val, y):
 
         # Find which (pre-calculated) derivative grid to use at current z.
         simname = f'origID{halo_ID}_snap_{snap}'
-        dPsi_grid = fct.load_grid(PRE.OUT_DIR, 'derivatives', simname)
-        cell_grid = fct.load_grid(PRE.OUT_DIR, 'positions',   simname)
+        dPsi_grid = fct.load_grid(TEMP_DIR, 'derivatives', simname)
+        cell_grid = fct.load_grid(TEMP_DIR, 'positions',   simname)
 
         cell_idx = fct.nu_in_which_cell(x_i, cell_grid)  # index of cell
         grad_tot = dPsi_grid[cell_idx,:]                 # derivative of cell
@@ -110,7 +110,7 @@ def backtrack_1_neutrino(y0_Nr):
         args=()
         )
     
-    np.save(f'{PRE.OUT_DIR}/nu_{int(Nr)}.npy', np.array(sol.y.T))
+    np.save(f'{TEMP_DIR}/nu_{int(Nr)}.npy', np.array(sol.y.T))
 
 
 # =============================================== #
@@ -140,9 +140,9 @@ for j, (snap, proj_ID) in enumerate(zip(
 
     IDname = f'origID{halo_ID}_snap_{snap}'
     fct.read_DM_halo_index(
-        snap, proj_ID, IDname, PRE.SIM_DIR, PRE.OUT_DIR
+        snap, proj_ID, IDname, PRE.SIM_DIR, TEMP_DIR
     )
-    DM_raw = np.load(f'{PRE.OUT_DIR}/DM_pos_{IDname}.npy')
+    DM_raw = np.load(f'{TEMP_DIR}/DM_pos_{IDname}.npy')
     
 
     # ---------------------- #
@@ -161,14 +161,14 @@ for j, (snap, proj_ID) in enumerate(zip(
 
     # Cell division.
     cell_division_count = fct.cell_division(
-        init_grid, DM_pos_for_cell_division, snap_GRID_L, PRE.DM_LIM, None, PRE.OUT_DIR, IDname
+        init_grid, DM_pos_for_cell_division, snap_GRID_L, PRE.DM_LIM, None, TEMP_DIR, IDname
     )
 
     # Load files from cell division.
-    fin_grid = np.load(f'{PRE.OUT_DIR}/fin_grid_{IDname}.npy')
-    DM_count = np.load(f'{PRE.OUT_DIR}/DM_count_{IDname}.npy')
-    cell_com = np.load(f'{PRE.OUT_DIR}/cell_com_{IDname}.npy')
-    cell_gen = np.load(f'{PRE.OUT_DIR}/cell_gen_{IDname}.npy')
+    fin_grid = np.load(f'{TEMP_DIR}/fin_grid_{IDname}.npy')
+    DM_count = np.load(f'{TEMP_DIR}/DM_count_{IDname}.npy')
+    cell_com = np.load(f'{TEMP_DIR}/cell_com_{IDname}.npy')
+    cell_gen = np.load(f'{TEMP_DIR}/cell_gen_{IDname}.npy')
     
     # Save snapshot specific parameters.
     save_GRID_L[j] = snap_GRID_L
@@ -195,7 +195,7 @@ for j, (snap, proj_ID) in enumerate(zip(
         fct.cell_gravity(
             b_cc, b_com, b_gen, snap_GRID_L,
             b_DM, b_count, PRE.DM_LIM, PRE.DM_SIM_MASS, PRE.SMOOTH_L,
-            PRE.OUT_DIR, bname
+            TEMP_DIR, bname
         )
 
     chunk_size = 10
@@ -214,15 +214,15 @@ for j, (snap, proj_ID) in enumerate(zip(
 
     # Combine and then delete batch files.
     dPsi_batches = [
-        np.load(f'{PRE.OUT_DIR}/dPsi_grid_batch{b}.npy') for b in idx_chunks
+        np.load(f'{TEMP_DIR}/dPsi_grid_batch{b}.npy') for b in idx_chunks
     ]
     dPsi_fin = np.array(list(chain.from_iterable(dPsi_batches)))
-    np.save(f'{PRE.OUT_DIR}/dPsi_grid_{IDname}.npy', dPsi_fin)
-    fct.delete_temp_data(f'{PRE.OUT_DIR}/dPsi_*batch*.npy')
+    np.save(f'{TEMP_DIR}/dPsi_grid_{IDname}.npy', dPsi_fin)
+    fct.delete_temp_data(f'{TEMP_DIR}/dPsi_*batch*.npy')
 
 # Save snapshot and halo specific arrays.
-np.save(f'{PRE.OUT_DIR}/snaps_GRID_L_origID{halo_ID}.npy', save_GRID_L)
-np.save(f'{PRE.OUT_DIR}/NrDM_snaps_origID{halo_ID}.npy', save_num_DM)
+np.save(f'{TEMP_DIR}/snaps_GRID_L_origID{halo_ID}.npy', save_GRID_L)
+np.save(f'{TEMP_DIR}/NrDM_snaps_origID{halo_ID}.npy', save_num_DM)
 # '''
 
 # ========================================= #
@@ -231,9 +231,9 @@ np.save(f'{PRE.OUT_DIR}/NrDM_snaps_origID{halo_ID}.npy', save_num_DM)
 
 # These arrays will be used in EOMs function above.
 snaps_GRID_L = np.load(
-    f'{PRE.OUT_DIR}/snaps_GRID_L_origID{halo_ID}.npy')
+    f'{TEMP_DIR}/snaps_GRID_L_origID{halo_ID}.npy')
 NrDM_SNAPSHOTS = np.load(
-    f'{PRE.OUT_DIR}/NrDM_snaps_origID{halo_ID}.npy')
+    f'{TEMP_DIR}/NrDM_snaps_origID{halo_ID}.npy')
 
 
 print(f'***Running simulation with {PRE.SIM_CPUs} CPUs***')
@@ -265,13 +265,15 @@ for i, (phi, theta) in enumerate(zip(hp_phis, hp_thetas)):
 
         # Compactify all neutrino vectors into 1 file.
         Ns = np.arange(PRE.Vs, dtype=int)            
-        nus = [np.load(f'{PRE.OUT_DIR}/nu_{Nr+1}.npy') for Nr in Ns]
-        CPname = f'{PRE.NUS}nus_{hname}_CoordPair{i+1}'
-        np.save(f'{PRE.OUT_DIR}/{CPname}.npy', np.array(nus))
+        nus = [np.load(f'{TEMP_DIR}/nu_{Nr+1}.npy') for Nr in Ns]
+        CPname = f'{PRE.NUS}nus_{hname}_halo{halo_j}_CoordPair{i+1}'
+        np.save(f'{TEMP_DIR}/{CPname}.npy', np.array(nus))
 
         # Calculate local overdensity.
         nu_mass_range = np.geomspace(0.01, 0.3, 100)*eV
-        vels_CoordPair = fct.load_sim_data(PRE.OUT_DIR, CPname, 'velocities')
+        vels_CoordPair = fct.load_sim_data(TEMP_DIR, CPname, 'velocities')
+
+        # note: The final number density is not stored in the temporary folder.
         out_file = f'{PRE.OUT_DIR}/number_densities_{CPname}.npy'
         fct.number_densities_mass_range(
             vels_CoordPair, nu_mass_range, out_file, pix_sr
@@ -287,6 +289,9 @@ for i, (phi, theta) in enumerate(zip(hp_phis, hp_thetas)):
         hours = minutes/60.
         print(f'Sim time min/h: {minutes} min, {hours} h.')
 
+
+# Remove temporary folder with all individual neutrino files.
+shutil.rmtree(TEMP_DIR)
 
 # Delete all other temporary files.
 # fct.delete_temp_data(f'{PRE.OUT_DIR}/NrDM_*.npy')

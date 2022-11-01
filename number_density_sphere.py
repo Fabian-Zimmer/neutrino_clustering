@@ -45,8 +45,6 @@ print(halo_batch_params)
 print('***********************************')
 
 
-
-
 def EOMs(s_val, y):
 
     # Initialize vector.
@@ -109,7 +107,6 @@ def backtrack_1_neutrino(y0_Nr):
         )
     
     np.save(f'{TEMP_DIR}/nu_{int(Nr)}.npy', np.array(sol.y.T))
-
 
 
 for halo_j, halo_ID in enumerate(halo_batch_IDs):
