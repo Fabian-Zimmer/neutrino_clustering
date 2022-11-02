@@ -9,6 +9,8 @@
 #SBATCH -e jobs/jupyter.err
 #SBATCH -v
 
+module purge
+
 source $HOME/.conda/envs/neutrino_clustering/bin/activate
 
 # Choose random port and print instructions to connect

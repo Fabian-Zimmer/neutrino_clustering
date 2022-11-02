@@ -231,7 +231,8 @@ if str(HOME) == '/home/zimmer':
     SIM_ROOT = '/projects/0/einf180/Tango_sims'
     # SIM_ROOT = '/archive/ccorrea/Tango_sims' #! can't read from archive
     # SIM_TYPE = 'DMONLY/SigmaConstant00'
-    SIM_TYPE = 'DMONLY/CDM_TF50'
+    # SIM_TYPE = 'DMONLY/CDM_TF50'
+    SIM_TYPE = 'Hydro_Model_2/SigmaConstant00'
 
 # Paths for FZ_desktop.
 elif str(HOME) == '/home/fabian':

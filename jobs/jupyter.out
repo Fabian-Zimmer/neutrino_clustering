@@ -1,18 +1,18 @@
-Selected port is:  5186
+Selected port is:  5040
 
 To connect to the notebook type the following command from your local terminal:
-ssh -N -L5186:localhost:5186 zimmer@int3-pub.snellius.surf.nl
+ssh -N -L5040:localhost:5040 zimmer@int3-pub.snellius.surf.nl
 
 JOB STATISTICS
 ==============
-Job ID: 1759285
+Job ID: 1778745
 Cluster: snellius
 User/Group: zimmer/zimmer
-State: CANCELLED (exit code 0)
+State: TIMEOUT (exit code 0)
 Nodes: 1
 Cores per node: 32
 CPU Utilized: 00:00:00
-CPU Efficiency: 0.00% of 17:28:32 core-walltime
-Job Wall-clock time: 00:32:46
-Memory Utilized: 66.69 MB
-Memory Efficiency: 0.12% of 56.00 GB
+CPU Efficiency: 0.00% of 8-00:06:24 core-walltime
+Job Wall-clock time: 06:00:12
+Memory Utilized: 1.10 GB
+Memory Efficiency: 1.96% of 56.00 GB

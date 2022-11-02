@@ -116,7 +116,7 @@ def backtrack_1_neutrino(y0_Nr):
 # =============================================== #
 # Run precalculations for selected halo in batch. #
 # =============================================== #
-manual_halo_index = 0  # 0 to 9, for submitting jobs manually
+manual_halo_index = 9  # 0 to 9, for submitting jobs manually
 halo_j, halo_ID = manual_halo_index, halo_batch_IDs[manual_halo_index]
 
 # '''
@@ -280,31 +280,15 @@ for i, (phi, theta) in enumerate(zip(hp_phis, hp_thetas)):
         )
 
         # Now delete velocities and distances of this coord. pair. neutrinos.
-        fct.delete_temp_data(f'{PRE.OUT_DIR}/{CPname}.npy')
-        fct.delete_temp_data(f'{PRE.OUT_DIR}/nu_*.npy')
-
+        fct.delete_temp_data(f'{TEMP_DIR}/{CPname}.npy')
 
         seconds = time.perf_counter()-sim_start
         minutes = seconds/60.
         hours = minutes/60.
         print(f'Sim time min/h: {minutes} min, {hours} h.')
 
-
 # Remove temporary folder with all individual neutrino files.
 shutil.rmtree(TEMP_DIR)
-
-# Delete all other temporary files.
-# fct.delete_temp_data(f'{PRE.OUT_DIR}/NrDM_*.npy')
-# fct.delete_temp_data(f'{PRE.OUT_DIR}/fin_grid_*.npy')
-# fct.delete_temp_data(f'{PRE.OUT_DIR}/DM_count_*.npy')
-# fct.delete_temp_data(f'{PRE.OUT_DIR}/DM_pos_*.npy')
-# fct.delete_temp_data(f'{PRE.OUT_DIR}/cell_com_*.npy')
-# fct.delete_temp_data(f'{PRE.OUT_DIR}/cell_gen_*.npy')
-# fct.delete_temp_data(f'{PRE.OUT_DIR}/CoP_*.npy')
-# fct.delete_temp_data(f'{PRE.OUT_DIR}/snaps_GRID_L_*.npy')
-# fct.delete_temp_data(f'{PRE.OUT_DIR}/halo_params_*.npy')
-# fct.delete_temp_data(f'{PRE.OUT_DIR}/halo_batch_*.npy')
-
 
 total_time = time.perf_counter()-total_start
 print(f'Total time: {total_time/60.} min, {total_time/(60**2)} h.')
