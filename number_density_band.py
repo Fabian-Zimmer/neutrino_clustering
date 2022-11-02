@@ -16,14 +16,14 @@ PRE = PRE(
     pre_CPUs=6, sim_CPUs=6
 )
 
-Testing=True
+Testing=False
 if Testing:
     mass_gauge = 12.3
     mass_range = 0.3
     size = 1
 else:
     mass_gauge = 12.0
-    mass_range = 0.5
+    mass_range = 0.6
     size = 10
 
 hname = f'1e+{mass_gauge}_pm{mass_range}Msun'

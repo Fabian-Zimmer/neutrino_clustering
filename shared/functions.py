@@ -199,12 +199,15 @@ def halo_batch_indices(
 
     # Limit amount of halos to given size.
     halo_number = len(select_halos)
+    print(halo_number)
     if halo_number >= halo_limit:
 
         # Fix choice of halos.
-        np.random.seed(1)
+        # np.random.seed(1)
+        random.seed(1)
         
-        rand_IDs = np.random.randint(0, halo_number-1, size=(halo_limit))
+        # rand_IDs = np.random.randint(0, halo_number-1, size=(halo_limit))
+        rand_IDs = random.sample(list(np.arange(halo_number)), halo_limit)
         select_halos = select_halos[rand_IDs]
 
     # Save cNFW, rvir and Mvir of halos in batch.

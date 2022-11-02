@@ -171,6 +171,7 @@ X_AG    = np.array([632.29742673, -377.40315121, -288.27006757])
 NU_MASS = 0.3*eV  
 NU_MASS_KG = NU_MASS/kg
 NU_MASSES = np.array([0.01, 0.05, 0.1, 0.3])*eV
+NU_MRANGE = np.geomspace(0.01, 0.3, 100)*eV
 
 # Neutrino + antineutrino number density of 1 flavor in [1/cm**3],
 # using the analytical expression for Fermions.
@@ -237,8 +238,7 @@ if str(HOME) == '/home/zimmer':
 # Paths for FZ_desktop.
 elif str(HOME) == '/home/fabian':
     SIM_ROOT = f'{HOME}/ownCloud/snellius'
-    # SIM_TYPE = 'DMONLY/SigmaConstant00'
-    SIM_TYPE = 'DMONLY/CDM_TF50'
+    SIM_TYPE = 'DMONLY/SigmaConstant00'
 
 # Paths for FZ_laptop.
 elif str(HOME) == '/home/fpc':
