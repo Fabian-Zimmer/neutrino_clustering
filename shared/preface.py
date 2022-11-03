@@ -220,6 +220,9 @@ AG_HALO = False
 
 SOLVER = 'RK23'
 
+# DM_SHELL_EDGES = np.array([2,4,6,8,10])*350*kpc
+DM_SHELL_EDGES = np.array([0,3,10])*100*kpc
+
 
 #######################
 ### Path Management ###

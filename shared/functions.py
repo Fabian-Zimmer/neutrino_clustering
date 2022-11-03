@@ -303,13 +303,12 @@ def read_DM_halos_inRange(
     snap, halo_ID, DM_range, halo_limit, fname, sim_dir, out_dir, CPUs
 ):
 
-    # ---------------- #
-    # Open data files. #
-    # ---------------- #
+    # --------------- #
+    # Initialize data #
+    # --------------- #
 
     snaps = h5py.File(f'{sim_dir}/snapshot_{snap}.hdf5')
     props = h5py.File(f'{sim_dir}/subhalo_{snap}.properties')
-
 
     # Positions.
     a = snaps["/Header"].attrs["Scale-factor"]
@@ -323,6 +322,7 @@ def read_DM_halos_inRange(
 
     # Center of Potential coordinates, for all halos.
     CoP = np.zeros((len(m200c), 3))
+    del m200c
     CoP[:, 0] = props["Xcminpot"][:]
     CoP[:, 1] = props["Ycminpot"][:]
     CoP[:, 2] = props["Zcminpot"][:]
@@ -379,56 +379,46 @@ def read_DM_halos_inRange(
 
 def read_DM_all_inRange(sim, snap, halo_ID, DM_range_kpc, fname, file_folder):
 
-    # Open data files.
+    # --------------- #
+    # Initialize data #
+    # --------------- #
+
     snaps = h5py.File(f'{file_folder}/snapshot_{snap}.hdf5')
     props = h5py.File(f'{file_folder}/subhalo_{snap}.properties')
 
     # Positions.
     a = snaps["/Header"].attrs["Scale-factor"]
     pos = snaps['PartType1/Coordinates'][:][:] * a
-
-    rvir = props['R_200crit'][:]*1e3 # Virial radius (to kpc with *1e3)
-
-    # DM_range from physical to comoving, and bring to Camila sim units.
-    DM_range_kpc *= (a/kpc/1e3)
     
+    # DM_range from physical to comoving.
+    DM_range_kpc *= (a/kpc/1e3)
 
-    # -------------------------------- #
-    # Save Center of Potential coords. #
-    # -------------------------------- #
-    # note: 
-    # Neutrinos start w.r.t. the CoP of the halo at z~0. If the halo "moves", 
-    # the DM positions have to be centered with respect to the halo CoP, when 
-    # the simulation started at z~0!
+    # Masses of all halos in sim.
+    m200c = props['Mass_200crit'][:]
 
-    if snap == '0036':
-        # Center of Potential coordinates, for all halos.
-        m200c = props['Mass_200crit'][:] # just for the shape of CoP
-        CoP = np.zeros((len(m200c), 3))
-        CoP[:, 0] = props["Xcminpot"][:]
-        CoP[:, 1] = props["Ycminpot"][:]
-        CoP[:, 2] = props["Zcminpot"][:]
-
-        # Save CoP coords of halo at first (at z~0) snapshot.
-        CoP_halo = CoP[halo_ID, :]
-        np.save(f'{sim}/CoP_{fname}.npy', CoP_halo)
-    else:
-        split_str = re.split('_snap', fname)
-        f0036 = f'{split_str[0]}_snap_0036'
-        CoP_halo = np.load(f'{sim}/CoP_{f0036}.npy')
+    # Center of Potential coordinates, for all halos.
+    CoP = np.zeros((len(m200c), 3))
+    del m200c
+    CoP[:, 0] = props["Xcminpot"][:]
+    CoP[:, 1] = props["Ycminpot"][:]
+    CoP[:, 2] = props["Zcminpot"][:]
+    CoP_halo = CoP[halo_ID, :]
+    del CoP
 
 
-    # ------------------------------------------------------- #
-    # Include all DM particles in range (correctly centered). #
-    # ------------------------------------------------------- #
+    # ----------------------------------- #
+    # Save DM in spherical shell batches. #
+    # ----------------------------------- #
 
-    pos -= CoP_halo
-    DM_dis = np.sqrt(np.sum(pos**2, axis=1))
-    DM_pos = pos[DM_dis <= DM_range_kpc]
-    DM_pos *= 1e3
-    np.save(f'{sim}/DM_pos_{fname}.npy', DM_pos)
+    for i, (shell_start, shell_end) in enumerate(
+        zip(DM_range_kpc[:-1], DM_range_kpc[1:])
+    ):
 
-    return rvir[halo_ID]
+        pos -= CoP_halo
+        DM_dis = np.sqrt(np.sum(pos**2, axis=1))
+        DM_pos = pos[shell_start < DM_dis <= shell_end]
+        DM_pos *= 1e3
+        np.save(f'{sim}/DM_pos_{fname}_shell{i}.npy', DM_pos)
 
 
 def grid_3D(l, s, origin_coords=[0.,0.,0.,]):
@@ -462,7 +452,7 @@ def grid_3D(l, s, origin_coords=[0.,0.,0.,]):
     return cent_coordPairs3D
 
 
-def check_grid(init_grid, DM_pos, parent_GRID_S, DM_lim, gen_count):
+def check_grid(init_grid, DM_pos, parent_GRID_S, DM_lim):
     """
     Determine which cells have DM above threshold and thus need division.
     """
@@ -489,19 +479,29 @@ def check_grid(init_grid, DM_pos, parent_GRID_S, DM_lim, gen_count):
     DM_sort = np.take_along_axis(DM_pos, ind_3D, axis=1)
     del ind_2D, ind_3D
 
-    # DM_sort = np.sort(DM_pos, axis=1)  #! this mf...
-
     # Drop "rows" common to all cells, which contain only nan values. This is 
     # determined by the cell with the most non-nan entries.
     DM_count_cells = np.count_nonzero(~np.isnan(DM_sort[:,:,0]), axis=1)
     DM_compact = np.delete(
         DM_sort, np.s_[np.max(DM_count_cells):], axis=1
     )
+    cells = len(DM_compact)
     del DM_sort
+
+    # Adjust DM threshold to the distance of the cell from the center.
+    # (cells farther away have higher DM threshold, i.e. less division)
+    grid_dis = np.sum(np.sqrt(init_grid**2), axis=2) # shape = (cells, 1)
+    shell_cents = (DM_SHELL_EDGES[:-1] + DM_SHELL_EDGES[1:])/2.
+    shells_sync = np.repeat(np.expand_dims(shell_cents, axis=0), cells, axis=0)
+    which_shell = np.abs(grid_dis - shells_sync).argmin(axis=1)
+    # multipliers = np.array([2,3,4,5])
+    multipliers = np.array([1,10])
+    cell_DMlims = np.array([multipliers[k] for k in which_shell])*DM_lim
 
     # Drop all cells containing an amount of DM below the given threshold, 
     # from the DM positions array.
-    stable_cells = DM_count_cells <= DM_lim
+    # stable_cells = DM_count_cells <= DM_lim  # note: original
+    stable_cells = DM_count_cells <= cell_DMlims
     DM_unstable_cells = np.delete(DM_compact, stable_cells, axis=0)
     thresh = np.size(DM_unstable_cells, axis=0)
     del DM_count_cells
@@ -535,8 +535,7 @@ def check_grid(init_grid, DM_pos, parent_GRID_S, DM_lim, gen_count):
 
 
 def cell_division(
-    init_grid, DM_pos, parent_GRID_S, DM_lim, 
-    stable_grid, out_dir, fname
+    init_grid, DM_pos, parent_GRID_S, DM_lim, stable_grid, out_dir, fname
     ):
 
 
@@ -551,7 +550,7 @@ def cell_division(
     while thresh > 0:
 
         DM_count, cell_com, stable_cells, DM_parent_cells, thresh = check_grid(
-            init_grid, DM_pos, parent_GRID_S, DM_lim, cell_division_count
+            init_grid, DM_pos, parent_GRID_S, DM_lim
         )
 
         # Save DM count and c.o.m coords of stable cells.

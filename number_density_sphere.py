@@ -111,12 +111,8 @@ def backtrack_1_neutrino(y0_Nr):
 
 for halo_j, halo_ID in enumerate(halo_batch_IDs):
 
-    # Manually adjust DM inclusion radius and number of halos.
-    # (for manual job submissions on snellius)
-    Rvir_halo = halo_batch_params[halo_j,0]
-    Rvir_multiplier = 16  # 2,4,8,16 x Rvir
-    DM_range_kpc = Rvir_multiplier*Rvir_halo*kpc  
-    halos_inRange_lim = 20
+    # DM range steps.
+    DM_range_kpc_steps = 
 
     # '''
     # =============================================== #
@@ -145,9 +141,8 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
         # --------------------------- #
 
         IDname = f'origID{halo_ID}_snap_{snap}'
-        fct.read_DM_halos_inRange(
-            snap, proj_ID, DM_range_kpc, int(halos_inRange_lim), 
-            IDname, PRE.SIM_DIR, TEMP_DIR, PRE.PRE_CPUs
+        fct.read_DM_all_inRange(
+            PRE.SIM, snap, proj_ID, DM_range_kpc_steps, IDname, TEMP_DIR
         )
         DM_raw = np.load(f'{TEMP_DIR}/DM_pos_{IDname}.npy')
         
@@ -208,7 +203,7 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
                 TEMP_DIR, bname
             )
 
-        chunk_size = 40
+        chunk_size = 10
         grid_chunks = chunks(chunk_size, fin_grid)
         DMnr_chunks = chunks(chunk_size, DM_count)
         com_chunks = chunks(chunk_size, cell_com)
