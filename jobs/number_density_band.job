@@ -1,14 +1,15 @@
 #!/bin/bash
 #SBATCH --job-name=Band
 #SBATCH -p thin
-#SBATCH -t 01:00:00
+#SBATCH -t 06:00:00
 #SBATCH -N 1
 #SBATCH --tasks-per-node=1
-#SBATCH --cpus-per-task=16
-#SBATCH --mem=56000
+#SBATCH --cpus-per-task=128
+#SBATCH --mem=224000
 #SBATCH -o jobs/number_density_band.out
 #SBATCH -e jobs/number_density_band.err
 #SBATCH -v
+#SBATCH --exclusive
 
 module purge
 

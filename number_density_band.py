@@ -10,10 +10,10 @@ total_start = time.perf_counter()
 # Initialize parameters and files.
 PRE = PRE(
     sim='L012N376', 
-    z0_snap=36, z4_snap=13, DM_lim=1000,
+    z0_snap=62, z4_snap=13, DM_lim=1000,
     sim_dir=SIM_ROOT, sim_ver=SIM_TYPE,
     phis=10, thetas=10, vels=100,
-    pre_CPUs=6, sim_CPUs=6
+    pre_CPUs=96, sim_CPUs=128
 )
 
 Testing=False
@@ -190,7 +190,7 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
                     PRE.OUT_DIR, bname
                 )
 
-            chunk_size = 20
+            chunk_size = 10
             grid_chunks = chunks(chunk_size, fin_grid)
             DMnr_chunks = chunks(chunk_size, DM_count)
             com_chunks = chunks(chunk_size, cell_com)
@@ -274,6 +274,7 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
             fct.delete_temp_data(f'{PRE.OUT_DIR}/snaps_GRID_L_*.npy')
             fct.delete_temp_data(f'{PRE.OUT_DIR}/halo_params_*.npy')
             fct.delete_temp_data(f'{PRE.OUT_DIR}/halo_batch_*.npy')
+            fct.delete_temp_data(f'{PRE.OUT_DIR}/dPsi_grid_*.npy')
 
             seconds = time.perf_counter()-start
             minutes = seconds/60.
