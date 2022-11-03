@@ -27,7 +27,7 @@ if Testing:
     size = 1
 else:
     mass_gauge = 12.0
-    mass_range = 0.46
+    mass_range = 0.6
     size = 10
 
 hname = f'1e+{mass_gauge}_pm{mass_range}Msun'

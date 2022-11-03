@@ -336,7 +336,6 @@ def read_DM_halos_inRange(
     CoP_cent = CoP - CoP_halo
     halo_dis = np.sqrt(np.sum(CoP_cent**2, axis=1))
     select_halos = np.where(halo_dis <= DM_range)[0]
-    print(f'All halos in range: {len(select_halos)}')
 
     # Limit amount of halos in range, select by mass.
     if halo_limit is not None:
