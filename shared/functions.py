@@ -202,10 +202,11 @@ def halo_batch_indices(
     print(halo_number)
     if halo_number >= halo_limit:
 
-        # Fix choice of halos.
+        # Fix pseudo-random choice of halos.
         # np.random.seed(1)
         random.seed(1)
         
+        # Select non-repeating indices for halos.
         # rand_IDs = np.random.randint(0, halo_number-1, size=(halo_limit))
         rand_IDs = random.sample(list(np.arange(halo_number)), halo_limit)
         select_halos = select_halos[rand_IDs]
@@ -377,21 +378,20 @@ def read_DM_halos_inRange(
     np.save(f'{out_dir}/DM_com_coord_{fname}.npy', DM_com_coord)
 
 
-def read_DM_all_inRange(sim, snap, halo_ID, DM_range_kpc, fname, file_folder):
+def read_DM_all_inRange(
+    snap, halo_ID, DM_shell_edges, fname, sim_dir, out_dir
+):
 
     # --------------- #
     # Initialize data #
     # --------------- #
 
-    snaps = h5py.File(f'{file_folder}/snapshot_{snap}.hdf5')
-    props = h5py.File(f'{file_folder}/subhalo_{snap}.properties')
+    snaps = h5py.File(f'{sim_dir}/snapshot_{snap}.hdf5')
+    props = h5py.File(f'{sim_dir}/subhalo_{snap}.properties')
 
     # Positions.
     a = snaps["/Header"].attrs["Scale-factor"]
     pos = snaps['PartType1/Coordinates'][:][:] * a
-    
-    # DM_range from physical to comoving.
-    DM_range_kpc *= (a/kpc/1e3)
 
     # Masses of all halos in sim.
     m200c = props['Mass_200crit'][:]
@@ -405,20 +405,23 @@ def read_DM_all_inRange(sim, snap, halo_ID, DM_range_kpc, fname, file_folder):
     CoP_halo = CoP[halo_ID, :]
     del CoP
 
+    # Center all DM on selected halo and calculate distance from halo center.
+    pos -= CoP_halo
+    DM_dis = np.sqrt(np.sum(pos**2, axis=1))
 
     # ----------------------------------- #
     # Save DM in spherical shell batches. #
     # ----------------------------------- #
 
+    # DM_shell_edges from physical to comoving.
+    DM_shell_edges_com = DM_shell_edges*(a/kpc/1e3)
+
     for i, (shell_start, shell_end) in enumerate(
-        zip(DM_range_kpc[:-1], DM_range_kpc[1:])
+        zip(DM_shell_edges_com[:-1], DM_shell_edges_com[1:])
     ):
 
-        pos -= CoP_halo
-        DM_dis = np.sqrt(np.sum(pos**2, axis=1))
-        DM_pos = pos[shell_start < DM_dis <= shell_end]
-        DM_pos *= 1e3
-        np.save(f'{sim}/DM_pos_{fname}_shell{i}.npy', DM_pos)
+        DM_pos = pos[(shell_start < DM_dis) & (DM_dis <= shell_end), :]*1e3
+        np.save(f'{out_dir}/DM_pos_{fname}_shell{i}.npy', DM_pos)
 
 
 def grid_3D(l, s, origin_coords=[0.,0.,0.,]):
@@ -488,18 +491,30 @@ def check_grid(init_grid, DM_pos, parent_GRID_S, DM_lim):
     cells = len(DM_compact)
     del DM_sort
 
-    # Adjust DM threshold to the distance of the cell from the center.
-    # (cells farther away have higher DM threshold, i.e. less division)
+
+    ### Adjust DM threshold to the distance of the cell from the center.
+    ### (cells farther away have higher DM threshold, i.e. less division)
+
+    # Distance from center for each cell.
     grid_dis = np.sum(np.sqrt(init_grid**2), axis=2) # shape = (cells, 1)
+
+    # Radial distance of each shell center, adjust array dimensionally.
     shell_cents = (DM_SHELL_EDGES[:-1] + DM_SHELL_EDGES[1:])/2.
     shells_sync = np.repeat(np.expand_dims(shell_cents, axis=0), cells, axis=0)
+
+    # Find shell center, which each cell is closest to.
     which_shell = np.abs(grid_dis - shells_sync).argmin(axis=1)
-    # multipliers = np.array([2,3,4,5])
-    multipliers = np.array([1,10])
+
+    # Multiplier for DM limit for each shell.
+    multipliers = np.array([1,5,10])
+
+    # Final DM limit for each cell.
     cell_DMlims = np.array([multipliers[k] for k in which_shell])*DM_lim
 
-    # Drop all cells containing an amount of DM below the given threshold, 
-    # from the DM positions array.
+
+    ### Drop all cells containing an amount of DM below the given threshold, 
+    ### from the DM positions array.
+
     # stable_cells = DM_count_cells <= DM_lim  # note: original
     stable_cells = DM_count_cells <= cell_DMlims
     DM_unstable_cells = np.delete(DM_compact, stable_cells, axis=0)

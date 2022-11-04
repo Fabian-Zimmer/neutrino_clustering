@@ -9,7 +9,7 @@ PRE = PRE(
     sim='L012N376', 
     z0_snap=62, z4_snap=13, DM_lim=1000,
     sim_dir=SIM_ROOT, sim_ver=SIM_TYPE,
-    phis=10, thetas=10, vels=100,
+    phis=20, thetas=20, vels=200,
     pre_CPUs=10, sim_CPUs=128
 )
 
@@ -111,10 +111,6 @@ def backtrack_1_neutrino(y0_Nr):
 
 for halo_j, halo_ID in enumerate(halo_batch_IDs):
 
-    # DM range steps.
-    DM_range_kpc_steps = 
-
-    # '''
     # =============================================== #
     # Run precalculations for selected halo in batch. #
     # =============================================== #
@@ -132,20 +128,32 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
     for j, (snap, proj_ID) in enumerate(zip(
         PRE.NUMS_SNAPS[::-1], proj_IDs
     )):
+        proj_ID = int(proj_ID)
+
+        # Output halo progress.
         print(f'halo {halo_j+1}/{halo_num} ; snapshot {snap}')
         
-        proj_ID = int(proj_ID)
 
         # --------------------------- #
         # Read and load DM positions. #
         # --------------------------- #
 
+        # Define how many shells are used, out of len(DM_SHELL_EDGES)-1.
+        shells = 1
+        DM_shell_edges = DM_SHELL_EDGES[:shells+1]
+
         IDname = f'origID{halo_ID}_snap_{snap}'
         fct.read_DM_all_inRange(
-            PRE.SIM, snap, proj_ID, DM_range_kpc_steps, IDname, TEMP_DIR
+            snap, proj_ID, DM_shell_edges, IDname, PRE.SIM_DIR, TEMP_DIR
         )
-        DM_raw = np.load(f'{TEMP_DIR}/DM_pos_{IDname}.npy')
-        
+
+        # Load DM from all used shells.
+        DM_pre = []
+        for si in range(shells):
+            print('Shell si:', si)
+            DM_pre.append(np.load(f'{TEMP_DIR}/DM_pos_{IDname}_shell{si}.npy'))
+        DM_raw = np.array(list(chain.from_iterable(DM_pre)))
+        del DM_pre
 
         # ---------------------- #
         # Cell division process. #
@@ -230,7 +238,7 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
     np.save(f'{TEMP_DIR}/DM_com_origID{halo_ID}.npy', save_DM_com_np)
     np.save(f'{TEMP_DIR}/snaps_GRID_L_origID{halo_ID}.npy', save_GRID_L)
     np.save(f'{TEMP_DIR}/NrDM_snaps_origID{halo_ID}.npy', save_num_DM)
-    # '''
+
 
     # ========================================= #
     # Run simulation for current halo in batch. #

@@ -220,8 +220,9 @@ AG_HALO = False
 
 SOLVER = 'RK23'
 
-# DM_SHELL_EDGES = np.array([2,4,6,8,10])*350*kpc
-DM_SHELL_EDGES = np.array([0,3,10])*100*kpc
+
+# For sphere of incluence tests: Divide inclusion region into shells.
+DM_SHELL_EDGES = np.array([0,5,10,15,20])*100*kpc
 
 
 #######################
@@ -241,8 +242,8 @@ if str(HOME) == '/home/zimmer':
 # Paths for FZ_desktop.
 elif str(HOME) == '/home/fabian':
     SIM_ROOT = f'{HOME}/ownCloud/snellius'
-    SIM_TYPE = 'DMONLY/SigmaConstant00'
-    # SIM_TYPE = 'DMONLY/CDM_TF50'
+    # SIM_TYPE = 'DMONLY/SigmaConstant00'
+    SIM_TYPE = 'DMONLY/CDM_TF50'
 
 # Paths for FZ_laptop.
 elif str(HOME) == '/home/fpc':
