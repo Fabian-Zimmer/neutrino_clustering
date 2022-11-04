@@ -506,7 +506,7 @@ def check_grid(init_grid, DM_pos, parent_GRID_S, DM_lim):
     which_shell = np.abs(grid_dis - shells_sync).argmin(axis=1)
 
     # Multiplier for DM limit for each shell.
-    multipliers = np.array([1,5,10])
+    multipliers = np.array([1,3,6,9])
 
     # Final DM limit for each cell.
     cell_DMlims = np.array([multipliers[k] for k in which_shell])*DM_lim

@@ -1,7 +1,7 @@
 ********************* Initialization *********************
 # Initial conditions for neutrinos:
-PHIs = 10, THETAs=10, Vs=100
-Total neutrinos: 10000
+PHIs = 20, THETAs=20, Vs=200
+Total neutrinos: 80000
 # Simulation parameters:
 Simulation box: L012N376
 Snapshot from 0062 (z=0) to 0013 (z=4)
@@ -13,1703 +13,1053 @@ Box files directory:
 Output directory: 
  /gpfs/home4/zimmer/neutrino_clustering_V2/L012N376/DMONLY/CDM_TF50
 **********************************************************
+17
 ********Number density band********
 Halo batch params (Rvir,Mvir,cNFW):
-[[180.75761547  11.7996673    7.7469711 ]
- [172.04146374  11.73527688   4.96810692]
- [155.63960823  11.60473788  11.06376948]
- [180.75761547  11.7996673    7.7469711 ]
- [299.54209457  12.45775108   8.69090077]
- [299.54209457  12.45775108   8.69090077]
+[[194.97752766  11.89833117  13.77313922]
  [233.71493957  12.13443691  11.13076874]
- [172.86606898  11.74150676   5.57114662]
+ [134.20486904  11.41168231   5.02346705]
+ [299.54209457  12.45775108   8.69090077]
  [177.13417489  11.77328457   6.55849835]
- [155.63960823  11.60473788  11.06376948]]
+ [151.26763808  11.56761557   7.42483687]
+ [153.84672187  11.58964223  10.17826122]
+ [180.75761547  11.7996673    7.7469711 ]
+ [214.73678286  12.02409682   5.54456138]
+ [140.61002231  11.47242632   6.92473537]]
 ***********************************
 halo 1/10 ; snapshot 0062
-All halos in range: 2746
-halo 1/10 ; snapshot 0057
-All halos in range: 2766
-halo 1/10 ; snapshot 0057
-All halos in range: 2766
-halo 1/10 ; snapshot 0057
-All halos in range: 2766
+Shell si: 0
 halo 1/10 ; snapshot 0061
-All halos in range: 2754
-halo 1/10 ; snapshot 0056
-All halos in range: 2793
-halo 1/10 ; snapshot 0056
-All halos in range: 2793
-halo 1/10 ; snapshot 0056
-All halos in range: 2793
+Shell si: 0
 halo 1/10 ; snapshot 0060
-All halos in range: 2746
-halo 1/10 ; snapshot 0055
-All halos in range: 2759
-halo 1/10 ; snapshot 0055
-All halos in range: 2759
-halo 1/10 ; snapshot 0055
-All halos in range: 2759
+Shell si: 0
 halo 1/10 ; snapshot 0059
-All halos in range: 2753
-halo 1/10 ; snapshot 0054
-All halos in range: 2770
-halo 1/10 ; snapshot 0054
-All halos in range: 2770
-halo 1/10 ; snapshot 0054
-All halos in range: 2770
+Shell si: 0
 halo 1/10 ; snapshot 0058
-All halos in range: 2768
-halo 1/10 ; snapshot 0053
-All halos in range: 2741
-halo 1/10 ; snapshot 0053
-All halos in range: 2741
-halo 1/10 ; snapshot 0053
-All halos in range: 2741
-halo 1/10 ; snapshot 0052
-All halos in range: 2759
-halo 1/10 ; snapshot 0052
-All halos in range: 2759
-halo 1/10 ; snapshot 0052
-All halos in range: 2759
+Shell si: 0
 halo 1/10 ; snapshot 0057
-All halos in range: 2766
-halo 1/10 ; snapshot 0051
-All halos in range: 2736
-halo 1/10 ; snapshot 0051
-All halos in range: 2736
-halo 1/10 ; snapshot 0051
-All halos in range: 2736
+Shell si: 0
 halo 1/10 ; snapshot 0056
-All halos in range: 2793
-halo 1/10 ; snapshot 0050
-All halos in range: 2718
-halo 1/10 ; snapshot 0050
-All halos in range: 2718
-halo 1/10 ; snapshot 0050
-All halos in range: 2718
+Shell si: 0
 halo 1/10 ; snapshot 0055
-All halos in range: 2759
-halo 1/10 ; snapshot 0049
-All halos in range: 2762
-halo 1/10 ; snapshot 0049
-All halos in range: 2762
+Shell si: 0
 halo 1/10 ; snapshot 0054
-All halos in range: 2770
-halo 1/10 ; snapshot 0049
-All halos in range: 2762
+Shell si: 0
 halo 1/10 ; snapshot 0053
-All halos in range: 2741
-halo 1/10 ; snapshot 0048
-All halos in range: 2789
-halo 1/10 ; snapshot 0048
-All halos in range: 2789
-halo 1/10 ; snapshot 0048
-All halos in range: 2789
-halo 1/10 ; snapshot 0047
-All halos in range: 2808
-halo 1/10 ; snapshot 0047
-All halos in range: 2808
+Shell si: 0
 halo 1/10 ; snapshot 0052
-All halos in range: 2759
-halo 1/10 ; snapshot 0047
-All halos in range: 2808
-halo 1/10 ; snapshot 0046
-All halos in range: 2812
-halo 1/10 ; snapshot 0046
-All halos in range: 2812
-halo 1/10 ; snapshot 0046
-All halos in range: 2812
+Shell si: 0
 halo 1/10 ; snapshot 0051
-All halos in range: 2736
-halo 1/10 ; snapshot 0045
-All halos in range: 2817
-halo 1/10 ; snapshot 0045
-All halos in range: 2817
-halo 1/10 ; snapshot 0045
-All halos in range: 2817
+Shell si: 0
 halo 1/10 ; snapshot 0050
-All halos in range: 2718
-halo 1/10 ; snapshot 0044
-All halos in range: 2823
-halo 1/10 ; snapshot 0044
-All halos in range: 2823
-halo 1/10 ; snapshot 0044
-All halos in range: 2823
+Shell si: 0
 halo 1/10 ; snapshot 0049
-All halos in range: 2762
-halo 1/10 ; snapshot 0043
-All halos in range: 2857
-halo 1/10 ; snapshot 0043
-All halos in range: 2857
-halo 1/10 ; snapshot 0043
-All halos in range: 2857
+Shell si: 0
 halo 1/10 ; snapshot 0048
-All halos in range: 2789
-halo 1/10 ; snapshot 0042
-All halos in range: 2833
-halo 1/10 ; snapshot 0042
-All halos in range: 2833
-halo 1/10 ; snapshot 0042
-All halos in range: 2833
+Shell si: 0
 halo 1/10 ; snapshot 0047
-All halos in range: 2808
-halo 1/10 ; snapshot 0041
-All halos in range: 2815
-halo 1/10 ; snapshot 0041
-All halos in range: 2815
-halo 1/10 ; snapshot 0041
-All halos in range: 2815
+Shell si: 0
 halo 1/10 ; snapshot 0046
-All halos in range: 2812
-halo 1/10 ; snapshot 0040
-All halos in range: 2812
-halo 1/10 ; snapshot 0040
-All halos in range: 2812
-halo 1/10 ; snapshot 0040
-All halos in range: 2812
+Shell si: 0
 halo 1/10 ; snapshot 0045
-All halos in range: 2817
-halo 1/10 ; snapshot 0039
-All halos in range: 2818
-halo 1/10 ; snapshot 0039
-All halos in range: 2818
-halo 1/10 ; snapshot 0039
-All halos in range: 2818
+Shell si: 0
 halo 1/10 ; snapshot 0044
-All halos in range: 2823
-halo 1/10 ; snapshot 0038
-All halos in range: 2759
-halo 1/10 ; snapshot 0038
-All halos in range: 2759
-halo 1/10 ; snapshot 0038
-All halos in range: 2759
+Shell si: 0
 halo 1/10 ; snapshot 0043
-All halos in range: 2857
-halo 1/10 ; snapshot 0037
-All halos in range: 2763
-halo 1/10 ; snapshot 0037
-All halos in range: 2763
-halo 1/10 ; snapshot 0037
-All halos in range: 2763
-halo 1/10 ; snapshot 0036
-All halos in range: 2707
-halo 1/10 ; snapshot 0036
-All halos in range: 2707
-halo 1/10 ; snapshot 0036
-All halos in range: 2707
+Shell si: 0
 halo 1/10 ; snapshot 0042
-All halos in range: 2833
-halo 1/10 ; snapshot 0035
-All halos in range: 2764
-halo 1/10 ; snapshot 0035
-All halos in range: 2764
-halo 1/10 ; snapshot 0035
-All halos in range: 2764
+Shell si: 0
 halo 1/10 ; snapshot 0041
-All halos in range: 2815
-halo 1/10 ; snapshot 0034
-All halos in range: 2794
-halo 1/10 ; snapshot 0034
-All halos in range: 2794
-halo 1/10 ; snapshot 0034
-All halos in range: 2794
-halo 1/10 ; snapshot 0033
-All halos in range: 2769
-halo 1/10 ; snapshot 0033
-All halos in range: 2769
-halo 1/10 ; snapshot 0033
-All halos in range: 2769
+Shell si: 0
 halo 1/10 ; snapshot 0040
-All halos in range: 2812
-halo 1/10 ; snapshot 0032
-All halos in range: 2805
-halo 1/10 ; snapshot 0032
-All halos in range: 2805
-halo 1/10 ; snapshot 0032
-All halos in range: 2805
-halo 1/10 ; snapshot 0031
-All halos in range: 2824
-halo 1/10 ; snapshot 0031
-All halos in range: 2824
-halo 1/10 ; snapshot 0031
-All halos in range: 2824
+Shell si: 0
 halo 1/10 ; snapshot 0039
-All halos in range: 2818
-halo 1/10 ; snapshot 0030
-All halos in range: 2877
-halo 1/10 ; snapshot 0030
-All halos in range: 2877
-halo 1/10 ; snapshot 0030
-All halos in range: 2877
+Shell si: 0
 halo 1/10 ; snapshot 0038
-All halos in range: 2759
-halo 1/10 ; snapshot 0029
-All halos in range: 2934
-halo 1/10 ; snapshot 0029
-All halos in range: 2934
-halo 1/10 ; snapshot 0029
-All halos in range: 2934
+Shell si: 0
 halo 1/10 ; snapshot 0037
-All halos in range: 2763
-halo 1/10 ; snapshot 0028
-All halos in range: 2963
-halo 1/10 ; snapshot 0028
-All halos in range: 2963
-halo 1/10 ; snapshot 0028
-All halos in range: 2963
-halo 1/10 ; snapshot 0027
-All halos in range: 3010
-halo 1/10 ; snapshot 0027
-All halos in range: 3010
-halo 1/10 ; snapshot 0027
-All halos in range: 3010
+Shell si: 0
 halo 1/10 ; snapshot 0036
-All halos in range: 2707
-halo 1/10 ; snapshot 0026
-All halos in range: 3025
-halo 1/10 ; snapshot 0026
-All halos in range: 3025
-halo 1/10 ; snapshot 0026
-All halos in range: 3025
+Shell si: 0
 halo 1/10 ; snapshot 0035
-All halos in range: 2764
-halo 1/10 ; snapshot 0025
-All halos in range: 3042
-halo 1/10 ; snapshot 0025
-All halos in range: 3042
-halo 1/10 ; snapshot 0025
-All halos in range: 3042
-halo 1/10 ; snapshot 0024
-All halos in range: 3058
-halo 1/10 ; snapshot 0024
-All halos in range: 3058
+Shell si: 0
 halo 1/10 ; snapshot 0034
-All halos in range: 2794
-halo 1/10 ; snapshot 0024
-All halos in range: 3058
-halo 1/10 ; snapshot 0023
-All halos in range: 3057
-halo 1/10 ; snapshot 0023
-All halos in range: 3057
-halo 1/10 ; snapshot 0023
-All halos in range: 3057
+Shell si: 0
 halo 1/10 ; snapshot 0033
-All halos in range: 2769
-halo 1/10 ; snapshot 0022
-All halos in range: 3101
-halo 1/10 ; snapshot 0022
-All halos in range: 3101
-halo 1/10 ; snapshot 0022
-All halos in range: 3101
+Shell si: 0
 halo 1/10 ; snapshot 0032
-All halos in range: 2805
-halo 1/10 ; snapshot 0021
-All halos in range: 3157
-halo 1/10 ; snapshot 0021
-All halos in range: 3157
-halo 1/10 ; snapshot 0021
-All halos in range: 3157
-halo 1/10 ; snapshot 0020
-All halos in range: 3133
-halo 1/10 ; snapshot 0020
-All halos in range: 3133
-halo 1/10 ; snapshot 0020
-All halos in range: 3133
+Shell si: 0
 halo 1/10 ; snapshot 0031
-All halos in range: 2824
-halo 1/10 ; snapshot 0019
-All halos in range: 3151
-halo 1/10 ; snapshot 0019
-All halos in range: 3151
-halo 1/10 ; snapshot 0019
-All halos in range: 3151
-halo 1/10 ; snapshot 0018
-All halos in range: 3167
-halo 1/10 ; snapshot 0018
-All halos in range: 3167
-halo 1/10 ; snapshot 0018
-All halos in range: 3167
+Shell si: 0
 halo 1/10 ; snapshot 0030
-All halos in range: 2877
-halo 1/10 ; snapshot 0017
-All halos in range: 3120
-halo 1/10 ; snapshot 0017
-All halos in range: 3120
-halo 1/10 ; snapshot 0017
-All halos in range: 3120
-halo 1/10 ; snapshot 0016
-All halos in range: 3076
-halo 1/10 ; snapshot 0016
-All halos in range: 3076
+Shell si: 0
 halo 1/10 ; snapshot 0029
-All halos in range: 2934
-halo 1/10 ; snapshot 0016
-All halos in range: 3076
-halo 1/10 ; snapshot 0015
-All halos in range: 3077
-halo 1/10 ; snapshot 0015
-All halos in range: 3077
-halo 1/10 ; snapshot 0015
-All halos in range: 3077
-halo 1/10 ; snapshot 0014
-All halos in range: 3036
+Shell si: 0
 halo 1/10 ; snapshot 0028
-All halos in range: 2963
-halo 1/10 ; snapshot 0014
-All halos in range: 3036
-halo 1/10 ; snapshot 0014
-All halos in range: 3036
-halo 1/10 ; snapshot 0013
-All halos in range: 2943
-halo 1/10 ; snapshot 0013
-All halos in range: 2943
-halo 1/10 ; snapshot 0013
-All halos in range: 2943
+Shell si: 0
 halo 1/10 ; snapshot 0027
-All halos in range: 3010
-***Running simulation with 128 CPUs***
-***Running simulation with 128 CPUs***
-Sim time min/h: 0.15807521783475142 min, 0.0026345869639125235 h.
-halo 2/10 ; snapshot 0062
-All halos in range: 2055
-***Running simulation with 128 CPUs***
-Sim time min/h: 0.16556188201648184 min, 0.0027593647002746974 h.
-halo 2/10 ; snapshot 0062
-All halos in range: 2055
-Sim time min/h: 0.15009917725110428 min, 0.0025016529541850713 h.
-halo 2/10 ; snapshot 0062
-All halos in range: 2055
+Shell si: 0
 halo 1/10 ; snapshot 0026
-All halos in range: 3025
+Shell si: 0
 halo 1/10 ; snapshot 0025
-All halos in range: 3042
+Shell si: 0
 halo 1/10 ; snapshot 0024
-All halos in range: 3058
-halo 2/10 ; snapshot 0061
-All halos in range: 2071
-halo 2/10 ; snapshot 0061
-All halos in range: 2071
-halo 2/10 ; snapshot 0061
-All halos in range: 2071
+Shell si: 0
 halo 1/10 ; snapshot 0023
-All halos in range: 3057
+Shell si: 0
 halo 1/10 ; snapshot 0022
-All halos in range: 3101
+Shell si: 0
 halo 1/10 ; snapshot 0021
-All halos in range: 3157
+Shell si: 0
 halo 1/10 ; snapshot 0020
-All halos in range: 3133
-halo 2/10 ; snapshot 0060
-All halos in range: 2118
-halo 2/10 ; snapshot 0060
-All halos in range: 2118
-halo 2/10 ; snapshot 0060
-All halos in range: 2118
+Shell si: 0
 halo 1/10 ; snapshot 0019
-All halos in range: 3151
+Shell si: 0
 halo 1/10 ; snapshot 0018
-All halos in range: 3167
+Shell si: 0
 halo 1/10 ; snapshot 0017
-All halos in range: 3120
+Shell si: 0
 halo 1/10 ; snapshot 0016
-All halos in range: 3076
+Shell si: 0
 halo 1/10 ; snapshot 0015
-All halos in range: 3077
+Shell si: 0
 halo 1/10 ; snapshot 0014
-All halos in range: 3036
-halo 2/10 ; snapshot 0059
-All halos in range: 2095
-halo 2/10 ; snapshot 0059
-All halos in range: 2095
-halo 2/10 ; snapshot 0059
-All halos in range: 2095
+Shell si: 0
 halo 1/10 ; snapshot 0013
-All halos in range: 2943
+Shell si: 0
 ***Running simulation with 128 CPUs***
-Sim time min/h: 0.14851202745145808 min, 0.0024752004575243013 h.
+Sim time min/h: 0.1517203252001006 min, 0.002528672086668343 h.
 halo 2/10 ; snapshot 0062
-All halos in range: 2055
-halo 2/10 ; snapshot 0058
-All halos in range: 2086
-halo 2/10 ; snapshot 0058
-All halos in range: 2086
-halo 2/10 ; snapshot 0058
-All halos in range: 2086
+Shell si: 0
 halo 2/10 ; snapshot 0061
-All halos in range: 2071
+Shell si: 0
 halo 2/10 ; snapshot 0060
-All halos in range: 2118
-halo 2/10 ; snapshot 0057
-All halos in range: 2123
-halo 2/10 ; snapshot 0057
-All halos in range: 2123
-halo 2/10 ; snapshot 0057
-All halos in range: 2123
+Shell si: 0
 halo 2/10 ; snapshot 0059
-All halos in range: 2095
-halo 2/10 ; snapshot 0056
-All halos in range: 2097
-halo 2/10 ; snapshot 0056
-All halos in range: 2097
-halo 2/10 ; snapshot 0056
-All halos in range: 2097
-halo 2/10 ; snapshot 0055
-All halos in range: 2127
-halo 2/10 ; snapshot 0055
-All halos in range: 2127
+Shell si: 0
 halo 2/10 ; snapshot 0058
-All halos in range: 2086
-halo 2/10 ; snapshot 0055
-All halos in range: 2127
-halo 2/10 ; snapshot 0054
-All halos in range: 2161
-halo 2/10 ; snapshot 0054
-All halos in range: 2161
-halo 2/10 ; snapshot 0054
-All halos in range: 2161
+Shell si: 0
 halo 2/10 ; snapshot 0057
-All halos in range: 2123
-halo 2/10 ; snapshot 0053
-All halos in range: 2168
-halo 2/10 ; snapshot 0053
-All halos in range: 2168
-halo 2/10 ; snapshot 0053
-All halos in range: 2168
+Shell si: 0
 halo 2/10 ; snapshot 0056
-All halos in range: 2097
-halo 2/10 ; snapshot 0052
-All halos in range: 2176
-halo 2/10 ; snapshot 0052
-All halos in range: 2176
-halo 2/10 ; snapshot 0052
-All halos in range: 2176
+Shell si: 0
 halo 2/10 ; snapshot 0055
-All halos in range: 2127
-halo 2/10 ; snapshot 0051
-All halos in range: 2225
-halo 2/10 ; snapshot 0051
-All halos in range: 2225
-halo 2/10 ; snapshot 0051
-All halos in range: 2225
+Shell si: 0
 halo 2/10 ; snapshot 0054
-All halos in range: 2161
-halo 2/10 ; snapshot 0050
-All halos in range: 2229
-halo 2/10 ; snapshot 0050
-All halos in range: 2229
-halo 2/10 ; snapshot 0050
-All halos in range: 2229
+Shell si: 0
 halo 2/10 ; snapshot 0053
-All halos in range: 2168
-halo 2/10 ; snapshot 0049
-All halos in range: 2288
-halo 2/10 ; snapshot 0049
-All halos in range: 2288
-halo 2/10 ; snapshot 0049
-All halos in range: 2288
+Shell si: 0
 halo 2/10 ; snapshot 0052
-All halos in range: 2176
-halo 2/10 ; snapshot 0048
-All halos in range: 2309
-halo 2/10 ; snapshot 0048
-All halos in range: 2309
-halo 2/10 ; snapshot 0048
-All halos in range: 2309
+Shell si: 0
 halo 2/10 ; snapshot 0051
-All halos in range: 2225
-halo 2/10 ; snapshot 0047
-All halos in range: 2304
-halo 2/10 ; snapshot 0047
-All halos in range: 2304
-halo 2/10 ; snapshot 0047
-All halos in range: 2304
+Shell si: 0
 halo 2/10 ; snapshot 0050
-All halos in range: 2229
-halo 2/10 ; snapshot 0046
-All halos in range: 2339
-halo 2/10 ; snapshot 0046
-All halos in range: 2339
-halo 2/10 ; snapshot 0046
-All halos in range: 2339
+Shell si: 0
 halo 2/10 ; snapshot 0049
-All halos in range: 2288
-halo 2/10 ; snapshot 0045
-All halos in range: 2313
-halo 2/10 ; snapshot 0045
-All halos in range: 2313
-halo 2/10 ; snapshot 0045
-All halos in range: 2313
+Shell si: 0
 halo 2/10 ; snapshot 0048
-All halos in range: 2309
-halo 2/10 ; snapshot 0044
-All halos in range: 2329
-halo 2/10 ; snapshot 0044
-All halos in range: 2329
-halo 2/10 ; snapshot 0044
-All halos in range: 2329
+Shell si: 0
 halo 2/10 ; snapshot 0047
-All halos in range: 2304
-halo 2/10 ; snapshot 0043
-All halos in range: 2320
-halo 2/10 ; snapshot 0043
-All halos in range: 2320
-halo 2/10 ; snapshot 0043
-All halos in range: 2320
+Shell si: 0
 halo 2/10 ; snapshot 0046
-All halos in range: 2339
-halo 2/10 ; snapshot 0042
-All halos in range: 2282
-halo 2/10 ; snapshot 0042
-All halos in range: 2282
-halo 2/10 ; snapshot 0042
-All halos in range: 2282
-halo 2/10 ; snapshot 0041
-All halos in range: 2309
+Shell si: 0
 halo 2/10 ; snapshot 0045
-All halos in range: 2313
-halo 2/10 ; snapshot 0041
-All halos in range: 2309
-halo 2/10 ; snapshot 0041
-All halos in range: 2309
-halo 2/10 ; snapshot 0040
-All halos in range: 2311
-halo 2/10 ; snapshot 0040
-All halos in range: 2311
-halo 2/10 ; snapshot 0040
-All halos in range: 2311
+Shell si: 0
 halo 2/10 ; snapshot 0044
-All halos in range: 2329
-halo 2/10 ; snapshot 0039
-All halos in range: 2286
-halo 2/10 ; snapshot 0039
-All halos in range: 2286
-halo 2/10 ; snapshot 0039
-All halos in range: 2286
+Shell si: 0
 halo 2/10 ; snapshot 0043
-All halos in range: 2320
-halo 2/10 ; snapshot 0038
-All halos in range: 2289
-halo 2/10 ; snapshot 0038
-All halos in range: 2289
-halo 2/10 ; snapshot 0038
-All halos in range: 2289
-halo 2/10 ; snapshot 0037
-All halos in range: 2321
-halo 2/10 ; snapshot 0037
-All halos in range: 2321
-halo 2/10 ; snapshot 0037
-All halos in range: 2321
+Shell si: 0
 halo 2/10 ; snapshot 0042
-All halos in range: 2282
-halo 2/10 ; snapshot 0036
-All halos in range: 2261
-halo 2/10 ; snapshot 0036
-All halos in range: 2261
-halo 2/10 ; snapshot 0036
-All halos in range: 2261
-halo 2/10 ; snapshot 0035
-All halos in range: 2219
-halo 2/10 ; snapshot 0035
-All halos in range: 2219
-halo 2/10 ; snapshot 0035
-All halos in range: 2219
-halo 2/10 ; snapshot 0034
-All halos in range: 2199
-halo 2/10 ; snapshot 0034
-All halos in range: 2199
-halo 2/10 ; snapshot 0034
-All halos in range: 2199
+Shell si: 0
 halo 2/10 ; snapshot 0041
-All halos in range: 2309
-halo 2/10 ; snapshot 0033
-All halos in range: 2201
-halo 2/10 ; snapshot 0033
-All halos in range: 2201
-halo 2/10 ; snapshot 0033
-All halos in range: 2201
-halo 2/10 ; snapshot 0032
-All halos in range: 2181
-halo 2/10 ; snapshot 0032
-All halos in range: 2181
-halo 2/10 ; snapshot 0032
-All halos in range: 2181
+Shell si: 0
 halo 2/10 ; snapshot 0040
-All halos in range: 2311
-halo 2/10 ; snapshot 0031
-All halos in range: 2171
-halo 2/10 ; snapshot 0031
-All halos in range: 2171
-halo 2/10 ; snapshot 0031
-All halos in range: 2171
-halo 2/10 ; snapshot 0030
-All halos in range: 2155
-halo 2/10 ; snapshot 0030
-All halos in range: 2155
-halo 2/10 ; snapshot 0030
-All halos in range: 2155
+Shell si: 0
 halo 2/10 ; snapshot 0039
-All halos in range: 2286
-halo 2/10 ; snapshot 0029
-All halos in range: 2200
-halo 2/10 ; snapshot 0029
-All halos in range: 2200
-halo 2/10 ; snapshot 0029
-All halos in range: 2200
-halo 2/10 ; snapshot 0028
-All halos in range: 2186
-halo 2/10 ; snapshot 0028
-All halos in range: 2186
-halo 2/10 ; snapshot 0028
-All halos in range: 2186
-halo 2/10 ; snapshot 0027
-All halos in range: 2185
-halo 2/10 ; snapshot 0027
-All halos in range: 2185
-halo 2/10 ; snapshot 0027
-All halos in range: 2185
+Shell si: 0
 halo 2/10 ; snapshot 0038
-All halos in range: 2289
-halo 2/10 ; snapshot 0026
-All halos in range: 2176
-halo 2/10 ; snapshot 0026
-All halos in range: 2176
-halo 2/10 ; snapshot 0026
-All halos in range: 2176
-halo 2/10 ; snapshot 0025
-All halos in range: 2211
-halo 2/10 ; snapshot 0025
-All halos in range: 2211
-halo 2/10 ; snapshot 0025
-All halos in range: 2211
+Shell si: 0
 halo 2/10 ; snapshot 0037
-All halos in range: 2321
-halo 2/10 ; snapshot 0024
-All halos in range: 2280
-halo 2/10 ; snapshot 0024
-All halos in range: 2280
-halo 2/10 ; snapshot 0024
-All halos in range: 2280
-halo 2/10 ; snapshot 0023
-All halos in range: 2284
-halo 2/10 ; snapshot 0023
-All halos in range: 2284
+Shell si: 0
 halo 2/10 ; snapshot 0036
-All halos in range: 2261
-halo 2/10 ; snapshot 0023
-All halos in range: 2284
-halo 2/10 ; snapshot 0022
-All halos in range: 2306
-halo 2/10 ; snapshot 0022
-All halos in range: 2306
-halo 2/10 ; snapshot 0022
-All halos in range: 2306
+Shell si: 0
 halo 2/10 ; snapshot 0035
-All halos in range: 2219
-halo 2/10 ; snapshot 0021
-All halos in range: 2303
-halo 2/10 ; snapshot 0021
-All halos in range: 2303
-halo 2/10 ; snapshot 0021
-All halos in range: 2303
-halo 2/10 ; snapshot 0020
-All halos in range: 2360
-halo 2/10 ; snapshot 0020
-All halos in range: 2360
-halo 2/10 ; snapshot 0020
-All halos in range: 2360
+Shell si: 0
 halo 2/10 ; snapshot 0034
-All halos in range: 2199
-halo 2/10 ; snapshot 0019
-All halos in range: 2392
-halo 2/10 ; snapshot 0019
-All halos in range: 2392
-halo 2/10 ; snapshot 0019
-All halos in range: 2392
+Shell si: 0
 halo 2/10 ; snapshot 0033
-All halos in range: 2201
-halo 2/10 ; snapshot 0018
-All halos in range: 2382
-halo 2/10 ; snapshot 0018
-All halos in range: 2382
-halo 2/10 ; snapshot 0018
-All halos in range: 2382
-halo 2/10 ; snapshot 0017
-All halos in range: 2470
-halo 2/10 ; snapshot 0017
-All halos in range: 2470
-halo 2/10 ; snapshot 0017
-All halos in range: 2470
+Shell si: 0
 halo 2/10 ; snapshot 0032
-All halos in range: 2181
-halo 2/10 ; snapshot 0016
-All halos in range: 2448
-halo 2/10 ; snapshot 0016
-All halos in range: 2448
-halo 2/10 ; snapshot 0016
-All halos in range: 2448
-halo 2/10 ; snapshot 0015
-All halos in range: 2326
-halo 2/10 ; snapshot 0015
-All halos in range: 2326
-halo 2/10 ; snapshot 0015
-All halos in range: 2326
+Shell si: 0
 halo 2/10 ; snapshot 0031
-All halos in range: 2171
-halo 2/10 ; snapshot 0014
-All halos in range: 2126
-halo 2/10 ; snapshot 0014
-All halos in range: 2126
-halo 2/10 ; snapshot 0014
-All halos in range: 2126
+Shell si: 0
 halo 2/10 ; snapshot 0030
-All halos in range: 2155
-halo 2/10 ; snapshot 0013
-All halos in range: 1978
-halo 2/10 ; snapshot 0013
-All halos in range: 1978
-halo 2/10 ; snapshot 0013
-All halos in range: 1978
-***Running simulation with 128 CPUs***
-***Running simulation with 128 CPUs***
-***Running simulation with 128 CPUs***
-Sim time min/h: 0.11497650724874499 min, 0.0019162751208124165 h.
-halo 3/10 ; snapshot 0062
-All halos in range: 1807
-Sim time min/h: 0.11673885915079155 min, 0.0019456476525131924 h.
-halo 3/10 ; snapshot 0062
-All halos in range: 1807
-Sim time min/h: 0.12676278079937522 min, 0.0021127130133229205 h.
-halo 3/10 ; snapshot 0062
-All halos in range: 1807
+Shell si: 0
 halo 2/10 ; snapshot 0029
-All halos in range: 2200
+Shell si: 0
 halo 2/10 ; snapshot 0028
-All halos in range: 2186
-halo 3/10 ; snapshot 0061
-All halos in range: 1835
-halo 3/10 ; snapshot 0061
-All halos in range: 1835
-halo 3/10 ; snapshot 0061
-All halos in range: 1835
+Shell si: 0
 halo 2/10 ; snapshot 0027
-All halos in range: 2185
+Shell si: 0
 halo 2/10 ; snapshot 0026
-All halos in range: 2176
+Shell si: 0
 halo 2/10 ; snapshot 0025
-All halos in range: 2211
-halo 3/10 ; snapshot 0060
-All halos in range: 1823
-halo 3/10 ; snapshot 0060
-All halos in range: 1823
-halo 3/10 ; snapshot 0060
-All halos in range: 1823
+Shell si: 0
 halo 2/10 ; snapshot 0024
-All halos in range: 2280
+Shell si: 0
 halo 2/10 ; snapshot 0023
-All halos in range: 2284
-halo 3/10 ; snapshot 0059
-All halos in range: 1827
-halo 3/10 ; snapshot 0059
-All halos in range: 1827
-halo 3/10 ; snapshot 0059
-All halos in range: 1827
+Shell si: 0
 halo 2/10 ; snapshot 0022
-All halos in range: 2306
+Shell si: 0
 halo 2/10 ; snapshot 0021
-All halos in range: 2303
+Shell si: 0
 halo 2/10 ; snapshot 0020
-All halos in range: 2360
-halo 3/10 ; snapshot 0058
-All halos in range: 1832
-halo 3/10 ; snapshot 0058
-All halos in range: 1832
-halo 3/10 ; snapshot 0058
-All halos in range: 1832
+Shell si: 0
 halo 2/10 ; snapshot 0019
-All halos in range: 2392
+Shell si: 0
 halo 2/10 ; snapshot 0018
-All halos in range: 2382
+Shell si: 0
 halo 2/10 ; snapshot 0017
-All halos in range: 2470
+Shell si: 0
 halo 2/10 ; snapshot 0016
-All halos in range: 2448
-halo 3/10 ; snapshot 0057
-All halos in range: 1814
-halo 3/10 ; snapshot 0057
-All halos in range: 1814
-halo 3/10 ; snapshot 0057
-All halos in range: 1814
+Shell si: 0
 halo 2/10 ; snapshot 0015
-All halos in range: 2326
+Shell si: 0
 halo 2/10 ; snapshot 0014
-All halos in range: 2126
+Shell si: 0
 halo 2/10 ; snapshot 0013
-All halos in range: 1978
-halo 3/10 ; snapshot 0056
-All halos in range: 1823
-halo 3/10 ; snapshot 0056
-All halos in range: 1823
-halo 3/10 ; snapshot 0056
-All halos in range: 1823
+Shell si: 0
 ***Running simulation with 128 CPUs***
-Sim time min/h: 0.11220210953227555 min, 0.0018700351588712592 h.
+Sim time min/h: 0.19994889143332936 min, 0.0033324815238888225 h.
 halo 3/10 ; snapshot 0062
-All halos in range: 1807
-halo 3/10 ; snapshot 0055
-All halos in range: 1819
-halo 3/10 ; snapshot 0055
-All halos in range: 1819
-halo 3/10 ; snapshot 0055
-All halos in range: 1819
+Shell si: 0
 halo 3/10 ; snapshot 0061
-All halos in range: 1835
-halo 3/10 ; snapshot 0054
-All halos in range: 1826
-halo 3/10 ; snapshot 0054
-All halos in range: 1826
-halo 3/10 ; snapshot 0054
-All halos in range: 1826
+Shell si: 0
 halo 3/10 ; snapshot 0060
-All halos in range: 1823
-halo 3/10 ; snapshot 0053
-All halos in range: 1778
-halo 3/10 ; snapshot 0053
-All halos in range: 1778
-halo 3/10 ; snapshot 0053
-All halos in range: 1778
+Shell si: 0
 halo 3/10 ; snapshot 0059
-All halos in range: 1827
-halo 3/10 ; snapshot 0052
-All halos in range: 1786
-halo 3/10 ; snapshot 0052
-All halos in range: 1786
-halo 3/10 ; snapshot 0052
-All halos in range: 1786
+Shell si: 0
 halo 3/10 ; snapshot 0058
-All halos in range: 1832
-halo 3/10 ; snapshot 0051
-All halos in range: 1789
-halo 3/10 ; snapshot 0051
-All halos in range: 1789
-halo 3/10 ; snapshot 0051
-All halos in range: 1789
+Shell si: 0
 halo 3/10 ; snapshot 0057
-All halos in range: 1814
-halo 3/10 ; snapshot 0050
-All halos in range: 1779
-halo 3/10 ; snapshot 0050
-All halos in range: 1779
-halo 3/10 ; snapshot 0050
-All halos in range: 1779
+Shell si: 0
 halo 3/10 ; snapshot 0056
-All halos in range: 1823
-halo 3/10 ; snapshot 0049
-All halos in range: 1794
-halo 3/10 ; snapshot 0049
-All halos in range: 1794
-halo 3/10 ; snapshot 0049
-All halos in range: 1794
+Shell si: 0
 halo 3/10 ; snapshot 0055
-All halos in range: 1819
-halo 3/10 ; snapshot 0048
-All halos in range: 1792
-halo 3/10 ; snapshot 0048
-All halos in range: 1792
-halo 3/10 ; snapshot 0048
-All halos in range: 1792
+Shell si: 0
 halo 3/10 ; snapshot 0054
-All halos in range: 1826
-halo 3/10 ; snapshot 0047
-All halos in range: 1811
-halo 3/10 ; snapshot 0047
-All halos in range: 1811
-halo 3/10 ; snapshot 0047
-All halos in range: 1811
+Shell si: 0
 halo 3/10 ; snapshot 0053
-All halos in range: 1778
-halo 3/10 ; snapshot 0046
-All halos in range: 1795
-halo 3/10 ; snapshot 0046
-All halos in range: 1795
-halo 3/10 ; snapshot 0046
-All halos in range: 1795
-halo 3/10 ; snapshot 0045
-All halos in range: 1785
-halo 3/10 ; snapshot 0045
-All halos in range: 1785
+Shell si: 0
 halo 3/10 ; snapshot 0052
-All halos in range: 1786
-halo 3/10 ; snapshot 0045
-All halos in range: 1785
-halo 3/10 ; snapshot 0044
-All halos in range: 1801
-halo 3/10 ; snapshot 0044
-All halos in range: 1801
-halo 3/10 ; snapshot 0044
-All halos in range: 1801
+Shell si: 0
 halo 3/10 ; snapshot 0051
-All halos in range: 1789
-halo 3/10 ; snapshot 0043
-All halos in range: 1793
-halo 3/10 ; snapshot 0043
-All halos in range: 1793
-halo 3/10 ; snapshot 0043
-All halos in range: 1793
+Shell si: 0
 halo 3/10 ; snapshot 0050
-All halos in range: 1779
-halo 3/10 ; snapshot 0042
-All halos in range: 1788
-halo 3/10 ; snapshot 0042
-All halos in range: 1788
-halo 3/10 ; snapshot 0042
-All halos in range: 1788
+Shell si: 0
 halo 3/10 ; snapshot 0049
-All halos in range: 1794
-halo 3/10 ; snapshot 0041
-All halos in range: 1799
-halo 3/10 ; snapshot 0041
-All halos in range: 1799
-halo 3/10 ; snapshot 0041
-All halos in range: 1799
+Shell si: 0
 halo 3/10 ; snapshot 0048
-All halos in range: 1792
-halo 3/10 ; snapshot 0040
-All halos in range: 1800
-halo 3/10 ; snapshot 0040
-All halos in range: 1800
-halo 3/10 ; snapshot 0040
-All halos in range: 1800
+Shell si: 0
 halo 3/10 ; snapshot 0047
-All halos in range: 1811
-halo 3/10 ; snapshot 0039
-All halos in range: 1840
-halo 3/10 ; snapshot 0039
-All halos in range: 1840
-halo 3/10 ; snapshot 0039
-All halos in range: 1840
+Shell si: 0
 halo 3/10 ; snapshot 0046
-All halos in range: 1795
-halo 3/10 ; snapshot 0038
-All halos in range: 1801
-halo 3/10 ; snapshot 0038
-All halos in range: 1801
-halo 3/10 ; snapshot 0038
-All halos in range: 1801
+Shell si: 0
 halo 3/10 ; snapshot 0045
-All halos in range: 1785
-halo 3/10 ; snapshot 0037
-All halos in range: 1808
-halo 3/10 ; snapshot 0037
-All halos in range: 1808
-halo 3/10 ; snapshot 0037
-All halos in range: 1808
+Shell si: 0
 halo 3/10 ; snapshot 0044
-All halos in range: 1801
-halo 3/10 ; snapshot 0036
-All halos in range: 1789
-halo 3/10 ; snapshot 0036
-All halos in range: 1789
-halo 3/10 ; snapshot 0036
-All halos in range: 1789
-halo 3/10 ; snapshot 0035
-All halos in range: 1825
-halo 3/10 ; snapshot 0035
-All halos in range: 1825
-halo 3/10 ; snapshot 0035
-All halos in range: 1825
+Shell si: 0
 halo 3/10 ; snapshot 0043
-All halos in range: 1793
-halo 3/10 ; snapshot 0034
-All halos in range: 1840
-halo 3/10 ; snapshot 0034
-All halos in range: 1840
-halo 3/10 ; snapshot 0034
-All halos in range: 1840
+Shell si: 0
 halo 3/10 ; snapshot 0042
-All halos in range: 1788
-halo 3/10 ; snapshot 0033
-All halos in range: 1829
-halo 3/10 ; snapshot 0033
-All halos in range: 1829
-halo 3/10 ; snapshot 0033
-All halos in range: 1829
+Shell si: 0
 halo 3/10 ; snapshot 0041
-All halos in range: 1799
-halo 3/10 ; snapshot 0032
-All halos in range: 1854
-halo 3/10 ; snapshot 0032
-All halos in range: 1854
-halo 3/10 ; snapshot 0032
-All halos in range: 1854
+Shell si: 0
 halo 3/10 ; snapshot 0040
-All halos in range: 1800
-halo 3/10 ; snapshot 0031
-All halos in range: 1850
-halo 3/10 ; snapshot 0031
-All halos in range: 1850
-halo 3/10 ; snapshot 0031
-All halos in range: 1850
-halo 3/10 ; snapshot 0030
-All halos in range: 1892
-halo 3/10 ; snapshot 0030
-All halos in range: 1892
-halo 3/10 ; snapshot 0030
-All halos in range: 1892
+Shell si: 0
 halo 3/10 ; snapshot 0039
-All halos in range: 1840
-halo 3/10 ; snapshot 0029
-All halos in range: 1939
-halo 3/10 ; snapshot 0029
-All halos in range: 1939
-halo 3/10 ; snapshot 0029
-All halos in range: 1939
+Shell si: 0
 halo 3/10 ; snapshot 0038
-All halos in range: 1801
-halo 3/10 ; snapshot 0028
-All halos in range: 1932
-halo 3/10 ; snapshot 0028
-All halos in range: 1932
-halo 3/10 ; snapshot 0028
-All halos in range: 1932
-halo 3/10 ; snapshot 0027
-All halos in range: 1972
-halo 3/10 ; snapshot 0027
-All halos in range: 1972
-halo 3/10 ; snapshot 0027
-All halos in range: 1972
+Shell si: 0
 halo 3/10 ; snapshot 0037
-All halos in range: 1808
-halo 3/10 ; snapshot 0026
-All halos in range: 1989
-halo 3/10 ; snapshot 0026
-All halos in range: 1989
-halo 3/10 ; snapshot 0026
-All halos in range: 1989
+Shell si: 0
 halo 3/10 ; snapshot 0036
-All halos in range: 1789
-halo 3/10 ; snapshot 0025
-All halos in range: 1969
-halo 3/10 ; snapshot 0025
-All halos in range: 1969
-halo 3/10 ; snapshot 0025
-All halos in range: 1969
+Shell si: 0
 halo 3/10 ; snapshot 0035
-All halos in range: 1825
-halo 3/10 ; snapshot 0024
-All halos in range: 1952
-halo 3/10 ; snapshot 0024
-All halos in range: 1952
-halo 3/10 ; snapshot 0024
-All halos in range: 1952
-halo 3/10 ; snapshot 0023
-All halos in range: 1971
-halo 3/10 ; snapshot 0023
-All halos in range: 1971
+Shell si: 0
 halo 3/10 ; snapshot 0034
-All halos in range: 1840
-halo 3/10 ; snapshot 0023
-All halos in range: 1971
-halo 3/10 ; snapshot 0022
-All halos in range: 1992
-halo 3/10 ; snapshot 0022
-All halos in range: 1992
-halo 3/10 ; snapshot 0022
-All halos in range: 1992
+Shell si: 0
 halo 3/10 ; snapshot 0033
-All halos in range: 1829
-halo 3/10 ; snapshot 0021
-All halos in range: 2043
-halo 3/10 ; snapshot 0021
-All halos in range: 2043
-halo 3/10 ; snapshot 0021
-All halos in range: 2043
+Shell si: 0
 halo 3/10 ; snapshot 0032
-All halos in range: 1854
-halo 3/10 ; snapshot 0020
-All halos in range: 2004
-halo 3/10 ; snapshot 0020
-All halos in range: 2004
-halo 3/10 ; snapshot 0020
-All halos in range: 2004
-halo 3/10 ; snapshot 0019
-All halos in range: 1999
-halo 3/10 ; snapshot 0019
-All halos in range: 1999
-halo 3/10 ; snapshot 0019
-All halos in range: 1999
+Shell si: 0
 halo 3/10 ; snapshot 0031
-All halos in range: 1850
-halo 3/10 ; snapshot 0018
-All halos in range: 2026
-halo 3/10 ; snapshot 0018
-All halos in range: 2026
-halo 3/10 ; snapshot 0018
-All halos in range: 2026
+Shell si: 0
 halo 3/10 ; snapshot 0030
-All halos in range: 1892
-halo 3/10 ; snapshot 0017
-All halos in range: 2001
-halo 3/10 ; snapshot 0017
-All halos in range: 2001
-halo 3/10 ; snapshot 0017
-All halos in range: 2001
-halo 3/10 ; snapshot 0016
-All halos in range: 1975
-halo 3/10 ; snapshot 0016
-All halos in range: 1975
-halo 3/10 ; snapshot 0016
-All halos in range: 1975
+Shell si: 0
 halo 3/10 ; snapshot 0029
-All halos in range: 1939
-halo 3/10 ; snapshot 0015
-All halos in range: 1974
-halo 3/10 ; snapshot 0015
-All halos in range: 1974
-halo 3/10 ; snapshot 0015
-All halos in range: 1974
+Shell si: 0
 halo 3/10 ; snapshot 0028
-All halos in range: 1932
-halo 3/10 ; snapshot 0014
-All halos in range: 1959
-halo 3/10 ; snapshot 0014
-All halos in range: 1959
-halo 3/10 ; snapshot 0014
-All halos in range: 1959
-halo 3/10 ; snapshot 0013
-All halos in range: 1899
-halo 3/10 ; snapshot 0013
-All halos in range: 1899
-halo 3/10 ; snapshot 0013
-All halos in range: 1899
+Shell si: 0
 halo 3/10 ; snapshot 0027
-All halos in range: 1972
-***Running simulation with 128 CPUs***
-***Running simulation with 128 CPUs***
-Sim time min/h: 0.1063845863332972 min, 0.0017730764388882866 h.
-halo 4/10 ; snapshot 0062
-All halos in range: 2746
-Sim time min/h: 0.09061972070097303 min, 0.0015103286783495506 h.
-halo 4/10 ; snapshot 0062
-All halos in range: 2746
-***Running simulation with 128 CPUs***
-Sim time min/h: 0.12017580674922404 min, 0.0020029301124870674 h.
-halo 4/10 ; snapshot 0062
-All halos in range: 2746
+Shell si: 0
 halo 3/10 ; snapshot 0026
-All halos in range: 1989
+Shell si: 0
 halo 3/10 ; snapshot 0025
-All halos in range: 1969
+Shell si: 0
 halo 3/10 ; snapshot 0024
-All halos in range: 1952
-halo 4/10 ; snapshot 0061
-All halos in range: 2754
-halo 4/10 ; snapshot 0061
-All halos in range: 2754
-halo 4/10 ; snapshot 0061
-All halos in range: 2754
+Shell si: 0
 halo 3/10 ; snapshot 0023
-All halos in range: 1971
+Shell si: 0
 halo 3/10 ; snapshot 0022
-All halos in range: 1992
+Shell si: 0
 halo 3/10 ; snapshot 0021
-All halos in range: 2043
-halo 4/10 ; snapshot 0060
-All halos in range: 2746
-halo 4/10 ; snapshot 0060
-All halos in range: 2746
-halo 4/10 ; snapshot 0060
-All halos in range: 2746
+Shell si: 0
 halo 3/10 ; snapshot 0020
-All halos in range: 2004
+Shell si: 0
 halo 3/10 ; snapshot 0019
-All halos in range: 1999
+Shell si: 0
 halo 3/10 ; snapshot 0018
-All halos in range: 2026
-halo 4/10 ; snapshot 0059
-All halos in range: 2753
-halo 4/10 ; snapshot 0059
-All halos in range: 2753
-halo 4/10 ; snapshot 0059
-All halos in range: 2753
+Shell si: 0
 halo 3/10 ; snapshot 0017
-All halos in range: 2001
+Shell si: 0
 halo 3/10 ; snapshot 0016
-All halos in range: 1975
+Shell si: 0
 halo 3/10 ; snapshot 0015
-All halos in range: 1974
-halo 4/10 ; snapshot 0058
-All halos in range: 2768
-halo 4/10 ; snapshot 0058
-All halos in range: 2768
+Shell si: 0
 halo 3/10 ; snapshot 0014
-All halos in range: 1959
-halo 4/10 ; snapshot 0058
-All halos in range: 2768
+Shell si: 0
 halo 3/10 ; snapshot 0013
-All halos in range: 1899
+Shell si: 0
 ***Running simulation with 128 CPUs***
-Sim time min/h: 0.09348668990035852 min, 0.0015581114983393087 h.
+Sim time min/h: 0.19381808031660816 min, 0.003230301338610136 h.
 halo 4/10 ; snapshot 0062
-All halos in range: 2746
-halo 4/10 ; snapshot 0057
-All halos in range: 2766
-halo 4/10 ; snapshot 0057
-All halos in range: 2766
-halo 4/10 ; snapshot 0057
-All halos in range: 2766
+Shell si: 0
 halo 4/10 ; snapshot 0061
-All halos in range: 2754
-halo 4/10 ; snapshot 0056
-All halos in range: 2793
-halo 4/10 ; snapshot 0056
-All halos in range: 2793
-halo 4/10 ; snapshot 0056
-All halos in range: 2793
+Shell si: 0
 halo 4/10 ; snapshot 0060
-All halos in range: 2746
-halo 4/10 ; snapshot 0055
-All halos in range: 2759
-halo 4/10 ; snapshot 0055
-All halos in range: 2759
-halo 4/10 ; snapshot 0055
-All halos in range: 2759
+Shell si: 0
 halo 4/10 ; snapshot 0059
-All halos in range: 2753
-halo 4/10 ; snapshot 0054
-All halos in range: 2770
-halo 4/10 ; snapshot 0054
-All halos in range: 2770
-halo 4/10 ; snapshot 0054
-All halos in range: 2770
-halo 4/10 ; snapshot 0053
-All halos in range: 2741
-halo 4/10 ; snapshot 0053
-All halos in range: 2741
-halo 4/10 ; snapshot 0053
-All halos in range: 2741
+Shell si: 0
 halo 4/10 ; snapshot 0058
-All halos in range: 2768
-halo 4/10 ; snapshot 0052
-All halos in range: 2759
-halo 4/10 ; snapshot 0052
-All halos in range: 2759
-halo 4/10 ; snapshot 0052
-All halos in range: 2759
+Shell si: 0
 halo 4/10 ; snapshot 0057
-All halos in range: 2766
-halo 4/10 ; snapshot 0051
-All halos in range: 2736
-halo 4/10 ; snapshot 0051
-All halos in range: 2736
-halo 4/10 ; snapshot 0051
-All halos in range: 2736
+Shell si: 0
 halo 4/10 ; snapshot 0056
-All halos in range: 2793
-halo 4/10 ; snapshot 0050
-All halos in range: 2718
-halo 4/10 ; snapshot 0050
-All halos in range: 2718
-halo 4/10 ; snapshot 0050
-All halos in range: 2718
+Shell si: 0
 halo 4/10 ; snapshot 0055
-All halos in range: 2759
-halo 4/10 ; snapshot 0049
-All halos in range: 2762
-halo 4/10 ; snapshot 0049
-All halos in range: 2762
-halo 4/10 ; snapshot 0049
-All halos in range: 2762
+Shell si: 0
 halo 4/10 ; snapshot 0054
-All halos in range: 2770
-halo 4/10 ; snapshot 0048
-All halos in range: 2789
-halo 4/10 ; snapshot 0048
-All halos in range: 2789
-halo 4/10 ; snapshot 0048
-All halos in range: 2789
+Shell si: 0
 halo 4/10 ; snapshot 0053
-All halos in range: 2741
-halo 4/10 ; snapshot 0047
-All halos in range: 2808
-halo 4/10 ; snapshot 0047
-All halos in range: 2808
-halo 4/10 ; snapshot 0047
-All halos in range: 2808
+Shell si: 0
 halo 4/10 ; snapshot 0052
-All halos in range: 2759
-halo 4/10 ; snapshot 0046
-All halos in range: 2812
-halo 4/10 ; snapshot 0046
-All halos in range: 2812
-halo 4/10 ; snapshot 0046
-All halos in range: 2812
+Shell si: 0
 halo 4/10 ; snapshot 0051
-All halos in range: 2736
-halo 4/10 ; snapshot 0045
-All halos in range: 2817
-halo 4/10 ; snapshot 0045
-All halos in range: 2817
-halo 4/10 ; snapshot 0045
-All halos in range: 2817
+Shell si: 0
 halo 4/10 ; snapshot 0050
-All halos in range: 2718
-halo 4/10 ; snapshot 0044
-All halos in range: 2823
-halo 4/10 ; snapshot 0044
-All halos in range: 2823
-halo 4/10 ; snapshot 0044
-All halos in range: 2823
+Shell si: 0
 halo 4/10 ; snapshot 0049
-All halos in range: 2762
-halo 4/10 ; snapshot 0043
-All halos in range: 2857
-halo 4/10 ; snapshot 0043
-All halos in range: 2857
-halo 4/10 ; snapshot 0043
-All halos in range: 2857
+Shell si: 0
 halo 4/10 ; snapshot 0048
-All halos in range: 2789
-halo 4/10 ; snapshot 0042
-All halos in range: 2833
-halo 4/10 ; snapshot 0042
-All halos in range: 2833
-halo 4/10 ; snapshot 0042
-All halos in range: 2833
+Shell si: 0
 halo 4/10 ; snapshot 0047
-All halos in range: 2808
-halo 4/10 ; snapshot 0041
-All halos in range: 2815
-halo 4/10 ; snapshot 0041
-All halos in range: 2815
-halo 4/10 ; snapshot 0041
-All halos in range: 2815
+Shell si: 0
 halo 4/10 ; snapshot 0046
-All halos in range: 2812
-halo 4/10 ; snapshot 0040
-All halos in range: 2812
-halo 4/10 ; snapshot 0040
-All halos in range: 2812
-halo 4/10 ; snapshot 0040
-All halos in range: 2812
+Shell si: 0
 halo 4/10 ; snapshot 0045
-All halos in range: 2817
-halo 4/10 ; snapshot 0039
-All halos in range: 2818
-halo 4/10 ; snapshot 0039
-All halos in range: 2818
-halo 4/10 ; snapshot 0039
-All halos in range: 2818
+Shell si: 0
 halo 4/10 ; snapshot 0044
-All halos in range: 2823
-halo 4/10 ; snapshot 0038
-All halos in range: 2759
-halo 4/10 ; snapshot 0038
-All halos in range: 2759
-halo 4/10 ; snapshot 0038
-All halos in range: 2759
-halo 4/10 ; snapshot 0037
-All halos in range: 2763
-halo 4/10 ; snapshot 0037
-All halos in range: 2763
+Shell si: 0
 halo 4/10 ; snapshot 0043
-All halos in range: 2857
-halo 4/10 ; snapshot 0037
-All halos in range: 2763
-halo 4/10 ; snapshot 0036
-All halos in range: 2707
-halo 4/10 ; snapshot 0036
-All halos in range: 2707
-halo 4/10 ; snapshot 0036
-All halos in range: 2707
+Shell si: 0
 halo 4/10 ; snapshot 0042
-All halos in range: 2833
-halo 4/10 ; snapshot 0035
-All halos in range: 2764
-halo 4/10 ; snapshot 0035
-All halos in range: 2764
-halo 4/10 ; snapshot 0035
-All halos in range: 2764
-halo 4/10 ; snapshot 0034
-All halos in range: 2794
-halo 4/10 ; snapshot 0034
-All halos in range: 2794
-halo 4/10 ; snapshot 0034
-All halos in range: 2794
+Shell si: 0
 halo 4/10 ; snapshot 0041
-All halos in range: 2815
-halo 4/10 ; snapshot 0033
-All halos in range: 2769
-halo 4/10 ; snapshot 0033
-All halos in range: 2769
-halo 4/10 ; snapshot 0033
-All halos in range: 2769
+Shell si: 0
 halo 4/10 ; snapshot 0040
-All halos in range: 2812
-halo 4/10 ; snapshot 0032
-All halos in range: 2805
-halo 4/10 ; snapshot 0032
-All halos in range: 2805
-halo 4/10 ; snapshot 0032
-All halos in range: 2805
-halo 4/10 ; snapshot 0031
-All halos in range: 2824
-halo 4/10 ; snapshot 0031
-All halos in range: 2824
-halo 4/10 ; snapshot 0031
-All halos in range: 2824
+Shell si: 0
 halo 4/10 ; snapshot 0039
-All halos in range: 2818
-halo 4/10 ; snapshot 0030
-All halos in range: 2877
-halo 4/10 ; snapshot 0030
-All halos in range: 2877
-halo 4/10 ; snapshot 0030
-All halos in range: 2877
+Shell si: 0
 halo 4/10 ; snapshot 0038
-All halos in range: 2759
-halo 4/10 ; snapshot 0029
-All halos in range: 2934
-halo 4/10 ; snapshot 0029
-All halos in range: 2934
-halo 4/10 ; snapshot 0029
-All halos in range: 2934
+Shell si: 0
 halo 4/10 ; snapshot 0037
-All halos in range: 2763
-halo 4/10 ; snapshot 0028
-All halos in range: 2963
-halo 4/10 ; snapshot 0028
-All halos in range: 2963
-halo 4/10 ; snapshot 0028
-All halos in range: 2963
-halo 4/10 ; snapshot 0027
-All halos in range: 3010
-halo 4/10 ; snapshot 0027
-All halos in range: 3010
-halo 4/10 ; snapshot 0027
-All halos in range: 3010
+Shell si: 0
 halo 4/10 ; snapshot 0036
-All halos in range: 2707
-halo 4/10 ; snapshot 0026
-All halos in range: 3025
-halo 4/10 ; snapshot 0026
-All halos in range: 3025
-halo 4/10 ; snapshot 0026
-All halos in range: 3025
+Shell si: 0
 halo 4/10 ; snapshot 0035
-All halos in range: 2764
-halo 4/10 ; snapshot 0025
-All halos in range: 3042
-halo 4/10 ; snapshot 0025
-All halos in range: 3042
-halo 4/10 ; snapshot 0025
-All halos in range: 3042
-halo 4/10 ; snapshot 0024
-All halos in range: 3058
-halo 4/10 ; snapshot 0024
-All halos in range: 3058
-halo 4/10 ; snapshot 0024
-All halos in range: 3058
+Shell si: 0
 halo 4/10 ; snapshot 0034
-All halos in range: 2794
-halo 4/10 ; snapshot 0023
-All halos in range: 3057
-halo 4/10 ; snapshot 0023
-All halos in range: 3057
-halo 4/10 ; snapshot 0023
-All halos in range: 3057
+Shell si: 0
 halo 4/10 ; snapshot 0033
-All halos in range: 2769
-halo 4/10 ; snapshot 0022
-All halos in range: 3101
-halo 4/10 ; snapshot 0022
-All halos in range: 3101
-halo 4/10 ; snapshot 0022
-All halos in range: 3101
-halo 4/10 ; snapshot 0021
-All halos in range: 3157
-halo 4/10 ; snapshot 0021
-All halos in range: 3157
+Shell si: 0
 halo 4/10 ; snapshot 0032
-All halos in range: 2805
-halo 4/10 ; snapshot 0021
-All halos in range: 3157
-halo 4/10 ; snapshot 0020
-All halos in range: 3133
-halo 4/10 ; snapshot 0020
-All halos in range: 3133
-halo 4/10 ; snapshot 0020
-All halos in range: 3133
+Shell si: 0
 halo 4/10 ; snapshot 0031
-All halos in range: 2824
-halo 4/10 ; snapshot 0019
-All halos in range: 3151
-halo 4/10 ; snapshot 0019
-All halos in range: 3151
-halo 4/10 ; snapshot 0019
-All halos in range: 3151
-halo 4/10 ; snapshot 0018
-All halos in range: 3167
-halo 4/10 ; snapshot 0018
-All halos in range: 3167
-halo 4/10 ; snapshot 0018
-All halos in range: 3167
+Shell si: 0
 halo 4/10 ; snapshot 0030
-All halos in range: 2877
-halo 4/10 ; snapshot 0017
-All halos in range: 3120
-halo 4/10 ; snapshot 0017
-All halos in range: 3120
-halo 4/10 ; snapshot 0017
-All halos in range: 3120
-halo 4/10 ; snapshot 0016
-All halos in range: 3076
-halo 4/10 ; snapshot 0016
-All halos in range: 3076
-halo 4/10 ; snapshot 0016
-All halos in range: 3076
+Shell si: 0
 halo 4/10 ; snapshot 0029
-All halos in range: 2934
-halo 4/10 ; snapshot 0015
-All halos in range: 3077
-halo 4/10 ; snapshot 0015
-All halos in range: 3077
-halo 4/10 ; snapshot 0015
-All halos in range: 3077
-halo 4/10 ; snapshot 0014
-All halos in range: 3036
-halo 4/10 ; snapshot 0014
-All halos in range: 3036
+Shell si: 0
 halo 4/10 ; snapshot 0028
-All halos in range: 2963
-halo 4/10 ; snapshot 0014
-All halos in range: 3036
-halo 4/10 ; snapshot 0013
-All halos in range: 2943
-halo 4/10 ; snapshot 0013
-All halos in range: 2943
-halo 4/10 ; snapshot 0013
-All halos in range: 2943
+Shell si: 0
 halo 4/10 ; snapshot 0027
-All halos in range: 3010
-***Running simulation with 128 CPUs***
-***Running simulation with 128 CPUs***
-***Running simulation with 128 CPUs***
-Sim time min/h: 0.1396821581836169 min, 0.0023280359697269485 h.
-halo 5/10 ; snapshot 0062
-All halos in range: 9682
-Sim time min/h: 0.14257869410018126 min, 0.0023763115683363544 h.
-halo 5/10 ; snapshot 0062
-All halos in range: 9682
-Sim time min/h: 0.15267921641740637 min, 0.0025446536069567726 h.
-halo 5/10 ; snapshot 0062
-All halos in range: 9682
+Shell si: 0
 halo 4/10 ; snapshot 0026
-All halos in range: 3025
+Shell si: 0
 halo 4/10 ; snapshot 0025
-All halos in range: 3042
+Shell si: 0
 halo 4/10 ; snapshot 0024
-All halos in range: 3058
+Shell si: 0
 halo 4/10 ; snapshot 0023
-All halos in range: 3057
+Shell si: 0
 halo 4/10 ; snapshot 0022
-All halos in range: 3101
+Shell si: 0
 halo 4/10 ; snapshot 0021
-All halos in range: 3157
+Shell si: 0
 halo 4/10 ; snapshot 0020
-All halos in range: 3133
+Shell si: 0
 halo 4/10 ; snapshot 0019
-All halos in range: 3151
+Shell si: 0
 halo 4/10 ; snapshot 0018
-All halos in range: 3167
+Shell si: 0
 halo 4/10 ; snapshot 0017
-All halos in range: 3120
+Shell si: 0
 halo 4/10 ; snapshot 0016
-All halos in range: 3076
+Shell si: 0
 halo 4/10 ; snapshot 0015
-All halos in range: 3077
+Shell si: 0
 halo 4/10 ; snapshot 0014
-All halos in range: 3036
+Shell si: 0
 halo 4/10 ; snapshot 0013
-All halos in range: 2943
+Shell si: 0
 ***Running simulation with 128 CPUs***
-Sim time min/h: 0.13083261710125954 min, 0.0021805436183543257 h.
+Sim time min/h: 0.21537003899999643 min, 0.0035895006499999404 h.
 halo 5/10 ; snapshot 0062
-All halos in range: 9682
+Shell si: 0
 halo 5/10 ; snapshot 0061
-All halos in range: 9804
-halo 5/10 ; snapshot 0061
-All halos in range: 9804
-halo 5/10 ; snapshot 0061
-All halos in range: 9804
-halo 5/10 ; snapshot 0061
-All halos in range: 9804
+Shell si: 0
 halo 5/10 ; snapshot 0060
-All halos in range: 9872
-halo 5/10 ; snapshot 0060
-All halos in range: 9872
-halo 5/10 ; snapshot 0060
-All halos in range: 9872
-halo 5/10 ; snapshot 0060
-All halos in range: 9872
-
-JOB STATISTICS
-==============
-Job ID: 1775627
-Cluster: snellius
-User/Group: zimmer/zimmer
-State: RUNNING
-Nodes: 1
-Cores per node: 128
-CPU Utilized: 00:00:00
-CPU Efficiency: 0.00% of 41-10:31:28 core-walltime
-Job Wall-clock time: 07:46:11
-Memory Utilized: 0.00 MB (estimated maximum)
-Memory Efficiency: 0.00% of 218.75 GB (218.75 GB/node)
-WARNING: Efficiency statistics may be misleading for RUNNING jobs.
-
-JOB STATISTICS
-==============
-Job ID: 1775630
-Cluster: snellius
-User/Group: zimmer/zimmer
-State: RUNNING
-Nodes: 1
-Cores per node: 128
-CPU Utilized: 00:00:00
-CPU Efficiency: 0.00% of 41-10:42:08 core-walltime
-Job Wall-clock time: 07:46:16
-Memory Utilized: 0.00 MB (estimated maximum)
-Memory Efficiency: 0.00% of 218.75 GB (218.75 GB/node)
-WARNING: Efficiency statistics may be misleading for RUNNING jobs.
-
-JOB STATISTICS
-==============
-Job ID: 1775631
-Cluster: snellius
-User/Group: zimmer/zimmer
-State: RUNNING
-Nodes: 1
-Cores per node: 128
-CPU Utilized: 00:00:00
-CPU Efficiency: 0.00% of 41-11:16:16 core-walltime
-Job Wall-clock time: 07:46:32
-Memory Utilized: 0.00 MB (estimated maximum)
-Memory Efficiency: 0.00% of 218.75 GB (218.75 GB/node)
-WARNING: Efficiency statistics may be misleading for RUNNING jobs.
+Shell si: 0
 halo 5/10 ; snapshot 0059
-All halos in range: 9772
+Shell si: 0
+halo 5/10 ; snapshot 0058
+Shell si: 0
+halo 5/10 ; snapshot 0057
+Shell si: 0
+halo 5/10 ; snapshot 0056
+Shell si: 0
+halo 5/10 ; snapshot 0055
+Shell si: 0
+halo 5/10 ; snapshot 0054
+Shell si: 0
+halo 5/10 ; snapshot 0053
+Shell si: 0
+halo 5/10 ; snapshot 0052
+Shell si: 0
+halo 5/10 ; snapshot 0051
+Shell si: 0
+halo 5/10 ; snapshot 0050
+Shell si: 0
+halo 5/10 ; snapshot 0049
+Shell si: 0
+halo 5/10 ; snapshot 0048
+Shell si: 0
+halo 5/10 ; snapshot 0047
+Shell si: 0
+halo 5/10 ; snapshot 0046
+Shell si: 0
+halo 5/10 ; snapshot 0045
+Shell si: 0
+halo 5/10 ; snapshot 0044
+Shell si: 0
+halo 5/10 ; snapshot 0043
+Shell si: 0
+halo 5/10 ; snapshot 0042
+Shell si: 0
+halo 5/10 ; snapshot 0041
+Shell si: 0
+halo 5/10 ; snapshot 0040
+Shell si: 0
+halo 5/10 ; snapshot 0039
+Shell si: 0
+halo 5/10 ; snapshot 0038
+Shell si: 0
+halo 5/10 ; snapshot 0037
+Shell si: 0
+halo 5/10 ; snapshot 0036
+Shell si: 0
+halo 5/10 ; snapshot 0035
+Shell si: 0
+halo 5/10 ; snapshot 0034
+Shell si: 0
+halo 5/10 ; snapshot 0033
+Shell si: 0
+halo 5/10 ; snapshot 0032
+Shell si: 0
+halo 5/10 ; snapshot 0031
+Shell si: 0
+halo 5/10 ; snapshot 0030
+Shell si: 0
+halo 5/10 ; snapshot 0029
+Shell si: 0
+halo 5/10 ; snapshot 0028
+Shell si: 0
+halo 5/10 ; snapshot 0027
+Shell si: 0
+halo 5/10 ; snapshot 0026
+Shell si: 0
+halo 5/10 ; snapshot 0025
+Shell si: 0
+halo 5/10 ; snapshot 0024
+Shell si: 0
+halo 5/10 ; snapshot 0023
+Shell si: 0
+halo 5/10 ; snapshot 0022
+Shell si: 0
+halo 5/10 ; snapshot 0021
+Shell si: 0
+halo 5/10 ; snapshot 0020
+Shell si: 0
+halo 5/10 ; snapshot 0019
+Shell si: 0
+halo 5/10 ; snapshot 0018
+Shell si: 0
+halo 5/10 ; snapshot 0017
+Shell si: 0
+halo 5/10 ; snapshot 0016
+Shell si: 0
+halo 5/10 ; snapshot 0015
+Shell si: 0
+halo 5/10 ; snapshot 0014
+Shell si: 0
+halo 5/10 ; snapshot 0013
+Shell si: 0
+***Running simulation with 128 CPUs***
+Sim time min/h: 0.14891875568331064 min, 0.0024819792613885107 h.
+halo 6/10 ; snapshot 0062
+Shell si: 0
+halo 6/10 ; snapshot 0061
+Shell si: 0
+halo 6/10 ; snapshot 0060
+Shell si: 0
+halo 6/10 ; snapshot 0059
+Shell si: 0
+halo 6/10 ; snapshot 0058
+Shell si: 0
+halo 6/10 ; snapshot 0057
+Shell si: 0
+halo 6/10 ; snapshot 0056
+Shell si: 0
+halo 6/10 ; snapshot 0055
+Shell si: 0
+halo 6/10 ; snapshot 0054
+Shell si: 0
+halo 6/10 ; snapshot 0053
+Shell si: 0
+halo 6/10 ; snapshot 0052
+Shell si: 0
+halo 6/10 ; snapshot 0051
+Shell si: 0
+halo 6/10 ; snapshot 0050
+Shell si: 0
+halo 6/10 ; snapshot 0049
+Shell si: 0
+halo 6/10 ; snapshot 0048
+Shell si: 0
+halo 6/10 ; snapshot 0047
+Shell si: 0
+halo 6/10 ; snapshot 0046
+Shell si: 0
+halo 6/10 ; snapshot 0045
+Shell si: 0
+halo 6/10 ; snapshot 0044
+Shell si: 0
+halo 6/10 ; snapshot 0043
+Shell si: 0
+halo 6/10 ; snapshot 0042
+Shell si: 0
+halo 6/10 ; snapshot 0041
+Shell si: 0
+halo 6/10 ; snapshot 0040
+Shell si: 0
+halo 6/10 ; snapshot 0039
+Shell si: 0
+halo 6/10 ; snapshot 0038
+Shell si: 0
+halo 6/10 ; snapshot 0037
+Shell si: 0
+halo 6/10 ; snapshot 0036
+Shell si: 0
+halo 6/10 ; snapshot 0035
+Shell si: 0
+halo 6/10 ; snapshot 0034
+Shell si: 0
+halo 6/10 ; snapshot 0033
+Shell si: 0
+halo 6/10 ; snapshot 0032
+Shell si: 0
+halo 6/10 ; snapshot 0031
+Shell si: 0
+halo 6/10 ; snapshot 0030
+Shell si: 0
+halo 6/10 ; snapshot 0029
+Shell si: 0
+halo 6/10 ; snapshot 0028
+Shell si: 0
+halo 6/10 ; snapshot 0027
+Shell si: 0
+halo 6/10 ; snapshot 0026
+Shell si: 0
+halo 6/10 ; snapshot 0025
+Shell si: 0
+halo 6/10 ; snapshot 0024
+Shell si: 0
+halo 6/10 ; snapshot 0023
+Shell si: 0
+halo 6/10 ; snapshot 0022
+Shell si: 0
+halo 6/10 ; snapshot 0021
+Shell si: 0
+halo 6/10 ; snapshot 0020
+Shell si: 0
+halo 6/10 ; snapshot 0019
+Shell si: 0
+halo 6/10 ; snapshot 0018
+Shell si: 0
+halo 6/10 ; snapshot 0017
+Shell si: 0
+halo 6/10 ; snapshot 0016
+Shell si: 0
+halo 6/10 ; snapshot 0015
+Shell si: 0
+halo 6/10 ; snapshot 0014
+Shell si: 0
+halo 6/10 ; snapshot 0013
+Shell si: 0
+***Running simulation with 128 CPUs***
+Sim time min/h: 0.10381684095009405 min, 0.0017302806825015675 h.
+halo 7/10 ; snapshot 0062
+Shell si: 0
+halo 7/10 ; snapshot 0061
+Shell si: 0
+halo 7/10 ; snapshot 0060
+Shell si: 0
+halo 7/10 ; snapshot 0059
+Shell si: 0
+halo 7/10 ; snapshot 0058
+Shell si: 0
+halo 7/10 ; snapshot 0057
+Shell si: 0
+halo 7/10 ; snapshot 0056
+Shell si: 0
+halo 7/10 ; snapshot 0055
+Shell si: 0
+halo 7/10 ; snapshot 0054
+Shell si: 0
+halo 7/10 ; snapshot 0053
+Shell si: 0
+halo 7/10 ; snapshot 0052
+Shell si: 0
+halo 7/10 ; snapshot 0051
+Shell si: 0
+halo 7/10 ; snapshot 0050
+Shell si: 0
+halo 7/10 ; snapshot 0049
+Shell si: 0
+halo 7/10 ; snapshot 0048
+Shell si: 0
+halo 7/10 ; snapshot 0047
+Shell si: 0
+halo 7/10 ; snapshot 0046
+Shell si: 0
+halo 7/10 ; snapshot 0045
+Shell si: 0
+halo 7/10 ; snapshot 0044
+Shell si: 0
+halo 7/10 ; snapshot 0043
+Shell si: 0
+halo 7/10 ; snapshot 0042
+Shell si: 0
+halo 7/10 ; snapshot 0041
+Shell si: 0
+halo 7/10 ; snapshot 0040
+Shell si: 0
+halo 7/10 ; snapshot 0039
+Shell si: 0
+halo 7/10 ; snapshot 0038
+Shell si: 0
+halo 7/10 ; snapshot 0037
+Shell si: 0
+halo 7/10 ; snapshot 0036
+Shell si: 0
+halo 7/10 ; snapshot 0035
+Shell si: 0
+halo 7/10 ; snapshot 0034
+Shell si: 0
+halo 7/10 ; snapshot 0033
+Shell si: 0
+halo 7/10 ; snapshot 0032
+Shell si: 0
+halo 7/10 ; snapshot 0031
+Shell si: 0
+halo 7/10 ; snapshot 0030
+Shell si: 0
+halo 7/10 ; snapshot 0029
+Shell si: 0
+halo 7/10 ; snapshot 0028
+Shell si: 0
+halo 7/10 ; snapshot 0027
+Shell si: 0
+halo 7/10 ; snapshot 0026
+Shell si: 0
+halo 7/10 ; snapshot 0025
+Shell si: 0
+halo 7/10 ; snapshot 0024
+Shell si: 0
+halo 7/10 ; snapshot 0023
+Shell si: 0
+halo 7/10 ; snapshot 0022
+Shell si: 0
+halo 7/10 ; snapshot 0021
+Shell si: 0
+halo 7/10 ; snapshot 0020
+Shell si: 0
+halo 7/10 ; snapshot 0019
+Shell si: 0
+halo 7/10 ; snapshot 0018
+Shell si: 0
+halo 7/10 ; snapshot 0017
+Shell si: 0
+halo 7/10 ; snapshot 0016
+Shell si: 0
+halo 7/10 ; snapshot 0015
+Shell si: 0
+halo 7/10 ; snapshot 0014
+Shell si: 0
+halo 7/10 ; snapshot 0013
+Shell si: 0
+***Running simulation with 128 CPUs***
+Sim time min/h: 0.18501210158331863 min, 0.003083535026388644 h.
+halo 8/10 ; snapshot 0062
+Shell si: 0
+halo 8/10 ; snapshot 0061
+Shell si: 0
+halo 8/10 ; snapshot 0060
+Shell si: 0
+halo 8/10 ; snapshot 0059
+Shell si: 0
+halo 8/10 ; snapshot 0058
+Shell si: 0
+halo 8/10 ; snapshot 0057
+Shell si: 0
+halo 8/10 ; snapshot 0056
+Shell si: 0
+halo 8/10 ; snapshot 0055
+Shell si: 0
+halo 8/10 ; snapshot 0054
+Shell si: 0
+halo 8/10 ; snapshot 0053
+Shell si: 0
+halo 8/10 ; snapshot 0052
+Shell si: 0
+halo 8/10 ; snapshot 0051
+Shell si: 0
+halo 8/10 ; snapshot 0050
+Shell si: 0
+halo 8/10 ; snapshot 0049
+Shell si: 0
+halo 8/10 ; snapshot 0048
+Shell si: 0
+halo 8/10 ; snapshot 0047
+Shell si: 0
+halo 8/10 ; snapshot 0046
+Shell si: 0
+halo 8/10 ; snapshot 0045
+Shell si: 0
+halo 8/10 ; snapshot 0044
+Shell si: 0
+halo 8/10 ; snapshot 0043
+Shell si: 0
+halo 8/10 ; snapshot 0042
+Shell si: 0
+halo 8/10 ; snapshot 0041
+Shell si: 0
+halo 8/10 ; snapshot 0040
+Shell si: 0
+halo 8/10 ; snapshot 0039
+Shell si: 0
+halo 8/10 ; snapshot 0038
+Shell si: 0
+halo 8/10 ; snapshot 0037
+Shell si: 0
+halo 8/10 ; snapshot 0036
+Shell si: 0
+halo 8/10 ; snapshot 0035
+Shell si: 0
+halo 8/10 ; snapshot 0034
+Shell si: 0
+halo 8/10 ; snapshot 0033
+Shell si: 0
+halo 8/10 ; snapshot 0032
+Shell si: 0
+halo 8/10 ; snapshot 0031
+Shell si: 0
+halo 8/10 ; snapshot 0030
+Shell si: 0
+halo 8/10 ; snapshot 0029
+Shell si: 0
+halo 8/10 ; snapshot 0028
+Shell si: 0
+halo 8/10 ; snapshot 0027
+Shell si: 0
+halo 8/10 ; snapshot 0026
+Shell si: 0
+halo 8/10 ; snapshot 0025
+Shell si: 0
+halo 8/10 ; snapshot 0024
+Shell si: 0
+halo 8/10 ; snapshot 0023
+Shell si: 0
+halo 8/10 ; snapshot 0022
+Shell si: 0
+halo 8/10 ; snapshot 0021
+Shell si: 0
+halo 8/10 ; snapshot 0020
+Shell si: 0
+halo 8/10 ; snapshot 0019
+Shell si: 0
+halo 8/10 ; snapshot 0018
+Shell si: 0
+halo 8/10 ; snapshot 0017
+Shell si: 0
+halo 8/10 ; snapshot 0016
+Shell si: 0
+halo 8/10 ; snapshot 0015
+Shell si: 0
+halo 8/10 ; snapshot 0014
+Shell si: 0
+halo 8/10 ; snapshot 0013
+Shell si: 0
+***Running simulation with 128 CPUs***
+Sim time min/h: 0.16840326644996823 min, 0.0028067211074994706 h.
+halo 9/10 ; snapshot 0062
+Shell si: 0
+halo 9/10 ; snapshot 0061
+Shell si: 0
+halo 9/10 ; snapshot 0060
+Shell si: 0
+halo 9/10 ; snapshot 0059
+Shell si: 0
+halo 9/10 ; snapshot 0058
+Shell si: 0
+halo 9/10 ; snapshot 0057
+Shell si: 0
+halo 9/10 ; snapshot 0056
+Shell si: 0
+halo 9/10 ; snapshot 0055
+Shell si: 0
+halo 9/10 ; snapshot 0054
+Shell si: 0
+halo 9/10 ; snapshot 0053
+Shell si: 0
+halo 9/10 ; snapshot 0052
+Shell si: 0
+halo 9/10 ; snapshot 0051
+Shell si: 0
+halo 9/10 ; snapshot 0050
+Shell si: 0
+halo 9/10 ; snapshot 0049
+Shell si: 0
+halo 9/10 ; snapshot 0048
+Shell si: 0
+halo 9/10 ; snapshot 0047
+Shell si: 0
+halo 9/10 ; snapshot 0046
+Shell si: 0
+halo 9/10 ; snapshot 0045
+Shell si: 0
+halo 9/10 ; snapshot 0044
+Shell si: 0
+halo 9/10 ; snapshot 0043
+Shell si: 0
+halo 9/10 ; snapshot 0042
+Shell si: 0
+halo 9/10 ; snapshot 0041
+Shell si: 0
+halo 9/10 ; snapshot 0040
+Shell si: 0
+halo 9/10 ; snapshot 0039
+Shell si: 0
+halo 9/10 ; snapshot 0038
+Shell si: 0
+halo 9/10 ; snapshot 0037
+Shell si: 0
+halo 9/10 ; snapshot 0036
+Shell si: 0
+halo 9/10 ; snapshot 0035
+Shell si: 0
+halo 9/10 ; snapshot 0034
+Shell si: 0
+halo 9/10 ; snapshot 0033
+Shell si: 0
+halo 9/10 ; snapshot 0032
+Shell si: 0
+halo 9/10 ; snapshot 0031
+Shell si: 0
+halo 9/10 ; snapshot 0030
+Shell si: 0
+halo 9/10 ; snapshot 0029
+Shell si: 0
+halo 9/10 ; snapshot 0028
+Shell si: 0
+halo 9/10 ; snapshot 0027
+Shell si: 0
+halo 9/10 ; snapshot 0026
+Shell si: 0
+halo 9/10 ; snapshot 0025
+Shell si: 0
+halo 9/10 ; snapshot 0024
+Shell si: 0
+halo 9/10 ; snapshot 0023
+Shell si: 0
+halo 9/10 ; snapshot 0022
+Shell si: 0
+halo 9/10 ; snapshot 0021
+Shell si: 0
+halo 9/10 ; snapshot 0020
+Shell si: 0
+halo 9/10 ; snapshot 0019
+Shell si: 0
+halo 9/10 ; snapshot 0018
+Shell si: 0
+halo 9/10 ; snapshot 0017
+Shell si: 0
+halo 9/10 ; snapshot 0016
+Shell si: 0
+halo 9/10 ; snapshot 0015
+Shell si: 0
+halo 9/10 ; snapshot 0014
+Shell si: 0
+halo 9/10 ; snapshot 0013
+Shell si: 0
+***Running simulation with 128 CPUs***
+Sim time min/h: 0.16810059250007423 min, 0.0028016765416679036 h.
+halo 10/10 ; snapshot 0062
+Shell si: 0
+halo 10/10 ; snapshot 0061
+Shell si: 0
+halo 10/10 ; snapshot 0060
+Shell si: 0
+halo 10/10 ; snapshot 0059
+Shell si: 0
+halo 10/10 ; snapshot 0058
+Shell si: 0
+halo 10/10 ; snapshot 0057
+Shell si: 0
+halo 10/10 ; snapshot 0056
+Shell si: 0
+halo 10/10 ; snapshot 0055
+Shell si: 0
+halo 10/10 ; snapshot 0054
+Shell si: 0
+halo 10/10 ; snapshot 0053
+Shell si: 0
+halo 10/10 ; snapshot 0052
+Shell si: 0
+halo 10/10 ; snapshot 0051
+Shell si: 0
+halo 10/10 ; snapshot 0050
+Shell si: 0
+halo 10/10 ; snapshot 0049
+Shell si: 0
+halo 10/10 ; snapshot 0048
+Shell si: 0
+halo 10/10 ; snapshot 0047
+Shell si: 0
+halo 10/10 ; snapshot 0046
+Shell si: 0
+halo 10/10 ; snapshot 0045
+Shell si: 0
+halo 10/10 ; snapshot 0044
+Shell si: 0
+halo 10/10 ; snapshot 0043
+Shell si: 0
+halo 10/10 ; snapshot 0042
+Shell si: 0
+halo 10/10 ; snapshot 0041
+Shell si: 0
+halo 10/10 ; snapshot 0040
+Shell si: 0
+halo 10/10 ; snapshot 0039
+Shell si: 0
+halo 10/10 ; snapshot 0038
+Shell si: 0
+halo 10/10 ; snapshot 0037
+Shell si: 0
+halo 10/10 ; snapshot 0036
+Shell si: 0
+halo 10/10 ; snapshot 0035
+Shell si: 0
+halo 10/10 ; snapshot 0034
+Shell si: 0
+halo 10/10 ; snapshot 0033
+Shell si: 0
+halo 10/10 ; snapshot 0032
+Shell si: 0
+halo 10/10 ; snapshot 0031
+Shell si: 0
+halo 10/10 ; snapshot 0030
+Shell si: 0
+halo 10/10 ; snapshot 0029
+Shell si: 0
+halo 10/10 ; snapshot 0028
+Shell si: 0
+halo 10/10 ; snapshot 0027
+Shell si: 0
+halo 10/10 ; snapshot 0026
+Shell si: 0
+halo 10/10 ; snapshot 0025
+Shell si: 0
+halo 10/10 ; snapshot 0024
+Shell si: 0
+halo 10/10 ; snapshot 0023
+Shell si: 0
+halo 10/10 ; snapshot 0022
+Shell si: 0
+halo 10/10 ; snapshot 0021
+Shell si: 0
+halo 10/10 ; snapshot 0020
+Shell si: 0
+halo 10/10 ; snapshot 0019
+Shell si: 0
+halo 10/10 ; snapshot 0018
+Shell si: 0
+halo 10/10 ; snapshot 0017
+Shell si: 0
+halo 10/10 ; snapshot 0016
+Shell si: 0
+halo 10/10 ; snapshot 0015
+Shell si: 0
+halo 10/10 ; snapshot 0014
+Shell si: 0
+halo 10/10 ; snapshot 0013
+Shell si: 0
+***Running simulation with 128 CPUs***
+Sim time min/h: 0.15491100131669858 min, 0.0025818500219449763 h.
+Total time: 169.11914157168334 min, 2.8186523595280555 h.
 
 JOB STATISTICS
 ==============
-Job ID: 1775628
+Job ID: 1786710
 Cluster: snellius
 User/Group: zimmer/zimmer
-State: OUT_OF_MEMORY (exit code 0)
+State: RUNNING
 Nodes: 1
 Cores per node: 128
-CPU Utilized: 1-23:54:33
-CPU Efficiency: 4.31% of 46-07:34:24 core-walltime
-Job Wall-clock time: 08:41:03
-Memory Utilized: 190.89 GB
-Memory Efficiency: 87.27% of 218.75 GB
+CPU Utilized: 00:00:00
+CPU Efficiency: 0.00% of 15-01:50:56 core-walltime
+Job Wall-clock time: 02:49:37
+Memory Utilized: 0.00 MB (estimated maximum)
+Memory Efficiency: 0.00% of 218.75 GB (218.75 GB/node)
+WARNING: Efficiency statistics may be misleading for RUNNING jobs.

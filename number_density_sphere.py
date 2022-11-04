@@ -150,10 +150,12 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
         # Load DM from all used shells.
         DM_pre = []
         for si in range(shells):
-            print('Shell si:', si)
             DM_pre.append(np.load(f'{TEMP_DIR}/DM_pos_{IDname}_shell{si}.npy'))
         DM_raw = np.array(list(chain.from_iterable(DM_pre)))
         del DM_pre
+
+        # Save c.o.m. coord of all DM particles (for outside_gravity fct.).
+        save_DM_com.append(np.sum(DM_raw, axis=0)/len(DM_raw))
 
         # ---------------------- #
         # Cell division process. #
@@ -183,9 +185,6 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
         # Save snapshot specific parameters.
         save_GRID_L[j] = snap_GRID_L
         save_num_DM[j] = np.sum(DM_count)
-        save_DM_com.append(
-            np.load(f'{TEMP_DIR}/DM_com_coord_{IDname}.npy')
-        )
 
 
         # --------------------------------------------- #
@@ -287,7 +286,7 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
         vels_CoordPair = fct.load_sim_data(TEMP_DIR, CPname, 'velocities')
 
         # note: The final number density is not stored in the temporary folder.
-        out_file = f'{PRE.OUT_DIR}/number_densities_{CPname}_DMrange_{(DM_range_kpc/kpc):.2f}kpc.npy'
+        out_file = f'{PRE.OUT_DIR}/number_densities_{CPname}_{shells}shells.npy'
         fct.number_densities_mass_range(
             vels_CoordPair, nu_mass_range, out_file
         )
