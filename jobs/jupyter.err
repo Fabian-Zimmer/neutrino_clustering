@@ -17,3 +17,5 @@
 [I 12:22:56.823 NotebookApp] Kernel restarted: 3b9b2605-b57f-469a-a720-13ef64eddabc
 [I 12:22:56.831 NotebookApp] Starting buffering for 3b9b2605-b57f-469a-a720-13ef64eddabc:24c688c4-49fd-4353-bbaf-934959a39eb7
 [I 12:22:56.838 NotebookApp] Restoring connection for 3b9b2605-b57f-469a-a720-13ef64eddabc:24c688c4-49fd-4353-bbaf-934959a39eb7
+[I 19:50:17.850 NotebookApp] Starting buffering for 3b9b2605-b57f-469a-a720-13ef64eddabc:24c688c4-49fd-4353-bbaf-934959a39eb7
+slurmstepd: error: *** JOB 1786841 ON tcn273 CANCELLED AT 2022-11-04T20:15:36 DUE TO TIME LIMIT ***

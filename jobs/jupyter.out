@@ -2,3 +2,17 @@ Selected port is:  5489
 
 To connect to the notebook type the following command from your local terminal:
 ssh -N -L5489:localhost:5489 zimmer@int3-pub.snellius.surf.nl
+
+JOB STATISTICS
+==============
+Job ID: 1786841
+Cluster: snellius
+User/Group: zimmer/zimmer
+State: TIMEOUT (exit code 0)
+Nodes: 1
+Cores per node: 32
+CPU Utilized: 00:00:00
+CPU Efficiency: 0.00% of 10-16:04:16 core-walltime
+Job Wall-clock time: 08:00:08
+Memory Utilized: 451.23 MB
+Memory Efficiency: 0.81% of 54.69 GB
