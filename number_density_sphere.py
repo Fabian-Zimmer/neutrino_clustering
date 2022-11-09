@@ -20,7 +20,7 @@ rand_code = ''.join(
 TEMP_DIR = f'{PRE.OUT_DIR}/temp_data_{rand_code}'
 os.makedirs(TEMP_DIR)
 
-Testing=False
+Testing = False
 if Testing:
     mass_gauge = 12.3
     mass_range = 0.3
@@ -210,7 +210,7 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
                 TEMP_DIR, bname
             )
 
-        chunk_size = 30
+        chunk_size = 20
         grid_chunks = chunks(chunk_size, fin_grid)
         DMnr_chunks = chunks(chunk_size, DM_count)
         com_chunks = chunks(chunk_size, cell_com)

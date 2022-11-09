@@ -199,7 +199,6 @@ def halo_batch_indices(
 
     # Limit amount of halos to given size.
     halo_number = len(select_halos)
-    print(halo_number)
     if halo_number >= halo_limit:
 
         # Fix pseudo-random choice of halos.
