@@ -151,10 +151,10 @@ def main(config: ArgumentParser):
 
 class Mock_ArgumentParser:
 
-    sim = 'L012N376'
+    sim = 'L025N752'
     splits = re.split('/', SIM_TYPE)
     name_list = f'MergerTree_{sim}_{splits[0]}_{splits[1]}'
-    first_snap = '0062'
+    first_snap = '0036'
     #note: final_snap has to be adjusted in above function build_tree
 
     snapshot_list = [f'snapshot_{first_snap}.hdf5',]

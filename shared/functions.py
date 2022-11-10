@@ -270,7 +270,7 @@ def read_DM_halo_index(snap, halo_ID, fname, sim_dir, out_dir):
     CoP_halo = CoP[halo_ID, :]
 
     DM_pos = pos[indices_p, :]  # x,y,z of each DM particle
-    DM_pos -= CoP_halo  # center DM on halo at first (at z~0) snapshot
+    DM_pos -= CoP_halo
     DM_pos *= 1e3  # to kpc
     np.save(f'{out_dir}/DM_pos_{fname}.npy', DM_pos)
 
