@@ -504,11 +504,8 @@ def check_grid(init_grid, DM_pos, parent_GRID_S, DM_lim):
     # Find shell center, which each cell is closest to.
     which_shell = np.abs(grid_dis - shells_sync).argmin(axis=1)
 
-    # Multiplier for DM limit for each shell.
-    multipliers = np.array([1,3,6,9])
-
     # Final DM limit for each cell.
-    cell_DMlims = np.array([multipliers[k] for k in which_shell])*DM_lim
+    cell_DMlims = np.array([SHELL_MULTIPLIERS[k] for k in which_shell])*DM_lim
 
 
     ### Drop all cells containing an amount of DM below the given threshold, 
@@ -662,43 +659,6 @@ def cell_division(
             stable_grid   = stable_grid_so_far
 
             cell_division_count += 1
-
-
-def manual_cell_division(
-    sim_id, snap, DM_raw, DM_lim_manual, 
-    GRID_L_manual, GRID_S_manual, m0, DM_radius
-):
-    
-    # Initial grid and DM positions.
-    grid = grid_3D(GRID_L_manual, GRID_S_manual)
-    init_grid = np.expand_dims(grid, axis=1)
-    DM_pos = np.expand_dims(DM_raw, axis=0)
-    DM_ready = np.repeat(DM_pos, len(init_grid), axis=0)
-    print('Grid and DM shapes before division:', init_grid.shape, DM_ready.shape)
-
-    cell_division_count = cell_division(
-        init_grid, DM_ready, GRID_S_manual, DM_lim_manual, 
-        stable_grid=None, sim=sim_id, snap=snap, m0=m0, 
-        DM_radius=DM_radius,
-        test_names=True  #! s.t. important files don't get changed
-    )
-    print(f'cell division rounds: {cell_division_count}')
-
-    # Output.
-    fin_grid = np.load(
-        f'CubeSpace/fin_grid_TestFile_snap_{snap}_{m0}Msun_{DM_radius}kpc.npy')
-    cell_gen = np.load(
-        f'CubeSpace/cell_gen_TestFile_snap_{snap}_{m0}Msun_{DM_radius}kpc.npy')
-    cell_com = np.load(
-        f'CubeSpace/cell_com_TestFile_snap_{snap}_{m0}Msun_{DM_radius}kpc.npy')
-    DM_count = np.load(
-        f'CubeSpace/DM_count_TestFile_snap_{snap}_{m0}Msun_{DM_radius}kpc.npy')
-
-    print('Shapes of output files:', fin_grid.shape, cell_gen.shape, cell_com.shape, DM_count.shape)
-
-    print('Total DM count across all cells:', DM_count.sum())
-
-    return fin_grid, cell_gen, cell_com, DM_count
 
 
 @nb.njit
