@@ -1,0 +1,44 @@
+********************* Initialization *********************
+# Initial conditions for neutrinos:
+PHIs = 20, THETAs=20, Vs=200
+Total neutrinos: 80000
+# Simulation parameters:
+Simulation box: L025N752
+Snapshot from 0036 (z=0) to 0013 (z=4)
+Pre/Sim CPUs 30/128
+DM limit for cells: 1000
+# File management:
+Box files directory: 
+ /projects/0/einf180/Tango_sims/L025N752/DMONLY/SigmaConstant00
+Output directory: 
+ /gpfs/home4/zimmer/neutrino_clustering_V2/L025N752/DMONLY/SigmaConstant00
+**********************************************************
+********Number density band********
+Halo batch params (Rvir,Mvir,cNFW):
+[[253.5523526   12.24058042   6.9286026 ]
+ [158.62979351  11.62953177   8.03988676]
+ [137.07912107  11.43929142   9.41292697]
+ [141.82849159  11.48366794   2.6088865 ]
+ [306.35586267  12.48705608  11.48652354]
+ [190.92998087  11.87099988   7.03921462]
+ [240.52254202  12.17184485   7.39127504]
+ [169.32112452  11.71451092   8.23421103]
+ [167.71139596  11.70206521   7.62954256]
+ [168.53268315  11.7084299    9.38434194]]
+***********************************
+halo 1/10 ; snapshot 0036
+halo 1/10 ; snapshot 0035
+
+JOB STATISTICS
+==============
+Job ID: 1836258
+Cluster: snellius
+User/Group: zimmer/zimmer
+State: CANCELLED (exit code 0)
+Nodes: 1
+Cores per node: 128
+CPU Utilized: 00:00:00
+CPU Efficiency: 0.00% of 5-22:09:04 core-walltime
+Job Wall-clock time: 01:06:38
+Memory Utilized: 252.35 GB
+Memory Efficiency: 26.92% of 937.50 GB

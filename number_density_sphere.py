@@ -10,7 +10,7 @@ PRE = PRE(
     z0_snap=36, z4_snap=13, DM_lim=1000,
     sim_dir=SIM_ROOT, sim_ver=SIM_TYPE,
     phis=20, thetas=20, vels=200,
-    pre_CPUs=20, sim_CPUs=128
+    pre_CPUs=10, sim_CPUs=128
 )
 
 # Make temporary folder to store files, s.t. parallel runs don't clash.
@@ -210,7 +210,7 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
                 TEMP_DIR, bname
             )
 
-        chunk_size = 20
+        chunk_size = 10
         grid_chunks = chunks(chunk_size, fin_grid)
         DMnr_chunks = chunks(chunk_size, DM_count)
         com_chunks = chunks(chunk_size, cell_com)
