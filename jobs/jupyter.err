@@ -18,3 +18,5 @@
 [I 10:16:23.842 NotebookApp] Kernel started: f2d1078d-ac6a-4e1d-a9bd-6f2708f4325c, name: python3
 [W 10:16:23.907 NotebookApp] delete /number_density_sphere-jvsc-22ac9deb-8a8e-42ce-9f66-fa15d3ee7e461545d6ac-65e0-4a41-8b31-1fc0bb390930.ipynb
 [W 10:16:23.908 NotebookApp] Skipping trash for /gpfs/home4/zimmer/neutrino_clustering_V2/number_density_sphere-jvsc-22ac9deb-8a8e-42ce-9f66-fa15d3ee7e461545d6ac-65e0-4a41-8b31-1fc0bb390930.ipynb, [Errno 13] Permission denied: b'/gpfs/home4/.Trash-59104'
+[I 10:47:38.716 NotebookApp] Kernel interrupted: f2d1078d-ac6a-4e1d-a9bd-6f2708f4325c
+[I 11:41:44.554 NotebookApp] Kernel interrupted: f2d1078d-ac6a-4e1d-a9bd-6f2708f4325c

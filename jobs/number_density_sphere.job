@@ -1,13 +1,13 @@
 #!/bin/bash
 #SBATCH --job-name=Sphere
 #SBATCH -p thin
-#SBATCH -t 08:00:00
+#SBATCH -t 14:00:00
 #SBATCH -N 1
 #SBATCH --tasks-per-node=1
 #SBATCH --cpus-per-task=128
 #SBATCH --mem=224000
-#SBATCH -o jobs/number_density_sphere_3shells.out
-#SBATCH -e jobs/number_density_sphere_3shells.err
+#SBATCH -o jobs/number_density_sphere_5shells.out
+#SBATCH -e jobs/number_density_sphere_5shells.err
 #SBATCH -v
 #SBATCH --exclusive
 

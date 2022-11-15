@@ -217,10 +217,10 @@ SOLVER = 'RK23'
 
 
 # For sphere of incluence tests: Divide inclusion region into shells.
-DM_SHELL_EDGES = np.array([0,5,10,15,20])*100*kpc
+DM_SHELL_EDGES = np.array([0,5,10,15,20,40,100])*100*kpc
 
 # Multiplier for DM limit for each shell.
-SHELL_MULTIPLIERS = np.array([1,3,6,9])
+SHELL_MULTIPLIERS = np.array([1,3,6,9,12,15])
 
 
 #######################

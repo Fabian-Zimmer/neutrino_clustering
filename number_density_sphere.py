@@ -139,7 +139,7 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
         # --------------------------- #
 
         # Define how many shells are used, out of len(DM_SHELL_EDGES)-1.
-        shells = 3
+        shells = 5
         DM_shell_edges = DM_SHELL_EDGES[:shells+1]
 
         IDname = f'origID{halo_ID}_snap_{snap}'
