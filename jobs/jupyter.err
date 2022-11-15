@@ -10,3 +10,7 @@
     Or copy and paste one of these URLs:
         http://localhost:5452/?token=63a371dc221c6cb2a915d8374e0019ab30f19bb49884819a
      or http://127.0.0.1:5452/?token=63a371dc221c6cb2a915d8374e0019ab30f19bb49884819a
+[I 10:06:17.361 NotebookApp] Creating new notebook in 
+[I 10:06:17.564 NotebookApp] Kernel started: 6614c0be-86c5-4b9b-8ff1-a56979dfd12d, name: python3
+[W 10:06:17.581 NotebookApp] delete /number_density_all_sky-jvsc-eeabfaf6-aeeb-43f9-b71d-2aab554dae458da1c4d3-84f7-4486-a0dd-5e353b872cdc.ipynb
+[W 10:06:17.582 NotebookApp] Skipping trash for /gpfs/home4/zimmer/neutrino_clustering_V2/number_density_all_sky-jvsc-eeabfaf6-aeeb-43f9-b71d-2aab554dae458da1c4d3-84f7-4486-a0dd-5e353b872cdc.ipynb, [Errno 13] Permission denied: b'/gpfs/home4/.Trash-59104'
