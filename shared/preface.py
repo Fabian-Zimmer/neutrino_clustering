@@ -213,11 +213,6 @@ S_STEPS = np.array([s_of_z(z) for z in ZEDS])
 # note: Earth is placed on x axis of coord. system.
 X_SUN = np.array([8.5, 0., 0.])
 
-# Available halos.
-MW_HALO = True
-VC_HALO = False
-AG_HALO = False
-
 SOLVER = 'RK23'
 
 
@@ -238,9 +233,9 @@ HOME = pathlib.Path.home()
 if str(HOME) == '/home/zimmer':
     SIM_ROOT = '/projects/0/einf180/Tango_sims'
     # SIM_ROOT = '/archive/ccorrea/Tango_sims' #! can't read from archive
-    # SIM_TYPE = 'DMONLY/SigmaConstant00'
+    SIM_TYPE = 'DMONLY/SigmaConstant00'
     # SIM_TYPE = 'DMONLY/CDM_TF50'
-    SIM_TYPE = 'Hydro_Model_2/SigmaConstant00'
+    # SIM_TYPE = 'Hydro_Model_2/SigmaConstant00'
 
 # Paths for FZ_desktop.
 elif str(HOME) == '/home/fabian':
@@ -270,6 +265,9 @@ class PRE:
 
         # File management.
         self.SIM = sim
+        self.MW_HALO = MW_HALO
+        self.VC_HALO = VC_HALO
+        self.AG_HALO = AG_HALO
         self.HALOS = 'MW'*MW_HALO + '+VC'*VC_HALO + '+AG'*AG_HALO
 
         if sim_ver is None:

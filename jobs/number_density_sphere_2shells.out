@@ -1,0 +1,304 @@
+********************* Initialization *********************
+# Initial conditions for neutrinos:
+PHIs = 20, THETAs=20, Vs=200
+Total neutrinos: 80000
+# Simulation parameters:
+Simulation box: L025N752
+Snapshot from 0036 (z=0) to 0013 (z=4)
+Pre/Sim CPUs 40/128
+DM limit for cells: 1000
+# File management:
+Box files directory: 
+ /projects/0/einf180/Tango_sims/L025N752/DMONLY/SigmaConstant00
+Output directory: 
+ /gpfs/home4/zimmer/neutrino_clustering_V2/L025N752/DMONLY/SigmaConstant00
+**********************************************************
+********Number density band********
+Halo batch params (Rvir,Mvir,cNFW):
+[[253.5523526   12.24058042   6.9286026 ]
+ [158.62979351  11.62953177   8.03988676]
+ [137.07912107  11.43929142   9.41292697]
+ [141.82849159  11.48366794   2.6088865 ]
+ [306.35586267  12.48705608  11.48652354]
+ [190.92998087  11.87099988   7.03921462]
+ [240.52254202  12.17184485   7.39127504]
+ [169.32112452  11.71451092   8.23421103]
+ [167.71139596  11.70206521   7.62954256]
+ [168.53268315  11.7084299    9.38434194]]
+***********************************
+halo 1/10 ; snapshot 0036
+halo 1/10 ; snapshot 0035
+halo 1/10 ; snapshot 0034
+halo 1/10 ; snapshot 0033
+halo 1/10 ; snapshot 0032
+halo 1/10 ; snapshot 0031
+halo 1/10 ; snapshot 0030
+halo 1/10 ; snapshot 0029
+halo 1/10 ; snapshot 0028
+halo 1/10 ; snapshot 0027
+halo 1/10 ; snapshot 0026
+halo 1/10 ; snapshot 0025
+halo 1/10 ; snapshot 0024
+halo 1/10 ; snapshot 0023
+halo 1/10 ; snapshot 0022
+halo 1/10 ; snapshot 0021
+halo 1/10 ; snapshot 0020
+halo 1/10 ; snapshot 0019
+halo 1/10 ; snapshot 0018
+halo 1/10 ; snapshot 0017
+halo 1/10 ; snapshot 0016
+halo 1/10 ; snapshot 0015
+halo 1/10 ; snapshot 0014
+halo 1/10 ; snapshot 0013
+***Running simulation with 128 CPUs***
+Sim time min/h: 0.19682470608192185 min, 0.0032804117680320308 h.
+halo 2/10 ; snapshot 0036
+halo 2/10 ; snapshot 0035
+halo 2/10 ; snapshot 0034
+halo 2/10 ; snapshot 0033
+halo 2/10 ; snapshot 0032
+halo 2/10 ; snapshot 0031
+halo 2/10 ; snapshot 0030
+halo 2/10 ; snapshot 0029
+halo 2/10 ; snapshot 0028
+halo 2/10 ; snapshot 0027
+halo 2/10 ; snapshot 0026
+halo 2/10 ; snapshot 0025
+halo 2/10 ; snapshot 0024
+halo 2/10 ; snapshot 0023
+halo 2/10 ; snapshot 0022
+halo 2/10 ; snapshot 0021
+halo 2/10 ; snapshot 0020
+halo 2/10 ; snapshot 0019
+halo 2/10 ; snapshot 0018
+halo 2/10 ; snapshot 0017
+halo 2/10 ; snapshot 0016
+halo 2/10 ; snapshot 0015
+halo 2/10 ; snapshot 0014
+halo 2/10 ; snapshot 0013
+***Running simulation with 128 CPUs***
+Sim time min/h: 0.17673732453452734 min, 0.002945622075575456 h.
+halo 3/10 ; snapshot 0036
+halo 3/10 ; snapshot 0035
+halo 3/10 ; snapshot 0034
+halo 3/10 ; snapshot 0033
+halo 3/10 ; snapshot 0032
+halo 3/10 ; snapshot 0031
+halo 3/10 ; snapshot 0030
+halo 3/10 ; snapshot 0029
+halo 3/10 ; snapshot 0028
+halo 3/10 ; snapshot 0027
+halo 3/10 ; snapshot 0026
+halo 3/10 ; snapshot 0025
+halo 3/10 ; snapshot 0024
+halo 3/10 ; snapshot 0023
+halo 3/10 ; snapshot 0022
+halo 3/10 ; snapshot 0021
+halo 3/10 ; snapshot 0020
+halo 3/10 ; snapshot 0019
+halo 3/10 ; snapshot 0018
+halo 3/10 ; snapshot 0017
+halo 3/10 ; snapshot 0016
+halo 3/10 ; snapshot 0015
+halo 3/10 ; snapshot 0014
+halo 3/10 ; snapshot 0013
+***Running simulation with 128 CPUs***
+Sim time min/h: 0.18779255288342636 min, 0.003129875881390439 h.
+halo 4/10 ; snapshot 0036
+halo 4/10 ; snapshot 0035
+halo 4/10 ; snapshot 0034
+halo 4/10 ; snapshot 0033
+halo 4/10 ; snapshot 0032
+halo 4/10 ; snapshot 0031
+halo 4/10 ; snapshot 0030
+halo 4/10 ; snapshot 0029
+halo 4/10 ; snapshot 0028
+halo 4/10 ; snapshot 0027
+halo 4/10 ; snapshot 0026
+halo 4/10 ; snapshot 0025
+halo 4/10 ; snapshot 0024
+halo 4/10 ; snapshot 0023
+halo 4/10 ; snapshot 0022
+halo 4/10 ; snapshot 0021
+halo 4/10 ; snapshot 0020
+halo 4/10 ; snapshot 0019
+halo 4/10 ; snapshot 0018
+halo 4/10 ; snapshot 0017
+halo 4/10 ; snapshot 0016
+halo 4/10 ; snapshot 0015
+halo 4/10 ; snapshot 0014
+halo 4/10 ; snapshot 0013
+***Running simulation with 128 CPUs***
+Sim time min/h: 0.20097218893351965 min, 0.0033495364822253276 h.
+halo 5/10 ; snapshot 0036
+halo 5/10 ; snapshot 0035
+halo 5/10 ; snapshot 0034
+halo 5/10 ; snapshot 0033
+halo 5/10 ; snapshot 0032
+halo 5/10 ; snapshot 0031
+halo 5/10 ; snapshot 0030
+halo 5/10 ; snapshot 0029
+halo 5/10 ; snapshot 0028
+halo 5/10 ; snapshot 0027
+halo 5/10 ; snapshot 0026
+halo 5/10 ; snapshot 0025
+halo 5/10 ; snapshot 0024
+halo 5/10 ; snapshot 0023
+halo 5/10 ; snapshot 0022
+halo 5/10 ; snapshot 0021
+halo 5/10 ; snapshot 0020
+halo 5/10 ; snapshot 0019
+halo 5/10 ; snapshot 0018
+halo 5/10 ; snapshot 0017
+halo 5/10 ; snapshot 0016
+halo 5/10 ; snapshot 0015
+halo 5/10 ; snapshot 0014
+halo 5/10 ; snapshot 0013
+***Running simulation with 128 CPUs***
+Sim time min/h: 0.28701740260003133 min, 0.004783623376667189 h.
+halo 6/10 ; snapshot 0036
+halo 6/10 ; snapshot 0035
+halo 6/10 ; snapshot 0034
+halo 6/10 ; snapshot 0033
+halo 6/10 ; snapshot 0032
+halo 6/10 ; snapshot 0031
+halo 6/10 ; snapshot 0030
+halo 6/10 ; snapshot 0029
+halo 6/10 ; snapshot 0028
+halo 6/10 ; snapshot 0027
+halo 6/10 ; snapshot 0026
+halo 6/10 ; snapshot 0025
+halo 6/10 ; snapshot 0024
+halo 6/10 ; snapshot 0023
+halo 6/10 ; snapshot 0022
+halo 6/10 ; snapshot 0021
+halo 6/10 ; snapshot 0020
+halo 6/10 ; snapshot 0019
+halo 6/10 ; snapshot 0018
+halo 6/10 ; snapshot 0017
+halo 6/10 ; snapshot 0016
+halo 6/10 ; snapshot 0015
+halo 6/10 ; snapshot 0014
+halo 6/10 ; snapshot 0013
+***Running simulation with 128 CPUs***
+Sim time min/h: 0.21196425936650484 min, 0.003532737656108414 h.
+halo 7/10 ; snapshot 0036
+halo 7/10 ; snapshot 0035
+halo 7/10 ; snapshot 0034
+halo 7/10 ; snapshot 0033
+halo 7/10 ; snapshot 0032
+halo 7/10 ; snapshot 0031
+halo 7/10 ; snapshot 0030
+halo 7/10 ; snapshot 0029
+halo 7/10 ; snapshot 0028
+halo 7/10 ; snapshot 0027
+halo 7/10 ; snapshot 0026
+halo 7/10 ; snapshot 0025
+halo 7/10 ; snapshot 0024
+halo 7/10 ; snapshot 0023
+halo 7/10 ; snapshot 0022
+halo 7/10 ; snapshot 0021
+halo 7/10 ; snapshot 0020
+halo 7/10 ; snapshot 0019
+halo 7/10 ; snapshot 0018
+halo 7/10 ; snapshot 0017
+halo 7/10 ; snapshot 0016
+halo 7/10 ; snapshot 0015
+halo 7/10 ; snapshot 0014
+halo 7/10 ; snapshot 0013
+***Running simulation with 128 CPUs***
+Sim time min/h: 0.17197694496717303 min, 0.0028662824161195507 h.
+halo 8/10 ; snapshot 0036
+halo 8/10 ; snapshot 0035
+halo 8/10 ; snapshot 0034
+halo 8/10 ; snapshot 0033
+halo 8/10 ; snapshot 0032
+halo 8/10 ; snapshot 0031
+halo 8/10 ; snapshot 0030
+halo 8/10 ; snapshot 0029
+halo 8/10 ; snapshot 0028
+halo 8/10 ; snapshot 0027
+halo 8/10 ; snapshot 0026
+halo 8/10 ; snapshot 0025
+halo 8/10 ; snapshot 0024
+halo 8/10 ; snapshot 0023
+halo 8/10 ; snapshot 0022
+halo 8/10 ; snapshot 0021
+halo 8/10 ; snapshot 0020
+halo 8/10 ; snapshot 0019
+halo 8/10 ; snapshot 0018
+halo 8/10 ; snapshot 0017
+halo 8/10 ; snapshot 0016
+halo 8/10 ; snapshot 0015
+halo 8/10 ; snapshot 0014
+halo 8/10 ; snapshot 0013
+***Running simulation with 128 CPUs***
+Sim time min/h: 0.07756191760029954 min, 0.001292698626671659 h.
+halo 9/10 ; snapshot 0036
+halo 9/10 ; snapshot 0035
+halo 9/10 ; snapshot 0034
+halo 9/10 ; snapshot 0033
+halo 9/10 ; snapshot 0032
+halo 9/10 ; snapshot 0031
+halo 9/10 ; snapshot 0030
+halo 9/10 ; snapshot 0029
+halo 9/10 ; snapshot 0028
+halo 9/10 ; snapshot 0027
+halo 9/10 ; snapshot 0026
+halo 9/10 ; snapshot 0025
+halo 9/10 ; snapshot 0024
+halo 9/10 ; snapshot 0023
+halo 9/10 ; snapshot 0022
+halo 9/10 ; snapshot 0021
+halo 9/10 ; snapshot 0020
+halo 9/10 ; snapshot 0019
+halo 9/10 ; snapshot 0018
+halo 9/10 ; snapshot 0017
+halo 9/10 ; snapshot 0016
+halo 9/10 ; snapshot 0015
+halo 9/10 ; snapshot 0014
+halo 9/10 ; snapshot 0013
+***Running simulation with 128 CPUs***
+Sim time min/h: 0.20249953195064638 min, 0.0033749921991774396 h.
+halo 10/10 ; snapshot 0036
+halo 10/10 ; snapshot 0035
+halo 10/10 ; snapshot 0034
+halo 10/10 ; snapshot 0033
+halo 10/10 ; snapshot 0032
+halo 10/10 ; snapshot 0031
+halo 10/10 ; snapshot 0030
+halo 10/10 ; snapshot 0029
+halo 10/10 ; snapshot 0028
+halo 10/10 ; snapshot 0027
+halo 10/10 ; snapshot 0026
+halo 10/10 ; snapshot 0025
+halo 10/10 ; snapshot 0024
+halo 10/10 ; snapshot 0023
+halo 10/10 ; snapshot 0022
+halo 10/10 ; snapshot 0021
+halo 10/10 ; snapshot 0020
+halo 10/10 ; snapshot 0019
+halo 10/10 ; snapshot 0018
+halo 10/10 ; snapshot 0017
+halo 10/10 ; snapshot 0016
+halo 10/10 ; snapshot 0015
+halo 10/10 ; snapshot 0014
+halo 10/10 ; snapshot 0013
+***Running simulation with 128 CPUs***
+Sim time min/h: 0.11532419213326647 min, 0.0019220698688877747 h.
+Total time: 190.22979453746618 min, 3.170496575624436 h.
+
+JOB STATISTICS
+==============
+Job ID: 1830044
+Cluster: snellius
+User/Group: zimmer/zimmer
+State: RUNNING
+Nodes: 1
+Cores per node: 128
+CPU Utilized: 00:00:00
+CPU Efficiency: 0.00% of 16-22:49:36 core-walltime
+Job Wall-clock time: 03:10:42
+Memory Utilized: 0.00 MB (estimated maximum)
+Memory Efficiency: 0.00% of 218.75 GB (218.75 GB/node)
+WARNING: Efficiency statistics may be misleading for RUNNING jobs.

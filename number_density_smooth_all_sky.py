@@ -40,15 +40,15 @@ def EOMs(s_val, y):
 
     # Sum gradients of each halo. Seperate if statements, for adding any halos.
     grad_tot = np.zeros(len(x_i))
-    if MW_HALO:
+    if PRE.MW_HALO:
         grad_tot += fct.dPsi_dxi_NFW(
             x_i, z, rho0_MW, Mvir_MW, Rvir_MW, Rs_MW, 'MW'
             )
-    if VC_HALO:
+    if PRE.VC_HALO:
         grad_tot += fct.dPsi_dxi_NFW(
             x_i, z, rho0_VC, Mvir_VC, Rvir_VC, Rs_VC, 'VC'
             )
-    if AG_HALO:
+    if PRE.AG_HALO:
         grad_tot += fct.dPsi_dxi_NFW(
             x_i, z, rho0_AG, Mvir_AG, Rvir_AG, Rs_AG, 'AG'
             )
@@ -123,11 +123,10 @@ for i, (phi, theta) in enumerate(zip(hp_phis, hp_thetas)):
     np.save(f'{PRE.OUT_DIR}/{CPname}.npy', np.array(nus))
 
     # Calculate local overdensity.
-    nu_mass_range = np.geomspace(0.01, 0.3, 100)*eV
     vels_CoordPair = fct.load_sim_data(PRE.OUT_DIR, CPname, 'velocities')
     out_file = f'{PRE.OUT_DIR}/number_densities_{CPname}.npy'
     fct.number_densities_mass_range(
-        vels_CoordPair, nu_mass_range, out_file, pix_sr
+        vels_CoordPair, NU_MRANGE, out_file, pix_sr
     )
 
     # Now delete velocities and distances of this coord. pair. neutrinos.

@@ -1,16 +1,12 @@
-[I 08:17:39.196 NotebookApp] Serving notebooks from local directory: /gpfs/home4/zimmer/neutrino_clustering_V2
-[I 08:17:39.198 NotebookApp] Jupyter Notebook 6.4.12 is running at:
-[I 08:17:39.198 NotebookApp] http://localhost:5540/?token=5975b9e914048a9772e6dad4d3e7c00a29841e4ebdc750f0
-[I 08:17:39.198 NotebookApp]  or http://127.0.0.1:5540/?token=5975b9e914048a9772e6dad4d3e7c00a29841e4ebdc750f0
-[I 08:17:39.198 NotebookApp] Use Control-C to stop this server and shut down all kernels (twice to skip confirmation).
-[C 08:17:39.215 NotebookApp] 
+[I 10:03:02.913 NotebookApp] Serving notebooks from local directory: /gpfs/home4/zimmer/neutrino_clustering_V2
+[I 10:03:02.914 NotebookApp] Jupyter Notebook 6.4.12 is running at:
+[I 10:03:02.914 NotebookApp] http://localhost:5452/?token=63a371dc221c6cb2a915d8374e0019ab30f19bb49884819a
+[I 10:03:02.914 NotebookApp]  or http://127.0.0.1:5452/?token=63a371dc221c6cb2a915d8374e0019ab30f19bb49884819a
+[I 10:03:02.914 NotebookApp] Use Control-C to stop this server and shut down all kernels (twice to skip confirmation).
+[C 10:03:02.928 NotebookApp] 
     
     To access the notebook, open this file in a browser:
-        file:///gpfs/home4/zimmer/.local/share/jupyter/runtime/nbserver-1846990-open.html
+        file:///gpfs/home4/zimmer/.local/share/jupyter/runtime/nbserver-1738446-open.html
     Or copy and paste one of these URLs:
-        http://localhost:5540/?token=5975b9e914048a9772e6dad4d3e7c00a29841e4ebdc750f0
-     or http://127.0.0.1:5540/?token=5975b9e914048a9772e6dad4d3e7c00a29841e4ebdc750f0
-[I 08:21:29.221 NotebookApp] Creating new notebook in 
-[I 08:21:29.457 NotebookApp] Kernel started: ce0a1b17-3cf4-4167-9483-7ea5132340f9, name: python3
-[W 08:21:29.475 NotebookApp] delete /baryons-jvsc-8ed46161-6b5a-4c0b-92a5-d381900832b6470bcba4-faa4-45f6-a278-c4f148ff8699.ipynb
-[W 08:21:29.475 NotebookApp] Skipping trash for /gpfs/home4/zimmer/neutrino_clustering_V2/baryons-jvsc-8ed46161-6b5a-4c0b-92a5-d381900832b6470bcba4-faa4-45f6-a278-c4f148ff8699.ipynb, [Errno 13] Permission denied: b'/gpfs/home4/.Trash-59104'
+        http://localhost:5452/?token=63a371dc221c6cb2a915d8374e0019ab30f19bb49884819a
+     or http://127.0.0.1:5452/?token=63a371dc221c6cb2a915d8374e0019ab30f19bb49884819a
