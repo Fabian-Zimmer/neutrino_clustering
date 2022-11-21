@@ -20,3 +20,6 @@
 [W 10:16:23.908 NotebookApp] Skipping trash for /gpfs/home4/zimmer/neutrino_clustering_V2/number_density_sphere-jvsc-22ac9deb-8a8e-42ce-9f66-fa15d3ee7e461545d6ac-65e0-4a41-8b31-1fc0bb390930.ipynb, [Errno 13] Permission denied: b'/gpfs/home4/.Trash-59104'
 [I 10:47:38.716 NotebookApp] Kernel interrupted: f2d1078d-ac6a-4e1d-a9bd-6f2708f4325c
 [I 11:41:44.554 NotebookApp] Kernel interrupted: f2d1078d-ac6a-4e1d-a9bd-6f2708f4325c
+[I 16:53:03.394 NotebookApp] Starting buffering for 6614c0be-86c5-4b9b-8ff1-a56979dfd12d:cbe82c6b-cd6b-4597-93b0-f6b62da8b237
+[I 16:53:03.398 NotebookApp] Starting buffering for f2d1078d-ac6a-4e1d-a9bd-6f2708f4325c:12be9d6b-eb3b-45c1-b875-1c76ad4f0261
+slurmstepd: error: *** JOB 1835241 ON tcn121 CANCELLED AT 2022-11-15T18:02:44 DUE TO TIME LIMIT ***
