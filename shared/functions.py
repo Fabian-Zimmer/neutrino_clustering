@@ -743,8 +743,9 @@ def cell_gravity(
             np.expand_dims(DM_count, axis=1), cs, axis=1
         )
 
-        # Create mask to drop cell, for which long-range gravity is being computed.
-        # Otherwise each cell will get its own c.o.m. gravity additionally.
+        # Create mask to drop cell, for which long-range gravity is being 
+        # computed (otherwise each cell will get its own c.o.m. gravity 
+        # additionally).
         mask_raw = np.zeros((cs, cs), int)
         np.fill_diagonal(mask_raw, 1)
 
