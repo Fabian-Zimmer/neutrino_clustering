@@ -71,6 +71,7 @@ plt.rc('figure', titlesize=BIGGER_SIZE)  # fontsize of the figure title
 ### Units ###
 #############
 
+GB_UNIT = 1000*1024**2
 Pi = np.pi
 hc_val = (const.h/(2*Pi)*const.c).convert(unit.eV*unit.cm).value
 
