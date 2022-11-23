@@ -3,6 +3,7 @@
 ###############
 
 import sys, os, shutil
+from sys import getsizeof as gso
 import psutil
 import time
 import glob
