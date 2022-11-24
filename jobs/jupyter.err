@@ -23,3 +23,39 @@
 [I 08:43:40.600 NotebookApp] Kernel restarted: f19c88f0-f4bc-4b07-a604-d625a411034c
 [I 08:43:40.605 NotebookApp] Starting buffering for f19c88f0-f4bc-4b07-a604-d625a411034c:eaaa4abc-71be-4761-933b-ea143b9da8eb
 [I 08:43:40.611 NotebookApp] Restoring connection for f19c88f0-f4bc-4b07-a604-d625a411034c:eaaa4abc-71be-4761-933b-ea143b9da8eb
+[I 10:54:25.428 NotebookApp] Kernel restarted: f19c88f0-f4bc-4b07-a604-d625a411034c
+[I 10:54:25.437 NotebookApp] Starting buffering for f19c88f0-f4bc-4b07-a604-d625a411034c:eaaa4abc-71be-4761-933b-ea143b9da8eb
+[I 10:54:25.441 NotebookApp] Restoring connection for f19c88f0-f4bc-4b07-a604-d625a411034c:eaaa4abc-71be-4761-933b-ea143b9da8eb
+[I 10:57:56.269 NotebookApp] Kernel interrupted: f19c88f0-f4bc-4b07-a604-d625a411034c
+[I 10:58:18.169 NotebookApp] Kernel interrupted: f19c88f0-f4bc-4b07-a604-d625a411034c
+[I 11:02:42.309 NotebookApp] Kernel interrupted: f19c88f0-f4bc-4b07-a604-d625a411034c
+[I 11:11:41.566 NotebookApp] Kernel interrupted: f19c88f0-f4bc-4b07-a604-d625a411034c
+[I 11:15:36.774 NotebookApp] Kernel interrupted: f19c88f0-f4bc-4b07-a604-d625a411034c
+[I 11:15:52.747 NotebookApp] Kernel restarted: f19c88f0-f4bc-4b07-a604-d625a411034c
+[I 11:15:52.752 NotebookApp] Starting buffering for f19c88f0-f4bc-4b07-a604-d625a411034c:eaaa4abc-71be-4761-933b-ea143b9da8eb
+[I 11:15:52.759 NotebookApp] Restoring connection for f19c88f0-f4bc-4b07-a604-d625a411034c:eaaa4abc-71be-4761-933b-ea143b9da8eb
+[W 11:36:15.633 NotebookApp] IOPub data rate exceeded.
+    The notebook server will temporarily stop sending output
+    to the client in order to avoid crashing it.
+    To change this limit, set the config variable
+    `--NotebookApp.iopub_data_rate_limit`.
+    
+    Current values:
+    NotebookApp.iopub_data_rate_limit=1000000.0 (bytes/sec)
+    NotebookApp.rate_limit_window=3.0 (secs)
+    
+[I 11:43:24.603 NotebookApp] Kernel restarted: f19c88f0-f4bc-4b07-a604-d625a411034c
+[I 11:43:24.610 NotebookApp] Starting buffering for f19c88f0-f4bc-4b07-a604-d625a411034c:eaaa4abc-71be-4761-933b-ea143b9da8eb
+[I 11:43:24.618 NotebookApp] Restoring connection for f19c88f0-f4bc-4b07-a604-d625a411034c:eaaa4abc-71be-4761-933b-ea143b9da8eb
+[I 12:14:50.276 NotebookApp] Kernel interrupted: f19c88f0-f4bc-4b07-a604-d625a411034c
+[I 12:16:18.173 NotebookApp] Kernel interrupted: f19c88f0-f4bc-4b07-a604-d625a411034c
+[I 12:16:30.154 NotebookApp] Kernel restarted: f19c88f0-f4bc-4b07-a604-d625a411034c
+[I 12:16:30.159 NotebookApp] Starting buffering for f19c88f0-f4bc-4b07-a604-d625a411034c:eaaa4abc-71be-4761-933b-ea143b9da8eb
+[I 12:16:30.166 NotebookApp] Restoring connection for f19c88f0-f4bc-4b07-a604-d625a411034c:eaaa4abc-71be-4761-933b-ea143b9da8eb
+[I 12:27:21.147 NotebookApp] KernelRestarter: restarting kernel (1/5), keep random ports
+WARNING:root:kernel f19c88f0-f4bc-4b07-a604-d625a411034c restarted
+[I 12:27:21.187 NotebookApp] Starting buffering for f19c88f0-f4bc-4b07-a604-d625a411034c:eaaa4abc-71be-4761-933b-ea143b9da8eb
+[I 12:27:21.207 NotebookApp] Restoring connection for f19c88f0-f4bc-4b07-a604-d625a411034c:eaaa4abc-71be-4761-933b-ea143b9da8eb
+[I 12:29:12.584 NotebookApp] Kernel restarted: f19c88f0-f4bc-4b07-a604-d625a411034c
+[I 12:29:12.587 NotebookApp] Starting buffering for f19c88f0-f4bc-4b07-a604-d625a411034c:eaaa4abc-71be-4761-933b-ea143b9da8eb
+[I 12:29:12.593 NotebookApp] Restoring connection for f19c88f0-f4bc-4b07-a604-d625a411034c:eaaa4abc-71be-4761-933b-ea143b9da8eb
