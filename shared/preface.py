@@ -262,7 +262,7 @@ class PRE:
         self, sim, z0_snap=0, z4_snap=0, 
         sim_dir=None, sim_ver=None, DM_lim=None,
         phis=0, thetas=0, vels=0, 
-        pre_CPUs=0, sim_CPUs=0,
+        pre_CPUs=0, sim_CPUs=0, mem_lim_GB=0,
         MW_HALO=False, VC_HALO=False, AG_HALO=False
         ):
 
@@ -298,6 +298,7 @@ class PRE:
             ...
         else:
             self.PRE_CPUs = pre_CPUs
+            self.MEM_LIM_GB = mem_lim_GB
             self.DM_LIM = DM_lim
             self.Z0_INT = int(z0_snap)
             self.Z4_INT = int(z4_snap)

@@ -676,6 +676,7 @@ def outside_gravity_com(x_i, com_DM, DM_tot, DM_sim_mass):
     return pre*x_i/denom
 
 
+'''
 def cell_gravity(
     cell_coords, cell_com, cell_gen, init_GRID_S,
     DM_pos, DM_count, DM_lim, DM_sim_mass, smooth_l,
@@ -777,6 +778,199 @@ def cell_gravity(
     dPsi_grid = np.asarray(-derivative, dtype=np.float64)
 
     np.save(f'{out_dir}/dPsi_grid_{fname}.npy', dPsi_grid)
+'''
+
+
+def chunksize_short_range(cells, DM_tot, max_DM_lim, core_mem_MB):
+
+    # note: mem_MB specific to peak memory usage in cell_gravity_short_range.
+    # -> Peak memory after calculation of ind_2D,ind_3D,etc. sorting arrays.
+
+    elem = 8                               # 8 bytes for standard np.float64
+    mem_type0 = cells*3 * elem             # for list to ndarray of cell_coords
+    mem_type1 = cells*DM_tot * elem        # for ind_2D
+    mem_type2 = cells*DM_tot*3 * elem      # for DM_pos_sync, ind_3D, DM_sort
+    mem_type3 = cells*max_DM_lim*3 * elem  # for DM_in
+
+    mem_MB = (mem_type0+mem_type1+(3*mem_type2)+mem_type3)/1.e6
+
+    batches = 1
+    while mem_MB >= 0.95*core_mem_MB:
+        mem_MB *= batches
+        batches += 1
+        mem_MB /= batches
+
+    chunksize = math.ceil(cells/batches)
+
+    return chunksize
+
+
+def chunksize_long_range(cells, core_mem_MB):
+    
+    # note: mem_MB specific to peak memory usage in cell_gravity_long_range.
+    # -> Peak memory after calculation of derivative.
+
+    elem = 8                          # 8 bytes for standard np.float64
+    mem_type1 = 3*elem                # for derivative
+    mem_type2 = cells*3*elem          # for quot
+    mem_type3 = cells*elem            # for DM_count_sync
+
+    mem_MB = (mem_type1+mem_type2+mem_type3)/1.e6
+
+    batches = 1
+    while mem_MB >= 0.95*core_mem_MB:
+        mem_MB *= batches
+        batches += 1
+        mem_MB /= batches
+
+    chunksize = math.ceil(cells/batches)
+
+    return chunksize
+
+
+def batch_generators_short_range(cell_coords, cell_gen, chunksize):
+
+    cells = len(cell_coords)
+
+    batches = math.ceil(cells/chunksize)
+    batch_arr = np.arange(batches)
+
+    cell_chunks = chunks(chunksize, cell_coords)
+    cgen_chunks = chunks(chunksize, cell_gen)
+    
+    return batch_arr, cell_chunks, cgen_chunks
+
+
+def batch_generators_long_range(
+    cell_coords, com_coords, DM_counts,
+    chunksize 
+):
+    cells = len(cell_coords)
+    cell_nums = np.arange(cells)
+
+    batches = math.ceil(cells/chunksize)
+
+    # Arrays used for naming files.
+    id_arr = np.array([idx+1 for idx in cell_nums for _ in range(batches)])
+    batch_arr = np.array([b+1 for _ in cell_nums for b in range(batches)])
+
+    # Coord of cell, for which long-range gravity gets calculated.
+    coord_arr = np.array([cc for cc in cell_coords for _ in range(batches)])
+
+    # Chunks for DM_count array, as a generator for all cells.
+    count_gens = (c for _ in cell_nums for c in chunks(chunksize, DM_counts))
+    count_chain = chain(gen for gen in count_gens)
+
+    # Chunks for cell_com array, as a generator for all cells.
+    com_gens = (c for _ in cell_nums for c in chunks(chunksize, com_coords))
+    com_chain = chain(gen for gen in com_gens)
+
+    return id_arr, batch_arr, coord_arr, count_chain, com_chain
+
+
+def cell_gravity_short_range(
+    cell_coords_in, cell_gen, init_GRID_S,
+    DM_pos, DM_lim, DM_sim_mass, smooth_l,
+    out_dir, b_id
+):
+
+    cell_coords = np.expand_dims(np.array(cell_coords_in), axis=1)
+    cell_gen = np.array(cell_gen)
+
+    # Center all DM positions w.r.t. cell center.
+    DM_pos_sync = np.repeat(DM_pos, len(cell_coords), axis=0)
+    DM_pos_sync -= cell_coords
+
+    # Cell lengths to limit DM particles. Limit for the largest cell is 
+    # GRID_S/2, not just GRID_S, therefore the cell_gen+1 !
+    cell_len = np.expand_dims(init_GRID_S/(2**(np.array(cell_gen)+1)), axis=1)
+
+    # Select DM particles inside each cell based on cube length generation.
+    DM_in_cell_IDs = np.asarray(
+        (np.abs(DM_pos_sync[:,:,0]) < cell_len) & 
+        (np.abs(DM_pos_sync[:,:,1]) < cell_len) & 
+        (np.abs(DM_pos_sync[:,:,2]) < cell_len)
+    )
+    del cell_gen, cell_len
+
+    # Set DM outside cell to nan values.
+    DM_pos_sync[~DM_in_cell_IDs] = np.nan
+    del DM_in_cell_IDs
+
+    # Sort all nan values to the bottom of axis 1, i.e. the DM-in-cell-X axis 
+    # and truncate array based on DM_lim parameter. This simple way works since 
+    # each cell cannot have more than DM_lim.
+    ind_2D = DM_pos_sync[:,:,0].argsort(axis=1)
+    ind_3D = np.repeat(np.expand_dims(ind_2D, axis=2), 3, axis=2)
+    DM_sort = np.take_along_axis(DM_pos_sync, ind_3D, axis=1)
+    DM_in = DM_sort[:,:DM_lim*SHELL_MULTIPLIERS[-1],:]
+
+    
+    # note: Memory peaks here, due to these arrays:
+    # print(DM_pos_sync.shape, ind_2D.shape, ind_3D.shape, DM_sort.shape, DM_in.shape)
+    # mem_inc = gso(cell_coords)+gso(DM_pos_sync)+gso(ind_2D)+gso(ind_3D)+gso(DM_sort)+gso(DM_in)
+    # print('MEM_PEAK:', mem_inc/1e6)
+    del DM_pos_sync, ind_2D, ind_3D, DM_sort
+
+    # Calculate distances of DM and adjust array dimensionally.
+    DM_dis = np.expand_dims(np.sqrt(np.sum(DM_in**2, axis=2)), axis=2)
+
+    # Offset DM positions by smoothening length of Camila's simulations.
+    eps = smooth_l / 2.
+
+    # nan values to 0 for numerator, and 1 for denominator to avoid infinities.
+    quot = np.nan_to_num(cell_coords - DM_in, copy=False, nan=0.0) / \
+        np.nan_to_num(
+            np.power((DM_dis**2 + eps**2), 3./2.), copy=False, nan=1.0
+        )
+    
+    # note: Minus sign, s.t. velocity changes correctly (see GoodNotes).
+    derivative = -G*DM_sim_mass*np.sum(quot, axis=1)    
+    np.save(f'{out_dir}/batch{b_id}_short_range.npy', derivative)
+
+
+def cell_gravity_long_range(
+    c_id, b_id, cellX_coords, 
+    DM_count, cell_com, 
+    DM_sim_mass, smooth_l, out_dir
+):
+
+    # Distances between cell centers and cell c.o.m. coords.
+    com_dis = np.expand_dims(
+        np.sqrt(np.sum((cellX_coords-cell_com)**2, axis=1)), axis=1
+    )
+
+    # Offset DM positions by smoothening length of Camila's simulations.
+    eps = smooth_l / 2.
+
+    # Long-range gravity component for each cell (without including itself).
+    quot = (cellX_coords-cell_com)/np.power((com_dis**2 + eps**2), 3./2.)
+    DM_count_sync = np.expand_dims(DM_count, axis=1)
+    del com_dis
+
+    # note: Minus sign, s.t. velocity changes correctly (see GoodNotes).
+    derivative = -G*DM_sim_mass*np.sum(DM_count_sync*quot, axis=0)
+    
+    # note: Memory peaks here, due to these arrays:
+    # print(quot.shape, DM_count_sync.shape, derivative.shape)
+    # mem_inc = gso(quot)+gso(DM_count_sync)+gso(derivative)
+    # print(mem_inc/1e6)
+    del quot, DM_count_sync
+
+    np.save(f'{out_dir}/cell{c_id}_batch{b_id}_long_range.npy', derivative)
+
+
+def load_dPsi_long_range(c_id, batches, out_dir):
+    
+    # Load all batches for current cell.
+    dPsi_raw = np.array(
+        [np.load(f'{out_dir}/cell{c_id}_batch{b}_long_range.npy') for b in batches]
+    )
+
+    # Delete entry, which corresponds to current cell. That "in-cell" gravity 
+    # is calculated more precisely with the short-range gravity function.
+    dPsi_cell_i = np.sum(np.delete(dPsi_raw, c_id-1, axis=0), axis=0)
+    np.save(f'{out_dir}/cell{c_id}_long_range.npy', dPsi_cell_i)    
 
 
 def load_grid(root_dir, which, fname):
