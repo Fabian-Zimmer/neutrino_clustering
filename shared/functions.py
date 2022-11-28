@@ -531,8 +531,7 @@ def check_grid(init_grid, DM_pos, parent_GRID_S, DM_lim):
     del DM_count_stable, DM_count_sync
     # note: 
     # cell_com can have (0,0,0) for a cell. Doesn't matter, since DM_count in 
-    # cell is then 0, which will set term in long-range (in cell_gravity 
-    # function) to zero.
+    # cell is then 0, which will set term in long-range gravity to zero.
 
     # Count again, where zeros are present (not ones).
     DM_count_final = np.count_nonzero(

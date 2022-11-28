@@ -122,20 +122,10 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
     # Run precalculations for current halo in batch. #
     # ============================================== #
 
-    # Generate progenitor index array for current halo.
-    splits = re.split('/', SIM_TYPE)
-    MTname = f'{PRE.SIM}_{splits[0]}_{splits[1]}'
-    proj_IDs = fct.read_MergerTree(PRE.OUT_DIR, MTname, halo_ID)
+    def read_and_divide(halo_j, snap, proj_ID):
 
-    save_GRID_L = np.zeros(len(PRE.NUMS_SNAPS))
-    save_num_DM = np.zeros(len(PRE.NUMS_SNAPS))
-    for j, (snap, proj_ID) in enumerate(zip(
-        PRE.NUMS_SNAPS[::-1], proj_IDs
-    )):
-        print(f'halo {halo_j+1}/{halo_num} ; snapshot {snap}')
-        
+        print(f'halo {halo_j+1} ; snapshot {snap}')
         proj_ID = int(proj_ID)
-
 
         # --------------------------- #
         # Read and load DM positions. #
@@ -146,7 +136,6 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
             snap, proj_ID, IDname, PRE.SIM_DIR, TEMP_DIR
         )
         DM_raw = np.load(f'{TEMP_DIR}/DM_pos_{IDname}.npy')
-        DM_particles = len(DM_raw)
 
         # ---------------------- #
         # Cell division process. #
@@ -167,23 +156,52 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
         cell_division_count = fct.cell_division(
             init_grid, DM_pos_for_cell_division, snap_GRID_L, PRE.DM_LIM, None, TEMP_DIR, IDname
         )
-        del DM_pos_for_cell_division
 
+        return snap_GRID_L, DM_pos
+
+
+    # Generate progenitor index array for current halo.
+    splits = re.split('/', SIM_TYPE)
+    MTname = f'{PRE.SIM}_{splits[0]}_{splits[1]}'
+    proj_IDs = fct.read_MergerTree(PRE.OUT_DIR, MTname, halo_ID)
+
+    save_GRID_L = np.zeros(len(PRE.NUMS_SNAPS))
+    save_DM_pos = []
+
+    # note: CPUs for this is determined through trial and error for now.
+    with ProcessPoolExecutor(5) as ex:
+
+        for k, out in enumerate(
+            ex.map(read_and_divide, 
+            repeat(halo_j), PRE.NUMS_SNAPS[::-1], proj_IDs)
+        ):
+
+            # Save snapshot specific parameters.
+            save_GRID_L[k] = out[0]
+            save_DM_pos.append(out[1])
+
+
+
+    save_num_DM = np.zeros(len(PRE.NUMS_SNAPS))
+    for j, (snap, proj_ID) in enumerate(zip(
+        PRE.NUMS_SNAPS[::-1], proj_IDs
+    )):
+        
         # Load files from cell division.
+        IDname = f'origID{halo_ID}_snap_{snap}'
         fin_grid = np.load(f'{TEMP_DIR}/fin_grid_{IDname}.npy')
         DM_count = np.load(f'{TEMP_DIR}/DM_count_{IDname}.npy')
         cell_com = np.load(f'{TEMP_DIR}/cell_com_{IDname}.npy')
         cell_gen = np.load(f'{TEMP_DIR}/cell_gen_{IDname}.npy')
-        
-        # Save snapshot specific parameters.
-        save_GRID_L[j] = snap_GRID_L
-        save_num_DM[j] = np.sum(DM_count)
 
+        DM_particles = np.sum(DM_count)
+        save_num_DM[j] = DM_particles
 
         # --------------------------------------------- #
         # Calculate gravity grid (in batches of cells). #
         # --------------------------------------------- #
         cell_coords = np.squeeze(fin_grid, axis=1)
+        del fin_grid
         cells = len(cell_coords)
 
 
@@ -194,11 +212,11 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
         # Calculate available memory per core.
         mem_so_far = (psutil.virtual_memory().used - OS_MEM)/MB_UNIT
         mem_left = PRE.MEM_LIM_GB*1e3 - mem_so_far
-        core_mem_MB = mem_left / PRE.PRE_CPUs
+        CPU_mem_MB = mem_left / PRE.PRE_CPUs
 
         # Determine short-range chuncksize based on available memory and cells.
         chunksize_sr = fct.chunksize_short_range(
-            cells, DM_particles, PRE.DM_LIM*SHELL_MULTIPLIERS[-1], core_mem_MB
+            cells, DM_particles, PRE.DM_LIM*SHELL_MULTIPLIERS[-1], CPU_mem_MB
         )
 
         # Split workload into batches (if necessary).
@@ -209,7 +227,8 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
         with ProcessPoolExecutor(PRE.PRE_CPUs) as ex:
             ex.map(
                 fct.cell_gravity_short_range, 
-                cell_chunks, cgen_chunks, repeat(snap_GRID_L), repeat(DM_pos), 
+                cell_chunks, cgen_chunks, 
+                repeat(save_GRID_L[j]), repeat(save_DM_pos[j]), 
                 repeat(PRE.DM_LIM), repeat(PRE.DM_SIM_MASS), 
                 repeat(PRE.SMOOTH_L), repeat(TEMP_DIR), batch_arr
             )
@@ -234,10 +253,10 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
         # Calculate available memory per core.
         mem_so_far = (psutil.virtual_memory().used - OS_MEM)/MB_UNIT
         mem_left = PRE.MEM_LIM_GB*1e3 - mem_so_far
-        core_mem_MB = mem_left / PRE.PRE_CPUs
+        CPU_mem_MB = mem_left / PRE.PRE_CPUs
 
         # Determine long-range chuncksize based on available memory and cells.
-        chunksize_lr = fct.chunksize_long_range(cells, core_mem_MB)
+        chunksize_lr = fct.chunksize_long_range(cells, CPU_mem_MB)
 
         # Split workload into batches (if necessary).
         cell_ids, batches, coords, count_chain, com_chain = fct.batch_generators_long_range(
@@ -327,7 +346,7 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
         vels = fct.load_sim_data(TEMP_DIR, Bname, 'velocities')
 
         # note: The final number density is not stored in the temporary folder.
-        out_file = f'{PRE.OUT_DIR}/number_densities_band_{Bname}.npy'
+        out_file = f'{PRE.OUT_DIR}/number_densities_band_V2_{Bname}.npy'
         fct.number_densities_mass_range(
             vels, NU_MRANGE, out_file
         )
