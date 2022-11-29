@@ -1,4 +1,4 @@
-Selected port is:  5341
+Selected port is:  5185
 
 To connect to the notebook type the following command from your local terminal:
-ssh -N -L5341:localhost:5341 zimmer@int3-pub.snellius.surf.nl
+ssh -N -L5185:localhost:5185 zimmer@int3-pub.snellius.surf.nl

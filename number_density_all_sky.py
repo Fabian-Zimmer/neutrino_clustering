@@ -1,10 +1,16 @@
+# Save how much memory is used by OS and not available for script.
+import psutil
+MB_UNIT = 1024**2
+OS_MEM = (psutil.virtual_memory().used)
+
+
 from shared.preface import *
 import shared.functions as fct
 
 total_start = time.perf_counter()
 
 # Generate (phi, theta) coord. pairs based on desired healpy map.
-Nside = 2**2              # Specify nside parameter
+Nside = 2**1              # Specify nside parameter
 Npix = 12 * Nside**2      # Number of pixels
 pix_sr = (4*np.pi)/Npix   # Pixel size  [sr]
 print(f'Healpy parameters: Nside={Nside}, Npix={Npix}, pix_sr={pix_sr}')
@@ -12,11 +18,11 @@ hp_thetas, hp_phis = np.array(hp.pixelfunc.pix2ang(Nside, np.arange(Npix)))
 
 # Initialize parameters and files.
 PRE = PRE(
-    sim='L012N376', 
-    z0_snap=62, z4_snap=13, DM_lim=1000,
+    sim='L025N752', 
+    z0_snap=36, z4_snap=13, DM_lim=1000,
     sim_dir=SIM_ROOT, sim_ver=SIM_TYPE,
-    phis=hp_phis, thetas=hp_thetas, vels=10000,
-    pre_CPUs=96, sim_CPUs=128
+    phis=hp_phis, thetas=hp_thetas, vels=1000,
+    pre_CPUs=128, sim_CPUs=128, mem_lim_GB=224
 )
 
 # Make temporary folder to store files, s.t. parallel runs don't clash.
@@ -26,15 +32,10 @@ rand_code = ''.join(
 TEMP_DIR = f'{PRE.OUT_DIR}/temp_data_{rand_code}'
 os.makedirs(TEMP_DIR)
 
-Testing=False
-if Testing:
-    mass_gauge = 12.3
-    mass_range = 0.3
-    size = 1
-else:
-    mass_gauge = 12.0
-    mass_range = 0.46
-    size = 10
+# Halo parameters.
+mass_gauge = 12.0
+mass_range = 0.6
+size = 3
 
 hname = f'1e+{mass_gauge}_pm{mass_range}Msun'
 fct.halo_batch_indices(
@@ -116,17 +117,20 @@ def backtrack_1_neutrino(y0_Nr):
 # =============================================== #
 # Run precalculations for selected halo in batch. #
 # =============================================== #
-manual_halo_index = 9  # 0 to 9, for submitting jobs manually
+
+manual_halo_index = 0  #! 0 to 9, for submitting jobs manually
 halo_j, halo_ID = manual_halo_index, halo_batch_IDs[manual_halo_index]
 
-# '''
+
 # Generate progenitor index array for current halo.
 splits = re.split('/', SIM_TYPE)
 MTname = f'{PRE.SIM}_{splits[0]}_{splits[1]}'
 proj_IDs = fct.read_MergerTree(PRE.OUT_DIR, MTname, halo_ID)
 
+# Create empty arrays to save specifics of each loop.
 save_GRID_L = np.zeros(len(PRE.NUMS_SNAPS))
 save_num_DM = np.zeros(len(PRE.NUMS_SNAPS))
+
 for j, (snap, proj_ID) in enumerate(zip(
     PRE.NUMS_SNAPS[::-1], proj_IDs
 )):
@@ -143,7 +147,8 @@ for j, (snap, proj_ID) in enumerate(zip(
         snap, proj_ID, IDname, PRE.SIM_DIR, TEMP_DIR
     )
     DM_raw = np.load(f'{TEMP_DIR}/DM_pos_{IDname}.npy')
-    
+    DM_particles = len(DM_raw)
+
 
     # ---------------------- #
     # Cell division process. #
@@ -158,11 +163,13 @@ for j, (snap, proj_ID) in enumerate(zip(
     DM_raw *= kpc
     DM_pos = np.expand_dims(DM_raw, axis=0)
     DM_pos_for_cell_division = np.repeat(DM_pos, len(init_grid), axis=0)
+    del DM_raw
 
     # Cell division.
     cell_division_count = fct.cell_division(
         init_grid, DM_pos_for_cell_division, snap_GRID_L, PRE.DM_LIM, None, TEMP_DIR, IDname
     )
+    del DM_pos_for_cell_division
 
     # Load files from cell division.
     fin_grid = np.load(f'{TEMP_DIR}/fin_grid_{IDname}.npy')
@@ -178,52 +185,103 @@ for j, (snap, proj_ID) in enumerate(zip(
     # --------------------------------------------- #
     # Calculate gravity grid (in batches of cells). #
     # --------------------------------------------- #
+    cell_coords = np.squeeze(fin_grid, axis=1)
+    cells = len(cell_coords)
 
-    def batch_gravity(
-        grid_chunk, DMnr_chunk, com_chunk, gen_chunk, num_chunk
-        ):
 
-        b = int(num_chunk)
-        b_cc = np.array(grid_chunk)
-        b_com = np.array(com_chunk)
-        b_gen = np.array(gen_chunk)
-        b_count = np.array(DMnr_chunk)
+    # -------------------- #
+    # Short-range gravity. #
+    # -------------------- #
 
-        # Calculate gravity in each cell in current batch.
-        b_DM = np.repeat(DM_pos, len(b_cc), axis=0)
-        bname = f'batch{b}'
-        fct.cell_gravity(
-            b_cc, b_com, b_gen, snap_GRID_L,
-            b_DM, b_count, PRE.DM_LIM, PRE.DM_SIM_MASS, PRE.SMOOTH_L,
-            TEMP_DIR, bname
-        )
+    # Calculate available memory per core.
+    mem_so_far = (psutil.virtual_memory().used - OS_MEM)/MB_UNIT
+    mem_left = PRE.MEM_LIM_GB*1e3 - mem_so_far
+    core_mem_MB = mem_left / PRE.PRE_CPUs
 
-    chunk_size = 10
-    grid_chunks = chunks(chunk_size, fin_grid)
-    DMnr_chunks = chunks(chunk_size, DM_count)
-    com_chunks = chunks(chunk_size, cell_com)
-    gen_chunks = chunks(chunk_size, cell_gen)
-    num_chunks = math.ceil(len(DM_count)/chunk_size)
-    idx_chunks = np.arange(num_chunks)
+    # Determine short-range chuncksize based on available memory and cells.
+    chunksize_sr = fct.chunksize_short_range(
+        cells, DM_particles, PRE.DM_LIM*SHELL_MULTIPLIERS[-1], core_mem_MB
+    )
+
+    # Split workload into batches (if necessary).
+    batch_arr, cell_chunks, cgen_chunks = fct.batch_generators_short_range(
+        cell_coords, cell_gen, chunksize_sr
+    )
 
     with ProcessPoolExecutor(PRE.PRE_CPUs) as ex:
         ex.map(
-            batch_gravity, grid_chunks, DMnr_chunks, 
-            com_chunks, gen_chunks, idx_chunks
+            fct.cell_gravity_short_range, 
+            cell_chunks, cgen_chunks, repeat(snap_GRID_L), repeat(DM_pos), 
+            repeat(PRE.DM_LIM), repeat(PRE.DM_SIM_MASS), 
+            repeat(PRE.SMOOTH_L), repeat(TEMP_DIR), batch_arr
         )
 
-    # Combine and then delete batch files.
-    dPsi_batches = [
-        np.load(f'{TEMP_DIR}/dPsi_grid_batch{b}.npy') for b in idx_chunks
+    # Combine short-range batch files.
+    dPsi_short_range_batches = [
+        np.load(f'{TEMP_DIR}/batch{b}_short_range.npy') for b in batch_arr
     ]
-    dPsi_fin = np.array(list(chain.from_iterable(dPsi_batches)))
-    np.save(f'{TEMP_DIR}/dPsi_grid_{IDname}.npy', dPsi_fin)
-    fct.delete_temp_data(f'{TEMP_DIR}/dPsi_*batch*.npy')
+    dPsi_short_range = np.array(
+        list(chain.from_iterable(dPsi_short_range_batches))
+    )
+    np.save(
+        f'{TEMP_DIR}/dPsi_short_range_{IDname}.npy', 
+        dPsi_short_range
+    )
+
+
+    # ------------------- #
+    # Long-range gravity. #
+    # ------------------- #
+
+    # Calculate available memory per core.
+    mem_so_far = (psutil.virtual_memory().used - OS_MEM)/MB_UNIT
+    mem_left = PRE.MEM_LIM_GB*1e3 - mem_so_far
+    core_mem_MB = mem_left / PRE.PRE_CPUs
+
+    # Determine long-range chuncksize based on available memory and cells.
+    chunksize_lr = fct.chunksize_long_range(cells, core_mem_MB)
+
+    # Split workload into batches (if necessary).
+    cell_ids, batches, coords, count_chain, com_chain = fct.batch_generators_long_range(
+        cell_coords, cell_com, DM_count, chunksize_lr
+    )
+
+    with ProcessPoolExecutor(PRE.PRE_CPUs) as ex:
+        ex.map(
+            fct.cell_gravity_long_range, cell_ids, batches, 
+            coords, count_chain, com_chain,
+            repeat(PRE.DM_SIM_MASS), repeat(PRE.SMOOTH_L), repeat(TEMP_DIR)
+        )
+
+
+    # Combine long-range batch files.
+    load_batch_arr = np.unique(batches)
+    with ProcessPoolExecutor(PRE.PRE_CPUs) as ex:
+        ex.map(
+            fct.load_dPsi_long_range, cell_ids, 
+            repeat(load_batch_arr), repeat(TEMP_DIR)
+        )
+
+    dPsi_long_range = np.array([
+        np.load(f'{TEMP_DIR}/cell{c}_long_range.npy') for c in cell_ids
+    ])
+    np.save(
+        f'{TEMP_DIR}/dPsi_long_range_{IDname}.npy', 
+        dPsi_long_range
+    )
+
+
+    # Combine short- and long-range forces.
+    gravity_sr = np.load(f'{TEMP_DIR}/dPsi_short_range_{IDname}.npy')
+    gravity_lr = np.load(f'{TEMP_DIR}/dPsi_long_range_{IDname}.npy')
+    dPsi_grid = gravity_sr + gravity_lr
+    np.save(f'{TEMP_DIR}/dPsi_grid_{IDname}.npy', dPsi_grid)
+
 
 # Save snapshot and halo specific arrays.
 np.save(f'{TEMP_DIR}/snaps_GRID_L_origID{halo_ID}.npy', save_GRID_L)
 np.save(f'{TEMP_DIR}/NrDM_snaps_origID{halo_ID}.npy', save_num_DM)
-# '''
+
 
 # ========================================= #
 # Run simulation for current halo in batch. #
@@ -270,13 +328,12 @@ for i, (phi, theta) in enumerate(zip(hp_phis, hp_thetas)):
         np.save(f'{TEMP_DIR}/{CPname}.npy', np.array(nus))
 
         # Calculate local overdensity.
-        nu_mass_range = np.geomspace(0.01, 0.3, 100)*eV
-        vels_CoordPair = fct.load_sim_data(TEMP_DIR, CPname, 'velocities')
+        vels = fct.load_sim_data(TEMP_DIR, CPname, 'velocities')
 
         # note: The final number density is not stored in the temporary folder.
-        out_file = f'{PRE.OUT_DIR}/number_densities_{CPname}.npy'
+        out_file = f'{PRE.OUT_DIR}/number_densities_all_sky_{CPname}.npy'
         fct.number_densities_mass_range(
-            vels_CoordPair, nu_mass_range, out_file, pix_sr
+            vels, NU_MRANGE, out_file, pix_sr
         )
 
         # Now delete velocities and distances of this coord. pair. neutrinos.

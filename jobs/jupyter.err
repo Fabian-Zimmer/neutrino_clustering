@@ -1,24 +1,20 @@
-[I 09:12:07.976 NotebookApp] Serving notebooks from local directory: /gpfs/home4/zimmer/neutrino_clustering_V2
-[I 09:12:07.978 NotebookApp] Jupyter Notebook 6.4.12 is running at:
-[I 09:12:07.978 NotebookApp] http://localhost:5341/?token=27a3f0bd5941984c3522e275df02ebd1e67796d87f800341
-[I 09:12:07.978 NotebookApp]  or http://127.0.0.1:5341/?token=27a3f0bd5941984c3522e275df02ebd1e67796d87f800341
-[I 09:12:07.978 NotebookApp] Use Control-C to stop this server and shut down all kernels (twice to skip confirmation).
-[C 09:12:07.989 NotebookApp] 
+[I 09:15:16.764 NotebookApp] Serving notebooks from local directory: /gpfs/home4/zimmer/neutrino_clustering_V2
+[I 09:15:16.764 NotebookApp] Jupyter Notebook 6.4.12 is running at:
+[I 09:15:16.764 NotebookApp] http://localhost:5185/?token=948054968fc2290b5fac72960dc797a603e0e136cee03bd3
+[I 09:15:16.764 NotebookApp]  or http://127.0.0.1:5185/?token=948054968fc2290b5fac72960dc797a603e0e136cee03bd3
+[I 09:15:16.764 NotebookApp] Use Control-C to stop this server and shut down all kernels (twice to skip confirmation).
+[C 09:15:16.780 NotebookApp] 
     
     To access the notebook, open this file in a browser:
-        file:///gpfs/home4/zimmer/.local/share/jupyter/runtime/nbserver-3492833-open.html
+        file:///gpfs/home4/zimmer/.local/share/jupyter/runtime/nbserver-2718546-open.html
     Or copy and paste one of these URLs:
-        http://localhost:5341/?token=27a3f0bd5941984c3522e275df02ebd1e67796d87f800341
-     or http://127.0.0.1:5341/?token=27a3f0bd5941984c3522e275df02ebd1e67796d87f800341
-[I 09:19:39.916 NotebookApp] Creating new notebook in 
-[I 09:19:40.051 NotebookApp] Kernel started: f527b37e-f7a1-452e-82c4-7c432d37f6a4, name: python3
-[W 09:19:40.111 NotebookApp] delete /test_band-jvsc-d6dd8a9c-f2f4-4b5a-a363-aba453b6f57fbdced0be-2fc2-47be-801f-6fea3154a9f0.ipynb
-[W 09:19:40.111 NotebookApp] Skipping trash for /gpfs/home4/zimmer/neutrino_clustering_V2/test_band-jvsc-d6dd8a9c-f2f4-4b5a-a363-aba453b6f57fbdced0be-2fc2-47be-801f-6fea3154a9f0.ipynb, [Errno 13] Permission denied: b'/gpfs/home4/.Trash-59104'
-[I 09:19:50.413 NotebookApp] Kernel interrupted: f527b37e-f7a1-452e-82c4-7c432d37f6a4
-[I 09:19:55.078 NotebookApp] Kernel restarted: f527b37e-f7a1-452e-82c4-7c432d37f6a4
-[I 09:19:55.085 NotebookApp] Starting buffering for f527b37e-f7a1-452e-82c4-7c432d37f6a4:893fd273-55d3-4d4d-8129-bcdf74d42ca8
-[I 09:19:55.091 NotebookApp] Restoring connection for f527b37e-f7a1-452e-82c4-7c432d37f6a4:893fd273-55d3-4d4d-8129-bcdf74d42ca8
-[I 11:21:59.050 NotebookApp] Creating new notebook in 
-[I 11:21:59.102 NotebookApp] Kernel started: cba8819a-a122-4ed5-8310-96100b5943a8, name: python3
-[W 11:21:59.158 NotebookApp] delete /number_density_band-jvsc-4d03c4ac-11e6-4291-88e6-a7e5a5f6424ccfd6acda-027e-4259-9de0-72f6ecc54344.ipynb
-[W 11:21:59.158 NotebookApp] Skipping trash for /gpfs/home4/zimmer/neutrino_clustering_V2/number_density_band-jvsc-4d03c4ac-11e6-4291-88e6-a7e5a5f6424ccfd6acda-027e-4259-9de0-72f6ecc54344.ipynb, [Errno 13] Permission denied: b'/gpfs/home4/.Trash-59104'
+        http://localhost:5185/?token=948054968fc2290b5fac72960dc797a603e0e136cee03bd3
+     or http://127.0.0.1:5185/?token=948054968fc2290b5fac72960dc797a603e0e136cee03bd3
+[I 09:17:52.655 NotebookApp] Creating new notebook in 
+[I 09:17:52.910 NotebookApp] Kernel started: c32f7a70-056d-40c5-82a5-85e0a6b78a9b, name: python3
+[W 09:17:52.930 NotebookApp] delete /number_density_band-jvsc-7cbc5ef4-34bc-494c-a1c2-4da9ddeea18c19dbe731-ae15-4598-a517-2b35b90f7f94.ipynb
+[W 09:17:52.930 NotebookApp] Skipping trash for /gpfs/home4/zimmer/neutrino_clustering_V2/number_density_band-jvsc-7cbc5ef4-34bc-494c-a1c2-4da9ddeea18c19dbe731-ae15-4598-a517-2b35b90f7f94.ipynb, [Errno 13] Permission denied: b'/gpfs/home4/.Trash-59104'
+[I 10:15:35.183 NotebookApp] Starting buffering for c32f7a70-056d-40c5-82a5-85e0a6b78a9b:cbf42d69-61c1-4ed4-8892-39f988006669
+[I 11:53:42.675 NotebookApp] Kernel restarted: c32f7a70-056d-40c5-82a5-85e0a6b78a9b
+[I 11:53:42.681 NotebookApp] Starting buffering for c32f7a70-056d-40c5-82a5-85e0a6b78a9b:9f0ee583-0566-41aa-a82f-a0dd36a9ecec
+[I 11:53:42.687 NotebookApp] Restoring connection for c32f7a70-056d-40c5-82a5-85e0a6b78a9b:9f0ee583-0566-41aa-a82f-a0dd36a9ecec

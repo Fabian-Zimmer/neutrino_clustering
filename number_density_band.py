@@ -16,7 +16,7 @@ total_start = time.perf_counter()
 # Initialize parameters and files.
 PRE = PRE(
     sim='L025N752', 
-    z0_snap=36, z4_snap=13, DM_lim=10000,
+    z0_snap=36, z4_snap=13, DM_lim=100,
     sim_dir=SIM_ROOT, sim_ver=SIM_TYPE,
     phis=10, thetas=10, vels=100,
     pre_CPUs=128, sim_CPUs=128, mem_lim_GB=224
@@ -29,15 +29,10 @@ rand_code = ''.join(
 TEMP_DIR = f'{PRE.OUT_DIR}/temp_data_{rand_code}'
 os.makedirs(TEMP_DIR)
 
-Testing=False
-if Testing:
-    mass_gauge = 12.3
-    mass_range = 0.3
-    size = 1
-else:
-    mass_gauge = 12.0
-    mass_range = 0.6
-    size = 3
+# Halo parameters.
+mass_gauge = 12.0
+mass_range = 0.6
+size = 3
 
 hname = f'1e+{mass_gauge}_pm{mass_range}Msun'
 fct.halo_batch_indices(
@@ -127,8 +122,10 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
     MTname = f'{PRE.SIM}_{splits[0]}_{splits[1]}'
     proj_IDs = fct.read_MergerTree(PRE.OUT_DIR, MTname, halo_ID)
 
+    # Create empty arrays to save specifics of each loop.
     save_GRID_L = np.zeros(len(PRE.NUMS_SNAPS))
     save_num_DM = np.zeros(len(PRE.NUMS_SNAPS))
+
     for j, (snap, proj_ID) in enumerate(zip(
         PRE.NUMS_SNAPS[::-1], proj_IDs
     )):
@@ -147,6 +144,7 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
         )
         DM_raw = np.load(f'{TEMP_DIR}/DM_pos_{IDname}.npy')
         DM_particles = len(DM_raw)
+
 
         # ---------------------- #
         # Cell division process. #
@@ -253,18 +251,19 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
 
 
         # Combine long-range batch files.
+        load_batch_arr = np.unique(batches)
         with ProcessPoolExecutor(PRE.PRE_CPUs) as ex:
             ex.map(
                 fct.load_dPsi_long_range, cell_ids, 
-                repeat(batches), repeat(TEMP_DIR)
+                repeat(load_batch_arr), repeat(TEMP_DIR)
             )
 
-        dPsi_long_range = [
+        dPsi_long_range = np.array([
             np.load(f'{TEMP_DIR}/cell{c}_long_range.npy') for c in cell_ids
-        ]
+        ])
         np.save(
             f'{TEMP_DIR}/dPsi_long_range_{IDname}.npy', 
-            np.array(dPsi_long_range)
+            dPsi_long_range
         )
 
 
@@ -290,6 +289,11 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
     NrDM_SNAPSHOTS = np.load(
         f'{TEMP_DIR}/NrDM_snaps_origID{halo_ID}.npy')
 
+    
+    # Display parameters for simulation.
+    print('***Running simulation***')
+    print(f'halo={halo_j+1}/{halo_num}, CPUs={PRE.SIM_CPUs}')
+
     start = time.perf_counter()
 
     # Draw initial velocities.
@@ -299,11 +303,6 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
     y0_Nr = np.array(
         [np.concatenate((X_SUN, ui[i], [i+1])) for i in range(PRE.NUS)]
         )
-
-
-    # Display parameters for simulation.
-    print('***Running simulation***')
-    print(f'halo={halo_j+1}/{halo_num}, CPUs={PRE.SIM_CPUs}')
 
     sim_testing = False
 
@@ -332,7 +331,7 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
             vels, NU_MRANGE, out_file
         )
 
-        # Now delete velocities and distances of this coord. pair. neutrinos.
+        # Now delete velocities and distances.
         fct.delete_temp_data(f'{TEMP_DIR}/{Bname}.npy')
 
 

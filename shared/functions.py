@@ -877,6 +877,7 @@ def cell_gravity_short_range(
     cell_gen = np.array(cell_gen)
 
     # Center all DM positions w.r.t. cell center.
+    # DM_pos already in shape = (1, DM_particles, 3)
     DM_pos_sync = np.repeat(DM_pos, len(cell_coords), axis=0)
     DM_pos_sync -= cell_coords
 
@@ -904,7 +905,6 @@ def cell_gravity_short_range(
     DM_sort = np.take_along_axis(DM_pos_sync, ind_3D, axis=1)
     DM_in = DM_sort[:,:DM_lim*SHELL_MULTIPLIERS[-1],:]
 
-    
     # note: Memory peaks here, due to these arrays:
     # print(DM_pos_sync.shape, ind_2D.shape, ind_3D.shape, DM_sort.shape, DM_in.shape)
     # mem_inc = gso(cell_coords)+gso(DM_pos_sync)+gso(ind_2D)+gso(ind_3D)+gso(DM_sort)+gso(DM_in)
@@ -916,6 +916,7 @@ def cell_gravity_short_range(
 
     # Offset DM positions by smoothening length of Camila's simulations.
     eps = smooth_l / 2.
+    # eps = smooth_l
 
     # nan values to 0 for numerator, and 1 for denominator to avoid infinities.
     quot = np.nan_to_num(cell_coords - DM_in, copy=False, nan=0.0) / \
@@ -941,15 +942,19 @@ def cell_gravity_long_range(
 
     # Offset DM positions by smoothening length of Camila's simulations.
     eps = smooth_l / 2.
+    # eps = smooth_l
 
-    # Long-range gravity component for each cell (without including itself).
+    # Long-range gravity component for each cell (including itself for now).
     quot = (cellX_coords-cell_com)/np.power((com_dis**2 + eps**2), 3./2.)
     DM_count_sync = np.expand_dims(DM_count, axis=1)
     del com_dis
 
+    # Set self-gravity to zero.
+    DM_count_sync[c_id-1, 0] = 0.
+
     # note: Minus sign, s.t. velocity changes correctly (see GoodNotes).
     derivative = -G*DM_sim_mass*np.sum(DM_count_sync*quot, axis=0)
-    
+
     # note: Memory peaks here, due to these arrays:
     # print(quot.shape, DM_count_sync.shape, derivative.shape)
     # mem_inc = gso(quot)+gso(DM_count_sync)+gso(derivative)
@@ -966,10 +971,8 @@ def load_dPsi_long_range(c_id, batches, out_dir):
         [np.load(f'{out_dir}/cell{c_id}_batch{b}_long_range.npy') for b in batches]
     )
 
-    # Delete entry, which corresponds to current cell. That "in-cell" gravity 
-    # is calculated more precisely with the short-range gravity function.
-    dPsi_cell_i = np.sum(np.delete(dPsi_raw, c_id-1, axis=0), axis=0)
-    np.save(f'{out_dir}/cell{c_id}_long_range.npy', dPsi_cell_i)    
+    dPsi_for_cell = np.sum(dPsi_raw, axis=0)
+    np.save(f'{out_dir}/cell{c_id}_long_range.npy', dPsi_for_cell)    
 
 
 def load_grid(root_dir, which, fname):
