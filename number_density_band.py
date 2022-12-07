@@ -224,7 +224,7 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
             dPsi_short_range
         )
 
-        '''
+        
         # ------------------- #
         # Long-range gravity. #
         # ------------------- #
@@ -265,7 +265,7 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
             f'{TEMP_DIR}/dPsi_long_range_{IDname}.npy', 
             dPsi_long_range
         )
-        '''
+        
 
         # Combine short- and long-range forces.
         gravity_sr = np.load(f'{TEMP_DIR}/dPsi_short_range_{IDname}.npy')
