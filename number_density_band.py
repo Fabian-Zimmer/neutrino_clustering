@@ -16,7 +16,7 @@ total_start = time.perf_counter()
 # Initialize parameters and files.
 PRE = PRE(
     sim='L025N752', 
-    z0_snap=36, z4_snap=13, DM_lim=100,
+    z0_snap=36, z4_snap=13, DM_lim=1000,
     sim_dir=SIM_ROOT, sim_ver=SIM_TYPE,
     phis=10, thetas=10, vels=100,
     pre_CPUs=128, sim_CPUs=128, mem_lim_GB=224
@@ -32,7 +32,7 @@ os.makedirs(TEMP_DIR)
 # Halo parameters.
 mass_gauge = 12.0
 mass_range = 0.6
-size = 3
+size = 1
 
 hname = f'1e+{mass_gauge}_pm{mass_range}Msun'
 fct.halo_batch_indices(
@@ -224,7 +224,7 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
             dPsi_short_range
         )
 
-
+        '''
         # ------------------- #
         # Long-range gravity. #
         # ------------------- #
@@ -265,12 +265,12 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
             f'{TEMP_DIR}/dPsi_long_range_{IDname}.npy', 
             dPsi_long_range
         )
-
+        '''
 
         # Combine short- and long-range forces.
         gravity_sr = np.load(f'{TEMP_DIR}/dPsi_short_range_{IDname}.npy')
-        gravity_lr = np.load(f'{TEMP_DIR}/dPsi_long_range_{IDname}.npy')
-        dPsi_grid = gravity_sr + gravity_lr
+        # gravity_lr = np.load(f'{TEMP_DIR}/dPsi_long_range_{IDname}.npy')
+        dPsi_grid = gravity_sr #+ gravity_lr
         np.save(f'{TEMP_DIR}/dPsi_grid_{IDname}.npy', dPsi_grid)
 
 

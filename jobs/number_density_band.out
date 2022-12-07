@@ -6,7 +6,7 @@ Total neutrinos: 10000
 Simulation box: L025N752
 Snapshot from 0036 (z=0) to 0013 (z=4)
 Pre/Sim CPUs 128/128
-DM limit for cells: 100
+DM limit for cells: 1000
 # File management:
 Box files directory: 
  /projects/0/einf180/Tango_sims/L025N752/DMONLY/SigmaConstant00
@@ -15,24 +15,47 @@ Output directory:
 **********************************************************
 ********Number density band********
 Halo batch params (Rvir,Mvir,cNFW):
-[[253.5523526   12.24058042   6.9286026 ]
- [158.62979351  11.62953177   8.03988676]
- [137.07912107  11.43929142   9.41292697]]
+[[253.5523526   12.24058042   6.9286026 ]]
 ***********************************
-halo 1/3 ; snapshot 0036
-halo 1/3 ; snapshot 0035
-halo 1/3 ; snapshot 0034
+halo 1/1 ; snapshot 0036
+halo 1/1 ; snapshot 0035
+halo 1/1 ; snapshot 0034
+halo 1/1 ; snapshot 0033
+halo 1/1 ; snapshot 0032
+halo 1/1 ; snapshot 0031
+halo 1/1 ; snapshot 0030
+halo 1/1 ; snapshot 0029
+halo 1/1 ; snapshot 0028
+halo 1/1 ; snapshot 0027
+halo 1/1 ; snapshot 0026
+halo 1/1 ; snapshot 0025
+halo 1/1 ; snapshot 0024
+halo 1/1 ; snapshot 0023
+halo 1/1 ; snapshot 0022
+halo 1/1 ; snapshot 0021
+halo 1/1 ; snapshot 0020
+halo 1/1 ; snapshot 0019
+halo 1/1 ; snapshot 0018
+halo 1/1 ; snapshot 0017
+halo 1/1 ; snapshot 0016
+halo 1/1 ; snapshot 0015
+halo 1/1 ; snapshot 0014
+halo 1/1 ; snapshot 0013
+***Running simulation***
+halo=1/1, CPUs=128
+Sim time min/h: 3.313157117048589 min, 0.055219285284143146 h.
+Total time: 33.900288221915254 min, 0.5650048036985875 h.
 
 JOB STATISTICS
 ==============
-Job ID: 1885580
+Job ID: 1886592
 Cluster: snellius
 User/Group: zimmer/zimmer
-State: CANCELLED (exit code 0)
+State: COMPLETED (exit code 0)
 Nodes: 1
 Cores per node: 128
-CPU Utilized: 00:00:00
-CPU Efficiency: 0.00% of 9-20:22:24 core-walltime
-Job Wall-clock time: 01:50:48
-Memory Utilized: 185.58 GB
-Memory Efficiency: 84.84% of 218.75 GB
+CPU Utilized: 04:58:52
+CPU Efficiency: 6.77% of 3-01:33:52 core-walltime
+Job Wall-clock time: 00:34:29
+Memory Utilized: 24.32 GB
+Memory Efficiency: 11.12% of 218.75 GB

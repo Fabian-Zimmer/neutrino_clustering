@@ -18,3 +18,8 @@
 [I 11:53:42.675 NotebookApp] Kernel restarted: c32f7a70-056d-40c5-82a5-85e0a6b78a9b
 [I 11:53:42.681 NotebookApp] Starting buffering for c32f7a70-056d-40c5-82a5-85e0a6b78a9b:9f0ee583-0566-41aa-a82f-a0dd36a9ecec
 [I 11:53:42.687 NotebookApp] Restoring connection for c32f7a70-056d-40c5-82a5-85e0a6b78a9b:9f0ee583-0566-41aa-a82f-a0dd36a9ecec
+[I 15:27:58.921 NotebookApp] Kernel interrupted: c32f7a70-056d-40c5-82a5-85e0a6b78a9b
+[I 15:28:04.863 NotebookApp] Kernel restarted: c32f7a70-056d-40c5-82a5-85e0a6b78a9b
+[I 15:42:08.170 NotebookApp] Kernel restarted: c32f7a70-056d-40c5-82a5-85e0a6b78a9b
+[I 17:04:36.985 NotebookApp] Starting buffering for c32f7a70-056d-40c5-82a5-85e0a6b78a9b:85f4470f-1864-4d38-8542-4e743a900e51
+slurmstepd: error: *** JOB 1885114 ON tcn367 CANCELLED AT 2022-11-29T17:14:53 DUE TO TIME LIMIT ***
