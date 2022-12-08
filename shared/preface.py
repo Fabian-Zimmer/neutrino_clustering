@@ -243,8 +243,8 @@ if str(HOME) == '/home/zimmer':
 # Paths for FZ_desktop.
 elif str(HOME) == '/home/fabian':
     SIM_ROOT = f'{HOME}/ownCloud/snellius'
-    # SIM_TYPE = 'DMONLY/SigmaConstant00'
-    SIM_TYPE = 'DMONLY/CDM_TF50'
+    SIM_TYPE = 'DMONLY/SigmaConstant00'
+    # SIM_TYPE = 'DMONLY/CDM_TF50'
 
 # Paths for FZ_laptop.
 elif str(HOME) == '/home/fpc':

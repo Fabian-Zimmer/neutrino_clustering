@@ -1198,6 +1198,7 @@ def dPsi_dxi_NFW(x_i, z, rho_0, M_vir, R_vir, R_s, halo:str):
         r_s = R_s
         x_i_cent = x_i
         r = np.sqrt(np.sum(x_i_cent**2))
+        
 
     # Distance from respective halo center with current coords. x_i.
     if halo == 'MW':
