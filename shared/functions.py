@@ -946,10 +946,10 @@ def cell_gravity_long_range(
 
     # Long-range gravity component for each cell (including itself for now).
     quot = (cellX_coords-cell_com)/np.power((com_dis**2 + eps**2), 3./2.)
-    DM_count_sync = np.expand_dims(DM_count, axis=1)
     del com_dis
 
     # Set self-gravity to zero.
+    DM_count_sync = np.expand_dims(DM_count, axis=1)
     DM_count_sync[c_id-1, 0] = 0.
 
     # note: Minus sign, s.t. velocity changes correctly (see GoodNotes).

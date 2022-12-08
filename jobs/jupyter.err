@@ -1,13 +1,20 @@
-[I 09:43:14.901 NotebookApp] Serving notebooks from local directory: /gpfs/home4/zimmer/neutrino_clustering_V2
-[I 09:43:14.901 NotebookApp] Jupyter Notebook 6.4.12 is running at:
-[I 09:43:14.901 NotebookApp] http://localhost:5036/?token=311309fb8c1daa666ea27a1481fbf6b3819ce096077abf2d
-[I 09:43:14.901 NotebookApp]  or http://127.0.0.1:5036/?token=311309fb8c1daa666ea27a1481fbf6b3819ce096077abf2d
-[I 09:43:14.901 NotebookApp] Use Control-C to stop this server and shut down all kernels (twice to skip confirmation).
-[C 09:43:14.912 NotebookApp] 
+[I 15:29:27.391 NotebookApp] Serving notebooks from local directory: /gpfs/home4/zimmer/neutrino_clustering_V2
+[I 15:29:27.391 NotebookApp] Jupyter Notebook 6.4.12 is running at:
+[I 15:29:27.391 NotebookApp] http://localhost:5441/?token=b07d61449b419048ce4f22c828a98a44fd0853258c0aeb02
+[I 15:29:27.391 NotebookApp]  or http://127.0.0.1:5441/?token=b07d61449b419048ce4f22c828a98a44fd0853258c0aeb02
+[I 15:29:27.391 NotebookApp] Use Control-C to stop this server and shut down all kernels (twice to skip confirmation).
+[C 15:29:27.400 NotebookApp] 
     
     To access the notebook, open this file in a browser:
-        file:///gpfs/home4/zimmer/.local/share/jupyter/runtime/nbserver-2198069-open.html
+        file:///gpfs/home4/zimmer/.local/share/jupyter/runtime/nbserver-2045082-open.html
     Or copy and paste one of these URLs:
-        http://localhost:5036/?token=311309fb8c1daa666ea27a1481fbf6b3819ce096077abf2d
-     or http://127.0.0.1:5036/?token=311309fb8c1daa666ea27a1481fbf6b3819ce096077abf2d
-slurmstepd: error: *** JOB 1915621 ON tcn392 CANCELLED AT 2022-12-08T09:51:48 ***
+        http://localhost:5441/?token=b07d61449b419048ce4f22c828a98a44fd0853258c0aeb02
+     or http://127.0.0.1:5441/?token=b07d61449b419048ce4f22c828a98a44fd0853258c0aeb02
+[I 15:32:02.776 NotebookApp] Creating new notebook in 
+[I 15:32:03.094 NotebookApp] Kernel started: ab2f8b86-7fe1-49f2-ba37-3540a04420f8, name: python3
+[W 15:32:03.195 NotebookApp] delete /hackaton_gravity-jvsc-c4b5acbf-4fac-44fa-ab15-f77b27d413dfb229d9e6-43af-4ca3-a9df-058272023c19.ipynb
+[W 15:32:03.196 NotebookApp] Skipping trash for /gpfs/home4/zimmer/neutrino_clustering_V2/hackaton_gravity-jvsc-c4b5acbf-4fac-44fa-ab15-f77b27d413dfb229d9e6-43af-4ca3-a9df-058272023c19.ipynb, [Errno 13] Permission denied: b'/gpfs/home4/.Trash-59104'
+[I 15:53:27.377 NotebookApp] Creating new notebook in 
+[I 15:53:27.527 NotebookApp] Kernel started: c024d4aa-08df-4231-b07b-37fefe4569fd, name: python3
+[W 15:53:27.626 NotebookApp] delete /number_density_band-jvsc-3782d878-c6d0-4576-8418-2db221fb863f2f6dc351-4957-4664-bdd9-670e94decf11.ipynb
+[W 15:53:27.627 NotebookApp] Skipping trash for /gpfs/home4/zimmer/neutrino_clustering_V2/number_density_band-jvsc-3782d878-c6d0-4576-8418-2db221fb863f2f6dc351-4957-4664-bdd9-670e94decf11.ipynb, [Errno 13] Permission denied: b'/gpfs/home4/.Trash-59104'
