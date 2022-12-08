@@ -1,16 +1,13 @@
-[I 14:31:28.686 NotebookApp] Serving notebooks from local directory: /gpfs/home4/zimmer/neutrino_clustering_V2
-[I 14:31:28.686 NotebookApp] Jupyter Notebook 6.4.12 is running at:
-[I 14:31:28.686 NotebookApp] http://localhost:5117/?token=338238945242bd1a758d376609d66268331ee9869ad001c4
-[I 14:31:28.686 NotebookApp]  or http://127.0.0.1:5117/?token=338238945242bd1a758d376609d66268331ee9869ad001c4
-[I 14:31:28.686 NotebookApp] Use Control-C to stop this server and shut down all kernels (twice to skip confirmation).
-[C 14:31:28.694 NotebookApp] 
+[I 09:43:14.901 NotebookApp] Serving notebooks from local directory: /gpfs/home4/zimmer/neutrino_clustering_V2
+[I 09:43:14.901 NotebookApp] Jupyter Notebook 6.4.12 is running at:
+[I 09:43:14.901 NotebookApp] http://localhost:5036/?token=311309fb8c1daa666ea27a1481fbf6b3819ce096077abf2d
+[I 09:43:14.901 NotebookApp]  or http://127.0.0.1:5036/?token=311309fb8c1daa666ea27a1481fbf6b3819ce096077abf2d
+[I 09:43:14.901 NotebookApp] Use Control-C to stop this server and shut down all kernels (twice to skip confirmation).
+[C 09:43:14.912 NotebookApp] 
     
     To access the notebook, open this file in a browser:
-        file:///gpfs/home4/zimmer/.local/share/jupyter/runtime/nbserver-1115044-open.html
+        file:///gpfs/home4/zimmer/.local/share/jupyter/runtime/nbserver-2198069-open.html
     Or copy and paste one of these URLs:
-        http://localhost:5117/?token=338238945242bd1a758d376609d66268331ee9869ad001c4
-     or http://127.0.0.1:5117/?token=338238945242bd1a758d376609d66268331ee9869ad001c4
-[I 14:40:35.979 NotebookApp] Creating new notebook in 
-[I 14:40:36.154 NotebookApp] Kernel started: e4ce92ab-090f-41b9-9c03-b93635113a17, name: python3
-[W 14:40:36.172 NotebookApp] delete /number_density_band-jvsc-b6802fba-5678-4c4b-b3fb-7d557c8d5687d9db2efe-a4e3-46f0-a497-749602ba95c0.ipynb
-[W 14:40:36.172 NotebookApp] Skipping trash for /gpfs/home4/zimmer/neutrino_clustering_V2/number_density_band-jvsc-b6802fba-5678-4c4b-b3fb-7d557c8d5687d9db2efe-a4e3-46f0-a497-749602ba95c0.ipynb, [Errno 13] Permission denied: b'/gpfs/home4/.Trash-59104'
+        http://localhost:5036/?token=311309fb8c1daa666ea27a1481fbf6b3819ce096077abf2d
+     or http://127.0.0.1:5036/?token=311309fb8c1daa666ea27a1481fbf6b3819ce096077abf2d
+slurmstepd: error: *** JOB 1915621 ON tcn392 CANCELLED AT 2022-12-08T09:51:48 ***
