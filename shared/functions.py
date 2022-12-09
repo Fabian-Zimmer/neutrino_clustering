@@ -533,7 +533,7 @@ def check_grid(init_grid, DM_pos, parent_GRID_S, DM_lim):
     # cell_com can have (0,0,0) for a cell. Doesn't matter, since DM_count in 
     # cell is then 0, which will set term in long-range gravity to zero.
 
-    # Count again, where zeros are present (not ones).
+    # Count again, where zeros are present (i.e. not replaced by ones).
     DM_count_final = np.count_nonzero(
         ~np.isnan(DM_stable_cells[:,:,0]), axis=1
     )

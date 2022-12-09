@@ -16,7 +16,7 @@ total_start = time.perf_counter()
 # Initialize parameters and files.
 PRE = PRE(
     sim='L025N752', 
-    z0_snap=36, z4_snap=13, DM_lim=500,
+    z0_snap=36, z4_snap=13, DM_lim=10,
     sim_dir=SIM_ROOT, sim_ver=SIM_TYPE,
     phis=10, thetas=10, vels=100,
     pre_CPUs=128, sim_CPUs=128, mem_lim_GB=224
@@ -224,7 +224,7 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
             dPsi_short_range
         )
 
-        
+        '''
         # ------------------- #
         # Long-range gravity. #
         # ------------------- #
@@ -265,12 +265,12 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
             f'{TEMP_DIR}/dPsi_long_range_{IDname}.npy', 
             dPsi_long_range
         )
-        
+        '''
 
         # Combine short- and long-range forces.
         gravity_sr = np.load(f'{TEMP_DIR}/dPsi_short_range_{IDname}.npy')
-        gravity_lr = np.load(f'{TEMP_DIR}/dPsi_long_range_{IDname}.npy')
-        dPsi_grid = gravity_sr + gravity_lr
+        # gravity_lr = np.load(f'{TEMP_DIR}/dPsi_long_range_{IDname}.npy')
+        dPsi_grid = gravity_sr #+ gravity_lr
         np.save(f'{TEMP_DIR}/dPsi_grid_{IDname}.npy', dPsi_grid)
 
 
@@ -326,7 +326,7 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
         vels = fct.load_sim_data(TEMP_DIR, Bname, 'velocities')
 
         # note: The final number density is not stored in the temporary folder.
-        out_file = f'{PRE.OUT_DIR}/number_densities_band_DMsmall_{Bname}.npy'
+        out_file = f'{PRE.OUT_DIR}/number_densities_band_SR_{Bname}.npy'
         fct.number_densities_mass_range(
             vels, NU_MRANGE, out_file
         )
