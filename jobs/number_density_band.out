@@ -15,47 +15,104 @@ Output directory:
 **********************************************************
 ********Number density band********
 Halo batch params (Rvir,Mvir,cNFW):
-[[253.5523526   12.24058042   6.9286026 ]]
+[[253.5523526   12.24058042   6.9286026 ]
+ [158.62979351  11.62953177   8.03988676]
+ [137.07912107  11.43929142   9.41292697]]
 ***********************************
-halo 1/1 ; snapshot 0036
-halo 1/1 ; snapshot 0035
-halo 1/1 ; snapshot 0034
-halo 1/1 ; snapshot 0033
-halo 1/1 ; snapshot 0032
-halo 1/1 ; snapshot 0031
-halo 1/1 ; snapshot 0030
-halo 1/1 ; snapshot 0029
-halo 1/1 ; snapshot 0028
-halo 1/1 ; snapshot 0027
-halo 1/1 ; snapshot 0026
-halo 1/1 ; snapshot 0025
-halo 1/1 ; snapshot 0024
-halo 1/1 ; snapshot 0023
-halo 1/1 ; snapshot 0022
-halo 1/1 ; snapshot 0021
-halo 1/1 ; snapshot 0020
-halo 1/1 ; snapshot 0019
-halo 1/1 ; snapshot 0018
-halo 1/1 ; snapshot 0017
-halo 1/1 ; snapshot 0016
-halo 1/1 ; snapshot 0015
-halo 1/1 ; snapshot 0014
-halo 1/1 ; snapshot 0013
+halo 1/3 ; snapshot 0036
+halo 1/3 ; snapshot 0035
+halo 1/3 ; snapshot 0034
+halo 1/3 ; snapshot 0033
+halo 1/3 ; snapshot 0032
+halo 1/3 ; snapshot 0031
+halo 1/3 ; snapshot 0030
+halo 1/3 ; snapshot 0029
+halo 1/3 ; snapshot 0028
+halo 1/3 ; snapshot 0027
+halo 1/3 ; snapshot 0026
+halo 1/3 ; snapshot 0025
+halo 1/3 ; snapshot 0024
+halo 1/3 ; snapshot 0023
+halo 1/3 ; snapshot 0022
+halo 1/3 ; snapshot 0021
+halo 1/3 ; snapshot 0020
+halo 1/3 ; snapshot 0019
+halo 1/3 ; snapshot 0018
+halo 1/3 ; snapshot 0017
+halo 1/3 ; snapshot 0016
+halo 1/3 ; snapshot 0015
+halo 1/3 ; snapshot 0014
+halo 1/3 ; snapshot 0013
 ***Running simulation***
-halo=1/1, CPUs=128
-Sim time min/h: 3.313157117048589 min, 0.055219285284143146 h.
-Total time: 33.900288221915254 min, 0.5650048036985875 h.
+halo=1/3, CPUs=128
+Sim time min/h: 4.170645766349995 min, 0.06951076277249993 h.
+halo 2/3 ; snapshot 0036
+halo 2/3 ; snapshot 0035
+halo 2/3 ; snapshot 0034
+halo 2/3 ; snapshot 0033
+halo 2/3 ; snapshot 0032
+halo 2/3 ; snapshot 0031
+halo 2/3 ; snapshot 0030
+halo 2/3 ; snapshot 0029
+halo 2/3 ; snapshot 0028
+halo 2/3 ; snapshot 0027
+halo 2/3 ; snapshot 0026
+halo 2/3 ; snapshot 0025
+halo 2/3 ; snapshot 0024
+halo 2/3 ; snapshot 0023
+halo 2/3 ; snapshot 0022
+halo 2/3 ; snapshot 0021
+halo 2/3 ; snapshot 0020
+halo 2/3 ; snapshot 0019
+halo 2/3 ; snapshot 0018
+halo 2/3 ; snapshot 0017
+halo 2/3 ; snapshot 0016
+halo 2/3 ; snapshot 0015
+halo 2/3 ; snapshot 0014
+halo 2/3 ; snapshot 0013
+***Running simulation***
+halo=2/3, CPUs=128
+Sim time min/h: 2.6676047409666657 min, 0.04446007901611109 h.
+halo 3/3 ; snapshot 0036
+halo 3/3 ; snapshot 0035
+halo 3/3 ; snapshot 0034
+halo 3/3 ; snapshot 0033
+halo 3/3 ; snapshot 0032
+halo 3/3 ; snapshot 0031
+halo 3/3 ; snapshot 0030
+halo 3/3 ; snapshot 0029
+halo 3/3 ; snapshot 0028
+halo 3/3 ; snapshot 0027
+halo 3/3 ; snapshot 0026
+halo 3/3 ; snapshot 0025
+halo 3/3 ; snapshot 0024
+halo 3/3 ; snapshot 0023
+halo 3/3 ; snapshot 0022
+halo 3/3 ; snapshot 0021
+halo 3/3 ; snapshot 0020
+halo 3/3 ; snapshot 0019
+halo 3/3 ; snapshot 0018
+halo 3/3 ; snapshot 0017
+halo 3/3 ; snapshot 0016
+halo 3/3 ; snapshot 0015
+halo 3/3 ; snapshot 0014
+halo 3/3 ; snapshot 0013
+***Running simulation***
+halo=3/3, CPUs=128
+Sim time min/h: 2.501193531549992 min, 0.04168655885916653 h.
+Total time: 105.24974968963333 min, 1.7541624948272223 h.
 
 JOB STATISTICS
 ==============
-Job ID: 1886592
+Job ID: 1933871
 Cluster: snellius
 User/Group: zimmer/zimmer
-State: COMPLETED (exit code 0)
+State: RUNNING
 Nodes: 1
 Cores per node: 128
-CPU Utilized: 04:58:52
-CPU Efficiency: 6.77% of 3-01:33:52 core-walltime
-Job Wall-clock time: 00:34:29
-Memory Utilized: 24.32 GB
-Memory Efficiency: 11.12% of 218.75 GB
+CPU Utilized: 00:00:00
+CPU Efficiency: 0.00% of 9-09:40:16 core-walltime
+Job Wall-clock time: 01:45:47
+Memory Utilized: 0.00 MB (estimated maximum)
+Memory Efficiency: 0.00% of 218.75 GB (218.75 GB/node)
+WARNING: Efficiency statistics may be misleading for RUNNING jobs.

@@ -528,7 +528,12 @@ def check_grid(init_grid, DM_pos, parent_GRID_S, DM_lim):
     DM_count_sync = np.expand_dims(DM_count_stable, axis=1)
     DM_count_sync[DM_count_sync==0] = 1  # to avoid divide by zero
     cell_com = np.nansum(DM_stable_cells, axis=1)/DM_count_sync
-    cell_com += init_grid
+
+    # Reset cell_com coords. of stable cells to proper coordinates.
+    good_grid = np.squeeze(np.delete(init_grid, ~stable_cells, axis=0), axis=1)
+    cell_com += good_grid
+    del good_grid
+
     del DM_count_stable, DM_count_sync
     # note: 
     # cell_com can have (0,0,0) for a cell. Doesn't matter, since DM_count in 
@@ -602,7 +607,6 @@ def cell_division(
 
 
         else:
-            #! do the same deletion process with cell_com! I think...
             del DM_count, cell_com
             
             # Array containing all cells (i.e. their coords.), which need to
@@ -626,8 +630,7 @@ def cell_division(
             # Reset DM on parent cells, such that they can be centered on new 
             # child cells again later.
             DM_reset = DM_parent_cells + parent_cells
-            # note: 
-            # Array does not contain duplicate DM, each cell has unique DM.
+            # note: Array doesn't contain duplicate DM, each cell has unique DM.
 
             # Repeat each DM "column" 8 times. This will be the DM position 
             # array in the next iteration.
@@ -885,7 +888,7 @@ def cell_gravity_short_range(
 
     # Cell lengths to limit DM particles. Limit for the largest cell is 
     # GRID_S/2, not just GRID_S, therefore the cell_gen+1 !
-    cell_len = np.expand_dims(init_GRID_S/(2**(np.array(cell_gen)+1)), axis=1)
+    cell_len = np.expand_dims(init_GRID_S/(2**(cell_gen+1)), axis=1)
 
     # Select DM particles inside each cell based on cube length generation.
     DM_in_cell_IDs = np.asarray(
@@ -944,7 +947,6 @@ def cell_gravity_long_range(
 
     # Offset DM positions by smoothening length of Camila's simulations.
     eps = smooth_l / 2.
-    # eps = smooth_l
 
     # Long-range gravity component for each cell (including itself for now).
     quot = (cellX_coords-cell_com)/np.power((com_dis**2 + eps**2), 3./2.)
