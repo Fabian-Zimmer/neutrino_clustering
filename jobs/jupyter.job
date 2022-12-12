@@ -16,7 +16,8 @@ module purge
 source $HOME/.conda/envs/neutrino_clustering/bin/activate
 
 # Choose random port and print instructions to connect
-PORT=`shuf -i 5000-5999 -n 1`
+# PORT=`shuf -i 5000-5999 -n 1`
+PORT=`shuf -i 5000-7999 -n 1`
 LOGIN_HOST_EXT=int3-pub.snellius.surf.nl
 LOGIN_HOST_INT=int3
 

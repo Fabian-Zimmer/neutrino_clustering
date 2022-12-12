@@ -528,6 +528,7 @@ def check_grid(init_grid, DM_pos, parent_GRID_S, DM_lim):
     DM_count_sync = np.expand_dims(DM_count_stable, axis=1)
     DM_count_sync[DM_count_sync==0] = 1  # to avoid divide by zero
     cell_com = np.nansum(DM_stable_cells, axis=1)/DM_count_sync
+    cell_com += init_grid
     del DM_count_stable, DM_count_sync
     # note: 
     # cell_com can have (0,0,0) for a cell. Doesn't matter, since DM_count in 
@@ -601,6 +602,7 @@ def cell_division(
 
 
         else:
+            #! do the same deletion process with cell_com! I think...
             del DM_count, cell_com
             
             # Array containing all cells (i.e. their coords.), which need to
