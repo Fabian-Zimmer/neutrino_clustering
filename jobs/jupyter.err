@@ -1,57 +1,16 @@
-[I 10:20:59.892 NotebookApp] Serving notebooks from local directory: /gpfs/home4/zimmer/neutrino_clustering_V2
-[I 10:20:59.892 NotebookApp] Jupyter Notebook 6.4.12 is running at:
-[I 10:20:59.892 NotebookApp] http://localhost:6898/?token=57d917a2e9544d838c972c657b015201052a26de6e614f24
-[I 10:20:59.892 NotebookApp]  or http://127.0.0.1:6898/?token=57d917a2e9544d838c972c657b015201052a26de6e614f24
-[I 10:20:59.892 NotebookApp] Use Control-C to stop this server and shut down all kernels (twice to skip confirmation).
-[C 10:20:59.911 NotebookApp] 
+[I 09:22:07.285 NotebookApp] Serving notebooks from local directory: /gpfs/home4/zimmer/neutrino_clustering_V2
+[I 09:22:07.286 NotebookApp] Jupyter Notebook 6.4.12 is running at:
+[I 09:22:07.286 NotebookApp] http://localhost:5100/?token=1b0ca745e79abbbe3ed09048652311cb54b0e66bf92b4fa3
+[I 09:22:07.286 NotebookApp]  or http://127.0.0.1:5100/?token=1b0ca745e79abbbe3ed09048652311cb54b0e66bf92b4fa3
+[I 09:22:07.287 NotebookApp] Use Control-C to stop this server and shut down all kernels (twice to skip confirmation).
+[C 09:22:07.298 NotebookApp] 
     
     To access the notebook, open this file in a browser:
-        file:///gpfs/home4/zimmer/.local/share/jupyter/runtime/nbserver-103124-open.html
+        file:///gpfs/home4/zimmer/.local/share/jupyter/runtime/nbserver-209136-open.html
     Or copy and paste one of these URLs:
-        http://localhost:6898/?token=57d917a2e9544d838c972c657b015201052a26de6e614f24
-     or http://127.0.0.1:6898/?token=57d917a2e9544d838c972c657b015201052a26de6e614f24
-[I 10:23:51.490 NotebookApp] Creating new notebook in 
-[I 10:23:51.923 NotebookApp] Kernel started: bbb24a1d-8629-4406-bed9-184e4e0abbe1, name: python3
-[W 10:23:52.024 NotebookApp] delete /hackaton_gravity-jvsc-64fbdda1-8c45-4846-b748-3ea33b73ba8dadfdd9dc-3e7b-4da4-a332-fcc419d656f5.ipynb
-[W 10:23:52.025 NotebookApp] Skipping trash for /gpfs/home4/zimmer/neutrino_clustering_V2/hackaton_gravity-jvsc-64fbdda1-8c45-4846-b748-3ea33b73ba8dadfdd9dc-3e7b-4da4-a332-fcc419d656f5.ipynb, [Errno 13] Permission denied: b'/gpfs/home4/.Trash-59104'
-[I 10:24:32.045 NotebookApp] Kernel restarted: bbb24a1d-8629-4406-bed9-184e4e0abbe1
-[I 10:24:32.089 NotebookApp] Starting buffering for bbb24a1d-8629-4406-bed9-184e4e0abbe1:d33018ee-24fd-4c71-92f9-bc76ac7b83d1
-[I 10:24:32.095 NotebookApp] Restoring connection for bbb24a1d-8629-4406-bed9-184e4e0abbe1:d33018ee-24fd-4c71-92f9-bc76ac7b83d1
-[I 10:31:24.831 NotebookApp] Kernel restarted: bbb24a1d-8629-4406-bed9-184e4e0abbe1
-[I 10:31:24.838 NotebookApp] Starting buffering for bbb24a1d-8629-4406-bed9-184e4e0abbe1:d33018ee-24fd-4c71-92f9-bc76ac7b83d1
-[I 10:31:24.845 NotebookApp] Restoring connection for bbb24a1d-8629-4406-bed9-184e4e0abbe1:d33018ee-24fd-4c71-92f9-bc76ac7b83d1
-[I 10:31:37.278 NotebookApp] Kernel interrupted: bbb24a1d-8629-4406-bed9-184e4e0abbe1
-[I 10:31:46.937 NotebookApp] Kernel restarted: bbb24a1d-8629-4406-bed9-184e4e0abbe1
-[I 10:31:46.943 NotebookApp] Starting buffering for bbb24a1d-8629-4406-bed9-184e4e0abbe1:d33018ee-24fd-4c71-92f9-bc76ac7b83d1
-[I 10:31:46.949 NotebookApp] Restoring connection for bbb24a1d-8629-4406-bed9-184e4e0abbe1:d33018ee-24fd-4c71-92f9-bc76ac7b83d1
-[I 10:43:48.228 NotebookApp] Kernel restarted: bbb24a1d-8629-4406-bed9-184e4e0abbe1
-[I 10:43:48.247 NotebookApp] Starting buffering for bbb24a1d-8629-4406-bed9-184e4e0abbe1:d33018ee-24fd-4c71-92f9-bc76ac7b83d1
-[I 10:43:48.257 NotebookApp] Restoring connection for bbb24a1d-8629-4406-bed9-184e4e0abbe1:d33018ee-24fd-4c71-92f9-bc76ac7b83d1
-[I 10:49:29.997 NotebookApp] Kernel restarted: bbb24a1d-8629-4406-bed9-184e4e0abbe1
-[I 10:49:30.004 NotebookApp] Starting buffering for bbb24a1d-8629-4406-bed9-184e4e0abbe1:d33018ee-24fd-4c71-92f9-bc76ac7b83d1
-[I 10:49:30.012 NotebookApp] Restoring connection for bbb24a1d-8629-4406-bed9-184e4e0abbe1:d33018ee-24fd-4c71-92f9-bc76ac7b83d1
-[I 10:51:31.648 NotebookApp] Kernel restarted: bbb24a1d-8629-4406-bed9-184e4e0abbe1
-[I 10:51:31.663 NotebookApp] Starting buffering for bbb24a1d-8629-4406-bed9-184e4e0abbe1:d33018ee-24fd-4c71-92f9-bc76ac7b83d1
-[I 10:51:31.665 NotebookApp] Restoring connection for bbb24a1d-8629-4406-bed9-184e4e0abbe1:d33018ee-24fd-4c71-92f9-bc76ac7b83d1
-[I 15:42:56.181 NotebookApp] Kernel restarted: bbb24a1d-8629-4406-bed9-184e4e0abbe1
-[I 15:43:04.743 NotebookApp] Kernel interrupted: bbb24a1d-8629-4406-bed9-184e4e0abbe1
-[I 15:43:07.431 NotebookApp] Kernel interrupted: bbb24a1d-8629-4406-bed9-184e4e0abbe1
-[I 15:43:16.238 NotebookApp] Creating new notebook in 
-[I 15:43:16.337 NotebookApp] Kernel started: b1644b81-f9ad-45b1-a9fc-47cf4d08ab3d, name: python3
-[W 15:43:16.394 NotebookApp] delete /number_density_band-jvsc-ebf8a8ce-c366-4a02-ac0d-b9d21d8651a426b440a7-aac7-42ff-9610-c4ccbd514da2.ipynb
-[W 15:43:16.395 NotebookApp] Skipping trash for /gpfs/home4/zimmer/neutrino_clustering_V2/number_density_band-jvsc-ebf8a8ce-c366-4a02-ac0d-b9d21d8651a426b440a7-aac7-42ff-9610-c4ccbd514da2.ipynb, [Errno 13] Permission denied: b'/gpfs/home4/.Trash-59104'
-[I 15:49:39.465 NotebookApp] Kernel restarted: b1644b81-f9ad-45b1-a9fc-47cf4d08ab3d
-[I 15:49:39.470 NotebookApp] Starting buffering for b1644b81-f9ad-45b1-a9fc-47cf4d08ab3d:0103af0d-f3b1-40ec-abae-06d7ac2b3fed
-[I 15:49:39.476 NotebookApp] Restoring connection for b1644b81-f9ad-45b1-a9fc-47cf4d08ab3d:0103af0d-f3b1-40ec-abae-06d7ac2b3fed
-[I 15:51:50.463 NotebookApp] Kernel restarted: b1644b81-f9ad-45b1-a9fc-47cf4d08ab3d
-[I 15:51:50.467 NotebookApp] Starting buffering for b1644b81-f9ad-45b1-a9fc-47cf4d08ab3d:0103af0d-f3b1-40ec-abae-06d7ac2b3fed
-[I 15:51:50.472 NotebookApp] Restoring connection for b1644b81-f9ad-45b1-a9fc-47cf4d08ab3d:0103af0d-f3b1-40ec-abae-06d7ac2b3fed
-[I 16:15:05.722 NotebookApp] Kernel restarted: b1644b81-f9ad-45b1-a9fc-47cf4d08ab3d
-[I 16:15:05.727 NotebookApp] Starting buffering for b1644b81-f9ad-45b1-a9fc-47cf4d08ab3d:0103af0d-f3b1-40ec-abae-06d7ac2b3fed
-[I 16:15:05.735 NotebookApp] Restoring connection for b1644b81-f9ad-45b1-a9fc-47cf4d08ab3d:0103af0d-f3b1-40ec-abae-06d7ac2b3fed
-[I 16:58:37.839 NotebookApp] Kernel restarted: b1644b81-f9ad-45b1-a9fc-47cf4d08ab3d
-[I 16:58:37.844 NotebookApp] Starting buffering for b1644b81-f9ad-45b1-a9fc-47cf4d08ab3d:0103af0d-f3b1-40ec-abae-06d7ac2b3fed
-[I 16:58:37.850 NotebookApp] Restoring connection for b1644b81-f9ad-45b1-a9fc-47cf4d08ab3d:0103af0d-f3b1-40ec-abae-06d7ac2b3fed
-[I 16:59:15.427 NotebookApp] Kernel restarted: b1644b81-f9ad-45b1-a9fc-47cf4d08ab3d
-[I 16:59:15.431 NotebookApp] Starting buffering for b1644b81-f9ad-45b1-a9fc-47cf4d08ab3d:0103af0d-f3b1-40ec-abae-06d7ac2b3fed
-[I 16:59:15.436 NotebookApp] Restoring connection for b1644b81-f9ad-45b1-a9fc-47cf4d08ab3d:0103af0d-f3b1-40ec-abae-06d7ac2b3fed
+        http://localhost:5100/?token=1b0ca745e79abbbe3ed09048652311cb54b0e66bf92b4fa3
+     or http://127.0.0.1:5100/?token=1b0ca745e79abbbe3ed09048652311cb54b0e66bf92b4fa3
+[I 10:56:20.770 NotebookApp] Creating new notebook in 
+[I 10:56:20.956 NotebookApp] Kernel started: 1354dd2b-cde9-4a3e-b174-389653ef8968, name: python3
+[W 10:56:20.977 NotebookApp] delete /hackaton_gravity-jvsc-cb651323-b973-4a88-9ba6-c3178f11d0d288f0c247-409b-4b62-ac15-39c4219aebd5.ipynb
+[W 10:56:20.979 NotebookApp] Skipping trash for /gpfs/home4/zimmer/neutrino_clustering_V2/hackaton_gravity-jvsc-cb651323-b973-4a88-9ba6-c3178f11d0d288f0c247-409b-4b62-ac15-39c4219aebd5.ipynb, [Errno 13] Permission denied: b'/gpfs/home4/.Trash-59104'
