@@ -14,3 +14,8 @@
 [I 10:56:20.956 NotebookApp] Kernel started: 1354dd2b-cde9-4a3e-b174-389653ef8968, name: python3
 [W 10:56:20.977 NotebookApp] delete /hackaton_gravity-jvsc-cb651323-b973-4a88-9ba6-c3178f11d0d288f0c247-409b-4b62-ac15-39c4219aebd5.ipynb
 [W 10:56:20.979 NotebookApp] Skipping trash for /gpfs/home4/zimmer/neutrino_clustering_V2/hackaton_gravity-jvsc-cb651323-b973-4a88-9ba6-c3178f11d0d288f0c247-409b-4b62-ac15-39c4219aebd5.ipynb, [Errno 13] Permission denied: b'/gpfs/home4/.Trash-59104'
+[W 15:55:33.440 NotebookApp] WebSocket ping timeout after 93535 ms.
+[I 15:55:38.445 NotebookApp] Starting buffering for 1354dd2b-cde9-4a3e-b174-389653ef8968:1668b24a-b9a7-48a1-ac6f-683d59f681b1
+[I 15:55:40.665 NotebookApp] Restoring connection for 1354dd2b-cde9-4a3e-b174-389653ef8968:1668b24a-b9a7-48a1-ac6f-683d59f681b1
+[I 16:50:09.648 NotebookApp] Starting buffering for 1354dd2b-cde9-4a3e-b174-389653ef8968:1668b24a-b9a7-48a1-ac6f-683d59f681b1
+slurmstepd: error: *** JOB 1935793 ON tcn287 CANCELLED AT 2022-12-13T17:21:19 DUE TO TIME LIMIT ***
