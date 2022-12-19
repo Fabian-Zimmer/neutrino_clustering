@@ -12,7 +12,7 @@ import string
 import gc
 import argparse
 import pathlib
-from itertools import chain, repeat
+from itertools import chain, repeat, zip_longest
 from memory_profiler import profile
 import traceback
 import math
