@@ -49,6 +49,21 @@ from mpl_toolkits import mplot3d
 import colorcet as cc
 # import imageio
 
+# debugging
+import code
+def raise_sys_exit():
+    raise SystemExit
+DONE = {"done": raise_sys_exit}
+
+def debug(local_vars):
+    try:
+        code.interact(local=local_vars)
+    except SystemExit:
+        sys.exit()
+
+# note: two lines of code for debugging
+# locs = DONE | locals()  # merge done() with locals()
+# debug(locs)  # use done() to exit interactive window
 
 #############
 ### Plots ###

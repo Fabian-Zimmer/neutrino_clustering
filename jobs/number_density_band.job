@@ -1,13 +1,13 @@
 #!/bin/bash
-#SBATCH --job-name=Band
+#SBATCH --job-name=BandQP
 #SBATCH -p thin
-#SBATCH -t 04:00:00
+#SBATCH -t 01:00:00
 #SBATCH -N 1
 #SBATCH --tasks-per-node=1
 #SBATCH --cpus-per-task=128
 #SBATCH --mem=224000
-#SBATCH -o jobs/number_density_band.out
-#SBATCH -e jobs/number_density_band.err
+#SBATCH -o jobs/number_density_band_QPole.out
+#SBATCH -e jobs/number_density_band_QPole.err
 #SBATCH -v
 #SBATCH --exclusive
 
@@ -15,4 +15,4 @@ module purge
 
 source $HOME/.conda/envs/neutrino_clustering/bin/activate
 
-python $HOME/neutrino_clustering_V2/number_density_band.py
+python $HOME/neutrino_clustering_V2/number_density_band_quadrupole.py
