@@ -61,9 +61,8 @@ def debug(local_vars):
     except SystemExit:
         sys.exit()
 
-# note: two lines of code for debugging
-# locs = DONE | locals()  # merge done() with locals()
-# debug(locs)  # use done() to exit interactive window
+# note: 1 line of code for debugging
+# debug(DONE | locals())  # use done() to exit interactive window
 
 #############
 ### Plots ###

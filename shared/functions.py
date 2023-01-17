@@ -712,8 +712,8 @@ def batch_generators_short_range(cell_coords, cell_gen, chunksize):
     batches = math.ceil(cells/chunksize)
     batch_arr = np.arange(batches)
 
-    cell_chunks = chunks(chunksize, cell_coords)
-    cgen_chunks = chunks(chunksize, cell_gen)
+    cell_chunks = list(chunks(chunksize, cell_coords))
+    cgen_chunks = list(chunks(chunksize, cell_gen))
     
     return batch_arr, cell_chunks, cgen_chunks
 
@@ -753,7 +753,8 @@ def cell_gravity_short_range(
     # Save the DM IDs, such that we know which particles are in which cell.
     # This will be used in the long-range gravity calculations.
     DM_in_cell_IDs_compact = np.argwhere(DM_in_cell_IDs==True)
-    DM_in_cell_IDs_compact[:,0] += max_b_len*b_id
+    DM_in_cell_IDs_compact[:,0] += (max_b_len*b_id)
+
     del DM_in_cell_IDs
     np.save(f'{out_dir}/batch{b_id}_DM_in_cell_IDs.npy', DM_in_cell_IDs_compact)
     del DM_in_cell_IDs_compact
@@ -824,52 +825,60 @@ def batch_generators_long_range(
     ### ------- ###
     ### Arrays. ###
     ### ------- ###
-    # note: can be simplified with tile/repeat/stack
 
-    # Cell IDs, repeated as necessary for multiple batches.
-    cellC_rep = [idx+1 for idx in cell_nums for _ in range(batches)]
+    # Arrays are repeated/tiled to match length & number of batches.
 
-    # Batch IDs, also repeated to match multiple batches.
-    batch_IDs = [b+1 for _ in cell_nums for b in range(batches)]
+    batch_IDs = np.tile(np.arange(batches), cells)  # batch labels/indices
+    # [0,...,batches,0,...,batches,...]
+    
+    cellC_rep = np.repeat(cell_nums, batches)  # cell labels/indices
+    # [0,...,0,1,...,1,...,cells-1,...,cells-1]
 
-    # Coord. of cell, for which long-range gravity gets calculated. 
-    # (repeated for multiple batches)
-    cellC_cc = [cc for cc in cell_coords for _ in range(batches)]
+    cellC_cc = np.repeat(cell_coords, batches, axis=0)  # cell coordinates
+    # [[x1,y1,z1],...,[x1,y1,z1],...]
 
-    # We also need the generation index for each cell
-    gen_rep = [g for g in cell_gen for _ in range(batches)]
-
+    cellC_gen = np.repeat(cell_gen, batches)  # cell generations
+    # e.g. [0,...,0,0,...,0,1,...1,...], ... repeated to match nr of batches
 
     ### ----------- ###
     ### Generators. ###
     ### ----------- ###
 
     # We split up all arrays into smaller chunks, s.t. each batch gets a 
-    # smaller set of cells. Generators are most convenient here, but it doesn't 
-    # matter since the multiprocessing library converts it to lists before 
-    # giving it to the map() function. We do this for 
+    # smaller set of cells. Generators are used to benefit from the chunks() 
+    # function, then converted to lists (map() will do this anyway).
+    
+    # We do this for:
     # 1. the cell_IDs of cells present in a batch, 
     # 2. the DM counts of all cells in a batch, 
     # 3. the c.o.m. coords of all cells in a batch,
     # 4. the (cell division) generation index for all cells in a batch:
 
     # 1. 
-    cib_IDs_gens = (c for _ in cell_nums for c in chunks(chunksize, cell_nums))
-    
+    cib_IDs = list(
+        (c for _ in cell_nums for c in chunks(chunksize, cell_nums))
+    )
+
     # 2.
-    count_gens = (c for _ in cell_nums for c in chunks(chunksize, DM_counts))
+    counts = list(
+        (c for _ in cell_nums for c in chunks(chunksize, DM_counts))
+    )
 
     # 3.
-    com_gens = (c for _ in cell_nums for c in chunks(chunksize, com_coords))
+    coms = list(
+        (c for _ in cell_nums for c in chunks(chunksize, com_coords))
+    )
 
     # 4.
-    gen_gens = (c for _ in cell_nums for c in chunks(chunksize, cell_gen))
+    gens = list(
+        (c for _ in cell_nums for c in chunks(chunksize, cell_gen))
+    )
 
     # Previously, I did the following additonally, which led to overcounting?
     # gen_chain = chain(gen for gen in gen_gens)
 
-    return cellC_rep, batch_IDs, cellC_cc, gen_rep, \
-        list(cib_IDs_gens), list(count_gens), list(com_gens), list(gen_gens)
+    return batch_IDs, cellC_rep, cellC_cc, cellC_gen, \
+        cib_IDs, counts, coms, gens
 
 
 def load_dPsi_long_range(c_id, batches, out_dir):
@@ -879,6 +888,7 @@ def load_dPsi_long_range(c_id, batches, out_dir):
         [np.load(f'{out_dir}/cell{c_id}_batch{b}_long_range.npy') for b in batches]
     )
 
+    # Combine into one array by summing and save.
     dPsi_for_cell = np.sum(dPsi_raw, axis=0)
     np.save(f'{out_dir}/cell{c_id}_long_range.npy', dPsi_for_cell)  
 
@@ -888,46 +898,48 @@ def cell_gravity_long_range_quadrupole(
     DM_pos, DM_count, DM_in_cell_IDs, DM_sim_mass, out_dir, 
     max_b_len, cellC_gen
 ):
+    # Prefix "cellC" denotes the cell to calculate the long-range forces for.
 
-    # print('Testing cell ', c_id)
-
-    # Convert generators and lists to np arrays.
+    # Convert the list inputs to numpy arrays.
     cib_ids = np.array(cib_ids)
-    cellC_cc = np.array(cellC_cc)
     cell_com = np.array(cell_com)
     cell_gen = np.array(cell_gen)
     DM_count = np.array(DM_count)
 
-    # print(
-    #     c_id, cib_ids.shape, b_id, cellC_cc.shape, 
-    #     cell_com.shape, cell_gen.shape, DM_pos.shape, DM_count.shape, DM_in_cell_IDs.shape
-    # )
-
     # Array, where cell C is centered on c.o.m. coords. of all cells.
     cellC_sync = np.repeat(
         np.expand_dims(cellC_cc, axis=0), len(cell_com), axis=0
-    )
+    ) 
     cellC_sync -= cell_com
 
-    # Get cell length of all cells and current cell C.
+    # Get (complete, not half) cell length of all cells and current cell C.
     cell_len = init_GRID_S/(2**(cell_gen))
     cellC_len = init_GRID_S/(2**(cellC_gen))
 
     # Distance of cellC to all cell_com's.
     cellC_dis = np.sqrt(np.sum(cellC_sync**2, axis=1))
 
-    
-    if (c_id-1) in cib_ids:
-        # Overwrite element corresponding to cell C from all arrays, to avoid
-        # self-gravity of the cell. That's what the short-range gravity is for.
-        cellC_idx = np.argwhere(cellC_dis == np.min(cellC_dis)).flatten()
-        cell_com[cellC_idx] = np.nan
-        cell_len[cellC_idx] = 0
-        DM_count[cellC_idx] = 0
 
-        # If cell C is an outer cell with 0 DM, then set cellC_dis from 0 to 1.
+    if c_id in cib_ids:
+        # Overwrite element corresponding to cell C from all arrays, to avoid
+        # self-gravity of the cell (taken care of by short-range gravity).
+
+        # First find the correct index for the current cell. We have to take 
+        # this akin to a "modulo" according to the maximum batch length. E.g. 
+        # if the max. batch length is 100, but we are at cell label/index 100, 
+        # then this would be index '0' again for arrays in this function.
+        cellC_idx = (c_id - (max_b_len*b_id))
+
+        # Set cell C array element(s) to 0 or nan, s.t. it just adds 0 later on.
+        cell_com[cellC_idx] = np.nan  # c.o.m. of cell C to [nan,nan,nan]
+        cell_len[cellC_idx] = 0  # 0 cell length
+        DM_count[cellC_idx] = 0  # 0 DM count
+
+        # If cell C has 0 DM, then its c.o.m == coords., so set cellC_dis to 1.
+        # (avoids divide by zero in these (edge) cases later on)
         if cellC_dis[cellC_idx] == 0:
             cellC_dis[cellC_idx] = 1
+
 
     # Determine which cells are close enough and need multipole expansion:    
     # Cells with angle larger than the critical angle are multipole cells.
@@ -940,38 +952,36 @@ def cell_gravity_long_range_quadrupole(
     # Divide all cell IDs into multipole cells and monopole-only cells.
     multipole_IDs = np.argwhere(theta >= theta_crit).flatten()
     monopole_IDs = np.argwhere(theta < theta_crit).flatten()
-    # note: cell C will be a monopole-only cell, but with DM_count set to 0.
+    # note: cell C will be a monopole-only cell (we set cell length to 0), but 
+    # note: with DM_count set to 0.
 
     # DM count for multipole cells.
     DM_count_mpoles = DM_count[multipole_IDs]
 
     # All DM particles (their positions), which are in multipole cells.
     # Adjust/match multipole_IDs first, since they are limited to size of batch.
-    comparison_IDs = multipole_IDs + (max_b_len*(b_id-1))
+    comparison_IDs = multipole_IDs + (max_b_len*b_id)
     DM_IDs = DM_in_cell_IDs[np.in1d(DM_in_cell_IDs[:,0], comparison_IDs)][:,1]
     DM_pos_mpoles = DM_pos[np.in1d(np.arange(len(DM_pos)), DM_IDs)]
 
     # Split this total DM array into DM chunks present in each multipole cell:
     # We can do this by breaking each axis into sub-arrays, with length 
     # depending on how many DM particles are in each cell (which is stored in 
-    # DM_count of multipole cells).
+    # DM_count of multipole cells, i.e. DM_count_mpoles).
 
-    # Special case, where cell C is empty and so are all multipole cells.
-    # (This can happen e.g. for outermost cells)
+    # Special case, where all multipole cells have no DM.
+    # (This can happen e.g. if cell C is an outermost cell)
     if np.all(DM_count_mpoles==0):
         DM_mpoles = np.full(shape=(len(multipole_IDs),1,3), fill_value=np.nan)
-        #? is this (and also the same if clause for the monopoles later below)
-        #? ok for the nan sums later? does this give the right (i.e. none) 
-        #? contribution?
 
-    # "Normal" case, where cell C and/or multipole cells contain DM.
+    # "Normal" case, where some or all multipole cells contain DM.
     else:
         breaks = np.cumsum(DM_count_mpoles[:-1])
         ax0_split = np.split(DM_pos_mpoles[:,0], breaks)
         ax1_split = np.split(DM_pos_mpoles[:,1], breaks)
         ax2_split = np.split(DM_pos_mpoles[:,2], breaks)
 
-        # Fill each axis with nans, until dimensionally valid ndarray is obtained.
+        # Fill each axis with nans to obtain dimensionally valid ndarray.
         DM_axis0 = np.array(list(zip_longest(*ax0_split, fillvalue=np.nan))).T
         DM_axis1 = np.array(list(zip_longest(*ax1_split, fillvalue=np.nan))).T
         DM_axis2 = np.array(list(zip_longest(*ax2_split, fillvalue=np.nan))).T
@@ -982,7 +992,7 @@ def cell_gravity_long_range_quadrupole(
     # Select c.o.m. of multipole cells and adjust dimensionally.
     mpoles_com = np.expand_dims(cell_com[multipole_IDs], axis=1)
 
-    # Center DM in J cells on their c.o.m. coords.
+    # Center DM in multipole (now labeled "J") cells on their c.o.m. coords.
     DM_mpoles -= mpoles_com
 
     # Calculate distances of all DM in J cells from their c.o.m. coord.
@@ -1003,7 +1013,7 @@ def cell_gravity_long_range_quadrupole(
     ### -------------------- ###
     ### Quadrupole formulas. ###
     ### -------------------- ###
-    # See GoodNotes page for notation.
+    # See GoodNotes for notation.
 
     # (x,y,z) positions of individual DM particles in multipole cells.
     # (these are each w.r.t the c.o.m. of the corresponding multipole cell)
@@ -1021,7 +1031,7 @@ def cell_gravity_long_range_quadrupole(
     # The sum in the long-range multipole potential, where a = b.
     a_eq_b_orig = np.nansum(
         np.nansum((3*DM_mpoles**2 - DM_dis**2)*cellC_Jcoms**2, axis=1), axis=1)
-    
+
     # The sum in the long-range multipole potential, where a != b.
     a_neq_b_orig = 3*2*np.nansum(
         x_1j*x_2j*x_1*x_2 + x_2j*x_3j*x_2*x_3 + x_3j*x_1j*x_3*x_1, axis=1)  
@@ -1044,14 +1054,15 @@ def cell_gravity_long_range_quadrupole(
     cellC_Jcoms_2D = np.squeeze(cellC_Jcoms, axis=1)
     
     term1 = cellC_Jcoms_2D/cellC_dis**3
-    term2 = 5*cellC_Jcoms_2D/(2*cellC_dis**7)*sum_Ja_orig
+    term2 = 5*cellC_Jcoms_2D*sum_Ja_orig/(2*cellC_dis**7)
     term3 = sum_Ja_deriv/cellC_dis**5
 
     # Contribution of multipole cells to derivative (see master formula).
     # np.nansum, since previous terms can have nan values, and nan-only cells 
     # do not contribute.
+    DM_count_mpoles_sync = np.expand_dims(DM_count_mpoles, axis=1)
     dPsi_multipole_cells = G*DM_sim_mass*np.nansum(
-        np.expand_dims(DM_count_mpoles, axis=1)*(term1+term2-term3), axis=0)
+        DM_count_mpoles_sync*(term1+term2-term3), axis=0)
 
 
     ### -------------------------- ###
@@ -1062,40 +1073,29 @@ def cell_gravity_long_range_quadrupole(
     DM_count_mono = DM_count[monopole_IDs]
 
     # All DM particles (their positions), which are in monopole cells.
-    comparison_IDs = monopole_IDs + (max_b_len*(b_id-1))
+    comparison_IDs = monopole_IDs + (max_b_len*b_id)
     DM_IDs = DM_in_cell_IDs[np.in1d(DM_in_cell_IDs[:,0], comparison_IDs)][:,1]
     DM_pos_mono = DM_pos[np.in1d(np.arange(len(DM_pos)), DM_IDs)]
 
-
-    # Split this total DM array into DM chunks present in each multipole cell:
-    # We can do this by breaking each axis into sub-arrays, with length 
-    # depending on how many DM particles are in each cell (which is stored in 
-    # DM_count of multipole cells).
-
-    # Special case, where cell C is empty and so are all multipole cells.
-    # (This can happen e.g. for outermost cells)
+    # Splitting and combining routine. See above in multipoles for comments.
     if np.all(DM_count_mono==0):
         DM_mono = np.full(shape=(len(monopole_IDs),1,3), fill_value=np.nan)
-    
-    # "Normal" case, where cell C and/or multipole cells contain DM.
     else:
         breaks = np.cumsum(DM_count_mono[:-1])
         ax0_split = np.split(DM_pos_mono[:,0], breaks)
         ax1_split = np.split(DM_pos_mono[:,1], breaks)
         ax2_split = np.split(DM_pos_mono[:,2], breaks)
 
-        # Fill each axis with nans, until dimensionally valid ndarray is obtained.
         DM_axis0 = np.array(list(zip_longest(*ax0_split, fillvalue=np.nan))).T
         DM_axis1 = np.array(list(zip_longest(*ax1_split, fillvalue=np.nan))).T
         DM_axis2 = np.array(list(zip_longest(*ax2_split, fillvalue=np.nan))).T
 
-        # Recombine all axes into one final DM positions array.
         DM_mono = np.stack((DM_axis0, DM_axis1, DM_axis2), axis=2)
 
-    # Select c.o.m. of multipole cells and adjust dimensionally.
+    # Select c.o.m. of monopole cells (incl. cell C) and adjust dimensionally.
     mono_com = np.expand_dims(cell_com[monopole_IDs], axis=1)
 
-    # Center DM in J cells on their c.o.m. coords.
+    # Center DM in monopole cells on their c.o.m. coords.
     DM_mono -= mono_com
 
     # Array, where cell C is centered on c.o.m. coords. of monopole cells.
@@ -1110,10 +1110,9 @@ def cell_gravity_long_range_quadrupole(
 
     # Long-range force of all monopole cells.
     cellC_Jcoms_mono_2D = np.squeeze(cellC_Jcoms_mono, axis=1)
+    DM_count_mono_sync = np.expand_dims(DM_count_mono, axis=1)
     dPsi_monopole_cells = G*DM_sim_mass*np.nansum(
-        np.expand_dims(DM_count_mono, axis=1)*cellC_Jcoms_mono_2D / \
-        cellC_dis_mono**3, 
-        axis=0)
+        DM_count_mono_sync*cellC_Jcoms_mono_2D/(cellC_dis_mono**3), axis=0)
 
     # note: Minus sign, s.t. velocity changes correctly (see GoodNotes).
     derivative_lr = -(dPsi_multipole_cells + dPsi_monopole_cells)
@@ -1121,6 +1120,8 @@ def cell_gravity_long_range_quadrupole(
     np.save(f'{out_dir}/cell{c_id}_batch{b_id}_long_range.npy', derivative_lr)
 
 
+
+'''
 def cell_gravity_long_range(
     c_id, b_id, cellX_coords, 
     DM_count, cell_com, 
@@ -1153,7 +1154,7 @@ def cell_gravity_long_range(
     del quot, DM_count_sync
 
     np.save(f'{out_dir}/cell{c_id}_batch{b_id}_long_range.npy', derivative)
-
+'''
 
 def load_grid(root_dir, which, fname):
 

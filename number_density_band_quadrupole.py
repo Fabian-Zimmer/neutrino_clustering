@@ -18,7 +18,7 @@ PRE = PRE(
     sim='L025N752', 
     z0_snap=36, z4_snap=13, DM_lim=1000,
     sim_dir=SIM_ROOT, sim_ver=SIM_TYPE,
-    phis=10, thetas=10, vels=100,
+    phis=20, thetas=20, vels=200,
     pre_CPUs=128, sim_CPUs=128, mem_lim_GB=224
 )
 
@@ -247,11 +247,11 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
 
         # Determine long-range chuncksize based on available memory and cells.
         # chunksize_lr = chunksize_long_range(cells, core_mem_MB)
-        chunksize_lr = 251
+        chunksize_lr = 501
 
         # Split workload into batches (if necessary).
         DM_in_cell_IDs = np.load(f'{TEMP_DIR}/DM_in_cell_IDs_{IDname}.npy')
-        cellC_rep, batch_IDs, cellC_cc, gen_rep, cib_IDs_gens, count_gens, com_gens, gen_gens = fct.batch_generators_long_range(
+        batch_IDs, cellC_rep, cellC_cc, gen_rep, cib_IDs_gens, count_gens, com_gens, gen_gens = fct.batch_generators_long_range(
             cell_coords, cell_com, cell_gen, DM_count, chunksize_lr
         )
 
@@ -266,15 +266,16 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
             )
 
         # Combine long-range batch files.
+        c_labels = np.unique(cellC_rep)
+        b_labels = np.unique(batch_IDs)
         with ProcessPoolExecutor(PRE.PRE_CPUs) as ex:
             ex.map(
-                fct.load_dPsi_long_range, np.unique(cellC_rep), 
-                repeat(np.unique(batch_IDs)), repeat(TEMP_DIR)
+                fct.load_dPsi_long_range, c_labels, 
+                repeat(b_labels), repeat(TEMP_DIR)
             )
 
-        load_arr = np.unique(cellC_rep)
         dPsi_long_range = np.array(
-            [np.load(f'{TEMP_DIR}/cell{c}_long_range.npy') for c in load_arr])
+            [np.load(f'{TEMP_DIR}/cell{c}_long_range.npy') for c in c_labels])
         # np.save(f'{TEMP_DIR}/dPsi_long_range_{IDname}.npy', dPsi_long_range)
 
         # previous version. why save and load? use directly?
@@ -341,7 +342,7 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
         vels = fct.load_sim_data(TEMP_DIR, Bname, 'velocities')
 
         # note: The final number density is not stored in the temporary folder.
-        out_file = f'{PRE.OUT_DIR}/number_densities_band_{Bname}.npy'
+        out_file = f'{PRE.OUT_DIR}/number_densities_band_HD_{Bname}.npy'
         fct.number_densities_mass_range(
             vels, NU_MRANGE, out_file
         )
