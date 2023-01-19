@@ -856,26 +856,19 @@ def batch_generators_long_range(
 
     # 1. 
     cib_IDs = list(
-        (c for _ in cell_nums for c in chunks(chunksize, cell_nums))
-    )
+        (c for _ in cell_nums for c in chunks(chunksize, cell_nums)))
 
     # 2.
     counts = list(
-        (c for _ in cell_nums for c in chunks(chunksize, DM_counts))
-    )
+        (c for _ in cell_nums for c in chunks(chunksize, DM_counts)))
 
     # 3.
     coms = list(
-        (c for _ in cell_nums for c in chunks(chunksize, com_coords))
-    )
+        (c for _ in cell_nums for c in chunks(chunksize, com_coords)))
 
     # 4.
     gens = list(
-        (c for _ in cell_nums for c in chunks(chunksize, cell_gen))
-    )
-
-    # Previously, I did the following additonally, which led to overcounting?
-    # gen_chain = chain(gen for gen in gen_gens)
+        (c for _ in cell_nums for c in chunks(chunksize, cell_gen)))
 
     return batch_IDs, cellC_rep, cellC_cc, cellC_gen, \
         cib_IDs, counts, coms, gens
@@ -947,7 +940,8 @@ def cell_gravity_long_range_quadrupole(
 
     # The critical angle is dependent on the cell length of cell C.
     # (see GoodNotes for why 0.3 exponent for now)
-    theta_crit = 1/(1.5*((cellC_gen+1)**0.3))
+    # theta_crit = 1/(1.5*((cellC_gen+1)**0.3))
+    theta_crit = 1e10  # large, s.t. only monopole cells
 
     # Divide all cell IDs into multipole cells and monopole-only cells.
     multipole_IDs = np.argwhere(theta >= theta_crit).flatten()
@@ -1118,7 +1112,6 @@ def cell_gravity_long_range_quadrupole(
     derivative_lr = -(dPsi_multipole_cells + dPsi_monopole_cells)
 
     np.save(f'{out_dir}/cell{c_id}_batch{b_id}_long_range.npy', derivative_lr)
-
 
 
 '''

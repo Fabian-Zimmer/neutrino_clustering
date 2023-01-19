@@ -13,6 +13,9 @@ import shared.functions as fct
 
 total_start = time.perf_counter()
 
+#! has not been run yet with new quadrupole gravity function (some fixes made)
+#note: however, the long-range forces according to the plots are still too big
+
 # Initialize parameters and files.
 PRE = PRE(
     sim='L025N752', 
@@ -32,7 +35,7 @@ os.makedirs(TEMP_DIR)
 # Halo parameters.
 mass_gauge = 12.0
 mass_range = 0.6
-size = 1
+size = 3
 
 hname = f'1e+{mass_gauge}_pm{mass_range}Msun'
 fct.halo_batch_indices(
@@ -342,7 +345,7 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
         vels = fct.load_sim_data(TEMP_DIR, Bname, 'velocities')
 
         # note: The final number density is not stored in the temporary folder.
-        out_file = f'{PRE.OUT_DIR}/number_densities_band_HD_{Bname}.npy'
+        out_file = f'{PRE.OUT_DIR}/number_densities_band_MPOLE_{Bname}.npy'
         fct.number_densities_mass_range(
             vels, NU_MRANGE, out_file
         )
