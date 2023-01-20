@@ -1,18 +1,4 @@
-Selected port is:  6337
+Selected port is:  7059
 
 To connect to the notebook type the following command from your local terminal:
-ssh -N -L6337:localhost:6337 zimmer@int3-pub.snellius.surf.nl
-
-JOB STATISTICS
-==============
-Job ID: 2090349
-Cluster: snellius
-User/Group: zimmer/zimmer
-State: TIMEOUT (exit code 0)
-Nodes: 1
-Cores per node: 128
-CPU Utilized: 00:00:01
-CPU Efficiency: 0.00% of 48-00:36:16 core-walltime
-Job Wall-clock time: 09:00:17
-Memory Utilized: 26.65 GB
-Memory Efficiency: 12.18% of 218.75 GB
+ssh -N -L7059:localhost:7059 zimmer@int3-pub.snellius.surf.nl

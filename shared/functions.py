@@ -761,7 +761,7 @@ def cell_gravity_short_range(
 
     # Sort all nan values to the bottom of axis 1, i.e. the DM-in-cell-X axis 
     # and truncate array based on DM_lim parameter. This simple way works since 
-    # each cell cannot have more than DM_lim.
+    # each cell cannot have more than DM_lim (times the last shell multiplier).
     ind_2D = DM_pos_sync[:,:,0].argsort(axis=1)
     ind_3D = np.repeat(np.expand_dims(ind_2D, axis=2), 3, axis=2)
     DM_sort = np.take_along_axis(DM_pos_sync, ind_3D, axis=1)
@@ -780,12 +780,15 @@ def cell_gravity_short_range(
     eps = smooth_l / 2.
 
     # Quotient in sum (see formula). Can contain nan values, thus the np.nansum for the derivative, s.t. these values don't contribute.
-    quot = (cell_coords - DM_in)/np.power((DM_dis**2 + eps**2), 3./2.)
+
+    #? are we using the correct x_i - x_j (see short-range formula in GoodNotes)
+    #! since we center DM on com of cell C, x_i's are zero!
+    # quot = (cell_coords - DM_in)/np.power((DM_dis**2 + eps**2), 3./2.)
+    quot = (-DM_in)/np.power((DM_dis**2 + eps**2), 3./2.)
     
     # note: Minus sign, s.t. velocity changes correctly (see GoodNotes).
     derivative = -G*DM_sim_mass*np.nansum(quot, axis=1)    
     np.save(f'{out_dir}/batch{b_id}_short_range.npy', derivative)
-
 
 
 def chunksize_long_range(cells, core_mem_MB):
@@ -945,6 +948,210 @@ def cell_gravity_long_range_quadrupole(
 
     # Divide all cell IDs into multipole cells and monopole-only cells.
     multipole_IDs = np.argwhere(theta >= theta_crit).flatten()
+    # note: cell C will be a monopole-only cell (we set cell length to 0), but 
+    # note: with DM_count set to 0.
+
+    # DM count for multipole cells.
+    DM_count_mpoles = DM_count[multipole_IDs]
+
+    # All DM particles (their positions), which are in multipole cells.
+    # Adjust/match multipole_IDs first, since they are limited to size of batch.
+    comparison_IDs = multipole_IDs + (max_b_len*b_id)
+    DM_IDs = DM_in_cell_IDs[np.in1d(DM_in_cell_IDs[:,0], comparison_IDs)][:,1]
+    DM_pos_mpoles = DM_pos[np.in1d(np.arange(len(DM_pos)), DM_IDs)]
+
+    # Split this total DM array into DM chunks present in each multipole cell:
+    # We can do this by breaking each axis into sub-arrays, with length 
+    # depending on how many DM particles are in each cell (which is stored in 
+    # DM_count of multipole cells, i.e. DM_count_mpoles).
+
+    # Special case, where all multipole cells have no DM.
+    # (This can happen e.g. if cell C is an outermost cell)
+    if np.all(DM_count_mpoles==0):
+        DM_mpoles = np.full(shape=(len(multipole_IDs),1,3), fill_value=np.nan)
+
+    # "Normal" case, where some or all multipole cells contain DM.
+    else:
+        breaks = np.cumsum(DM_count_mpoles[:-1])
+        ax0_split = np.split(DM_pos_mpoles[:,0], breaks)
+        ax1_split = np.split(DM_pos_mpoles[:,1], breaks)
+        ax2_split = np.split(DM_pos_mpoles[:,2], breaks)
+
+        # Fill each axis with nans to obtain dimensionally valid ndarray.
+        DM_axis0 = np.array(list(zip_longest(*ax0_split, fillvalue=np.nan))).T
+        DM_axis1 = np.array(list(zip_longest(*ax1_split, fillvalue=np.nan))).T
+        DM_axis2 = np.array(list(zip_longest(*ax2_split, fillvalue=np.nan))).T
+
+        # Recombine all axes into one final DM positions array.
+        DM_mpoles = np.stack((DM_axis0, DM_axis1, DM_axis2), axis=2)
+
+    # Select c.o.m. of multipole cells and adjust dimensionally.
+    mpoles_com = np.expand_dims(cell_com[multipole_IDs], axis=1)
+
+    # Center DM in multipole (labeled with "J") cells on their c.o.m. coords.
+    DM_mpoles -= mpoles_com
+
+    # Calculate distances of all DM in J cells from their c.o.m. coord.
+    # -> this is the r_j needed for the quadrupole term.
+    DMj_dis = np.expand_dims(np.sqrt(np.sum(DM_mpoles**2, axis=2)), axis=2)
+
+    # Array, where cell C is centered on c.o.m. coords. of J cells.
+    cellC_Jcoms = np.repeat(
+        np.expand_dims(np.expand_dims(cellC_cc, axis=0), axis=0), 
+        len(mpoles_com), axis=0
+    )
+    cellC_Jcoms -= mpoles_com
+
+    # Distance of cell C to c.o.m. of multipole cells.
+    cellC_dis = np.sqrt(np.sum(cellC_Jcoms**2, axis=2))
+
+
+    ### -------------------- ###
+    ### Quadrupole formulas. ###
+    ### -------------------- ###
+    # See GoodNotes for notation.
+
+    # (x,y,z) positions of individual DM particles in multipole cells.
+    # (these are each w.r.t the c.o.m. of the corresponding multipole cell)
+    # -> notation: x_{a,j}
+    x_1j = DM_mpoles[...,0]
+    x_2j = DM_mpoles[...,1]
+    x_3j = DM_mpoles[...,2]
+
+    # (x,y,z) positions of cell C, w.r.t to the c.o.m.'s of the multipole cells.
+    # -> notation: x_a
+    x_1 = cellC_Jcoms[...,0]
+    x_2 = cellC_Jcoms[...,1]
+    x_3 = cellC_Jcoms[...,2]
+
+    #? do we also have to use smootheing length to offset DM particles in each 
+    #? multipole cell? That would mean adjusting DMj_dis**2 to something like 
+    #? np.power((DMj_dis**2 + eps**2), x), where x has to be determined...
+
+    # The sum in the long-range multipole potential, where a = b.
+    a_eq_b_orig = np.nansum(
+        np.nansum((3*DM_mpoles**2 - DMj_dis**2)*cellC_Jcoms**2, axis=1), axis=1)
+
+    # The sum in the long-range multipole potential, where a != b.
+    a_neq_b_orig = np.nansum(
+        3*2*(x_1j*x_2j*x_1*x_2 + x_2j*x_3j*x_2*x_3 + x_3j*x_1j*x_3*x_1), axis=1)
+
+    # Sum of the above sums.
+    # -> notation: sum_{J,a}
+    sum_Ja_orig = np.expand_dims(a_eq_b_orig + a_neq_b_orig, axis=1)
+
+    # Sums for a=b and a!=b, which appear in the long-range derivative.
+    a_eq_b_deriv = np.nansum(
+        np.nansum((3*DM_mpoles**2 - DMj_dis**2)*cellC_Jcoms, axis=1), axis=1)
+    a_neq_b_deriv = np.nansum(
+        3*(x_1j*x_2j*x_2 + x_2j*x_3j*x_3 + x_3j*x_1j*x_1), axis=1)
+
+    # Sum of the above sums. Global factor of 2 due to derivative cancels with 
+    # 2 in denominator (see formula), so both are ommited to save calculations.
+    sum_Ja_deriv = np.expand_dims(a_eq_b_deriv + a_neq_b_deriv, axis=1)
+
+    # Global sum over all multipole cells J!=C.
+    cellC_Jcoms_2D = np.squeeze(cellC_Jcoms, axis=1)
+    
+    term1 = cellC_Jcoms_2D/(cellC_dis**3)
+    term2 = 5*cellC_Jcoms_2D*sum_Ja_orig/(2*cellC_dis**7)
+    term3 = sum_Ja_deriv/(cellC_dis**5)
+
+    # Contribution of multipole cells to derivative (see master formula).
+    # np.nansum, since previous terms can have nan values, and nan-only cells 
+    # do not contribute.
+    DM_count_mpoles_sync = np.expand_dims(DM_count_mpoles, axis=1)
+    dPsi_multipole_cells = G*DM_sim_mass*np.nansum(
+        DM_count_mpoles_sync*(term1+term2-term3), axis=0)
+
+    ### ---------------------- ###
+    ### Monopole of all cells. ###
+    ### ---------------------- ###
+
+    mono_com = np.expand_dims(cell_com, axis=1)
+
+    # Array, where cell C is centered on c.o.m. coords. of monopole cells.
+    cellC_Jcoms_mono = np.repeat(
+        np.expand_dims(np.expand_dims(cellC_cc, axis=0), axis=0), 
+        len(mono_com), axis=0
+    )
+    cellC_Jcoms_mono -= mono_com
+
+    # Distance of cell C to c.o.m. of monopole cells.
+    cellC_dis_mono = np.sqrt(np.sum(cellC_Jcoms_mono**2, axis=2))
+
+    # Long-range force of all cells due to monopole.
+    cellC_Jcoms_mono_2D = np.squeeze(cellC_Jcoms_mono, axis=1)
+    DM_count_mono_sync = np.expand_dims(DM_count, axis=1)
+    dPsi_monopole_cells = G*DM_sim_mass*np.nansum(
+        DM_count_mono_sync*cellC_Jcoms_mono_2D/(cellC_dis_mono**3), axis=0)
+
+    # note: Minus sign, s.t. velocity changes correctly (see GoodNotes).
+    derivative_lr = -(dPsi_multipole_cells + dPsi_monopole_cells)
+
+    np.save(f'{out_dir}/cell{c_id}_batch{b_id}_long_range.npy', derivative_lr)
+
+
+
+def cell_gravity_long_range_quadrupole_OldCodePieces(
+    c_id, cib_ids, b_id, cellC_cc, cell_com, cell_gen, init_GRID_S,
+    DM_pos, DM_count, DM_in_cell_IDs, DM_sim_mass, out_dir, 
+    max_b_len, cellC_gen
+):
+    # Prefix "cellC" denotes the cell to calculate the long-range forces for.
+
+    # Convert the list inputs to numpy arrays.
+    cib_ids = np.array(cib_ids)
+    cell_com = np.array(cell_com)
+    cell_gen = np.array(cell_gen)
+    DM_count = np.array(DM_count)
+
+    # Array, where cell C is centered on c.o.m. coords. of all cells.
+    cellC_sync = np.repeat(
+        np.expand_dims(cellC_cc, axis=0), len(cell_com), axis=0
+    ) 
+    cellC_sync -= cell_com
+
+    # Get (complete, not half) cell length of all cells and current cell C.
+    cell_len = init_GRID_S/(2**(cell_gen))
+    cellC_len = init_GRID_S/(2**(cellC_gen))
+
+    # Distance of cellC to all cell_com's.
+    cellC_dis = np.sqrt(np.sum(cellC_sync**2, axis=1))
+
+
+    if c_id in cib_ids:
+        # Overwrite element corresponding to cell C from all arrays, to avoid
+        # self-gravity of the cell (taken care of by short-range gravity).
+
+        # First find the correct index for the current cell. We have to take 
+        # this akin to a "modulo" according to the maximum batch length. E.g. 
+        # if the max. batch length is 100, but we are at cell label/index 100, 
+        # then this would be index '0' again for arrays in this function.
+        cellC_idx = (c_id - (max_b_len*b_id))
+
+        # Set cell C array element(s) to 0 or nan, s.t. it just adds 0 later on.
+        cell_com[cellC_idx] = np.nan  # c.o.m. of cell C to [nan,nan,nan]
+        cell_len[cellC_idx] = 0  # 0 cell length
+        DM_count[cellC_idx] = 0  # 0 DM count
+
+        # If cell C has 0 DM, then its c.o.m == coords., so set cellC_dis to 1.
+        # (avoids divide by zero in these (edge) cases later on)
+        if cellC_dis[cellC_idx] == 0:
+            cellC_dis[cellC_idx] = 1
+
+
+    # Determine which cells are close enough and need multipole expansion:    
+    # Cells with angle larger than the critical angle are multipole cells.
+    theta = cell_len / cellC_dis
+
+    # The critical angle is dependent on the cell length of cell C.
+    # (see GoodNotes for why 0.3 exponent for now)
+    # theta_crit = 1/(1.5*((cellC_gen+1)**0.3))
+    theta_crit = 1e10  # large, s.t. only monopole cells
+
+    # Divide all cell IDs into multipole cells and monopole-only cells.
+    multipole_IDs = np.argwhere(theta >= theta_crit).flatten()
     monopole_IDs = np.argwhere(theta < theta_crit).flatten()
     # note: cell C will be a monopole-only cell (we set cell length to 0), but 
     # note: with DM_count set to 0.
@@ -986,12 +1193,12 @@ def cell_gravity_long_range_quadrupole(
     # Select c.o.m. of multipole cells and adjust dimensionally.
     mpoles_com = np.expand_dims(cell_com[multipole_IDs], axis=1)
 
-    # Center DM in multipole (now labeled "J") cells on their c.o.m. coords.
+    # Center DM in multipole (labeled with "J") cells on their c.o.m. coords.
     DM_mpoles -= mpoles_com
 
     # Calculate distances of all DM in J cells from their c.o.m. coord.
     # -> this is the r_j needed for the quadrupole term.
-    DM_dis = np.expand_dims(np.sqrt(np.sum(DM_mpoles**2, axis=2)), axis=2)
+    DMj_dis = np.expand_dims(np.sqrt(np.sum(DM_mpoles**2, axis=2)), axis=2)
 
     # Array, where cell C is centered on c.o.m. coords. of J cells.
     cellC_Jcoms = np.repeat(
@@ -1022,13 +1229,17 @@ def cell_gravity_long_range_quadrupole(
     x_2 = cellC_Jcoms[...,1]
     x_3 = cellC_Jcoms[...,2]
 
+    #? do we also have to use smootheing length to offset DM particles in each 
+    #? multipole cell? That would mean adjusting DMj_dis**2 to something like 
+    #? np.power((DMj_dis**2 + eps**2), x), where x has to be determined...
+
     # The sum in the long-range multipole potential, where a = b.
     a_eq_b_orig = np.nansum(
-        np.nansum((3*DM_mpoles**2 - DM_dis**2)*cellC_Jcoms**2, axis=1), axis=1)
+        np.nansum((3*DM_mpoles**2 - DMj_dis**2)*cellC_Jcoms**2, axis=1), axis=1)
 
     # The sum in the long-range multipole potential, where a != b.
-    a_neq_b_orig = 3*2*np.nansum(
-        x_1j*x_2j*x_1*x_2 + x_2j*x_3j*x_2*x_3 + x_3j*x_1j*x_3*x_1, axis=1)  
+    a_neq_b_orig = np.nansum(
+        3*2*(x_1j*x_2j*x_1*x_2 + x_2j*x_3j*x_2*x_3 + x_3j*x_1j*x_3*x_1), axis=1)
 
     # Sum of the above sums.
     # -> notation: sum_{J,a}
@@ -1036,20 +1247,20 @@ def cell_gravity_long_range_quadrupole(
 
     # Sums for a=b and a!=b, which appear in the long-range derivative.
     a_eq_b_deriv = np.nansum(
-        np.nansum((3*DM_mpoles**2 - DM_dis**2)*cellC_Jcoms, axis=1), axis=1)
-    a_neq_b_deriv = 3*np.nansum(
-        x_1j*x_2j*x_2 + x_2j*x_3j*x_3 + x_3j*x_1j*x_1, axis=1)
+        np.nansum((3*DM_mpoles**2 - DMj_dis**2)*cellC_Jcoms, axis=1), axis=1)
+    a_neq_b_deriv = np.nansum(
+        3*(x_1j*x_2j*x_2 + x_2j*x_3j*x_3 + x_3j*x_1j*x_1), axis=1)
 
     # Sum of the above sums. Global factor of 2 due to derivative cancels with 
     # 2 in denominator (see formula), so both are ommited to save calculations.
     sum_Ja_deriv = np.expand_dims(a_eq_b_deriv + a_neq_b_deriv, axis=1)
 
-    # Global sum over all multipole cells J!=C ; a summation over axis 0.
+    # Global sum over all multipole cells J!=C.
     cellC_Jcoms_2D = np.squeeze(cellC_Jcoms, axis=1)
     
-    term1 = cellC_Jcoms_2D/cellC_dis**3
+    term1 = cellC_Jcoms_2D/(cellC_dis**3)
     term2 = 5*cellC_Jcoms_2D*sum_Ja_orig/(2*cellC_dis**7)
-    term3 = sum_Ja_deriv/cellC_dis**5
+    term3 = sum_Ja_deriv/(cellC_dis**5)
 
     # Contribution of multipole cells to derivative (see master formula).
     # np.nansum, since previous terms can have nan values, and nan-only cells 
@@ -1058,11 +1269,33 @@ def cell_gravity_long_range_quadrupole(
     dPsi_multipole_cells = G*DM_sim_mass*np.nansum(
         DM_count_mpoles_sync*(term1+term2-term3), axis=0)
 
+    ### ---------------------- ###
+    ### Monopole of all cells. ###
+    ### ---------------------- ###
+
+    mono_com = np.expand_dims(cell_com, axis=1)
+
+    # Array, where cell C is centered on c.o.m. coords. of monopole cells.
+    cellC_Jcoms_mono = np.repeat(
+        np.expand_dims(np.expand_dims(cellC_cc, axis=0), axis=0), 
+        len(mono_com), axis=0
+    )
+    cellC_Jcoms_mono -= mono_com
+
+    # Distance of cell C to c.o.m. of monopole cells.
+    cellC_dis_mono = np.sqrt(np.sum(cellC_Jcoms_mono**2, axis=2))
+
+    # Long-range force of all cells due to monopole.
+    cellC_Jcoms_mono_2D = np.squeeze(cellC_Jcoms_mono, axis=1)
+    DM_count_mono_sync = np.expand_dims(DM_count, axis=1)
+    dPsi_monopole_cells = G*DM_sim_mass*np.nansum(
+        DM_count_mono_sync*cellC_Jcoms_mono_2D/(cellC_dis_mono**3), axis=0)
 
     ### -------------------------- ###
     ### Other monopole-only cells. ###
     ### -------------------------- ###
-
+    # region
+    '''
     # DM count for monopole cells.
     DM_count_mono = DM_count[monopole_IDs]
 
@@ -1092,6 +1325,8 @@ def cell_gravity_long_range_quadrupole(
     # Center DM in monopole cells on their c.o.m. coords.
     DM_mono -= mono_com
 
+    #? DM_mono is not needed at all...
+
     # Array, where cell C is centered on c.o.m. coords. of monopole cells.
     cellC_Jcoms_mono = np.repeat(
         np.expand_dims(np.expand_dims(cellC_cc, axis=0), axis=0), 
@@ -1107,12 +1342,13 @@ def cell_gravity_long_range_quadrupole(
     DM_count_mono_sync = np.expand_dims(DM_count_mono, axis=1)
     dPsi_monopole_cells = G*DM_sim_mass*np.nansum(
         DM_count_mono_sync*cellC_Jcoms_mono_2D/(cellC_dis_mono**3), axis=0)
+    '''
+    # endregion
 
     # note: Minus sign, s.t. velocity changes correctly (see GoodNotes).
     derivative_lr = -(dPsi_multipole_cells + dPsi_monopole_cells)
 
     np.save(f'{out_dir}/cell{c_id}_batch{b_id}_long_range.npy', derivative_lr)
-
 
 '''
 def cell_gravity_long_range(

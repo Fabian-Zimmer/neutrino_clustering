@@ -1,2 +1,0 @@
-/var/spool/slurm/slurmd/job1421735/slurm_script: line 16: 916087 Killed                  python $HOME/neutrino_clustering_V2/discrete_precalculations_MW.py
-slurmstepd: error: Detected 1 oom-kill event(s) in StepId=1421735.batch. Some of your processes may have been killed by the cgroup out-of-memory handler.
