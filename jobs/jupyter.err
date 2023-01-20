@@ -24,3 +24,5 @@
 [I 13:27:08.901 NotebookApp] Starting buffering for 6ce84737-dbc3-4f45-af90-463ae1b07bbf:013f541d-00a1-41c6-a3e7-832a645818de
 [I 13:50:46.505 NotebookApp] Kernel restarted: 28c5ea13-b9c3-43b4-aed5-e8230e3fe53e
 [I 17:35:09.106 NotebookApp] Kernel restarted: 28c5ea13-b9c3-43b4-aed5-e8230e3fe53e
+[I 18:25:25.304 NotebookApp] Starting buffering for 28c5ea13-b9c3-43b4-aed5-e8230e3fe53e:782de08e-cdf6-44e2-ba0a-2531288e07c7
+slurmstepd: error: *** JOB 2090349 ON tcn28 CANCELLED AT 2023-01-19T18:30:13 DUE TO TIME LIMIT ***
