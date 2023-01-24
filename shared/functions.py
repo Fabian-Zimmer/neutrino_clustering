@@ -1799,7 +1799,7 @@ def plot_eta_band(
     ax.set_title(f'Overdensity band')
     ax.set_xlabel(r'$m_{\nu}$ [meV]')
     ax.set_ylabel(r'$n_{\nu} / n_{\nu, 0}$')
-    # ax.set_ylim(1e-3, 1e1)
+    ax.set_ylim(1e-3, 1e1)
     plt.grid(True, which="both", ls="-")
     plt.legend(loc='lower right')
 
