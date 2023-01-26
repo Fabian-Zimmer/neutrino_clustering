@@ -1,25 +1,12 @@
-[I 08:09:54.138 NotebookApp] Serving notebooks from local directory: /gpfs/home4/zimmer/neutrino_clustering_V2
-[I 08:09:54.138 NotebookApp] Jupyter Notebook 6.4.12 is running at:
-[I 08:09:54.138 NotebookApp] http://localhost:5121/?token=0dc9b9b723eed813408db7cf0024cc73b63083b64b6fcf0a
-[I 08:09:54.138 NotebookApp]  or http://127.0.0.1:5121/?token=0dc9b9b723eed813408db7cf0024cc73b63083b64b6fcf0a
-[I 08:09:54.138 NotebookApp] Use Control-C to stop this server and shut down all kernels (twice to skip confirmation).
-[C 08:09:54.149 NotebookApp] 
+[I 13:53:10.661 NotebookApp] Serving notebooks from local directory: /gpfs/home4/zimmer/neutrino_clustering_V2
+[I 13:53:10.661 NotebookApp] Jupyter Notebook 6.4.12 is running at:
+[I 13:53:10.661 NotebookApp] http://localhost:6720/?token=4b3dae28acfff9004e45c382cd0b8aa768027dea87965f32
+[I 13:53:10.661 NotebookApp]  or http://127.0.0.1:6720/?token=4b3dae28acfff9004e45c382cd0b8aa768027dea87965f32
+[I 13:53:10.661 NotebookApp] Use Control-C to stop this server and shut down all kernels (twice to skip confirmation).
+[C 13:53:10.702 NotebookApp] 
     
     To access the notebook, open this file in a browser:
-        file:///gpfs/home4/zimmer/.local/share/jupyter/runtime/nbserver-1471470-open.html
+        file:///gpfs/home4/zimmer/.local/share/jupyter/runtime/nbserver-3807233-open.html
     Or copy and paste one of these URLs:
-        http://localhost:5121/?token=0dc9b9b723eed813408db7cf0024cc73b63083b64b6fcf0a
-     or http://127.0.0.1:5121/?token=0dc9b9b723eed813408db7cf0024cc73b63083b64b6fcf0a
-[I 08:11:06.127 NotebookApp] Creating new notebook in 
-[I 08:11:06.262 NotebookApp] Kernel started: be29b79f-1909-4250-91a3-f8800d1075ef, name: python3
-[W 08:11:06.286 NotebookApp] delete /number_density_band-jvsc-40a1b1fc-489e-4320-b4c9-0943b09bb2d78d500aac-d883-47fb-be1f-757a25c29f3d.ipynb
-[W 08:11:06.286 NotebookApp] Skipping trash for /gpfs/home4/zimmer/neutrino_clustering_V2/number_density_band-jvsc-40a1b1fc-489e-4320-b4c9-0943b09bb2d78d500aac-d883-47fb-be1f-757a25c29f3d.ipynb, [Errno 13] Permission denied: b'/gpfs/home4/.Trash-59104'
-[I 08:11:34.699 NotebookApp] Kernel restarted: be29b79f-1909-4250-91a3-f8800d1075ef
-[I 08:11:34.704 NotebookApp] Starting buffering for be29b79f-1909-4250-91a3-f8800d1075ef:cb808f04-0a65-4f50-9170-175c53004e26
-[I 08:11:34.709 NotebookApp] Restoring connection for be29b79f-1909-4250-91a3-f8800d1075ef:cb808f04-0a65-4f50-9170-175c53004e26
-[I 08:12:34.478 NotebookApp] Kernel restarted: be29b79f-1909-4250-91a3-f8800d1075ef
-[I 08:12:34.482 NotebookApp] Starting buffering for be29b79f-1909-4250-91a3-f8800d1075ef:cb808f04-0a65-4f50-9170-175c53004e26
-[I 08:12:34.491 NotebookApp] Restoring connection for be29b79f-1909-4250-91a3-f8800d1075ef:cb808f04-0a65-4f50-9170-175c53004e26
-[I 08:19:37.899 NotebookApp] Kernel restarted: be29b79f-1909-4250-91a3-f8800d1075ef
-[I 08:19:37.904 NotebookApp] Starting buffering for be29b79f-1909-4250-91a3-f8800d1075ef:cb808f04-0a65-4f50-9170-175c53004e26
-[I 08:19:37.913 NotebookApp] Restoring connection for be29b79f-1909-4250-91a3-f8800d1075ef:cb808f04-0a65-4f50-9170-175c53004e26
+        http://localhost:6720/?token=4b3dae28acfff9004e45c382cd0b8aa768027dea87965f32
+     or http://127.0.0.1:6720/?token=4b3dae28acfff9004e45c382cd0b8aa768027dea87965f32
