@@ -1,12 +1,12 @@
-[I 13:53:10.661 NotebookApp] Serving notebooks from local directory: /gpfs/home4/zimmer/neutrino_clustering_V2
-[I 13:53:10.661 NotebookApp] Jupyter Notebook 6.4.12 is running at:
-[I 13:53:10.661 NotebookApp] http://localhost:6720/?token=4b3dae28acfff9004e45c382cd0b8aa768027dea87965f32
-[I 13:53:10.661 NotebookApp]  or http://127.0.0.1:6720/?token=4b3dae28acfff9004e45c382cd0b8aa768027dea87965f32
-[I 13:53:10.661 NotebookApp] Use Control-C to stop this server and shut down all kernels (twice to skip confirmation).
-[C 13:53:10.702 NotebookApp] 
+[I 12:21:04.232 NotebookApp] Serving notebooks from local directory: /gpfs/home4/zimmer/neutrino_clustering_V2
+[I 12:21:04.232 NotebookApp] Jupyter Notebook 6.4.12 is running at:
+[I 12:21:04.233 NotebookApp] http://localhost:5600/?token=eb53957fa678e2fef32e9e307ec5a421c7ce7d7b93f86388
+[I 12:21:04.233 NotebookApp]  or http://127.0.0.1:5600/?token=eb53957fa678e2fef32e9e307ec5a421c7ce7d7b93f86388
+[I 12:21:04.233 NotebookApp] Use Control-C to stop this server and shut down all kernels (twice to skip confirmation).
+[C 12:21:07.244 NotebookApp] 
     
     To access the notebook, open this file in a browser:
-        file:///gpfs/home4/zimmer/.local/share/jupyter/runtime/nbserver-3807233-open.html
+        file:///gpfs/home4/zimmer/.local/share/jupyter/runtime/nbserver-69433-open.html
     Or copy and paste one of these URLs:
-        http://localhost:6720/?token=4b3dae28acfff9004e45c382cd0b8aa768027dea87965f32
-     or http://127.0.0.1:6720/?token=4b3dae28acfff9004e45c382cd0b8aa768027dea87965f32
+        http://localhost:5600/?token=eb53957fa678e2fef32e9e307ec5a421c7ce7d7b93f86388
+     or http://127.0.0.1:5600/?token=eb53957fa678e2fef32e9e307ec5a421c7ce7d7b93f86388
