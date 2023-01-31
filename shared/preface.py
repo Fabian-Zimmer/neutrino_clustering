@@ -16,6 +16,7 @@ from itertools import chain, repeat, zip_longest
 from memory_profiler import profile
 import traceback
 import math
+from pynverse import inversefunc
 
 # arrays and data packages
 import numpy as np
@@ -377,6 +378,10 @@ class PRE:
             print(f'Snapshot from {self.Z0_STR} (z=0) to {self.Z4_STR} (z=4)')
             print(f'Pre/Sim CPUs {self.PRE_CPUs}/{self.SIM_CPUs}')
             print(f'DM limit for cells: {self.DM_LIM}')
+            DM_Msun_log10 = np.round(np.log10(self.DM_SIM_MASS/Msun), 4)
+            print(f'DM mass of sim box in log10 Msun: {DM_Msun_log10}')
+            smooth_kpc = np.round(self.SMOOTH_L/kpc, 4)
+            print(f'Smoothening length of sim box in kpc: {smooth_kpc}')
 
             print('# File management:')
             print(f'Box files directory: \n {self.SIM_DIR}')
