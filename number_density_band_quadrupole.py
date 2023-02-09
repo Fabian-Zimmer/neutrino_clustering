@@ -240,7 +240,7 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
         # ------------------- #
         # Long-range gravity. #
         # ------------------- #
-        # '''
+        
         # Calculate available memory per core.
         mem_so_far = (psutil.virtual_memory().used - OS_MEM)/MB_UNIT
         mem_left = PRE.MEM_LIM_GB*1e3 - mem_so_far
@@ -284,7 +284,6 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
         # gravity_sr = np.load(f'{TEMP_DIR}/dPsi_short_range_{IDname}.npy')
         # gravity_lr = np.load(f'{TEMP_DIR}/dPsi_long_range_{IDname}.npy')
         # dPsi_grid = gravity_sr + gravity_lr
-        # '''
 
         # Combine short- and long-range forces.
         dPsi_grid = dPsi_short_range + dPsi_long_range

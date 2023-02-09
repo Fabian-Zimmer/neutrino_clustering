@@ -1,0 +1,158 @@
+Healpy parameters: Nside=2, Npix=48, pix_sr=0.2617993877991494
+********************* Initialization *********************
+# Initial conditions for neutrinos:
+PHIs = 48, THETAs=48, Vs=10000
+Total neutrinos: 23040000
+# Simulation parameters:
+Simulation box: L025N752
+Snapshot from 0036 (z=0) to 0013 (z=4)
+Pre/Sim CPUs 128/128
+DM limit for cells: 10000
+DM mass of sim box in log10 Msun: 6.1577
+Smoothening length of sim box in kpc: 0.65
+# File management:
+Box files directory: 
+ /projects/0/einf180/Tango_sims/L025N752/DMONLY/SigmaConstant00
+Output directory: 
+ /gpfs/home4/zimmer/neutrino_clustering_V2/L025N752/DMONLY/SigmaConstant00
+**********************************************************
+********Number density band********
+Halo batch params (Rvir,Mvir,cNFW):
+[[253.5523526   12.24058042   6.9286026 ]]
+***********************************
+halo 1/1 ; snapshot 0036
+halo 1/1 ; snapshot 0035
+halo 1/1 ; snapshot 0034
+halo 1/1 ; snapshot 0033
+halo 1/1 ; snapshot 0032
+halo 1/1 ; snapshot 0031
+halo 1/1 ; snapshot 0030
+halo 1/1 ; snapshot 0029
+halo 1/1 ; snapshot 0028
+halo 1/1 ; snapshot 0027
+halo 1/1 ; snapshot 0026
+halo 1/1 ; snapshot 0025
+halo 1/1 ; snapshot 0024
+halo 1/1 ; snapshot 0023
+halo 1/1 ; snapshot 0022
+halo 1/1 ; snapshot 0021
+halo 1/1 ; snapshot 0020
+halo 1/1 ; snapshot 0019
+halo 1/1 ; snapshot 0018
+halo 1/1 ; snapshot 0017
+halo 1/1 ; snapshot 0016
+halo 1/1 ; snapshot 0015
+halo 1/1 ; snapshot 0014
+halo 1/1 ; snapshot 0013
+***Running simulation with 128 CPUs***
+Coord. pair 1/48
+Sim time min/h: 2.677746410916249 min, 0.04462910684860415 h.
+Coord. pair 2/48
+Sim time min/h: 2.0174609065366287 min, 0.033624348442277144 h.
+Coord. pair 3/48
+Sim time min/h: 2.0310404134293396 min, 0.03385067355715566 h.
+Coord. pair 4/48
+Sim time min/h: 2.053798139607534 min, 0.0342299689934589 h.
+Coord. pair 5/48
+Sim time min/h: 2.0592764584658045 min, 0.03432127430776341 h.
+Coord. pair 6/48
+Sim time min/h: 1.7889518229446064 min, 0.02981586371574344 h.
+Coord. pair 7/48
+Sim time min/h: 1.7783790048211814 min, 0.029639650080353023 h.
+Coord. pair 8/48
+Sim time min/h: 2.0566311841985834 min, 0.03427718640330972 h.
+Coord. pair 9/48
+Sim time min/h: 2.0586112292483447 min, 0.034310187154139075 h.
+Coord. pair 10/48
+Sim time min/h: 1.7833368708845228 min, 0.029722281181408714 h.
+Coord. pair 11/48
+Sim time min/h: 1.7942632983593891 min, 0.029904388305989817 h.
+Coord. pair 12/48
+Sim time min/h: 2.0602375095244496 min, 0.03433729182540749 h.
+Coord. pair 13/48
+Sim time min/h: 8.074366477970035 min, 0.1345727746328339 h.
+Coord. pair 14/48
+Sim time min/h: 1.940400929764534 min, 0.03234001549607556 h.
+Coord. pair 15/48
+Sim time min/h: 1.979801017449548 min, 0.03299668362415913 h.
+Coord. pair 16/48
+Sim time min/h: 1.9328107390242317 min, 0.03221351231707053 h.
+Coord. pair 17/48
+Sim time min/h: 8.16605768877392 min, 0.13610096147956532 h.
+Coord. pair 18/48
+Sim time min/h: 1.927313731207202 min, 0.032121895520120035 h.
+Coord. pair 19/48
+Sim time min/h: 2.0027120248259354 min, 0.03337853374709892 h.
+Coord. pair 20/48
+Sim time min/h: 1.9621342644871522 min, 0.03270223774145254 h.
+Coord. pair 21/48
+Sim time min/h: 7.825616746131952 min, 0.13042694576886588 h.
+Coord. pair 22/48
+Sim time min/h: 7.828518710425124 min, 0.13047531184041875 h.
+Coord. pair 23/48
+Sim time min/h: 7.708060807393243 min, 0.1284676801232207 h.
+Coord. pair 24/48
+Sim time min/h: 7.771690696881463 min, 0.1295281782813577 h.
+Coord. pair 25/48
+Sim time min/h: 8.468337436082463 min, 0.14113895726804104 h.
+Coord. pair 26/48
+Sim time min/h: 8.629593268533547 min, 0.14382655447555912 h.
+Coord. pair 27/48
+Sim time min/h: 8.665000055637211 min, 0.14441666759395352 h.
+Coord. pair 28/48
+Sim time min/h: 8.393664070777595 min, 0.13989440117962657 h.
+Coord. pair 29/48
+Sim time min/h: 8.142540126961345 min, 0.1357090021160224 h.
+Coord. pair 30/48
+Sim time min/h: 1.9156165205252667 min, 0.03192694200875444 h.
+Coord. pair 31/48
+Sim time min/h: 2.0257657036650927 min, 0.03376276172775154 h.
+Coord. pair 32/48
+Sim time min/h: 1.9456095746873567 min, 0.03242682624478928 h.
+Coord. pair 33/48
+Sim time min/h: 8.315543486053745 min, 0.13859239143422908 h.
+Coord. pair 34/48
+Sim time min/h: 1.9698845654415587 min, 0.03283140942402598 h.
+Coord. pair 35/48
+Sim time min/h: 2.008522839766617 min, 0.03347538066277695 h.
+Coord. pair 36/48
+Sim time min/h: 1.9610099523173024 min, 0.032683499205288374 h.
+Coord. pair 37/48
+Sim time min/h: 2.061070741650959 min, 0.03435117902751598 h.
+Coord. pair 38/48
+Sim time min/h: 1.814690731326118 min, 0.03024484552210197 h.
+Coord. pair 39/48
+Sim time min/h: 1.828957121555383 min, 0.030482618692589718 h.
+Coord. pair 40/48
+Sim time min/h: 2.0756368645156424 min, 0.034593947741927374 h.
+Coord. pair 41/48
+Sim time min/h: 2.0624697965725014 min, 0.03437449660954169 h.
+Coord. pair 42/48
+Sim time min/h: 1.8300525637809186 min, 0.03050087606301531 h.
+Coord. pair 43/48
+Sim time min/h: 1.8145089814905078 min, 0.03024181635817513 h.
+Coord. pair 44/48
+Sim time min/h: 2.069655844025935 min, 0.03449426406709891 h.
+Coord. pair 45/48
+Sim time min/h: 2.0676159116439523 min, 0.03446026519406587 h.
+Coord. pair 46/48
+Sim time min/h: 2.071714958998685 min, 0.03452858264997808 h.
+Coord. pair 47/48
+Sim time min/h: 2.096445319009945 min, 0.03494075531683241 h.
+Coord. pair 48/48
+Sim time min/h: 2.097652525641024 min, 0.0349608754273504 h.
+Total time: 203.1947348614068 min, 3.38657891435678 h.
+
+JOB STATISTICS
+==============
+Job ID: 2172760
+Cluster: snellius
+User/Group: zimmer/zimmer
+State: COMPLETED (exit code 0)
+Nodes: 1
+Cores per node: 128
+CPU Utilized: 9-21:44:46
+CPU Efficiency: 54.72% of 18-02:29:20 core-walltime
+Job Wall-clock time: 03:23:40
+Memory Utilized: 21.85 GB
+Memory Efficiency: 9.99% of 218.75 GB
