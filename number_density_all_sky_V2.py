@@ -39,7 +39,7 @@ os.makedirs(TEMP_DIR)
 # Halo parameters.
 mass_gauge = 12.0
 mass_range = 0.6
-size = 1
+size = 3
 
 hname = f'1e+{mass_gauge}_pm{mass_range}Msun'
 fct.halo_batch_indices(

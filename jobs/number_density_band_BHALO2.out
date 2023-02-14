@@ -1,0 +1,60 @@
+********************* Initialization *********************
+# Initial conditions for neutrinos:
+PHIs = 20, THETAs=20, Vs=200
+Total neutrinos: 80000
+# Simulation parameters:
+Simulation box: L025N752
+Snapshot from 0036 (z=0) to 0013 (z=4)
+Pre/Sim CPUs 128/128
+DM limit for cells: 10000
+DM mass of sim box in log10 Msun: 6.1577
+Smoothening length of sim box in kpc: 0.65
+# File management:
+Box files directory: 
+ /projects/0/einf180/Tango_sims/L025N752/DMONLY/SigmaConstant00
+Output directory: 
+ /gpfs/home4/zimmer/neutrino_clustering_V2/L025N752/DMONLY/SigmaConstant00
+**********************************************************
+benchmark halo ; snapshot 0036
+benchmark halo ; snapshot 0035
+benchmark halo ; snapshot 0034
+benchmark halo ; snapshot 0033
+benchmark halo ; snapshot 0032
+benchmark halo ; snapshot 0031
+benchmark halo ; snapshot 0030
+benchmark halo ; snapshot 0029
+benchmark halo ; snapshot 0028
+benchmark halo ; snapshot 0027
+benchmark halo ; snapshot 0026
+benchmark halo ; snapshot 0025
+benchmark halo ; snapshot 0024
+benchmark halo ; snapshot 0023
+benchmark halo ; snapshot 0022
+benchmark halo ; snapshot 0021
+benchmark halo ; snapshot 0020
+benchmark halo ; snapshot 0019
+benchmark halo ; snapshot 0018
+benchmark halo ; snapshot 0017
+benchmark halo ; snapshot 0016
+benchmark halo ; snapshot 0015
+benchmark halo ; snapshot 0014
+benchmark halo ; snapshot 0013
+***Running simulation***
+benchmark halo, CPUs=128
+Sim time min/h: 20.30626059990003 min, 0.33843767666500046 h.
+Total time: 46.31070594871665 min, 0.7718450991452775 h.
+
+JOB STATISTICS
+==============
+Job ID: 2226344
+Cluster: snellius
+User/Group: zimmer/zimmer
+State: RUNNING
+Nodes: 1
+Cores per node: 128
+CPU Utilized: 00:00:00
+CPU Efficiency: 0.00% of 4-03:58:56 core-walltime
+Job Wall-clock time: 00:46:52
+Memory Utilized: 0.00 MB (estimated maximum)
+Memory Efficiency: 0.00% of 218.75 GB (218.75 GB/node)
+WARNING: Efficiency statistics may be misleading for RUNNING jobs.
