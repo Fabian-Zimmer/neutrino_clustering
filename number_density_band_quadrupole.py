@@ -342,7 +342,7 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
         vels = fct.load_sim_data(TEMP_DIR, Bname, 'velocities')
 
         # note: The final number density is not stored in the temporary folder.
-        out_file = f'{PRE.OUT_DIR}/number_densities_band_QPOLE_{Bname}.npy'
+        out_file = f'{PRE.OUT_DIR}/number_densities_band_NU01_{Bname}.npy'
         fct.number_densities_mass_range(
             vels, NU_MRANGE, out_file
         )
