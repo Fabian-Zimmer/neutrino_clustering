@@ -17,9 +17,9 @@ total_start = time.perf_counter()
 # Initialize parameters and files.
 PRE = PRE(
     sim='L025N752', 
-    z0_snap=36, z4_snap=13, DM_lim=5000,
+    z0_snap=36, z4_snap=13, DM_lim=10000,
     sim_dir=SIM_ROOT, sim_ver=SIM_TYPE,
-    phis=20, thetas=20, vels=200,
+    phis=10, thetas=10, vels=100,
     pre_CPUs=128, sim_CPUs=128, mem_lim_GB=224
 )
 
@@ -33,7 +33,7 @@ os.makedirs(TEMP_DIR)
 # Halo parameters.
 mass_gauge = 12.0
 mass_range = 0.6
-size = 3
+size = 1
 
 hname = f'1e+{mass_gauge}_pm{mass_range}Msun'
 fct.halo_batch_indices(
@@ -342,7 +342,7 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
         vels = fct.load_sim_data(TEMP_DIR, Bname, 'velocities')
 
         # note: The final number density is not stored in the temporary folder.
-        out_file = f'{PRE.OUT_DIR}/number_densities_band_NU01_{Bname}.npy'
+        out_file = f'{PRE.OUT_DIR}/number_densities_band_RK45_{Bname}.npy'
         fct.number_densities_mass_range(
             vels, NU_MRANGE, out_file
         )

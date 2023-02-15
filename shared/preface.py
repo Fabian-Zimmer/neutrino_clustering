@@ -188,8 +188,8 @@ X_AG    = np.array([632.29742673, -377.40315121, -288.27006757])
 ### Control Center ###
 ######################
 
-# NU_MASS = 0.3*eV  # all sims have run with this so far
-NU_MASS = 0.1*eV  #! testing impact of different sim mass
+NU_MASS = 0.3*eV  # all sims have run with this so far
+# NU_MASS = 0.1*eV  #! testing impact of different sim mass
 NU_MASS_KG = NU_MASS/kg
 NU_MASSES = np.array([0.01, 0.05, 0.1, 0.3])*eV
 NU_MRANGE = np.geomspace(0.01, 0.3, 100)*eV
@@ -234,7 +234,8 @@ S_STEPS = np.array([s_of_z(z) for z in ZEDS])
 # note: Earth is placed on x axis of coord. system.
 X_SUN = np.array([8.5, 0., 0.])
 
-SOLVER = 'RK23'
+# SOLVER = 'RK23'  # all sims have run with this so far
+SOLVER = 'RK45'  #! testing impact of different solver
 
 
 # For sphere of incluence tests: Divide inclusion region into shells.

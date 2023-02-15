@@ -21,3 +21,4 @@
 [I 10:20:28.009 NotebookApp] Kernel started: 4b6f689b-6deb-49b6-a675-253bedba1b49, name: python3
 [W 10:20:28.022 NotebookApp] delete /testground-jvsc-56754439-05c6-46b2-9625-dce735afd6259b783f84-9d73-40a0-9615-9c399870836e.ipynb
 [W 10:20:28.022 NotebookApp] Skipping trash for /gpfs/home4/zimmer/neutrino_clustering_V2/testground-jvsc-56754439-05c6-46b2-9625-dce735afd6259b783f84-9d73-40a0-9615-9c399870836e.ipynb, [Errno 13] Permission denied: b'/gpfs/home4/.Trash-59104'
+slurmstepd: error: *** JOB 2232216 ON tcn282 CANCELLED AT 2023-02-14T18:39:47 DUE TO TIME LIMIT ***
