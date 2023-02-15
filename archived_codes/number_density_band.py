@@ -29,15 +29,10 @@ rand_code = ''.join(
 TEMP_DIR = f'{PRE.OUT_DIR}/temp_data_{rand_code}'
 os.makedirs(TEMP_DIR)
 
-Testing=False
-if Testing:
-    mass_gauge = 12.3
-    mass_range = 0.3
-    size = 1
-else:
-    mass_gauge = 12.0
-    mass_range = 0.6
-    size = 3
+# Halo parameters.
+mass_gauge = 12.0
+mass_range = 0.6
+size = 3
 
 hname = f'1e+{mass_gauge}_pm{mass_range}Msun'
 fct.halo_batch_indices(
@@ -127,8 +122,10 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
     MTname = f'{PRE.SIM}_{splits[0]}_{splits[1]}'
     proj_IDs = fct.read_MergerTree(PRE.OUT_DIR, MTname, halo_ID)
 
+    # Create empty arrays to save specifics of each loop.
     save_GRID_L = np.zeros(len(PRE.NUMS_SNAPS))
     save_num_DM = np.zeros(len(PRE.NUMS_SNAPS))
+
     for j, (snap, proj_ID) in enumerate(zip(
         PRE.NUMS_SNAPS[::-1], proj_IDs
     )):
@@ -147,6 +144,7 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
         )
         DM_raw = np.load(f'{TEMP_DIR}/DM_pos_{IDname}.npy')
         DM_particles = len(DM_raw)
+
 
         # ---------------------- #
         # Cell division process. #
@@ -186,7 +184,10 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
         cell_coords = np.squeeze(fin_grid, axis=1)
         cells = len(cell_coords)
 
-        ### Short-range gravity.
+
+        # -------------------- #
+        # Short-range gravity. #
+        # -------------------- #
 
         # Calculate available memory per core.
         mem_so_far = (psutil.virtual_memory().used - OS_MEM)/MB_UNIT
@@ -223,8 +224,10 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
             dPsi_short_range
         )
 
-
-        ### Long-range gravity.
+        
+        # ------------------- #
+        # Long-range gravity. #
+        # ------------------- #
 
         # Calculate available memory per core.
         mem_so_far = (psutil.virtual_memory().used - OS_MEM)/MB_UNIT
@@ -248,17 +251,21 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
 
 
         # Combine long-range batch files.
+        load_batch_arr = np.unique(batches)
         with ProcessPoolExecutor(PRE.PRE_CPUs) as ex:
-            ex.map(fct.load_dPsi_long_range, cell_ids, repeat(batches))
+            ex.map(
+                fct.load_dPsi_long_range, cell_ids, 
+                repeat(load_batch_arr), repeat(TEMP_DIR)
+            )
 
-        dPsi_long_range = [
+        dPsi_long_range = np.array([
             np.load(f'{TEMP_DIR}/cell{c}_long_range.npy') for c in cell_ids
-        ]
+        ])
         np.save(
             f'{TEMP_DIR}/dPsi_long_range_{IDname}.npy', 
-            np.array(dPsi_long_range)
+            dPsi_long_range
         )
-
+        
 
         # Combine short- and long-range forces.
         gravity_sr = np.load(f'{TEMP_DIR}/dPsi_short_range_{IDname}.npy')
@@ -282,6 +289,11 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
     NrDM_SNAPSHOTS = np.load(
         f'{TEMP_DIR}/NrDM_snaps_origID{halo_ID}.npy')
 
+    
+    # Display parameters for simulation.
+    print('***Running simulation***')
+    print(f'halo={halo_j+1}/{halo_num}, CPUs={PRE.SIM_CPUs}')
+
     start = time.perf_counter()
 
     # Draw initial velocities.
@@ -291,11 +303,6 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
     y0_Nr = np.array(
         [np.concatenate((X_SUN, ui[i], [i+1])) for i in range(PRE.NUS)]
         )
-
-
-    # Display parameters for simulation.
-    print('***Running simulation***')
-    print(f'halo={halo_j+1}/{halo_num}, CPUs={PRE.SIM_CPUs}')
 
     sim_testing = False
 
@@ -312,10 +319,21 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
         # Compactify all neutrino vectors into 1 file.
         Ns = np.arange(PRE.NUS, dtype=int)            
         nus = [np.load(f'{TEMP_DIR}/nu_{Nr+1}.npy') for Nr in Ns]
-        np.save(
-            f'{TEMP_DIR}/{PRE.NUS}nus_{hname}_halo{halo_j}.npy', 
-            np.array(nus)
+        Bname = f'{PRE.NUS}nus_{hname}_halo{halo_j}'
+        np.save(f'{TEMP_DIR}/{Bname}.npy', np.array(nus))
+
+        # Calculate local overdensity.
+        vels = fct.load_sim_data(TEMP_DIR, Bname, 'velocities')
+
+        # note: The final number density is not stored in the temporary folder.
+        out_file = f'{PRE.OUT_DIR}/number_densities_band_{Bname}.npy'
+        fct.number_densities_mass_range(
+            vels, NU_MRANGE, out_file
         )
+
+        # Now delete velocities and distances.
+        fct.delete_temp_data(f'{TEMP_DIR}/{Bname}.npy')
+
 
         seconds = time.perf_counter()-start
         minutes = seconds/60.

@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=Jupyter
 #SBATCH -p thin
-#SBATCH -t 09:00:00
+#SBATCH -t 04:00:00
 #SBATCH -N 1
 #SBATCH --tasks-per-node=1
 #SBATCH --cpus-per-task=128
@@ -17,15 +17,15 @@ source $HOME/.conda/envs/neutrino_clustering/bin/activate
 
 # Choose random port and print instructions to connect
 PORT=`shuf -i 5000-5999 -n 1`
-# PORT=`shuf -i 5000-7999 -n 1`
-LOGIN_HOST_EXT=int3-pub.snellius.surf.nl
-LOGIN_HOST_INT=int3
-
-echo "Selected port is: " $PORT
-echo
-echo "To connect to the notebook type the following command from your local terminal:"
-echo "ssh -N -L${PORT}:localhost:${PORT} ${USER}@${LOGIN_HOST_EXT}"
-
-ssh -o StrictHostKeyChecking=no -f -N -p 22 -R $PORT:localhost:$PORT $LOGIN_HOST_INT
-
+LOGIN_HOST=int3-pub.snellius.surf.nl
+BATCH_HOST=$(hostname)
+ 
+echo "Copy following command into VSCode terminal, from home directory:"
+echo "ssh -L ${PORT}:localhost:${PORT} ${BATCH_HOST}"
+# echo "To connect to the notebook type the following command from your local terminal:"
+# echo "ssh -J ${USER}@${LOGIN_HOST} ${USER}@${BATCH_HOST} -L ${PORT}:localhost:${PORT}"
+# echo
+# echo "After connection is established in your local browser go to the address:"
+# echo "http://localhost:${PORT}"
+ 
 jupyter notebook --no-browser --port $PORT

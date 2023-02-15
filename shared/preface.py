@@ -234,8 +234,8 @@ S_STEPS = np.array([s_of_z(z) for z in ZEDS])
 # note: Earth is placed on x axis of coord. system.
 X_SUN = np.array([8.5, 0., 0.])
 
-# SOLVER = 'RK23'  # all sims have run with this so far
-SOLVER = 'RK45'  #! testing impact of different solver
+SOLVER = 'RK23'  # all sims have run with this so far
+# SOLVER = 'RK45'  #! testing impact of different solver
 
 
 # For sphere of incluence tests: Divide inclusion region into shells.

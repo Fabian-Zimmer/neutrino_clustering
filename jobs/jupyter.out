@@ -1,18 +1,19 @@
-Selected port is:  5921
-
 To connect to the notebook type the following command from your local terminal:
-ssh -N -L5921:localhost:5921 zimmer@int3-pub.snellius.surf.nl
+ssh -J zimmer@int3-pub.snellius.surf.nl zimmer@tcn396.local.snellius.surf.nl -L 5860:localhost:5860
+
+After connection is established in your local browser go to the address:
+http://localhost:5860
 
 JOB STATISTICS
 ==============
-Job ID: 2232216
+Job ID: 2244347
 Cluster: snellius
 User/Group: zimmer/zimmer
 State: TIMEOUT (exit code 0)
 Nodes: 1
 Cores per node: 128
 CPU Utilized: 00:00:01
-CPU Efficiency: 0.00% of 48-00:36:16 core-walltime
-Job Wall-clock time: 09:00:17
-Memory Utilized: 608.34 MB
-Memory Efficiency: 0.27% of 218.75 GB
+CPU Efficiency: 0.00% of 5-08:23:28 core-walltime
+Job Wall-clock time: 01:00:11
+Memory Utilized: 561.83 MB
+Memory Efficiency: 0.25% of 218.75 GB

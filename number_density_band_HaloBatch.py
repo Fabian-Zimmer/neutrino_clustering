@@ -13,12 +13,13 @@ import shared.functions as fct
 
 total_start = time.perf_counter()
 
+
 # Initialize parameters and files.
 PRE = PRE(
     sim='L025N752', 
     z0_snap=36, z4_snap=13, DM_lim=1000,
     sim_dir=SIM_ROOT, sim_ver=SIM_TYPE,
-    phis=10, thetas=10, vels=100,
+    phis=20, thetas=20, vels=200,
     pre_CPUs=128, sim_CPUs=128, mem_lim_GB=224
 )
 
@@ -32,7 +33,7 @@ os.makedirs(TEMP_DIR)
 # Halo parameters.
 mass_gauge = 12.0
 mass_range = 0.6
-size = 3
+size = 10
 
 hname = f'1e+{mass_gauge}_pm{mass_range}Msun'
 fct.halo_batch_indices(
@@ -207,9 +208,10 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
         with ProcessPoolExecutor(PRE.PRE_CPUs) as ex:
             ex.map(
                 fct.cell_gravity_short_range, 
-                cell_chunks, cgen_chunks, repeat(snap_GRID_L), repeat(DM_pos), 
-                repeat(PRE.DM_LIM), repeat(PRE.DM_SIM_MASS), 
-                repeat(PRE.SMOOTH_L), repeat(TEMP_DIR), batch_arr
+                cell_chunks, cgen_chunks, repeat(snap_GRID_L), 
+                repeat(DM_pos), repeat(PRE.DM_LIM), repeat(PRE.DM_SIM_MASS), 
+                repeat(PRE.SMOOTH_L), repeat(TEMP_DIR), batch_arr, 
+                repeat(chunksize_sr)
             )
 
         # Combine short-range batch files.
@@ -219,58 +221,61 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
         dPsi_short_range = np.array(
             list(chain.from_iterable(dPsi_short_range_batches))
         )
-        np.save(
-            f'{TEMP_DIR}/dPsi_short_range_{IDname}.npy', 
-            dPsi_short_range
-        )
 
+        # Combine DM_in_cell_IDs batches (needed for long-range gravity).
+        DM_in_cell_IDs_l = []
+        for b_id in batch_arr:
+            DM_in_cell_IDs_l.append(
+                np.load(f'{TEMP_DIR}/batch{b_id}_DM_in_cell_IDs.npy')
+            )
+        DM_in_cell_IDs_np = np.array(
+            list(chain.from_iterable(DM_in_cell_IDs_l)))
+        np.save(f'{TEMP_DIR}/DM_in_cell_IDs_{IDname}.npy', DM_in_cell_IDs_np)
         
+
         # ------------------- #
         # Long-range gravity. #
         # ------------------- #
-
+        
         # Calculate available memory per core.
         mem_so_far = (psutil.virtual_memory().used - OS_MEM)/MB_UNIT
         mem_left = PRE.MEM_LIM_GB*1e3 - mem_so_far
         core_mem_MB = mem_left / PRE.PRE_CPUs
 
         # Determine long-range chuncksize based on available memory and cells.
-        chunksize_lr = fct.chunksize_long_range(cells, core_mem_MB)
+        # chunksize_lr = chunksize_long_range(cells, core_mem_MB)
+        chunksize_lr = 501
 
         # Split workload into batches (if necessary).
-        cell_ids, batches, coords, count_chain, com_chain = fct.batch_generators_long_range(
-            cell_coords, cell_com, DM_count, chunksize_lr
+        DM_in_cell_IDs = np.load(f'{TEMP_DIR}/DM_in_cell_IDs_{IDname}.npy')
+        batch_IDs, cellC_rep, cellC_cc, gen_rep, cib_IDs_gens, count_gens, com_gens, gen_gens = fct.batch_generators_long_range(
+            cell_coords, cell_com, cell_gen, DM_count, chunksize_lr
         )
 
         with ProcessPoolExecutor(PRE.PRE_CPUs) as ex:
             ex.map(
-                fct.cell_gravity_long_range, cell_ids, batches, 
-                coords, count_chain, com_chain,
-                repeat(PRE.DM_SIM_MASS), repeat(PRE.SMOOTH_L), repeat(TEMP_DIR)
+                fct.cell_gravity_long_range_quadrupole, 
+                cellC_rep, cib_IDs_gens, batch_IDs, 
+                cellC_cc, com_gens, gen_gens, repeat(snap_GRID_L),
+                repeat(np.squeeze(DM_pos, axis=0)), count_gens, 
+                repeat(DM_in_cell_IDs), repeat(PRE.DM_SIM_MASS), 
+                repeat(TEMP_DIR), repeat(chunksize_lr), gen_rep
             )
-
 
         # Combine long-range batch files.
-        load_batch_arr = np.unique(batches)
+        c_labels = np.unique(cellC_rep)
+        b_labels = np.unique(batch_IDs)
         with ProcessPoolExecutor(PRE.PRE_CPUs) as ex:
             ex.map(
-                fct.load_dPsi_long_range, cell_ids, 
-                repeat(load_batch_arr), repeat(TEMP_DIR)
+                fct.load_dPsi_long_range, c_labels, 
+                repeat(b_labels), repeat(TEMP_DIR)
             )
 
-        dPsi_long_range = np.array([
-            np.load(f'{TEMP_DIR}/cell{c}_long_range.npy') for c in cell_ids
-        ])
-        np.save(
-            f'{TEMP_DIR}/dPsi_long_range_{IDname}.npy', 
-            dPsi_long_range
-        )
-        
+        dPsi_long_range = np.array(
+            [np.load(f'{TEMP_DIR}/cell{c}_long_range.npy') for c in c_labels])
 
         # Combine short- and long-range forces.
-        gravity_sr = np.load(f'{TEMP_DIR}/dPsi_short_range_{IDname}.npy')
-        gravity_lr = np.load(f'{TEMP_DIR}/dPsi_long_range_{IDname}.npy')
-        dPsi_grid = gravity_sr + gravity_lr
+        dPsi_grid = dPsi_short_range + dPsi_long_range
         np.save(f'{TEMP_DIR}/dPsi_grid_{IDname}.npy', dPsi_grid)
 
 
@@ -304,41 +309,34 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
         [np.concatenate((X_SUN, ui[i], [i+1])) for i in range(PRE.NUS)]
         )
 
-    sim_testing = False
-
-    if sim_testing:
-        # Test 1 neutrino only.
-        backtrack_1_neutrino(y0_Nr[0])
-
-    else:
-        # Run simulation on multiple cores.
-        with ProcessPoolExecutor(PRE.SIM_CPUs) as ex:
-            ex.map(backtrack_1_neutrino, y0_Nr)
+    # Run simulation on multiple cores.
+    with ProcessPoolExecutor(PRE.SIM_CPUs) as ex:
+        ex.map(backtrack_1_neutrino, y0_Nr)
 
 
-        # Compactify all neutrino vectors into 1 file.
-        Ns = np.arange(PRE.NUS, dtype=int)            
-        nus = [np.load(f'{TEMP_DIR}/nu_{Nr+1}.npy') for Nr in Ns]
-        Bname = f'{PRE.NUS}nus_{hname}_halo{halo_j}'
-        np.save(f'{TEMP_DIR}/{Bname}.npy', np.array(nus))
+    # Compactify all neutrino vectors into 1 file.
+    Ns = np.arange(PRE.NUS, dtype=int)            
+    nus = [np.load(f'{TEMP_DIR}/nu_{Nr+1}.npy') for Nr in Ns]
+    Bname = f'{PRE.NUS}nus_{hname}_halo{halo_j}'
+    np.save(f'{TEMP_DIR}/{Bname}.npy', np.array(nus))
 
-        # Calculate local overdensity.
-        vels = fct.load_sim_data(TEMP_DIR, Bname, 'velocities')
+    # Calculate local overdensity.
+    vels = fct.load_sim_data(TEMP_DIR, Bname, 'velocities')
 
-        # note: The final number density is not stored in the temporary folder.
-        out_file = f'{PRE.OUT_DIR}/number_densities_band_{Bname}.npy'
-        fct.number_densities_mass_range(
-            vels, NU_MRANGE, out_file
-        )
+    #! The final number density must **NOT** be stored in the temporary folder.
+    out_file = f'{PRE.OUT_DIR}/number_densities_band_{Bname}.npy'
+    fct.number_densities_mass_range(
+        vels, NU_MRANGE, out_file
+    )
 
-        # Now delete velocities and distances.
-        fct.delete_temp_data(f'{TEMP_DIR}/{Bname}.npy')
+    # Now delete velocities and distances.
+    fct.delete_temp_data(f'{TEMP_DIR}/{Bname}.npy')
 
 
-        seconds = time.perf_counter()-start
-        minutes = seconds/60.
-        hours = minutes/60.
-        print(f'Sim time min/h: {minutes} min, {hours} h.')
+    seconds = time.perf_counter()-start
+    minutes = seconds/60.
+    hours = minutes/60.
+    print(f'Sim time min/h: {minutes} min, {hours} h.')
 
 # Remove temporary folder with all individual neutrino files.
 shutil.rmtree(TEMP_DIR)

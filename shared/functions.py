@@ -945,13 +945,6 @@ def cell_gravity_long_range_quadrupole(
     cell_gen = np.array(cell_gen)
     DM_count = np.array(DM_count)
 
-    # fig = plt.figure()
-    # ax = fig.add_subplot(111, projection='3d')
-    # ss = 50
-    # x, y, z = DM_pos[:,0][::ss], DM_pos[:,1][::ss], DM_pos[:,2][::ss]
-    # ax.scatter(x,y,z, alpha=0.8, c='blueviolet', s=0.01)
-    # plt.show()
-
     # Array, where cell C is centered on c.o.m. coords. of all cells.
     cellC_sync = np.repeat(
         np.expand_dims(cellC_cc, axis=0), len(cell_com), axis=0
@@ -965,11 +958,9 @@ def cell_gravity_long_range_quadrupole(
     # Distance of cellC to all cell_com's.
     cellC_dis = np.sqrt(np.sum(cellC_sync**2, axis=1))
 
-    # note: different criterium, based on cells inside sphere around cell C.
-    r_crit = 1.5*cellC_len*((cellC_gen+1)**0.6)
-    # r_crit = -1.  # for no multipole cells
+    # Cells with distance bewlow critical we compute quadrupole moments for.
+    r_crit = 1.5*cellC_len*((cellC_gen+1)**0.6)  # set to -1 for no quadrupoles
     multipole_IDs = np.argwhere(cellC_dis <= r_crit).flatten()
-    monopole_IDs = np.argwhere(cellC_dis > r_crit).flatten()
 
     if c_id in cib_ids:
         # Overwrite element corresponding to cell C from all arrays, to avoid
@@ -991,28 +982,6 @@ def cell_gravity_long_range_quadrupole(
         if cellC_dis[cellC_idx] == 0:
             cellC_dis[cellC_idx] = 1
 
-    # region
-    # note: until further understood, this the angle criterium doesn't work.
-    # Determine which cells are close enough and need multipole expansion:    
-    # Cells with angle larger than the critical angle are multipole cells.
-    # The critical angle is dependent on the cell length of cell C.
-    # (see GoodNotes for why 0.3 exponent for now)
-    # theta = cell_len / cellC_dis
-    # theta_crit = 1/(1.5*((cellC_gen+1)**0.3))
-    # theta_crit = 1/(1.5*cellC_len*((cellC_gen+1)**0.3))
-    # theta_crit = 1e10  # large, s.t. only monopole cells
-
-    # Find IDs for cells, for which we additionally calculate the quadrupole.
-    # Cell C will be a monopole-only cell, but with its DM count set to 0, so 
-    # it won't contribute later.
-    # multipole_IDs = np.argwhere(theta >= theta_crit).flatten()
-    # monopole_IDs = np.argwhere(theta < theta_crit).flatten()
-
-    # Save positions for plotting.
-    # np.save(f'{out_dir}/monopoles_cc_batch{b_id}.npy', monopole_IDs + (max_b_len*b_id))
-    # np.save(f'{out_dir}/multipoles_cc_batch{b_id}.npy', multipole_IDs + (max_b_len*b_id))
-    # endregion
-
     # DM count for multipole cells.
     DM_count_mpoles = DM_count[multipole_IDs]
 
@@ -1020,7 +989,6 @@ def cell_gravity_long_range_quadrupole(
     # Adjust/match multipole_IDs first, since they are limited to size of batch.
     comparison_IDs = multipole_IDs + (max_b_len*b_id)
     DM_IDs = DM_in_cell_IDs[np.in1d(DM_in_cell_IDs[:,0], comparison_IDs)][:,1]
-    # DM_pos_mpoles = DM_pos[np.in1d(np.arange(len(DM_pos)), DM_IDs)] #! wrong
     DM_pos_mpoles = np.take(DM_pos, DM_IDs, axis=0)
 
     # Split this total DM array into DM chunks present in each multipole cell:
@@ -1056,19 +1024,6 @@ def cell_gravity_long_range_quadrupole(
     # Center DM in multipole cells (labeled with "J") on their c.o.m. coords.
     DM_mpoles -= mpoles_com
 
-    # note: Plotting DM particles with colors in each cell.
-    # fig = plt.figure()
-    # ax = fig.add_subplot(111, projection='3d')
-    # ss = 10
-    # for elem in (DM_mpoles+mpoles_com)/kpc:
-    #     x, y, z = elem[:,0][::ss], elem[:,1][::ss], elem[:,2][::ss]
-    #     ax.scatter(x,y,z, alpha=0.5, s=1)
-
-    # x, y, z = mpoles_com[...,0], mpoles_com[...,1], mpoles_com[...,2]
-    # ax.scatter(x/kpc,y/kpc,z/kpc, alpha=1, c='black', marker='x', s=20)
-    # ax.view_init(elev=15, azim=15)
-    # plt.show()
-
     # Calculate distances of all DM in J cells from their c.o.m. coord.
     DMj_dis = np.expand_dims(np.sqrt(np.sum(DM_mpoles**2, axis=2)), axis=2)
     
@@ -1082,6 +1037,7 @@ def cell_gravity_long_range_quadrupole(
     # Distance of cell C to c.o.m. of multipole cells.
     cellC_Jdis = np.sqrt(np.sum(cellC_Jcoms**2, axis=2))
 
+
     ### -------------------- ###
     ### Quadrupole formulas. ###
     ### -------------------- ###
@@ -1090,8 +1046,6 @@ def cell_gravity_long_range_quadrupole(
     # Terms appearing in the quadrupole term.
     QJ_aa = np.nansum(3*DM_mpoles**2 - DMj_dis**2, axis=1)
     QJ_ab = np.nansum(3*DM_mpoles*np.roll(DM_mpoles, 1, axis=2), axis=1)
-
-    trace = np.nansum(QJ_aa, axis=1)
 
     # Reduce dimensions.
     cellC_Jcoms = np.squeeze(cellC_Jcoms, axis=1)
@@ -1112,6 +1066,7 @@ def cell_gravity_long_range_quadrupole(
 
     dPsi_multipole_cells = G*DM_sim_mass*np.nansum(-term1+term2, axis=0)
     
+
     ### ---------------------- ###
     ### Monopole of all cells. ###
     ### ---------------------- ###
@@ -1134,7 +1089,7 @@ def cell_gravity_long_range_quadrupole(
     dPsi_monopole_cells = G*DM_sim_mass*np.nansum(
         DM_count_mono_sync*cellC_Jcoms_mono_2D/(cellC_dis_mono**3), axis=0)
 
-    # note: Minus sign, s.t. velocity changes correctly (see GoodNotes).
+    # Minus sign, s.t. velocity changes correctly (see GoodNotes).
     derivative_lr = -(dPsi_multipole_cells + dPsi_monopole_cells)
     
     np.save(f'{out_dir}/cell{c_id}_batch{b_id}_long_range.npy', derivative_lr)
@@ -1797,106 +1752,24 @@ def plot_number_density_integral(
         plt.close()
 
 
+
+#########################
+### Old code snippets ###
+#########################
 '''
-def cell_gravity(
-    cell_coords, cell_com, cell_gen, init_GRID_S,
-    DM_pos, DM_count, DM_lim, DM_sim_mass, smooth_l,
-    out_dir, fname, long_range=True,
-):
-    # Center all DM positions w.r.t. cell center.
-    DM_pos -= cell_coords
+    # note: until further understood, this the angle criterium doesn't work.
+    # Determine which cells are close enough and need multipole expansion:    
+    # Cells with angle larger than the critical angle are multipole cells.
+    # The critical angle is dependent on the cell length of cell C.
+    # (see GoodNotes for why 0.3 exponent for now)
+    # theta = cell_len / cellC_dis
+    # theta_crit = 1/(1.5*((cellC_gen+1)**0.3))
+    # theta_crit = 1/(1.5*cellC_len*((cellC_gen+1)**0.3))
+    # theta_crit = 1e10  # large, s.t. only monopole cells
 
-    # Cell lengths to limit DM particles. Limit for the largest cell is 
-    # GRID_S/2, not just GRID_S, therefore the cell_gen+1 !
-    cell_len = np.expand_dims(init_GRID_S/(2**(cell_gen+1)), axis=1)
-
-    # Select DM particles inside each cell based on cube length generation.
-    DM_in_cell_IDs = np.asarray(
-        (np.abs(DM_pos[:,:,0]) < cell_len) & 
-        (np.abs(DM_pos[:,:,1]) < cell_len) & 
-        (np.abs(DM_pos[:,:,2]) < cell_len)
-    )
-
-    # Set DM outside cell to nan values.
-    DM_pos[~DM_in_cell_IDs] = np.nan
-
-    # Sort all nan values to the bottom of axis 1, i.e. the DM-in-cell-X axis 
-    # and truncate array based on DM_lim parameter. This simple way works since 
-    # each cell cannot have more than DM_lim.
-
-    ind_2D = DM_pos[:,:,0].argsort(axis=1)
-    ind_3D = np.repeat(np.expand_dims(ind_2D, axis=2), 3, axis=2)
-    DM_sort = np.take_along_axis(DM_pos, ind_3D, axis=1)
-    DM_in = DM_sort[:,:DM_lim,:]
-    del ind_2D, ind_3D, DM_sort
-
-    # Calculate distances of DM and adjust array dimensionally.
-    DM_dis = np.expand_dims(np.sqrt(np.sum(DM_in**2, axis=2)), axis=2)
-
-    # ------------------------------ #
-    # Calculate short-range gravity. #
-    # ------------------------------ #
-
-    # Offset DM positions by smoothening length of Camila's simulations.
-    eps = smooth_l / 2.
-
-    # nan values to 0 for numerator, and 1 for denominator to avoid infinities.
-    quot = np.nan_to_num(cell_coords - DM_in, copy=False, nan=0.0) / \
-        np.nan_to_num(
-            np.power((DM_dis**2 + eps**2), 3./2.), copy=False, nan=1.0
-        )
-    del DM_in, DM_dis
-    dPsi_short = G*DM_sim_mass*np.sum(quot, axis=1)
-    del quot
-
-    if long_range:
-        # ----------------------------- #
-        # Calculate long-range gravity. #
-        # ----------------------------- #
-        
-        # Number of cells.
-        cs = cell_coords.shape[0]
-        
-        # Adjust c.o.m cell cords. and DM count arrays dimensionally.
-        com_rep = np.repeat(
-            np.expand_dims(cell_com, axis=1), cs, axis=1
-        )
-        DM_count_rep = np.repeat(
-            np.expand_dims(DM_count, axis=1), cs, axis=1
-        )
-
-        # Create mask to drop cell, for which long-range gravity is being 
-        # computed (otherwise each cell will get its own c.o.m. gravity 
-        # additionally).
-        mask_raw = np.zeros((cs, cs), int)
-        np.fill_diagonal(mask_raw, 1)
-
-        # Before mask changes dimensionally, filter DM count array, 
-        # then adjust it dimensionally.
-        DM_count_del = DM_count_rep[~mask_raw.astype(dtype=bool)].reshape(cs,cs-1)
-        DM_count_sync = np.expand_dims(DM_count_del, axis=2)
-
-        # Adjust mask dimensionally and filter c.o.m. cell coords.
-        mask = np.repeat(np.expand_dims(mask_raw, axis=2), 3, axis=2)
-        com_del = com_rep[~mask.astype(dtype=bool)].reshape(cs, cs-1, 3)
-        del com_rep
-
-        # Distances between cell centers and cell c.o.m. coords.
-        com_dis = np.sqrt(np.sum((cell_coords-com_del)**2, axis=2))
-        com_dis_sync = np.expand_dims(com_dis, axis=2)
-
-        # Long-range gravity component for each cell (without including itself).
-        quot_long = (cell_coords-com_del)/np.power((com_dis_sync**2 + eps**2), 3./2.)
-        dPsi_long = G*DM_sim_mass*np.sum(DM_count_sync*quot_long, axis=1)
-        del quot_long
-
-        # Total derivative as short+long range.
-        derivative = dPsi_short + dPsi_long
-    else:
-        derivative = dPsi_short
-
-    # note: Minus sign, s.t. velocity changes correctly (see GoodNotes).
-    dPsi_grid = np.asarray(-derivative, dtype=np.float64)
-
-    np.save(f'{out_dir}/dPsi_grid_{fname}.npy', dPsi_grid)
+    # Find IDs for cells, for which we additionally calculate the quadrupole.
+    # Cell C will be a monopole-only cell, but with its DM count set to 0, so 
+    # it won't contribute later.
+    # multipole_IDs = np.argwhere(theta >= theta_crit).flatten()
+    # monopole_IDs = np.argwhere(theta < theta_crit).flatten()
 '''
