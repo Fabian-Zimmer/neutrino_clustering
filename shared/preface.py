@@ -188,11 +188,17 @@ X_AG    = np.array([632.29742673, -377.40315121, -288.27006757])
 ### Control Center ###
 ######################
 
-NU_MASS = 0.3*eV  # all sims have run with this so far
-# NU_MASS = 0.1*eV  #! testing impact of different sim mass
+# All sims have run with this so far.
+NU_MASS = 0.3*eV
 NU_MASS_KG = NU_MASS/kg
 NU_MASSES = np.array([0.01, 0.05, 0.1, 0.3])*eV
 NU_MRANGE = np.geomspace(0.01, 0.3, 100)*eV
+
+#! testing impact of different sim mass, global divide by 10.
+# NU_MASS = 0.03*eV
+# NU_MASS_KG = NU_MASS/kg
+# NU_MASSES = np.array([0.001, 0.005, 0.01, 0.03])*eV
+# NU_MRANGE = np.geomspace(0.001, 0.03, 100)*eV
 
 # Neutrino + antineutrino number density of 1 flavor in [1/cm**3],
 # using the analytical expression for Fermions.
@@ -306,7 +312,7 @@ class PRE:
             self.NUS = phis*thetas*vels
         else:
             self.NUS = len(phis)*len(thetas)*vels
-        self.LOWER = 0.1*T_CNB
+        self.LOWER = 0.01*T_CNB
         self.UPPER = 400.*T_CNB
         self.MOMENTA = np.geomspace(self.LOWER, self.UPPER, vels)
 

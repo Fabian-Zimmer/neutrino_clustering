@@ -1,18 +1,18 @@
 #!/bin/bash
-#SBATCH --job-name=RK45
+#SBATCH --job-name=outNEW
 #SBATCH -p thin
-#SBATCH -t 06:00:00
+#SBATCH -t 04:00:00
 #SBATCH -N 1
 #SBATCH --tasks-per-node=1
 #SBATCH --cpus-per-task=128
 #SBATCH --mem=224000
-#SBATCH -o jobs/number_density_band_RK45.out
-#SBATCH -e jobs/number_density_band_RK45.err
+#SBATCH -o jobs/number_density_band_outNEW.out
+#SBATCH -e jobs/number_density_band_outNEW.err
 #SBATCH -v
 #SBATCH --exclusive
 
 module purge
-
+cat 
 source $HOME/.conda/envs/neutrino_clustering/bin/activate
 
-python $HOME/neutrino_clustering_V2/number_density_band_quadrupole.py
+python $HOME/neutrino_clustering_V2/number_density_band_HaloBatch.py

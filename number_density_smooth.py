@@ -1,11 +1,10 @@
 from shared.preface import *
 import shared.functions as fct
 
-
 # Initialize parameters and files.
 PRE = PRE(
     sim='LinfNinf', phis=10, thetas=10, vels=100,
-    sim_CPUs=128, MW_HALO=True
+    sim_CPUs=128, MW_HALO=True, VC_HALO=False
 )
 
 # Make temporary folder to store files, s.t. parallel runs don't clash.
@@ -31,15 +30,15 @@ def EOMs(s_val, y):
 
     # Sum gradients of each halo. Seperate if statements, for adding any halos.
     grad_tot = np.zeros(len(x_i))
-    if MW_HALO:
+    if PRE.MW_HALO:
         grad_tot += fct.dPsi_dxi_NFW(
             x_i, z, rho0_MW, Mvir_MW, Rvir_MW, Rs_MW, 'MW'
             )
-    if VC_HALO:
+    if PRE.VC_HALO:
         grad_tot += fct.dPsi_dxi_NFW(
             x_i, z, rho0_VC, Mvir_VC, Rvir_VC, Rs_VC, 'VC'
             )
-    if AG_HALO:
+    if PRE.AG_HALO:
         grad_tot += fct.dPsi_dxi_NFW(
             x_i, z, rho0_AG, Mvir_AG, Rvir_AG, Rs_AG, 'AG'
             )
@@ -83,42 +82,30 @@ if __name__ == '__main__':
         [np.concatenate((X_SUN, ui[k], [k+1])) for k in range(PRE.NUS)]
         )
 
+    # Run simulation on multiple cores, in batches.
+    # (important for other solvers (e.g. Rk45), due to memory increase)
+    batch_size = 10000
+    ticks = np.arange(0, PRE.NUS/batch_size, dtype=int)
+    for i in ticks:
 
-    sim_testing = False
+        id_min = (i*batch_size) + 1
+        id_max = ((i+1)*batch_size) + 1
+        print(f'From {id_min} to and incl. {id_max-1}')
 
-    if sim_testing:
-        # Test 1 neutrino only.
-        backtrack_1_neutrino(y0_Nr[0])
-        backtrack_1_neutrino(y0_Nr[1])
-        backtrack_1_neutrino(y0_Nr[2])
+        if i == 0:
+            id_min = 0
 
-    else:
+        with ProcessPoolExecutor(PRE.SIM_CPUs) as ex:
+            ex.map(backtrack_1_neutrino, y0_Nr[id_min:id_max])
 
-        # Run simulation on multiple cores, in batches.
-        # (important for other solvers (e.g. Rk45), due to memory increase)
-        batch_size = 10000
-        ticks = np.arange(0, PRE.NUS/batch_size, dtype=int)
-        for i in ticks:
-
-            id_min = (i*batch_size) + 1
-            id_max = ((i+1)*batch_size) + 1
-            print(f'From {id_min} to and incl. {id_max-1}')
-
-            if i == 0:
-                id_min = 0
-
-            with ProcessPoolExecutor(PRE.SIM_CPUs) as ex:
-                ex.map(backtrack_1_neutrino, y0_Nr[id_min:id_max])
-
-            print(f'Batch {i+1}/{len(ticks)} done!')
+        print(f'Batch {i+1}/{len(ticks)} done!')
 
 
-        # Compactify all neutrino vectors into 1 file.
-        Ns = np.arange(PRE.NUS, dtype=int)
-        nus = np.array([np.load(f'{TEMP_DIR}/nu_{Nr+1}.npy') for Nr in Ns])
-        oname = f'{PRE.NUS}nus_smooth_{PRE.HALOS}_{SOLVER}'
-        np.save(f'{PRE.OUT_DIR}/{oname}.npy', nus)
-
+    # Compactify all neutrino vectors into 1 file.
+    Ns = np.arange(PRE.NUS, dtype=int)
+    nus = np.array([np.load(f'{TEMP_DIR}/nu_{Nr+1}.npy') for Nr in Ns])
+    oname = f'{PRE.NUS}nus_smooth_{PRE.HALOS}_{SOLVER}'
+    np.save(f'{PRE.OUT_DIR}/{oname}.npy', nus)
 
     # Remove temporary folder with all individual neutrino files.
     shutil.rmtree(TEMP_DIR)   

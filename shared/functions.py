@@ -274,6 +274,10 @@ def read_DM_halo_index(snap, halo_ID, fname, sim_dir, out_dir):
     DM_pos *= 1e3  # to kpc
     np.save(f'{out_dir}/DM_pos_{fname}.npy', DM_pos)
 
+    # Save c.o.m. coord of all DM particles (used for outside_gravity fct.).
+    DM_com_coord = np.sum(DM_pos, axis=0)/len(DM_pos)
+    np.save(f'{out_dir}/DM_com_coord_{fname}.npy', DM_com_coord)
+
 
 def halo_DM(halo_idx, snap, pos, snap_Particle_IDs, sim_dir, out_dir):
 
@@ -697,18 +701,61 @@ def halo_to_grid(DM_pos_kpc, DM_lim, fname, out_dir):
 
 
 @nb.njit
-def outside_gravity(x_i, DM_tot, DM_sim_mass):
-    pre = G*DM_tot*DM_sim_mass
+def outside_gravity(x_i, DM_count_tot, DM_sim_mass):
+    pre = G*DM_count_tot*DM_sim_mass
     denom = np.sqrt(np.sum(x_i**2))**3
 
-    return pre*x_i/denom
+    return -pre*x_i/denom
+
+
 
 @nb.njit
 def outside_gravity_com(x_i, com_DM, DM_tot, DM_sim_mass):
     pre = G*DM_tot*DM_sim_mass
     denom = np.sqrt(np.sum((x_i-com_DM)**2))**3
 
-    return pre*x_i/denom
+    return -pre*(x_i-com_DM)/denom
+
+
+def outside_gravity_quadrupole(x_i, com_halo, DM_sim_mass, DM_num, QJ_abs):
+
+    ### ----------- ###
+    ### Quadrupole. ###
+    ### ----------- ###
+
+    # Center neutrino on c.o.m. of halo and get distance.
+    x_i -= com_halo
+    r_i = np.sqrt(np.sum(x_i**2))
+    
+    # Permute order of coords by one, i.e. (x,y,z) -> (z,x,y).
+    x_i_roll = np.roll(x_i, 1)
+
+    # Terms appearing in the quadrupole term.
+    QJ_aa = QJ_abs[0]
+    QJ_ab = QJ_abs[1]
+
+    # Factors of 2 are for the symmetry of QJ_ab elements.
+    term1_aa = np.sum(QJ_aa*x_i, axis=0)
+    term1_ab = np.sum(2*QJ_ab*x_i_roll, axis=0)
+    term1 = (term1_aa+term1_ab)/r_i**5
+
+    term2_pre = 5*x_i/(2*r_i**7)
+    term2_aa = np.sum(QJ_aa*x_i**2, axis=0)
+    term2_ab = np.sum(2*QJ_ab*x_i*x_i_roll, axis=0)
+    term2 = term2_pre*(term2_aa+term2_ab)
+
+    dPsi_multipole_cells = G*DM_sim_mass*(-term1+term2)
+
+
+    ### --------- ###
+    ### Monopole. ###
+    ### --------- ###
+    dPsi_monopole_cells = G*DM_num*DM_sim_mass*x_i/r_i**3
+
+    # Minus sign, s.t. velocity changes correctly (see GoodNotes).
+    derivative_lr = -(dPsi_multipole_cells + dPsi_monopole_cells)
+
+    return derivative_lr
 
 
 def chunksize_short_range(cells, DM_tot, max_DM_lim, core_mem_MB):
@@ -1196,39 +1243,57 @@ def init_velocities(phi_points, theta_points, momenta, all_sky=False):
     """Get initial velocities for the neutrinos."""
 
     # Convert momenta to initial velocity magnitudes, in units of [kpc/s].
-    v_kpc = 1/np.sqrt(NU_MASS**2/momenta**2 + 1) / (kpc/s)
+    # v_kpc = 1/np.sqrt(NU_MASS**2/momenta**2 + 1) / (kpc/s)
+    u_i = momenta/NU_MASS / (kpc/s)
 
     if all_sky:
         # For all_sky script, input is just one coord. pair
         t, p = theta_points, phi_points
 
         # Each coord. pair gets whole momentum, i.e. velocity range.
-        uxs = [-v*np.cos(p)*np.sin(t) for v in v_kpc]
-        uys = [-v*np.sin(p)*np.sin(t) for v in v_kpc]
-        uzs = [-v*np.cos(t) for v in v_kpc]
+        uxs = [-u*np.cos(p)*np.sin(t) for u in u_i]
+        uys = [-u*np.sin(p)*np.sin(t) for u in u_i]
+        uzs = [-u*np.cos(t) for u in u_i]
 
-        ui_array = np.array(
+        u_i_array = np.array(
             [[ux, uy, uz] for ux,uy,uz in zip(uxs,uys,uzs)]
         )
 
     else:
         # Split up this magnitude into velocity components, by using spher. 
         # coords. trafos, which act as "weights" for each direction.
+        cts = np.linspace(-1, 1, theta_points)
+        ps = np.linspace(0, 2*Pi, phi_points)
+
+        # Minus signs due to choice of coord. system setup (see notes/drawings).
+        #                              (<-- outer loops, --> inner loops)
+        uxs = [
+            -u*np.cos(p)*np.sqrt(1-ct**2) for ct in cts for p in ps for u in u_i
+        ]
+        uys = [
+            -u*np.sin(p)*np.sqrt(1-ct**2) for ct in cts for p in ps for u in u_i
+        ]
+        uzs = [
+            -u*ct for ct in cts for _ in ps for u in u_i
+        ]
+
+        '''
         eps = 0.01  # shift in theta, so poles are not included
         ts = np.linspace(0.+eps, Pi-eps, theta_points)
         ps = np.linspace(0., 2.*Pi, phi_points)
 
         # Minus signs due to choice of coord. system setup (see notes/drawings).
         #                              (<-- outer loops, --> inner loops)
-        uxs = [-v*np.cos(p)*np.sin(t) for t in ts for p in ps for v in v_kpc]
-        uys = [-v*np.sin(p)*np.sin(t) for t in ts for p in ps for v in v_kpc]
-        uzs = [-v*np.cos(t) for t in ts for _ in ps for v in v_kpc]
+        uxs = [-u*np.cos(p)*np.sin(t) for t in ts for p in ps for u in u_i]
+        uys = [-u*np.sin(p)*np.sin(t) for t in ts for p in ps for u in u_i]
+        uzs = [-u*np.cos(t) for t in ts for _ in ps for u in u_i]
+        '''
 
-        ui_array = np.array(
+        u_i_array = np.array(
             [[ux, uy, uz] for ux,uy,uz in zip(uxs,uys,uzs)]
         )
 
-    return ui_array 
+    return u_i_array 
 
 
 @nb.njit
@@ -1311,13 +1376,17 @@ def dPsi_dxi_NFW(x_i, z, rho_0, M_vir, R_vir, R_s, halo:str):
     if halo in ('MW', 'VC', 'AG'):
         # Compute values dependent on redshift.
         r_vir = R_vir_fct(z, M_vir)
-        r_s = r_vir / c_vir(z, M_vir, R_vir, R_s)
+        c_NFW = c_vir(z, M_vir, R_vir, R_s)
+        r_s = r_vir / c_NFW
+        f_NFW = np.log(1+c_NFW) - (c_NFW/(1+c_NFW))
+        rho_0_NEW = M_vir / (4*Pi*r_s**3*f_NFW)
     else:
         # If function is used to calculate NFW gravity for arbitrary halo.
         r_vir = R_vir
         r_s = R_s
         x_i_cent = x_i
         r = np.sqrt(np.sum(x_i_cent**2))
+        rho_0_NEW = rho_0
         
 
     # Distance from respective halo center with current coords. x_i.
@@ -1334,7 +1403,8 @@ def dPsi_dxi_NFW(x_i, z, rho_0, M_vir, R_vir, R_s, halo:str):
     # Derivative in compact notation with m and M.
     m = np.minimum(r, r_vir)
     M = np.maximum(r, r_vir)
-    prefactor = 4.*Pi*G*rho_0*r_s**2*x_i_cent/r**2
+    # prefactor = 4.*Pi*G*rho_0*r_s**2*x_i_cent/r**2
+    prefactor = 4.*Pi*G*rho_0_NEW*r_s**2*x_i_cent/r**2
     term1 = np.log(1. + (m/r_s)) / (r/r_s)
     term2 = (r_vir/M) / (1. + (m/r_s))
     derivative = prefactor * (term1 - term2)
@@ -1576,7 +1646,7 @@ def plot_eta_z_back_1Halo(sim_vels, nu_masses, fig_dir, fname, show=False):
 def plot_phase_space_1Halo(
     sim_vels, nu_masses, halo_param_arr, 
     vels, phis, thetas, lower, upper,
-    fig_dir, fname, show=False
+    fig_dir, fname, show=False, curtain=False
 ):
 
     # Convert to momenta.
@@ -1588,10 +1658,7 @@ def plot_phase_space_1Halo(
     p1_sort = np.take_along_axis(p1_arr, ind, axis=-1)
     y0_sort = np.take_along_axis(y0_arr, ind, axis=-1)
 
-
-    curtain_behaviour = False
-
-    if curtain_behaviour:
+    if curtain:
         p1_final = p1_sort
         y0_final = y0_sort
     else:
@@ -1665,7 +1732,7 @@ def plot_phase_space_1Halo(
 def plot_number_density_integral(
     sim_vels, nu_masses, 
     vels, phis, thetas, lower, upper,
-    fig_dir, fname, show=False
+    fig_dir, fname, show=False, curtain=False
 ):
 
     # Convert to first and last momenta (of each neutrino).
@@ -1676,10 +1743,8 @@ def plot_number_density_integral(
     ind = p0_arr.argsort(axis=-1)
     p0_sort = np.take_along_axis(p0_arr, ind, axis=-1)
     p1_sort = np.take_along_axis(p1_arr, ind, axis=-1)
-
-    curtain_behaviour = False
-
-    if curtain_behaviour:
+    
+    if curtain:
         p0_final = p0_sort
         p1_final = p1_sort
     else:

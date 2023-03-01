@@ -17,9 +17,9 @@ total_start = time.perf_counter()
 # Initialize parameters and files.
 PRE = PRE(
     sim='L025N752', 
-    z0_snap=36, z4_snap=13, DM_lim=1000,
+    z0_snap=36, z4_snap=13, DM_lim=10000,
     sim_dir=SIM_ROOT, sim_ver=SIM_TYPE,
-    phis=20, thetas=20, vels=200,
+    phis=10, thetas=10, vels=100,
     pre_CPUs=128, sim_CPUs=128, mem_lim_GB=224
 )
 
@@ -33,7 +33,7 @@ os.makedirs(TEMP_DIR)
 # Halo parameters.
 mass_gauge = 12.0
 mass_range = 0.6
-size = 10
+size = 1
 
 hname = f'1e+{mass_gauge}_pm{mass_range}Msun'
 fct.halo_batch_indices(
@@ -80,15 +80,23 @@ def EOMs(s_val, y):
 
     # Neutrino outside cell grid.
     else:
-        NrDM = NrDM_SNAPSHOTS[idx]
-        grad_tot = fct.outside_gravity(x_i, NrDM, PRE.DM_SIM_MASS)
+        # NrDM = snaps_DM_num[idx]
+        # grad_tot = fct.outside_gravity(x_i, NrDM, PRE.DM_SIM_MASS)
+
+        # With quadrupole.
+        DM_com = snaps_DM_com[idx]
+        DM_num = snaps_DM_num[idx]
+        QJ_abs = snaps_QJ_abs[idx]
+        grad_tot = fct.outside_gravity_quadrupole(
+            x_i, DM_com, PRE.DM_SIM_MASS, DM_num, QJ_abs
+        )
 
     # Switch to "physical reality" here.
     grad_tot /= (kpc/s**2)
     x_i /= kpc
     u_i /= (kpc/s)
 
-    # Hamilton eqns. for integration.
+    # Hamilton eqns. for integration (global minus, s.t. we go back in time).
     dyds = -np.array([
         u_i, 1./(1.+z)**2 * grad_tot
     ])
@@ -126,6 +134,8 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
     # Create empty arrays to save specifics of each loop.
     save_GRID_L = np.zeros(len(PRE.NUMS_SNAPS))
     save_num_DM = np.zeros(len(PRE.NUMS_SNAPS))
+    save_DM_com = []
+    save_QJ_abs = []
 
     for j, (snap, proj_ID) in enumerate(zip(
         PRE.NUMS_SNAPS[::-1], proj_IDs
@@ -145,6 +155,8 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
         )
         DM_raw = np.load(f'{TEMP_DIR}/DM_pos_{IDname}.npy')
         DM_particles = len(DM_raw)
+        DM_com = np.load(f'{TEMP_DIR}/DM_com_coord_{IDname}.npy')*kpc
+
 
 
         # ---------------------- #
@@ -160,7 +172,23 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
         DM_raw *= kpc
         DM_pos = np.expand_dims(DM_raw, axis=0)
         DM_pos_for_cell_division = np.repeat(DM_pos, len(init_grid), axis=0)
+
+        
+        ### Interlude: Calculate QJ_aa and QJ_ab for complete halo. ###
+        
+        # Center all DM particles of halo on c.o.m. of halo and get distances.
+        DM_raw -= DM_com
+        DM_raw_dis = np.expand_dims(np.sqrt(np.sum(DM_raw**2, axis=1)), axis=1)
+
+        # Permute order of coords by one, i.e. (x,y,z) -> (z,x,y).
+        DM_raw_roll = np.roll(DM_raw, 1)
+
+        # Terms appearing in the quadrupole term.
+        QJ_aa = np.sum(3*DM_raw**2 - DM_raw_dis**2, axis=0)
+        QJ_ab = np.sum(3*DM_raw*DM_raw_roll, axis=0)
         del DM_raw
+        save_QJ_abs.append(np.array([QJ_aa, QJ_ab]))
+
 
         # Cell division.
         cell_division_count = fct.cell_division(
@@ -177,6 +205,7 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
         # Save snapshot specific parameters.
         save_GRID_L[j] = snap_GRID_L
         save_num_DM[j] = np.sum(DM_count)
+        save_DM_com.append(DM_com)
 
 
         # --------------------------------------------- #
@@ -282,7 +311,12 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
     # Save snapshot and halo specific arrays.
     np.save(f'{TEMP_DIR}/snaps_GRID_L_origID{halo_ID}.npy', save_GRID_L)
     np.save(f'{TEMP_DIR}/NrDM_snaps_origID{halo_ID}.npy', save_num_DM)
-
+    np.save(
+        f'{TEMP_DIR}/snaps_DM_com_origID{halo_ID}.npy', np.array(save_DM_com)
+    )
+    np.save(
+        f'{TEMP_DIR}/snaps_QJ_abs_origID{halo_ID}.npy', np.array(save_QJ_abs)
+    )
 
     # ========================================= #
     # Run simulation for current halo in batch. #
@@ -291,8 +325,12 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
     # These arrays will be used in EOMs function above.
     snaps_GRID_L = np.load(
         f'{TEMP_DIR}/snaps_GRID_L_origID{halo_ID}.npy')
-    NrDM_SNAPSHOTS = np.load(
+    snaps_DM_num = np.load(
         f'{TEMP_DIR}/NrDM_snaps_origID{halo_ID}.npy')
+    snaps_DM_com = np.load(
+        f'{TEMP_DIR}/snaps_DM_com_origID{halo_ID}.npy')
+    snaps_QJ_abs = np.load(
+        f'{TEMP_DIR}/snaps_QJ_abs_origID{halo_ID}.npy')
 
     
     # Display parameters for simulation.
@@ -323,8 +361,11 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
     # Calculate local overdensity.
     vels = fct.load_sim_data(TEMP_DIR, Bname, 'velocities')
 
+    # note: (optional) save velocities, such that we can do additional plots
+    np.save(f'{PRE.OUT_DIR}/velocities_{Bname}.npy', np.array(vels))
+
     #! The final number density must **NOT** be stored in the temporary folder.
-    out_file = f'{PRE.OUT_DIR}/number_densities_band_{Bname}.npy'
+    out_file = f'{PRE.OUT_DIR}/number_densities_band_outNEW_{Bname}.npy'
     fct.number_densities_mass_range(
         vels, NU_MRANGE, out_file
     )
