@@ -19,7 +19,7 @@ PRE = PRE(
     sim='L025N752', 
     z0_snap=36, z4_snap=13, DM_lim=10000,
     sim_dir=SIM_ROOT, sim_ver=SIM_TYPE,
-    phis=20, thetas=20, vels=200,
+    phis=10, thetas=10, vels=100,
     pre_CPUs=128, sim_CPUs=128, mem_lim_GB=224
 )
 
@@ -61,8 +61,16 @@ def EOMs(s_val, y):
 
     # Neutrino outside cell grid.
     else:
-        NrDM = snaps_num_DM[idx]
+        NrDM = snaps_DM_num[idx]
         grad_tot = fct.outside_gravity(x_i, NrDM, PRE.DM_SIM_MASS)
+
+        # With quadrupole.
+        # DM_com = snaps_DM_com[idx]
+        # DM_num = snaps_DM_num[idx]
+        # QJ_abs = snaps_QJ_abs[idx]
+        # grad_tot = fct.outside_gravity_quadrupole(
+        #     x_i, DM_com, PRE.DM_SIM_MASS, DM_num, QJ_abs
+        # )
 
     # Switch to "physical reality" here.
     grad_tot /= (kpc/s**2)
@@ -99,7 +107,7 @@ def backtrack_1_neutrino(y0_Nr):
 
 # Create empty arrays to save specifics of each loop.
 snaps_GRID_L = np.zeros(len(PRE.NUMS_SNAPS))
-snaps_num_DM = np.zeros(len(PRE.NUMS_SNAPS))
+snaps_DM_num = np.zeros(len(PRE.NUMS_SNAPS))
 
 for j, snap in enumerate(PRE.NUMS_SNAPS[::-1]):
     
@@ -142,7 +150,7 @@ for j, snap in enumerate(PRE.NUMS_SNAPS[::-1]):
     
     # Save snapshot specific parameters.
     snaps_GRID_L[j] = snap_GRID_L
-    snaps_num_DM[j] = np.sum(DM_count)
+    snaps_DM_num[j] = np.sum(DM_count)
 
 
     # --------------------------------------------- #

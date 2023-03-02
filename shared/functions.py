@@ -1212,7 +1212,8 @@ def velocity_to_momentum(sim_vels, m_arr):
     )
 
     # From velocity (magnitude) in kpc/s to momentum in eV.
-    p_dim = 1/np.sqrt(1-mags_dim**2) * mags_dim*(kpc/s) * m_dim
+    # p_dim = 1/np.sqrt(1-mags_dim**2) * mags_dim*(kpc/s) * m_dim
+    p_dim = mags_dim*(kpc/s) * m_dim
 
     # p/T_CNB ratio.
     y = p_dim/T_CNB
