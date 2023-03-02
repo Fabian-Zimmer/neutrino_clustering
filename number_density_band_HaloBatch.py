@@ -360,12 +360,14 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
 
     # Calculate local overdensity.
     vels = fct.load_sim_data(TEMP_DIR, Bname, 'velocities')
+    poss = fct.load_sim_data(TEMP_DIR, Bname, 'positions')
 
     # note: (optional) save velocities, such that we can do additional plots
-    # np.save(f'{PRE.OUT_DIR}/velocities_{Bname}.npy', np.array(vels))
+    np.save(f'{PRE.OUT_DIR}/velocities_{Bname}.npy', np.array(vels))
+    np.save(f'{PRE.OUT_DIR}/positions_{Bname}.npy', np.array(poss))
 
     #! The final number density must **NOT** be stored in the temporary folder.
-    out_file = f'{PRE.OUT_DIR}/number_densities_band_noYL_{Bname}.npy'
+    out_file = f'{PRE.OUT_DIR}/number_densities_band_poss_{Bname}.npy'
     fct.number_densities_mass_range(
         vels, NU_MRANGE, out_file
     )
