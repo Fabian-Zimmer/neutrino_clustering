@@ -1,0 +1,13 @@
+Content:
+  DM Mass [Msun]: 1437874.875
+  Smoothening Length [pc]: 650.0000017695129
+Cosmology:
+  Omega_L: 0.693
+  Omega_M: 0.307
+  Omega_R: 0.0
+  h: 0.6777
+File Paths:
+  Box Directory: /projects/0/einf180/Tango_sims
+  Box File Directory: /projects/0/einf180/Tango_sims/L025N752/DMONLY/SigmaConstant00
+  Box Name: L025N752
+  Box Version: DMONLY/SigmaConstant00

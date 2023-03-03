@@ -1240,62 +1240,6 @@ def y_fmt(value, tick_number):
 ### Main functions ###
 ######################
 
-def init_velocities(phi_points, theta_points, momenta, all_sky=False):
-    """Get initial velocities for the neutrinos."""
-
-    # Convert momenta to initial velocity magnitudes, in units of [kpc/s].
-    # v_kpc = 1/np.sqrt(NU_MASS**2/momenta**2 + 1) / (kpc/s)
-    u_i = momenta/NU_MASS / (kpc/s)
-
-    if all_sky:
-        # For all_sky script, input is just one coord. pair
-        t, p = theta_points, phi_points
-
-        # Each coord. pair gets whole momentum, i.e. velocity range.
-        uxs = [-u*np.cos(p)*np.sin(t) for u in u_i]
-        uys = [-u*np.sin(p)*np.sin(t) for u in u_i]
-        uzs = [-u*np.cos(t) for u in u_i]
-
-        u_i_array = np.array(
-            [[ux, uy, uz] for ux,uy,uz in zip(uxs,uys,uzs)]
-        )
-
-    else:
-        # Split up this magnitude into velocity components, by using spher. 
-        # coords. trafos, which act as "weights" for each direction.
-        cts = np.linspace(-1, 1, theta_points)
-        ps = np.linspace(0, 2*Pi, phi_points)
-
-        # Minus signs due to choice of coord. system setup (see notes/drawings).
-        #                              (<-- outer loops, --> inner loops)
-        uxs = [
-            -u*np.cos(p)*np.sqrt(1-ct**2) for ct in cts for p in ps for u in u_i
-        ]
-        uys = [
-            -u*np.sin(p)*np.sqrt(1-ct**2) for ct in cts for p in ps for u in u_i
-        ]
-        uzs = [
-            -u*ct for ct in cts for _ in ps for u in u_i
-        ]
-
-        '''
-        eps = 0.01  # shift in theta, so poles are not included
-        ts = np.linspace(0.+eps, Pi-eps, theta_points)
-        ps = np.linspace(0., 2.*Pi, phi_points)
-
-        # Minus signs due to choice of coord. system setup (see notes/drawings).
-        #                              (<-- outer loops, --> inner loops)
-        uxs = [-u*np.cos(p)*np.sin(t) for t in ts for p in ps for u in u_i]
-        uys = [-u*np.sin(p)*np.sin(t) for t in ts for p in ps for u in u_i]
-        uzs = [-u*np.cos(t) for t in ts for _ in ps for u in u_i]
-        '''
-
-        u_i_array = np.array(
-            [[ux, uy, uz] for ux,uy,uz in zip(uxs,uys,uzs)]
-        )
-
-    return u_i_array 
-
 
 @nb.njit
 def halo_pos(glat, glon, d):
