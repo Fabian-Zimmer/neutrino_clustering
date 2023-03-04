@@ -254,7 +254,6 @@ def make_box_parameters_and_merger_tree(
     main(config_parameters)
 
 
-
 # Argparse inputs.
 parser = argparse.ArgumentParser()
 parser.add_argument('-bd', '--box_directory', required=True)
@@ -269,14 +268,6 @@ make_box_parameters_and_merger_tree(
     box_dir=args.box_directory, 
     box_name=args.box_name, 
     box_ver=args.box_version, 
-    zi_snap=args.initial_snap, 
-    zf_snap=args.final_snap
+    zi_snap=int(args.initial_snap), 
+    zf_snap=int(args.final_snap)
 )
-
-# make_box_parameters_and_merger_tree(
-#     box_dir='/projects/0/einf180/Tango_sims', 
-#     box_name='L025N752', 
-#     box_ver='DMONLY/SigmaConstant00', 
-#     zi_snap=36, 
-#     zf_snap=12
-# )

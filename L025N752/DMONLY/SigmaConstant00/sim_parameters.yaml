@@ -7,7 +7,7 @@ integration_solver: RK23
 memory_limit_GB: 224
 momentum_num: 100
 momentum_start: 0.01
-momentum_stop: 400
+momentum_stop: 400.0
 neutrino_mass_num: 100
 neutrino_mass_start: 0.01
 neutrino_mass_stop: 0.3
@@ -18,4 +18,4 @@ phis: 10
 thetas: 10
 z_inegration_num: 100
 z_inegration_start: 0
-z_inegration_stop: 4
+z_inegration_stop: 4.0

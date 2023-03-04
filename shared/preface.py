@@ -173,6 +173,10 @@ X_AG    = np.array([632.29742673, -377.40315121, -288.27006757])
 T_CMB = 2.72548*K
 T_CNB = np.power(4/11, 1/3)*T_CMB
 
+# Neutrino + antineutrino number density of 1 flavor in [1/cm**3],
+# using the analytical expression for Fermions.
+N0 = 2*zeta(3.)/Pi**2 *T_CNB**3 *(3./4.) /(1/cm**3)
+
 
 ######################################
 ### Discrete simulation parameters ###

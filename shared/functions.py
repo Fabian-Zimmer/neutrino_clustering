@@ -208,6 +208,7 @@ def halo_batch_indices(
     np.save(f'{out_dir}/halo_batch_{fname}_indices.npy', select_halos)
     np.save(f'{out_dir}/halo_batch_{fname}_params.npy', halo_params)
 
+
 def read_DM_halo_index(snap, halo_ID, fname, sim_dir, out_dir):
 
     # ---------------- #

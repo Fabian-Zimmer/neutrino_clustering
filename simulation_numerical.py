@@ -53,6 +53,7 @@ z_int_steps = np.save(f'{args.directory}/z_int_steps.npy')
 s_int_steps = np.save(f'{args.directory}/s_int_steps.npy')
 neutrino_massrange = np.save(f'{args.directory}/neutrino_massrange_eV.npy')
 shell_multipliers = np.save(f'{args.directory}/shell_multipliers.npy')
+DM_shell_edges = np.save(f'{args.directory}/DM_shell_edges.npy')
 
 
 # Make temporary folder to store files, s.t. parallel runs don't clash.
@@ -72,13 +73,13 @@ os.makedirs(temp_dir)
 hname = f'1e+{args.mass_gauge}_pm{args.mass_range}Msun'
 fct.halo_batch_indices(
     z0_snap_4cif, args.mass_gauge, args.mass_range, 'halos', args.halo_num, 
-    hname, box_file_dir, temp_dir
+    hname, box_file_dir, args.directory
 )
-halo_batch_IDs = np.load(f'{temp_dir}/halo_batch_{hname}_indices.npy')
-halo_batch_params = np.load(f'{temp_dir}/halo_batch_{hname}_params.npy')
+halo_batch_IDs = np.load(f'{args.directory}/halo_batch_{hname}_indices.npy')
+halo_batch_params = np.load(f'{args.directory}/halo_batch_{hname}_params.npy')
 halo_num = len(halo_batch_params)
 
-print('********Number density band********')
+print(f'********Numerical Simulation: Mode={args.sim_type}********')
 print('Halo batch params (Rvir,Mvir,cNFW):')
 print(halo_batch_params)
 print('***********************************')
@@ -172,27 +173,45 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
     save_DM_com = []
     save_QJ_abs = []
 
-    for j, (snap, prog_ID) in enumerate(zip(
-        nums_snaps[::-1], prog_IDs_np
-    )):
+    for j, (snap, prog_ID) in enumerate(
+        zip(nums_snaps[::-1], prog_IDs_np)
+    ):
         print(f'halo {halo_j+1}/{halo_num} ; snapshot {snap}')
-        
         prog_ID = int(prog_ID)
 
 
         # --------------------------- #
         # Read and load DM positions. #
         # --------------------------- #
-        #? this load DM section would be different for each of the 3 modes.
 
+        # Name for file identification of current halo for current snapshot.
         IDname = f'origID{halo_ID}_snap_{snap}'
-        fct.read_DM_halo_index(
-            snap, prog_ID, IDname, box_file_dir, temp_dir
-        )
-        DM_raw = np.load(f'{temp_dir}/DM_pos_{IDname}.npy')
-        DM_particles = len(DM_raw)
-        DM_com = np.load(f'{temp_dir}/DM_com_coord_{IDname}.npy')*kpc
 
+        if args.sim_type in ('single_halos', 'all_sky'):
+            
+            fct.read_DM_halo_index(
+                snap, prog_ID, IDname, box_file_dir, temp_dir
+            )
+            DM_raw = np.load(f'{temp_dir}/DM_pos_{IDname}.npy')
+            DM_com = np.load(f'{temp_dir}/DM_com_coord_{IDname}.npy')*kpc
+            DM_particles = len(DM_raw)
+
+        else:
+
+            # Define how many shells are used, out of len(DM_SHELL_EDGES)-1.
+            shells = 1
+            DM_shell_edges = DM_shell_edges[:shells+1]
+            
+            # Load DM from all used shells.
+            DM_pre = []
+            for shell_i in range(shells):
+                DM_pre.append(
+                    np.load(f'{temp_dir}/DM_pos_{IDname}_shell{shell_i}.npy')
+                )
+            DM_raw = np.array(list(chain.from_iterable(DM_pre)))
+            DM_particles = len(DM_raw)
+            DM_com = np.sum(DM_raw, axis=0)/len(DM_raw)
+            del DM_pre
 
 
         # ---------------------- #
@@ -369,7 +388,10 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
     snaps_QJ_abs = np.load(
         f'{temp_dir}/snaps_QJ_abs_origID{halo_ID}.npy')
 
-    
+
+    #? simulation script below has to be slightly modifies for all_sky, with 
+    #? loop over coord. pairs and conversion to number densities.
+
     # Display parameters for simulation.
     print('***Running simulation***')
     print(f'halo={halo_j+1}/{halo_num}, CPUs={CPUs_sim}')
@@ -394,7 +416,7 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
     )
 
     if args.sim_type in ('single_halos', 'spheres'):
-
+        # For modes except all_sky, save neutrino vectors.
         # Split velocities and positions into 10k neutrino batches.
         # A ndarray with shape (10_000, 100, 6) in our case is then 48 MB.
         split = np.array_split(neutrino_vectors, 10_000, axis=0)
@@ -402,12 +424,19 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
             np.save(
                 f'{args.directory}/neutrino_vectors_batch{i+1}.npy', elem
             )
-    else:
-        # Directly compute the overdensities for the all_sky mode.
+
+        # Compute the number densities.
         out_file = f'{args.directory}/number_densities.npy'
         fct.number_densities_mass_range(
             neutrino_vectors[:,:,3:6], neutrino_massrange, out_file
         )
+
+    else:
+        # Compute the number densities for the all_sky mode for each coord. 
+        # pair, then combine into one file with angles included. Shape is 
+        # (coord_pairs, 3) with the 3 elements being [phi,theta,number_density].
+
+        #? fill out for all_sky here: see number_density_all_sky(_V2).py
 
 
     sim_time = time.perf_counter()-start
