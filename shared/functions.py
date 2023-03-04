@@ -149,18 +149,6 @@ def R_vir_fct(z, M_vir):
 ### Functions used in DISCRETE simulation ###
 #############################################
 
-def read_MergerTree(tree_dir, fname, init_halo):
-
-    # Path to merger_tree file.
-    tree_path = f'{tree_dir}/MergerTree_{fname}.hdf5'
-
-    with h5py.File(tree_path) as tree:
-        # Progenitor index list.
-        prog_IDs = tree['Assembly_history/Progenitor_index'][init_halo,:]
-        prog_IDs_np = np.array(np.expand_dims(prog_IDs, axis=1), dtype=int)
-
-    return prog_IDs_np
-
 
 def halo_batch_indices(
     snap, mass_gauge, mass_range, 
@@ -219,7 +207,6 @@ def halo_batch_indices(
 
     np.save(f'{out_dir}/halo_batch_{fname}_indices.npy', select_halos)
     np.save(f'{out_dir}/halo_batch_{fname}_params.npy', halo_params)
-
 
 def read_DM_halo_index(snap, halo_ID, fname, sim_dir, out_dir):
 

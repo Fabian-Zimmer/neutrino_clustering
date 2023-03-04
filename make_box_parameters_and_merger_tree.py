@@ -1,5 +1,4 @@
 from shared.preface import *
-
 import velociraptor
 from shared.snapshot_data import snapshot_info
 from shared.tree_dataset import TreeCatalogue
@@ -149,38 +148,135 @@ def main(config: ArgumentParser):
         make_tree_data(sim_info)
 
 
-class Mock_ArgumentParser():
+def make_box_parameters_and_merger_tree(
+    box_dir, box_name, box_ver, zi_snap, zf_snap
+):
+    """
+    Reads cosmological and other global parameters of the specified simulation box. Output is stored in corresponding output folder, where all simulation outputs (e.g. neutrino overdensities) will be stored.
+    """
 
-    def __init__(
-            self, box_file_dir, output_dir, file_name, z0_snap_4cif,
-        ):
-        self.directory_list = box_file_dir
-        self.snapshot_list = [f'snapshot_{z0_snap_4cif}.hdf5',]
-        self.catalogue_list = [f'subhalo_{z0_snap_4cif}.properties',]
-        self.name_list = file_name
-        self.output_directory = output_dir
+    # Box input/output paths.
+    file_dir = f'{box_dir}/{box_name}/{box_ver}'
+    out_dir = f'{os.getcwd()}/{box_name}/{box_ver}'
+
+    # Create output directory. If it exists already, delete then create.
+    if os.path.exists(out_dir):
+        shutil.rmtree(out_dir)
+    os.makedirs(out_dir)
+
+    # The snapshots to read, determined by inputs zi_snap and zf_snap.
+    snap_nums = np.arange(zf_snap, zi_snap+1)
+    nums_4cif = []
+    zeds = np.zeros(len(snap_nums))
+
+    # Loop over selected snapshots and save outputs.
+    for i, num in enumerate(snap_nums):
+        num_4cif = f'{num:04d}'
+        nums_4cif.append(num_4cif)
+
+        with h5py.File(f'{file_dir}/snapshot_{num_4cif}.hdf5') as snap:
+
+            # Store redshifts.
+            zeds[i] = snap['Cosmology'].attrs['Redshift'][0]
+
+            # Save global parameters only once.
+            if i == 0:
+
+                # Cosmology.
+                cosmo = snap['Cosmology']
+                Omega_R = cosmo.attrs['Omega_r'][0]
+                Omega_M = cosmo.attrs['Omega_m'][0]
+                Omega_L = cosmo.attrs['Omega_lambda'][0]
+                h_dimless = cosmo.attrs['h'][0]
+
+                # Dark matter "particle" mass of box.
+                DM_mass = np.unique(snap['PartType1/Masses'][:]*1e10*Msun)[0]
+
+                # Gravity smoothening length of box.
+                smooth_len = snap['GravityScheme'].attrs[
+                    'Maximal physical DM softening length (Plummer equivalent) [internal units]'
+                ][0]*1e6*pc
 
 
-    # note:
-    # For now, the "final" snapshot we simulate back to, is hard coded above.
-    # Future version would preferably be via user input.
 
-    # sim = 'L025N752'
-    # splits = re.split('/', SIM_TYPE)
-    # name_list = f'MergerTree_{sim}_{splits[0]}_{splits[1]}'
-    # first_snap = '0036'
-    # #note: final_snap has to be adjusted in above function build_tree
+                # Create .yaml file for global parameters of box.
+                box_parameters = {
+                    "File Paths": {
+                        "Box Directory": box_dir,
+                        "Box Name": box_name,
+                        "Box Version": box_ver,
+                        "Box File Directory": file_dir,
+                    },
+                    "Cosmology": {
+                        "Omega_R": float(Omega_R),
+                        "Omega_M": float(Omega_M),
+                        "Omega_L": float(Omega_L),
+                        "h": float(h_dimless),
+                    },
+                    "Content": {
+                        "DM Mass [Msun]": float(DM_mass/Msun),
+                        "Smoothening Length [pc]": float(smooth_len/pc),
+                        "z=0 snapshot": f'{zi_snap:04d}',
+                        "initial redshift": float(zeds[-1]),
+                        "final redshift": float(zeds[0]),
+                    } 
+                }
+                with open(f'{out_dir}/box_parameters.yaml', 'w') as file:
+                    yaml.dump(box_parameters, file)
 
-    # snapshot_list = [f'snapshot_{first_snap}.hdf5',]
-    # catalogue_list = [f'subhalo_{first_snap}.properties',]
-
-    # directory_list = f'{SIM_ROOT}/{sim}/{SIM_TYPE}'
-    # output_directory = f'{os.getcwd()}/{sim}/{SIM_TYPE}'
-    # number_of_inputs = len(snapshot_list)
-    # print(directory_list)
-    # print(output_directory)
+    # Save 4cifer codes and redshift for snapshots, as array files.
+    np.save(f'{out_dir}/zeds_snaps.npy', zeds)
+    np.save(f'{out_dir}/nums_snaps.npy', nums_4cif)
 
 
-print(f'***Making merger tree for box {box_name}***')
-config_parameters = Mock_ArgumentParser()
-main(config_parameters)
+    ### ================= ###
+    ### Make merger tree. ###
+    ### ================= ###
+
+    class Mock_ArgumentParser():
+        def __init__(
+                self, box_file_dir, output_dir, file_name, z0_snap_4cif
+            ):
+            self.directory_list = box_file_dir
+            self.snapshot_list = [f'snapshot_{z0_snap_4cif}.hdf5',]
+            self.catalogue_list = [f'subhalo_{z0_snap_4cif}.properties',]
+            self.name_list = file_name
+            self.output_directory = output_dir
+            self.number_of_inputs = len(self.snapshot_list)
+
+    print(f'***Making merger tree for box name/version {box_name}/{box_ver}***')
+    config_parameters = Mock_ArgumentParser(
+        box_file_dir=file_dir, 
+        output_dir=out_dir, 
+        file_name='MergerTree',
+        z0_snap_4cif=f'{zi_snap:04d}'
+    )
+    main(config_parameters)
+
+
+
+# Argparse inputs.
+parser = argparse.ArgumentParser()
+parser.add_argument('-bd', '--box_directory', required=True)
+parser.add_argument('-bn', '--box_name', required=True)
+parser.add_argument('-bv', '--box_version', required=True)
+parser.add_argument('-zi', '--initial_snap', required=True)
+parser.add_argument('-zf', '--final_snap', required=True)
+args = parser.parse_args()
+
+
+make_box_parameters_and_merger_tree(
+    box_dir=args.box_directory, 
+    box_name=args.box_name, 
+    box_ver=args.box_version, 
+    zi_snap=args.initial_snap, 
+    zf_snap=args.final_snap
+)
+
+# make_box_parameters_and_merger_tree(
+#     box_dir='/projects/0/einf180/Tango_sims', 
+#     box_name='L025N752', 
+#     box_ver='DMONLY/SigmaConstant00', 
+#     zi_snap=36, 
+#     zf_snap=12
+# )
