@@ -1444,7 +1444,7 @@ def number_density(p0, p1, pix_sr=4*Pi):
 
 def number_densities_mass_range(
     sim_vels, nu_masses, out_file, pix_sr=4*Pi,
-    average=False, m_start=0.01, z_start=0.
+    average=False, m_start=0.01, z_start=0., sim_type='single_halos'
 ):
     
     # Convert velocities to momenta.
@@ -1459,7 +1459,10 @@ def number_densities_mass_range(
     else:
         num_densities = number_density(p_arr[...,0], p_arr[...,-1], pix_sr)
 
-    np.save(f'{out_file}', num_densities)
+    if sim_type is 'all_sky':
+        return num_densities
+    else:
+        np.save(f'{out_file}', num_densities)
 
 
 def plot_eta_band(

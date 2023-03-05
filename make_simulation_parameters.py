@@ -136,19 +136,25 @@ def make_sim_parameters(
     u_i = neutrino_momenta/nu_mass_eV / (kpc/s)
 
     if sim_type == 'all_sky':
-        # For all-sky script, input is just one coord. pair.
-        t, p = thetas, phis
 
         # Each coord. pair gets whole momentum, i.e. velocity range.
-        uxs = [-u*np.cos(p)*np.sin(t) for u in u_i]
-        uys = [-u*np.sin(p)*np.sin(t) for u in u_i]
-        uzs = [-u*np.cos(t) for u in u_i]
-
-        u_i_array = np.array(
-            [[ux, uy, uz] for ux,uy,uz in zip(uxs,uys,uzs)]
+        u_i = np.ones(neutrinos)
+        uxs = np.array(
+            [-u_i*np.cos(ps)*np.sin(ts) for ps, ts in zip(phis, thetas)]
         )
+        uys = np.array(
+            [-u_i*np.sin(ps)*np.sin(ts) for ps, ts in zip(phis, thetas)]
+        )
+        uzs = np.array(
+            [-u_i*np.cos(ts) for ts in thetas]
+        )
+        u_i_array = np.stack((uxs, uys, uzs), axis=2)
+
+        # Save the theta and phi angles as numpy arrays.
+        np.save(f'{sim_dir}/all_sky_angles.npy', np.transpose((phis, thetas)))
 
     else:
+
         # Split up this magnitude into velocity components, by using spher. 
         # coords. trafos, which act as "weights" for each direction.
         cts = np.linspace(-1, 1, thetas)  # cos(thetas)
@@ -177,6 +183,10 @@ def make_sim_parameters(
 parser = argparse.ArgumentParser()
 parser.add_argument('-sd', '--sim_dir', required=True)
 parser.add_argument('-st', '--sim_type', required=True)
+
+# If sim_type is all_sky, phi and theta angles are determined by Nside.
+parser.add_argument('-hn', '--healpix_nside', required=False)
+
 parser.add_argument('-ni', '--nu_mass_start', required=True)
 parser.add_argument('-nf', '--nu_mass_stop', required=True)
 parser.add_argument('-nn', '--nu_mass_num', required=True)
@@ -184,8 +194,11 @@ parser.add_argument('-nm', '--nu_sim_mass', required=True)
 parser.add_argument('-pi', '--p_start', required=True)
 parser.add_argument('-pf', '--p_stop', required=True)
 parser.add_argument('-pn', '--p_num', required=True)
-parser.add_argument('-ph', '--phis', required=True)
-parser.add_argument('-th', '--thetas', required=True)
+
+# Only required for modes other than all_sky.
+parser.add_argument('-ph', '--phis', required=False)
+parser.add_argument('-th', '--thetas', required=False)
+
 parser.add_argument('-xi', '--init_x_dis', required=True)
 parser.add_argument('-zi', '--z_int_shift', required=True)
 parser.add_argument('-zf', '--z_int_stop', required=True)
@@ -198,6 +211,22 @@ parser.add_argument('-dl', '--DM_in_cell_limit', required=True)
 args = parser.parse_args()
 
 
+# Adjust phi and theta angles for different modes.
+if args.sim_type == 'all_sky':
+    
+    Nside = 2**1              # Specify nside parameter
+    Npix = 12 * Nside**2      # Number of pixels
+    pix_sr = (4*np.pi)/Npix   # Pixel size  [sr]
+    
+    theta_angles, phi_angles = np.array(
+        hp.pixelfunc.pix2ang(Nside, np.arange(Npix))
+    )
+else:
+
+    phi_angles = int(args.phis)
+    theta_angles = int(args.thetas)
+
+
 make_sim_parameters(
     sim_dir=args.sim_dir,
     sim_type=args.sim_type,
@@ -208,8 +237,8 @@ make_sim_parameters(
     p_start=float(args.p_start),
     p_stop=float(args.p_stop),
     p_num=int(args.p_num),
-    phis=int(args.phis),
-    thetas=int(args.thetas),
+    phis=phi_angles,
+    thetas=theta_angles,
     init_x_dis=float(args.init_x_dis),
     z_int_shift=float(args.z_int_shift),
     z_int_stop=float(args.z_int_stop),

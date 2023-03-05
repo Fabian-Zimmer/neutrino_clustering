@@ -389,36 +389,34 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
         f'{temp_dir}/snaps_QJ_abs_origID{halo_ID}.npy')
 
 
-    #? simulation script below has to be slightly modifies for all_sky, with 
-    #? loop over coord. pairs and conversion to number densities.
-
     # Display parameters for simulation.
-    print('***Running simulation***')
+    print(f'***Running simulation: mode = {args.sim_type}***')
     print(f'halo={halo_j+1}/{halo_num}, CPUs={CPUs_sim}')
 
-    start = time.perf_counter()
-
-    # Load initial velocities.
-    ui = np.load(f'{args.directory}/initial_velocities.npy')
-
-    # Combine vectors and append neutrino particle number.
-    y0_Nr = np.array(
-        [np.concatenate((init_xyz, ui[i], [i+1])) for i in range(neutrinos)]
-        )
-
-    # Run simulation on multiple cores.
-    with ProcessPoolExecutor(CPUs_sim) as ex:
-        ex.map(backtrack_1_neutrino, y0_Nr)
-
-    # Compactify all neutrino vectors into 1 file.
-    neutrino_vectors = np.array(
-        [np.load(f'{temp_dir}/nu_{i+1}.npy') for i in range(neutrinos)]
-    )
+    sim_start = time.perf_counter()
 
     if args.sim_type in ('single_halos', 'spheres'):
-        # For modes except all_sky, save neutrino vectors.
+    
+        # Load initial velocities.
+        ui = np.load(f'{args.directory}/initial_velocities.npy')
+
+        # Combine vectors and append neutrino particle number.
+        y0_Nr = np.array(
+            [np.concatenate((init_xyz, ui[i], [i+1])) for i in range(neutrinos)]
+            )
+
+        # Run simulation on multiple cores.
+        with ProcessPoolExecutor(CPUs_sim) as ex:
+            ex.map(backtrack_1_neutrino, y0_Nr)
+
+        # Compactify all neutrino vectors into 1 file.
+        neutrino_vectors = np.array(
+            [np.load(f'{temp_dir}/nu_{i+1}.npy') for i in range(neutrinos)]
+        )
+
+        # For these modes (i.e. not all_sky), save all neutrino vectors.
         # Split velocities and positions into 10k neutrino batches.
-        # A ndarray with shape (10_000, 100, 6) in our case is then 48 MB.
+        # For reference: ndarray with shape (10_000, 100, 6) is  48 MB.
         split = np.array_split(neutrino_vectors, 10_000, axis=0)
         for i, elem in enumerate(split):
             np.save(
@@ -432,14 +430,53 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
         )
 
     else:
-        # Compute the number densities for the all_sky mode for each coord. 
-        # pair, then combine into one file with angles included. Shape is 
-        # (coord_pairs, 3) with the 3 elements being [phi,theta,number_density].
 
-        #? fill out for all_sky here: see number_density_all_sky(_V2).py
+        # Load initial velocities for all_sky mode. Note that this array is not 
+        # github compatible, and will be deleted afterwards.
+        ui = np.load(f'{args.directory}/initial_velocities.npy')
+
+        # Empty list to append number densitites of each angle coord. pair.
+        number_densities_pairs = []
+
+        for i, ui_elem in enumerate(ui):
+
+            print(f'Coord. pair {i+1}/{len(ui)}')
+
+            # Combine vectors and append neutrino particle number.
+            y0_Nr = np.array([np.concatenate(
+                (init_xyz, ui_elem[k], [k+1])) for k in range(len(ui_elem))
+            ])
+            
+            # Run simulation on multiple cores.
+            with ProcessPoolExecutor(CPUs_sim) as ex:
+                ex.map(backtrack_1_neutrino, y0_Nr)
+
+            # Compactify all neutrino vectors into 1 file.
+            neutrino_vectors = np.array(
+                [np.load(f'{temp_dir}/nu_{i+1}.npy') for i in range(neutrinos)]
+            )
+
+            # Compute the number densities.
+            number_densities_pairs.append(
+                fct.number_densities_mass_range(
+                    neutrino_vectors[:,:,3:6], 
+                    neutrino_massrange, 
+                    sim_type=args.sim_type
+                )
+            )
 
 
-    sim_time = time.perf_counter()-start
+        # Combine number densities with angle pairs: First 2 entries are angles.
+        nu_dens_pairs = np.array(number_densities_pairs)
+        angle_pairs = np.load(f'{args.directory}/all_sky_angles.npy')
+        nu_final = np.concatenate((angle_pairs, nu_dens_pairs), axis=2)
+        np.save(f'{args.directory}/number_densities.npy', nu_final)
+
+        # Delete arrays not compatible with github file limit size.
+        fct.delete_temp_data(f'{args.directory}/initial_velocities.npy')
+
+
+    sim_time = time.perf_counter()-sim_start
     print(f'Sim time: {sim_time/60.} min, {sim_time/(60**2)} h.')
 
 # Remove temporary folder with all individual neutrino files.
