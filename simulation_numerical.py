@@ -5,7 +5,6 @@ OS_MEM = (psutil.virtual_memory().used)
 total_start = time.perf_counter()
 
 from shared.preface import *
-import shared.functions as fct
 
 # Argparse inputs.
 parser = argparse.ArgumentParser()
@@ -43,17 +42,37 @@ init_x_dis = sim_setup['initial_haloGC_distance']
 init_xyz = np.array([init_x_dis, 0., 0.])
 neutrinos = sim_setup['neutrinos']
 
-
 # Load arrays.
 nums_snaps = np.save(f'{args.directory}/nums_snaps.npy')
 zeds_snaps = np.save(f'{args.directory}/zeds_snaps.npy')
-#? check the ordering of these arrays later. Sometimes [::-1] necessary...
 
 z_int_steps = np.save(f'{args.directory}/z_int_steps.npy')
 s_int_steps = np.save(f'{args.directory}/s_int_steps.npy')
 neutrino_massrange = np.save(f'{args.directory}/neutrino_massrange_eV.npy')
-shell_multipliers = np.save(f'{args.directory}/shell_multipliers.npy')
 DM_shell_edges = np.save(f'{args.directory}/DM_shell_edges.npy')
+shell_multipliers = np.save(f'{args.directory}/shell_multipliers.npy')
+
+
+# Load constants and arrays, which the functions.py script needs.
+FCT_h = box_setup['Cosmology']['h']
+FCT_H0 = FCT_h*100*km/s/Mpc
+FCT_Omega_M = box_setup['Cosmology']['Omega_M']
+FCT_Omega_L = box_setup['Cosmology']['Omega_L']
+FCT_DM_shell_edges = np.copy(DM_shell_edges)
+FCT_shell_multipliers = np.copy(shell_multipliers)
+FCT_init_xys = np.copy(init_xyz)
+FCT_neutrino_simulation_mass_eV = sim_setup['neutrino_simulation_mass_eV']*eV
+FCT_zeds = np.copy(z_int_steps)
+
+# note: now that variables are loaded into memory, the function.py will work.
+#? probably not a good final solution, perhaps scripts have functions above, 
+#? which they will use? they should be unique between the analytical and 
+#? numerical simulation types.
+import shared.functions as fct
+
+
+
+
 
 
 # Make temporary folder to store files, s.t. parallel runs don't clash.
@@ -173,8 +192,14 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
     save_DM_com = []
     save_QJ_abs = []
 
+    #! before
+    # for j, (snap, prog_ID) in enumerate(
+    #     zip(nums_snaps[::-1], prog_IDs_np)
+    # ):
+        
+    #! after
     for j, (snap, prog_ID) in enumerate(
-        zip(nums_snaps[::-1], prog_IDs_np)
+        zip(nums_snaps, prog_IDs_np)
     ):
         print(f'halo {halo_j+1}/{halo_num} ; snapshot {snap}')
         prog_ID = int(prog_ID)
@@ -363,31 +388,19 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
         np.save(f'{temp_dir}/dPsi_grid_{IDname}.npy', dPsi_grid)
 
 
-    # Save snapshot and halo specific arrays.
-    np.save(f'{temp_dir}/snaps_GRID_L_origID{halo_ID}.npy', save_GRID_L)
-    np.save(f'{temp_dir}/NrDM_snaps_origID{halo_ID}.npy', save_num_DM)
-    np.save(
-        f'{temp_dir}/snaps_DM_com_origID{halo_ID}.npy', np.array(save_DM_com)
-    )
-    np.save(
-        f'{temp_dir}/snaps_QJ_abs_origID{halo_ID}.npy', np.array(save_QJ_abs)
-    )
-
-
     # ========================================= #
     # Run simulation for current halo in batch. #
     # ========================================= #
 
-    # These arrays will be used in EOMs function above.
-    snaps_GRID_L = np.load(
-        f'{temp_dir}/snaps_GRID_L_origID{halo_ID}.npy')
-    snaps_DM_num = np.load(
-        f'{temp_dir}/NrDM_snaps_origID{halo_ID}.npy')
-    snaps_DM_com = np.load(
-        f'{temp_dir}/snaps_DM_com_origID{halo_ID}.npy')
-    snaps_QJ_abs = np.load(
-        f'{temp_dir}/snaps_QJ_abs_origID{halo_ID}.npy')
-
+    #! Important:
+    # The loop ran from the earliest snapshot (z~4 for us) to the latest (z=0).
+    # So these arrays are in this order. Even though our simulation runs 
+    # backwards in time, we can leave them like this, since the correct element 
+    # gets picked with the idx routine in the EOMs function above.
+    snaps_GRID_L = np.array(save_GRID_L)
+    snaps_DM_num = np.array(save_num_DM)
+    snaps_DM_com = np.array(save_DM_com)
+    snaps_QJ_abs = np.array(save_QJ_abs)
 
     # Display parameters for simulation.
     print(f'***Running simulation: mode = {args.sim_type}***')

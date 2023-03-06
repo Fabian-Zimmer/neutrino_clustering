@@ -1,18 +1,77 @@
 from shared.preface import *
+
+# Argparse inputs.
+parser = argparse.ArgumentParser()
+parser.add_argument('-d', '--directory', required=True)
+parser.add_argument('-st', '--sim_type', required=True)
+parser.add_argument('-hn', '--halo_num', required=True)
+parser.add_argument('-mg', '--mass_gauge', required=True)
+parser.add_argument('-mr', '--mass_range', required=True)
+args = parser.parse_args()
+
+
+### ================================= ###
+### Load box & simulation parameters. ###
+### ================================= ###
+
+# Box parameters.
+with open(f'{args.directory}/box_parameters.yaml', 'r') as file:
+    box_setup = yaml.safe_load(file)
+
+box_file_dir = box_setup['File Paths/Box File Directory']
+DM_mass = box_setup['Content/DM Mass [Msun]']*Msun
+Smooth_L = box_setup['Content/Smoothening Length [pc]']*pc
+z0_snap_4cif = box_setup['Content/z=0 snapshot']
+
+# Simulation parameters.
+with open(f'{args.directory}/sim_parameters.yaml', 'r') as file:
+    sim_setup = yaml.safe_load(file)
+
+CPUs_pre = sim_setup['CPUs_precalculations']
+CPUs_sim = sim_setup['CPUs_simulations']
+mem_lim_GB = sim_setup['memory_limit_GB']
+DM_lim = sim_setup['DM_in_cell_limit']
+integration_solver = sim_setup['integration_solver']
+init_x_dis = sim_setup['initial_haloGC_distance']
+init_xyz = np.array([init_x_dis, 0., 0.])
+neutrinos = sim_setup['neutrinos']
+
+# Load arrays.
+nums_snaps = np.save(f'{args.directory}/nums_snaps.npy')
+zeds_snaps = np.save(f'{args.directory}/zeds_snaps.npy')
+
+z_int_steps = np.save(f'{args.directory}/z_int_steps.npy')
+s_int_steps = np.save(f'{args.directory}/s_int_steps.npy')
+neutrino_massrange = np.save(f'{args.directory}/neutrino_massrange_eV.npy')
+DM_shell_edges = np.save(f'{args.directory}/DM_shell_edges.npy')
+shell_multipliers = np.save(f'{args.directory}/shell_multipliers.npy')
+
+
+# Load constants and arrays, which the functions.py script needs.
+FCT_h = box_setup['Cosmology']['h']
+FCT_H0 = FCT_h*100*km/s/Mpc
+FCT_Omega_M = box_setup['Cosmology']['Omega_M']
+FCT_Omega_L = box_setup['Cosmology']['Omega_L']
+FCT_DM_shell_edges = np.copy(DM_shell_edges)
+FCT_shell_multipliers = np.copy(shell_multipliers)
+FCT_init_xys = np.copy(init_xyz)
+FCT_neutrino_simulation_mass_eV = sim_setup['neutrino_simulation_mass_eV']*eV
+FCT_zeds = np.copy(z_int_steps)
+
+# note: now that variables are loaded into memory, the function.py will work.
+#? probably not a good final solution, perhaps scripts have functions above, 
+#? which they will use? they should be unique between the analytical and 
+#? numerical simulation types.
 import shared.functions as fct
 
-# Initialize parameters and files.
-PRE = PRE(
-    sim='LinfNinf', phis=10, thetas=10, vels=100,
-    sim_CPUs=128, MW_HALO=True, VC_HALO=False
-)
+
 
 # Make temporary folder to store files, s.t. parallel runs don't clash.
 rand_code = ''.join(
     random.choices(string.ascii_uppercase + string.digits, k=4)
 )
-TEMP_DIR = f'{PRE.OUT_DIR}/temp_data_{rand_code}'
-os.makedirs(TEMP_DIR)
+temp_dir = f'{args.directory}/temp_data_{rand_code}'
+os.makedirs(temp_dir)
 
 
 def EOMs(s_val, y):
@@ -26,7 +85,7 @@ def EOMs(s_val, y):
     u_i *= (kpc/s)
 
     # Find z corresponding to s via interpolation.
-    z = np.interp(s_val, S_STEPS, ZEDS)
+    z = np.interp(s_val, s_int_steps, z_int_steps)
 
     # Sum gradients of each halo. Seperate if statements, for adding any halos.
     grad_tot = np.zeros(len(x_i))

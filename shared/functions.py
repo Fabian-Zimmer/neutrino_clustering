@@ -43,7 +43,7 @@ def c_vir_avg(z, M_vir):
     b_of_z = -0.097 + 0.024*z
 
     # Calculate average c_vir.
-    arg_in_log = (M_vir / (1.e12 / h * Msun))
+    arg_in_log = (M_vir / (1.e12 / FCT_h * Msun))
     c_vir_avg = np.power(a_of_z + b_of_z*np.log10(arg_in_log), 10.)
 
     return np.float64(c_vir_avg)
@@ -87,7 +87,7 @@ def rho_crit(z):
         array: critical density at redshift z
     """    
     
-    H_squared = H0**2 * (Omega_M*(1.+z)**3 + Omega_L) 
+    H_squared = FCT_H0**2 * (FCT_Omega_M*(1.+z)**3 + FCT_Omega_L) 
     rho_crit = 3.*H_squared / (8.*Pi*G)
 
     return np.float64(rho_crit)
@@ -106,7 +106,9 @@ def Omega_M_z(z):
         array: matter density parameter at redshift z [dimensionless]
     """    
 
-    Omega_M_of_z = (Omega_M*(1.+z)**3) / (Omega_M*(1.+z)**3 + Omega_L)
+    numer = FCT_Omega_M*(1.+z)**3
+    denom = FCT_Omega_M*(1.+z)**3 + FCT_Omega_L
+    Omega_M_of_z = numer/denom
 
     return np.float64(Omega_M_of_z)
 
@@ -490,14 +492,16 @@ def check_grid(init_grid, DM_pos, parent_GRID_S, DM_lim):
     grid_dis = np.sum(np.sqrt(init_grid**2), axis=2) # shape = (cells, 1)
 
     # Radial distance of each shell center, adjust array dimensionally.
-    shell_cents = (DM_SHELL_EDGES[:-1] + DM_SHELL_EDGES[1:])/2.
+    shell_cents = (FCT_DM_shell_edges[:-1] + FCT_DM_shell_edges[1:])/2.
     shells_sync = np.repeat(np.expand_dims(shell_cents, axis=0), cells, axis=0)
 
     # Find shell center, which each cell is closest to.
     which_shell = np.abs(grid_dis - shells_sync).argmin(axis=1)
 
     # Final DM limit for each cell.
-    cell_DMlims = np.array([SHELL_MULTIPLIERS[k] for k in which_shell])*DM_lim
+    cell_DMlims = np.array(
+        [FCT_shell_multipliers[k] for k in which_shell]
+    )*DM_lim
 
 
     ### Drop all cells containing an amount of DM below the given threshold, 
@@ -830,7 +834,7 @@ def cell_gravity_short_range(
     ind_2D = DM_pos_sync[:,:,0].argsort(axis=1)
     ind_3D = np.repeat(np.expand_dims(ind_2D, axis=2), 3, axis=2)
     DM_sort = np.take_along_axis(DM_pos_sync, ind_3D, axis=1)
-    DM_in = DM_sort[:,:DM_lim*SHELL_MULTIPLIERS[-1],:]
+    DM_in = DM_sort[:,:DM_lim*FCT_shell_multipliers[-1],:]
     
     # note: Visual to see, if DM_in is grouped into the right cells.
     # fig = plt.figure()
@@ -1260,7 +1264,7 @@ def halo_pos(glat, glon, d):
 
 
     # x,y,z coords. w.r.t. GC (instead of sun), treating each case seperately.
-    x_sun, y_sun, z_sun = X_SUN[0], X_SUN[1], X_SUN[2]
+    x_sun, y_sun, z_sun = FCT_init_xys[0], FCT_init_xys[1], FCT_init_xys[2]
     z_GC = z_sun + z_rel
 
     if l in (0., 2.*Pi):
@@ -1388,7 +1392,7 @@ def escape_momentum(x_i, z, rho_0, M_vir, R_vir, R_s, m_nu, halo:str):
     grav = grav_pot(x_i, z, rho_0, M_vir, R_vir, R_s, halo)
 
     # Escape momentum formula from Ringwald & Wong (2004).
-    p_esc = np.sqrt(2*np.abs(grav)) * m_nu/NU_MASS
+    p_esc = np.sqrt(2*np.abs(grav)) * m_nu/FCT_neutrino_simulation_mass_eV
     y_esc = p_esc/T_CNB
 
     return p_esc, y_esc
@@ -1451,7 +1455,7 @@ def number_densities_mass_range(
     p_arr, _ = velocity_to_momentum(sim_vels, nu_masses)
 
     if average:
-        inds = np.array(np.where(ZEDS >= z_start)).flatten()
+        inds = np.array(np.where(FCT_zeds >= z_start)).flatten()
         temp = [
             number_density(p_arr[...,0], p_arr[...,k], pix_sr) for k in inds
         ]
@@ -1558,7 +1562,7 @@ def plot_eta_z_back_1Halo(sim_vels, nu_masses, fig_dir, fname, show=False):
 
     colors = ['blue', 'orange', 'green', 'red']
     for j, m in enumerate(nu_masses):
-        ax.semilogy(ZEDS, etas_zeds[j]-1, c=colors[j], label=f'{m:.3f} eV')
+        ax.semilogy(FCT_zeds, etas_zeds[j]-1, c=colors[j], label=f'{m:.3f} eV')
 
     ax.set_title('Overdensities evolution')
     ax.set_xlabel('z')
@@ -1641,7 +1645,8 @@ def plot_phase_space_1Halo(
         rho0_halo = scale_density_NFW(0., cNFW_halo)*(Msun/kpc**3)
         rs_halo = Rvir_halo/cNFW_halo
         _, y_esc = escape_momentum(
-            X_SUN, 0., rho0_halo, Mvir_halo, Rvir_halo, rs_halo, m_nu, 'none'
+            FCT_init_xys, 0., 
+            rho0_halo, Mvir_halo, Rvir_halo, rs_halo, m_nu, 'none'
         )
         axs[i,j].axvline(y_esc, c='k', ls='-.', label='y_esc')
 
