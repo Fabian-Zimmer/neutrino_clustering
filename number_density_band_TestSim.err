@@ -1,0 +1,71 @@
+Traceback (most recent call last):
+  File "/home/zimmer/neutrino_clustering_V2/simulation_analytical.py", line 166, in <module>
+    backtrack_1_neutrino(y0_Nr[0])
+  File "/home/zimmer/neutrino_clustering_V2/simulation_analytical.py", line 129, in backtrack_1_neutrino
+    sol = solve_ivp(
+  File "/home/zimmer/.conda/envs/neutrino_clustering/lib/python3.9/site-packages/scipy/integrate/_ivp/ivp.py", line 555, in solve_ivp
+    solver = method(fun, t0, y0, tf, vectorized=vectorized, **options)
+  File "/home/zimmer/.conda/envs/neutrino_clustering/lib/python3.9/site-packages/scipy/integrate/_ivp/rk.py", line 94, in __init__
+    self.f = self.fun(self.t, self.y)
+  File "/home/zimmer/.conda/envs/neutrino_clustering/lib/python3.9/site-packages/scipy/integrate/_ivp/base.py", line 138, in fun
+    return self.fun_single(t, y)
+  File "/home/zimmer/.conda/envs/neutrino_clustering/lib/python3.9/site-packages/scipy/integrate/_ivp/base.py", line 125, in fun_single
+    return self._fun(t, y[:, None]).ravel()
+  File "/home/zimmer/.conda/envs/neutrino_clustering/lib/python3.9/site-packages/scipy/integrate/_ivp/base.py", line 20, in fun_wrapped
+    return np.asarray(fun(t, y), dtype=dtype)
+  File "/home/zimmer/neutrino_clustering_V2/simulation_analytical.py", line 97, in EOMs
+    grad_tot += fct.dPsi_dxi_NFW(
+  File "/home/zimmer/.conda/envs/neutrino_clustering/lib/python3.9/site-packages/numba/core/dispatcher.py", line 468, in _compile_for_args
+    error_rewrite(e, 'typing')
+  File "/home/zimmer/.conda/envs/neutrino_clustering/lib/python3.9/site-packages/numba/core/dispatcher.py", line 409, in error_rewrite
+    raise e.with_traceback(None)
+numba.core.errors.TypingError: Failed in nopython mode pipeline (step: nopython frontend)
+[1m[1m[1m[1mFailed in nopython mode pipeline (step: nopython frontend)
+[1m[1m[1m[1mFailed in nopython mode pipeline (step: nopython frontend)
+[1m[1m[1m[1m[1m[1mFailed in nopython mode pipeline (step: nopython frontend)
+[1mNameError: name 'FCT_Omega_M' is not defined[0m
+[0m[1mDuring: resolving callee type: type(CPUDispatcher(<function Omega_M_z at 0x14562c3ca670>))[0m
+[0m[1mDuring: typing of call at /gpfs/home4/zimmer/neutrino_clustering_V2/shared/functions.py (127)
+[0m
+[0m[1mDuring: resolving callee type: type(CPUDispatcher(<function Omega_M_z at 0x14562c3ca670>))[0m
+[0m[1mDuring: typing of call at /gpfs/home4/zimmer/neutrino_clustering_V2/shared/functions.py (127)
+[0m
+[0m[1mDuring: resolving callee type: type(CPUDispatcher(<function Omega_M_z at 0x14562c3ca670>))[0m
+[0m[1mDuring: typing of call at /gpfs/home4/zimmer/neutrino_clustering_V2/shared/functions.py (127)
+[0m
+[1m
+File "shared/functions.py", line 127:[0m
+[1mdef Delta_vir(z):
+    <source elided>
+
+[1m    Delta_vir = 18.*Pi**2 + 82.*(Omega_M_z(z)-1.) - 39.*(Omega_M_z(z)-1.)**2
+[0m    [1m^[0m[0m
+
+[0m[1mDuring: resolving callee type: type(CPUDispatcher(<function Delta_vir at 0x14562c3ca4c0>))[0m
+[0m[1mDuring: typing of call at /gpfs/home4/zimmer/neutrino_clustering_V2/shared/functions.py (144)
+[0m
+[0m[1mDuring: resolving callee type: type(CPUDispatcher(<function Delta_vir at 0x14562c3ca4c0>))[0m
+[0m[1mDuring: typing of call at /gpfs/home4/zimmer/neutrino_clustering_V2/shared/functions.py (144)
+[0m
+[1m
+File "shared/functions.py", line 144:[0m
+[1mdef R_vir_fct(z, M_vir):
+    <source elided>
+
+[1m    R_vir = np.power(3.*M_vir / (4.*Pi*Delta_vir(z)*rho_crit(z)), 1./3.)
+[0m    [1m^[0m[0m
+
+[0m[1mDuring: resolving callee type: type(CPUDispatcher(<function R_vir_fct at 0x14562c3ca3a0>))[0m
+[0m[1mDuring: typing of call at /gpfs/home4/zimmer/neutrino_clustering_V2/shared/functions.py (1315)
+[0m
+[0m[1mDuring: resolving callee type: type(CPUDispatcher(<function R_vir_fct at 0x14562c3ca3a0>))[0m
+[0m[1mDuring: typing of call at /gpfs/home4/zimmer/neutrino_clustering_V2/shared/functions.py (1315)
+[0m
+[1m
+File "shared/functions.py", line 1315:[0m
+[1mdef dPsi_dxi_NFW(x_i, z, rho_0, M_vir, R_vir, R_s, halo:str):
+    <source elided>
+        # Compute values dependent on redshift.
+[1m        r_vir = R_vir_fct(z, M_vir)
+[0m        [1m^[0m[0m
+

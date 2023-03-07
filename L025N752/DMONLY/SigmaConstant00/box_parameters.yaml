@@ -10,7 +10,8 @@ Cosmology:
   Omega_R: 0.0
   h: 0.6777
 File Paths:
-  Box Directory: /projects/0/einf180/Tango_sims
   Box File Directory: /projects/0/einf180/Tango_sims/L025N752/DMONLY/SigmaConstant00
   Box Name: L025N752
+  Box Root Directory: /projects/0/einf180/Tango_sims
   Box Version: DMONLY/SigmaConstant00
+  Output Directory: /gpfs/home4/zimmer/neutrino_clustering_V2/L025N752/DMONLY/SigmaConstant00

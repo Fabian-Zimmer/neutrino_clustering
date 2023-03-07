@@ -203,10 +203,11 @@ def make_box_parameters_and_merger_tree(
                 # Create .yaml file for global parameters of box.
                 box_parameters = {
                     "File Paths": {
-                        "Box Directory": box_dir,
+                        "Box Root Directory": box_dir,
                         "Box Name": box_name,
                         "Box Version": box_ver,
                         "Box File Directory": file_dir,
+                        "Output Directory": out_dir
                     },
                     "Cosmology": {
                         "Omega_R": float(Omega_R),
