@@ -7,9 +7,9 @@ python simulation_analytical.py \
 --no-AG_halo
 
 
-# python simulation_numerical.py \
-# -d L025N752/DMONLY/SigmaConstant00 \
-# -st single_halos \
-# -mg 12.0 \
-# -mr 0.6 \
-# -hn 3
+python simulation_numerical.py \
+-d L025N752/DMONLY/SigmaConstant00 \
+-st single_halos \
+-mg 12.0 \
+-mr 0.6 \
+-hn 3

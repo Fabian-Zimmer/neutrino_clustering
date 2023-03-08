@@ -1011,14 +1011,7 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
     save_DM_com = []
     save_QJ_abs = []
 
-    #! before
-    # Loop went from z=0 to z=4, which is opposite to the zeds_snaps array!
-    # This results in picking the wrong element from the save_x arrays in EOMs.
-    # for j, (snap, prog_ID) in enumerate(
-    #     zip(nums_snaps[::-1], prog_IDs_np)
-    # ):
-        
-    #! after
+
     # Generate the gravity grids from the earliest snapshot to the latest, i.e. 
     # from z=4 to z=0 in our case.
     for j, (snap, prog_ID) in enumerate(
