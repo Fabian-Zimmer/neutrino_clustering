@@ -22,7 +22,6 @@ from pynverse import inversefunc
 
 # arrays and data packages
 import numpy as np
-import pandas as pd
 import re
 import h5py
 from funcy import chunks
@@ -51,7 +50,6 @@ import matplotlib.ticker as ticker
 import matplotlib.patches as mpatches
 from mpl_toolkits import mplot3d
 import colorcet as cc
-# import imageio
 
 import code
 def raise_sys_exit():
@@ -169,99 +167,10 @@ DIST_AG = 0.784e3*kpc                              # Distance
 # Translated to cartesian coordinates [kpc] in our setup (from fct.halo_pos).
 X_AG    = np.array([632.29742673, -377.40315121, -288.27006757])
 
-#? for now temps. here
-T_CMB = 2.72548*K
+# CMB temperature from Planck 2018.
+T_CMB = 2.72548*K 
 T_CNB = np.power(4/11, 1/3)*T_CMB
 
 # Neutrino + antineutrino number density of 1 flavor in [1/cm**3],
 # using the analytical expression for Fermions.
 N0 = 2*zeta(3.)/Pi**2 *T_CNB**3 *(3./4.) /(1/cm**3)
-
-
-######################################
-### Discrete simulation parameters ###
-######################################
-
-# class PRE:
-
-#     def __init__(
-#         self, sim, z0_snap=0, z4_snap=0, 
-#         sim_dir=None, sim_ver=None, DM_lim=None,
-#         phis=0, thetas=0, vels=0, 
-#         pre_CPUs=0, sim_CPUs=0, mem_lim_GB=0,
-#         MW_HALO=False, VC_HALO=False, AG_HALO=False
-#         ):
-
-#         # File management.
-#         self.SIM = sim
-#         self.MW_HALO = MW_HALO
-#         self.VC_HALO = VC_HALO
-#         self.AG_HALO = AG_HALO
-#         self.HALOS = 'MW'*MW_HALO + '+VC'*VC_HALO + '+AG'*AG_HALO
-
-#         if sim_ver is None:
-#             self.OUT_DIR = f'{os.getcwd()}/{sim}'
-#         else:
-#             self.SIM_DIR = f'{sim_dir}/{sim}/{sim_ver}'
-#             self.OUT_DIR = f'{os.getcwd()}/{sim}/{sim_ver}'
-
-#         # Initial conditions for neutrinos.
-#         self.PHIs = phis
-#         self.THETAs = thetas
-#         self.Vs = vels
-#         if isinstance(phis, int):
-#             self.NUS = phis*thetas*vels
-#         else:
-#             self.NUS = len(phis)*len(thetas)*vels
-#         self.LOWER = 0.01*T_CNB
-#         self.UPPER = 400.*T_CNB
-#         self.MOMENTA = np.geomspace(self.LOWER, self.UPPER, vels)
-
-#         # Simulation parameters.
-#         self.SIM_CPUs = sim_CPUs
-
-#         if sim_ver is None:
-#             ...
-#         else:
-#             self.PRE_CPUs = pre_CPUs
-#             self.MEM_LIM_GB = mem_lim_GB
-#             self.DM_LIM = DM_lim
-#             self.Z0_INT = int(z0_snap)
-#             self.Z4_INT = int(z4_snap)
-#             self.Z0_STR = f'{z0_snap:04d}'
-#             self.Z4_STR = f'{z4_snap:04d}'
-#             snaps = np.arange(z4_snap, z0_snap+1)
-#             zeds = np.zeros(len(snaps))
-#             nums = []
-
-#             #! No Halo tests.
-#             # self.OUT_DIR = f'{os.getcwd()}/{sim}/{sim_ver}_noHalo'
-
-#             # Store parameters unique to each simulation box.
-#             for j, i in enumerate(snaps):
-#                 snap_zi = f'{i:04d}'
-#                 snap_z0 = f'{snaps[-1]:04d}'
-#                 nums.append(snap_zi)
-
-#                 with h5py.File(f'{self.SIM_DIR}/snapshot_{snap_zi}.hdf5') as snap:
-                    
-#                     # Store redshifts.
-#                     zeds[j] = snap['Cosmology'].attrs['Redshift'][0]
-
-#                     if snap_zi == snap_z0:
-
-#                         # DM mass.
-#                         dm_mass = snap['PartType1/Masses'][:]*1e10*Msun
-#                         self.DM_SIM_MASS = np.unique(dm_mass)[0]
-
-#                         #! No Halo tests.
-#                         # self.DM_SIM_MASS = 0.
-
-#                         # Gravity smoothening length.
-#                         sl = snap['GravityScheme'].attrs[
-#                             'Maximal physical DM softening length (Plummer equivalent) [internal units]'
-#                         ][0]
-#                         self.SMOOTH_L = sl*1e6*pc
-
-#             self.ZEDS_SNAPS = np.asarray(zeds)
-#             self.NUMS_SNAPS = np.asarray(nums)
