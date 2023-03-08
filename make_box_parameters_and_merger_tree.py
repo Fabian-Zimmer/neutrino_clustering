@@ -150,7 +150,7 @@ def main(config: ArgumentParser):
 
 
 def make_box_parameters_and_merger_tree(
-    box_dir, box_name, box_ver, zi_snap, zf_snap
+    box_dir, box_name, box_ver, z0_snap, z4_snap
 ):
     """
     Reads cosmological and other global parameters of the specified simulation box. Output is stored in corresponding output folder, where all simulation outputs (e.g. neutrino overdensities) will be stored.
@@ -165,8 +165,8 @@ def make_box_parameters_and_merger_tree(
         shutil.rmtree(out_dir)
     os.makedirs(out_dir)
 
-    # The snapshots to read, determined by inputs zi_snap and zf_snap.
-    snap_nums = np.arange(zf_snap, zi_snap+1)
+    # The snapshots to read, determined by inputs z0_snap and z4_snap.
+    snap_nums = np.arange(z4_snap, z0_snap+1)
     nums_4cif = []
     zeds = np.zeros(len(snap_nums))
 
@@ -218,7 +218,7 @@ def make_box_parameters_and_merger_tree(
                     "Content": {
                         "DM Mass [Msun]": float(DM_mass/Msun),
                         "Smoothening Length [pc]": float(smooth_len/pc),
-                        "z=0 snapshot": f'{zi_snap:04d}',
+                        "z=0 snapshot": f'{z0_snap:04d}',
                         "initial redshift": float(zeds[-1]),
                         "final redshift": float(zeds[0]),
                     } 
@@ -251,7 +251,7 @@ def make_box_parameters_and_merger_tree(
         box_file_dir=file_dir, 
         output_dir=out_dir, 
         file_name='MergerTree',
-        z0_snap_4cif=f'{zi_snap:04d}'
+        z0_snap_4cif=f'{z0_snap:04d}'
     )
     main(config_parameters)
 
@@ -261,8 +261,8 @@ parser = argparse.ArgumentParser()
 parser.add_argument('-bd', '--box_directory', required=True)
 parser.add_argument('-bn', '--box_name', required=True)
 parser.add_argument('-bv', '--box_version', required=True)
-parser.add_argument('-zi', '--initial_snap', required=True)
-parser.add_argument('-zf', '--final_snap', required=True)
+parser.add_argument('-z0', '--initial_snap_z0', required=True)
+parser.add_argument('-z4', '--final_snap_z4', required=True)
 args = parser.parse_args()
 
 
@@ -270,6 +270,6 @@ make_box_parameters_and_merger_tree(
     box_dir=args.box_directory, 
     box_name=args.box_name, 
     box_ver=args.box_version, 
-    zi_snap=int(args.initial_snap), 
-    zf_snap=int(args.final_snap)
+    z0_snap=int(args.initial_snap_z0), 
+    z4_snap=int(args.final_snap_z4)
 )

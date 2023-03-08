@@ -1463,7 +1463,7 @@ def number_densities_mass_range(
     else:
         num_densities = number_density(p_arr[...,0], p_arr[...,-1], pix_sr)
 
-    if sim_type is 'all_sky':
+    if sim_type == 'all_sky':
         return num_densities
     else:
         np.save(f'{out_file}', num_densities)

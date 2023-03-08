@@ -49,7 +49,7 @@ zeds_snaps = np.load(f'{args.directory}/zeds_snaps.npy')
 
 z_int_steps = np.load(f'{args.directory}/z_int_steps.npy')
 s_int_steps = np.load(f'{args.directory}/s_int_steps.npy')
-neutrino_massrange = np.load(f'{args.directory}/neutrino_massrange_eV.npy')
+neutrino_massrange = np.load(f'{args.directory}/neutrino_massrange_eV.npy')*eV
 DM_shell_edges = np.load(f'{args.directory}/DM_shell_edges.npy')
 shell_multipliers = np.load(f'{args.directory}/shell_multipliers.npy')
 
@@ -62,7 +62,6 @@ FCT_Omega_L = box_setup['Cosmology']['Omega_L']
 FCT_DM_shell_edges = np.copy(DM_shell_edges)
 FCT_shell_multipliers = np.copy(shell_multipliers)
 FCT_init_xys = np.copy(init_xyz)
-FCT_neutrino_simulation_mass_eV = sim_setup['neutrino_simulation_mass_eV']*eV
 FCT_zeds = np.copy(z_int_steps)
 
 ### ==================================== ###

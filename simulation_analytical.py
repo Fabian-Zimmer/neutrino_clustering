@@ -24,31 +24,20 @@ args = parser.parse_args()
 with open(f'{args.directory}/box_parameters.yaml', 'r') as file:
     box_setup = yaml.safe_load(file)
 
-box_file_dir = box_setup['File Paths']['Box File Directory']
-DM_mass = box_setup['Content']['DM Mass [Msun]']*Msun
-Smooth_L = box_setup['Content']['Smoothening Length [pc]']*pc
-z0_snap_4cif = box_setup['Content']['z=0 snapshot']
-
 # Simulation parameters.
 with open(f'{args.directory}/sim_parameters.yaml', 'r') as file:
     sim_setup = yaml.safe_load(file)
 
-CPUs_pre = sim_setup['CPUs_precalculations']
 CPUs_sim = sim_setup['CPUs_simulations']
-mem_lim_GB = sim_setup['memory_limit_GB']
-DM_lim = sim_setup['DM_in_cell_limit']
 integration_solver = sim_setup['integration_solver']
 init_x_dis = sim_setup['initial_haloGC_distance']
 init_xyz = np.array([init_x_dis, 0., 0.])
 neutrinos = sim_setup['neutrinos']
 
 # Load arrays.
-nums_snaps = np.load(f'{args.directory}/nums_snaps.npy')
-zeds_snaps = np.load(f'{args.directory}/zeds_snaps.npy')
-
 z_int_steps = np.load(f'{args.directory}/z_int_steps.npy')
 s_int_steps = np.load(f'{args.directory}/s_int_steps.npy')
-neutrino_massrange = np.load(f'{args.directory}/neutrino_massrange_eV.npy')
+neutrino_massrange = np.load(f'{args.directory}/neutrino_massrange_eV.npy')*eV
 DM_shell_edges = np.load(f'{args.directory}/DM_shell_edges.npy')
 shell_multipliers = np.load(f'{args.directory}/shell_multipliers.npy')
 
@@ -58,10 +47,7 @@ FCT_h = box_setup['Cosmology']['h']
 FCT_H0 = FCT_h*100*km/s/Mpc
 FCT_Omega_M = box_setup['Cosmology']['Omega_M']
 FCT_Omega_L = box_setup['Cosmology']['Omega_L']
-FCT_DM_shell_edges = np.copy(DM_shell_edges)
-FCT_shell_multipliers = np.copy(shell_multipliers)
 FCT_init_xys = np.copy(init_xyz)
-FCT_neutrino_simulation_mass_eV = sim_setup['neutrino_simulation_mass_eV']*eV
 FCT_zeds = np.copy(z_int_steps)
 
 

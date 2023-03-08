@@ -18,9 +18,9 @@ def make_sim_parameters(
         box_params = yaml.safe_load(file)
 
     h = box_params['Cosmology']['h']
-    H0 = h*100*km/s/Mpc
+    H0 = h * 100 * km/s/Mpc
     Omega_M = box_params['Cosmology']['Omega_M']
-    Omega_L = 1.-Omega_M  # since we don't use Omega_R
+    Omega_L = box_params['Cosmology']['Omega_L']
 
 
     ### ============================== ###
@@ -52,6 +52,7 @@ def make_sim_parameters(
 
         return np.float64(s_of_z)
 
+
     # Number of simulated neutrinos.
     if isinstance(phis, int):
         neutrinos = phis*thetas*p_num
@@ -66,7 +67,7 @@ def make_sim_parameters(
     )*eV
 
     # Neutrino momentum range.
-    neutrino_momenta = np.geomspace(p_start, p_stop, p_num)
+    neutrino_momenta = np.geomspace(p_start*T_CNB, p_stop*T_CNB, p_num)
 
     # Neutrino + antineutrino number density of 1 flavor in [1/cm**3],
     # using the analytical expression for Fermions.
@@ -80,9 +81,10 @@ def make_sim_parameters(
     z_int_steps -= z_int_shift
     s_int_steps = np.array([s_of_z(z) for z in z_int_steps])
 
-    #? these two figure out later.
+
     # For sphere of incluence tests: Divide inclusion region into shells.
     DM_shell_edges = np.array([0,5,10,15,20,40,100])*100*kpc
+
     # Multiplier for DM limit for each shell.
     shell_multipliers = np.array([1,3,6,9,12,15])
 
@@ -92,6 +94,7 @@ def make_sim_parameters(
     ### ============================================ ###
 
     sim_parameters = {
+        "simulation type": sim_type,
         "neutrinos": neutrinos,
         "initial_haloGC_distance": init_x_dis,
         "neutrino_mass_start": nu_mass_start,
