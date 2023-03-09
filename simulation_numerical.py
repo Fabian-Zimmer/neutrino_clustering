@@ -1213,10 +1213,14 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
     # So these arrays are in this order. Even though our simulation runs 
     # backwards in time, we can leave them like this, since the correct element 
     # gets picked with the idx routine in the EOMs function above.
-    snaps_GRID_L = np.flip(np.array(save_GRID_L), axis=0)
-    snaps_DM_num = np.flip(np.array(save_num_DM), axis=0)
-    snaps_DM_com = np.flip(np.array(save_DM_com), axis=0)
-    snaps_QJ_abs = np.flip(np.array(save_QJ_abs), axis=0)
+    snaps_GRID_L = np.array(save_GRID_L)
+    snaps_DM_num = np.array(save_num_DM)
+    snaps_DM_com = np.array(save_DM_com)
+    snaps_QJ_abs = np.array(save_QJ_abs)
+    np.save(f'{args.directory}/snaps_GRID_L.npy', snaps_GRID_L)
+    np.save(f'{args.directory}/snaps_DM_num.npy', snaps_DM_num)
+    np.save(f'{args.directory}/snaps_DM_com.npy', snaps_DM_com)
+    np.save(f'{args.directory}/snaps_QJ_abs.npy', snaps_QJ_abs)
 
     # Display parameters for simulation.
     print(f'***Running simulation: mode = {args.sim_type}***')
@@ -1226,6 +1230,8 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
 
     if args.sim_type in ('single_halos', 'spheres'):
     
+        print('in loop')
+
         # Load initial velocities.
         ui = np.load(f'{args.directory}/initial_velocities.npy')
 
