@@ -55,13 +55,8 @@ shell_multipliers = np.load(f'{args.directory}/shell_multipliers.npy')
 
 
 # Load constants and arrays, which the functions.py script needs.
-FCT_h = box_setup['Cosmology']['h']
-FCT_H0 = FCT_h*100*km/s/Mpc
-FCT_Omega_M = box_setup['Cosmology']['Omega_M']
-FCT_Omega_L = box_setup['Cosmology']['Omega_L']
 FCT_DM_shell_edges = np.copy(DM_shell_edges)
 FCT_shell_multipliers = np.copy(shell_multipliers)
-FCT_init_xys = np.copy(init_xyz)
 FCT_zeds = np.copy(z_int_steps)
 
 ### ==================================== ###
@@ -181,7 +176,7 @@ def read_DM_halo_index(snap, halo_ID, fname, sim_dir, out_dir):
     DM_pos *= 1e3  # to kpc
     np.save(f'{out_dir}/DM_pos_{fname}.npy', DM_pos)
 
-    # Save c.o.m. coord of all DM particles (used for outside_gravity fct.).
+    # Save c.o.m. coord of all DM particles (used for outside_gravity).
     DM_com_coord = np.sum(DM_pos, axis=0)/len(DM_pos)
     np.save(f'{out_dir}/DM_com_coord_{fname}.npy', DM_com_coord)
 
@@ -829,6 +824,7 @@ def load_grid(root_dir, which, fname):
 def nu_in_which_cell(nu_coords, cell_coords):
 
     # For now, just subtract nu_coords from all cell_coords, then take min.
+    #? is this correct with the axes? What shape does cell_coords have?
     dist = np.sqrt(np.sum((np.abs(cell_coords-nu_coords)**2), axis=2))
     cell_idx = dist.argmin()
 
@@ -845,6 +841,7 @@ def outside_gravity_quadrupole(x_i, com_halo, DM_sim_mass, DM_num, QJ_abs):
     x_i -= com_halo
     r_i = np.sqrt(np.sum(x_i**2))
     
+    '''
     # Permute order of coords by one, i.e. (x,y,z) -> (z,x,y).
     x_i_roll = np.roll(x_i, 1)
 
@@ -863,7 +860,7 @@ def outside_gravity_quadrupole(x_i, com_halo, DM_sim_mass, DM_num, QJ_abs):
     term2 = term2_pre*(term2_aa+term2_ab)
 
     dPsi_multipole_cells = G*DM_sim_mass*(-term1+term2)
-
+    '''
 
     ### --------- ###
     ### Monopole. ###
@@ -871,7 +868,8 @@ def outside_gravity_quadrupole(x_i, com_halo, DM_sim_mass, DM_num, QJ_abs):
     dPsi_monopole_cells = G*DM_num*DM_sim_mass*x_i/r_i**3
 
     # Minus sign, s.t. velocity changes correctly (see GoodNotes).
-    derivative_lr = -(dPsi_multipole_cells + dPsi_monopole_cells)
+    # derivative_lr = -(dPsi_multipole_cells + dPsi_monopole_cells)
+    derivative_lr = -dPsi_monopole_cells
 
     return derivative_lr
 
@@ -948,6 +946,7 @@ def EOMs(s_val, y):
         dPsi_grid = load_grid(temp_dir, 'derivatives', simname)
         cell_grid = load_grid(temp_dir, 'positions',   simname)
 
+        #? is cell_grid in kpc? because careful: x_i has kpc multiplied!
         cell_idx = nu_in_which_cell(x_i, cell_grid)  # index of cell
         grad_tot = dPsi_grid[cell_idx,:]             # derivative of cell
 
@@ -1213,10 +1212,10 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
     # So these arrays are in this order. Even though our simulation runs 
     # backwards in time, we can leave them like this, since the correct element 
     # gets picked with the idx routine in the EOMs function above.
-    snaps_GRID_L = np.array(save_GRID_L)
-    snaps_DM_num = np.array(save_num_DM)
-    snaps_DM_com = np.array(save_DM_com)
-    snaps_QJ_abs = np.array(save_QJ_abs)
+    snaps_GRID_L = np.flip(np.array(save_GRID_L), axis=0)
+    snaps_DM_num = np.flip(np.array(save_num_DM), axis=0)
+    snaps_DM_com = np.flip(np.array(save_DM_com), axis=0)
+    snaps_QJ_abs = np.flip(np.array(save_QJ_abs), axis=0)
     np.save(f'{args.directory}/snaps_GRID_L.npy', snaps_GRID_L)
     np.save(f'{args.directory}/snaps_DM_num.npy', snaps_DM_num)
     np.save(f'{args.directory}/snaps_DM_com.npy', snaps_DM_com)
@@ -1229,8 +1228,6 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
     sim_start = time.perf_counter()
 
     if args.sim_type in ('single_halos', 'spheres'):
-    
-        print('in loop')
 
         # Load initial velocities.
         ui = np.load(f'{args.directory}/initial_velocities.npy')
