@@ -153,17 +153,16 @@ def make_box_parameters_and_merger_tree(
     box_dir, box_name, box_ver, z0_snap, z4_snap
 ):
     """
-    Reads cosmological and other global parameters of the specified simulation box. Output is stored in corresponding output folder, where all simulation outputs (e.g. neutrino overdensities) will be stored.
+    Reads cosmological and other global parameters of the specified simulation box. Output is stored in corresponding output folder, where all simulation outputs (e.g. neutrino densities) will be stored.
     """
 
     # Box input/output paths.
     file_dir = f'{box_dir}/{box_name}/{box_ver}'
     out_dir = f'{os.getcwd()}/{box_name}/{box_ver}'
 
-    # Create output directory. If it exists already, delete then create.
-    if os.path.exists(out_dir):
-        shutil.rmtree(out_dir)
-    os.makedirs(out_dir)
+    # Create output director, if it doesn't exist yet.
+    if not os.path.exists(out_dir):
+        os.makedirs(out_dir)
 
     # The snapshots to read, determined by inputs z0_snap and z4_snap.
     snap_nums = np.arange(z4_snap, z0_snap+1)
@@ -219,6 +218,7 @@ def make_box_parameters_and_merger_tree(
                         "DM Mass [Msun]": float(DM_mass/Msun),
                         "Smoothening Length [pc]": float(smooth_len/pc),
                         "z=0 snapshot": f'{z0_snap:04d}',
+                        "z=4 snapshot": f'{z4_snap:04d}',
                         "initial redshift": float(zeds[-1]),
                         "final redshift": float(zeds[0]),
                     } 
