@@ -828,11 +828,37 @@ def load_grid(root_dir, which, fname):
 
 
 @nb.njit
-def nu_in_which_cell(nu_coords, cell_coords):
+def nu_in_which_cell_OLD(nu_coords, cell_coords):
 
     # Find distances to all cell centers, then take min.
     dist = np.sqrt(np.sum((cell_coords-nu_coords)**2, axis=-1))
     cell_idx = dist.argmin()
+
+    return cell_idx
+
+
+def nu_in_which_cell(x_i, cell_coords, cell_gens, init_GRID_S):
+
+    # x_i.shape = (3,)
+    # cell_coords.shape = (cells, 1, 3)
+    # cell_gens.shape = (cells,)
+
+    # Center neutrino coords. on each cell center (whole grid).
+    x_i = np.repeat(np.expand_dims(x_i, axis=(0,1)), len(cell_coords), axis=0)
+    x_i -= cell_coords
+
+    # All cell lengths. Limit for the largest cell is GRID_S/2, not just 
+    # GRID_S, therefore the cell_gen+1 !
+    cell_lens = np.expand_dims(init_GRID_S/(2**(cell_gens+1)), axis=1)
+    # cell_lens.shape = (cells, 1)
+
+    # Find index of cell in which neutrino is enclosed.
+    in_cell = np.asarray(
+        (np.abs(x_i[...,0]) < cell_lens) & 
+        (np.abs(x_i[...,1]) < cell_lens) & 
+        (np.abs(x_i[...,2]) < cell_lens)
+    )
+    cell_idx = np.argwhere(in_cell==True)
 
     return cell_idx
 
