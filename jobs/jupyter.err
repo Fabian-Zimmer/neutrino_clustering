@@ -14,3 +14,49 @@
 [I 15:31:20.848 NotebookApp] Kernel started: ce040555-b8a4-4f81-94f4-60e330b2fd5b, name: python3
 [W 15:31:20.860 NotebookApp] delete /analyze_results-jvsc-f0fc9e8f-2f63-46d3-907f-27cea3280e717351d61b-89bd-43f8-aafe-b735b7050292.ipynb
 [W 15:31:20.861 NotebookApp] Skipping trash for /gpfs/home4/zimmer/neutrino_clustering_V2/analyze_results-jvsc-f0fc9e8f-2f63-46d3-907f-27cea3280e717351d61b-89bd-43f8-aafe-b735b7050292.ipynb, [Errno 13] Permission denied: b'/gpfs/home4/.Trash-59104'
+[I 16:07:41.245 NotebookApp] Kernel restarted: ce040555-b8a4-4f81-94f4-60e330b2fd5b
+[I 16:07:41.249 NotebookApp] Starting buffering for ce040555-b8a4-4f81-94f4-60e330b2fd5b:920726c0-53a5-4b6c-990d-5440659d0a9e
+[I 16:07:41.254 NotebookApp] Restoring connection for ce040555-b8a4-4f81-94f4-60e330b2fd5b:920726c0-53a5-4b6c-990d-5440659d0a9e
+[I 16:08:22.876 NotebookApp] Creating new notebook in 
+[I 16:08:23.126 NotebookApp] Kernel started: 10b5b3db-ec80-425d-8b59-f181589a94a0, name: python3
+[W 16:08:23.136 NotebookApp] delete /testground-jvsc-99bad07a-85bc-4f43-9353-aca8fbe9d3b580e88a66-301c-48d0-9587-6e79ea247f4a.ipynb
+[W 16:08:23.137 NotebookApp] Skipping trash for /gpfs/home4/zimmer/neutrino_clustering_V2/testground-jvsc-99bad07a-85bc-4f43-9353-aca8fbe9d3b580e88a66-301c-48d0-9587-6e79ea247f4a.ipynb, [Errno 13] Permission denied: b'/gpfs/home4/.Trash-59104'
+[I 16:08:36.268 NotebookApp] Kernel restarted: 10b5b3db-ec80-425d-8b59-f181589a94a0
+[I 16:08:36.272 NotebookApp] Starting buffering for 10b5b3db-ec80-425d-8b59-f181589a94a0:7d3840a2-498c-4118-8591-f718c49f6de2
+[I 16:08:36.276 NotebookApp] Restoring connection for 10b5b3db-ec80-425d-8b59-f181589a94a0:7d3840a2-498c-4118-8591-f718c49f6de2
+[I 16:19:54.587 NotebookApp] Kernel restarted: ce040555-b8a4-4f81-94f4-60e330b2fd5b
+[I 16:19:54.591 NotebookApp] Starting buffering for ce040555-b8a4-4f81-94f4-60e330b2fd5b:920726c0-53a5-4b6c-990d-5440659d0a9e
+[I 16:19:54.596 NotebookApp] Restoring connection for ce040555-b8a4-4f81-94f4-60e330b2fd5b:920726c0-53a5-4b6c-990d-5440659d0a9e
+[I 16:22:20.222 NotebookApp] Kernel restarted: ce040555-b8a4-4f81-94f4-60e330b2fd5b
+[I 16:22:20.226 NotebookApp] Starting buffering for ce040555-b8a4-4f81-94f4-60e330b2fd5b:920726c0-53a5-4b6c-990d-5440659d0a9e
+[I 16:22:20.230 NotebookApp] Restoring connection for ce040555-b8a4-4f81-94f4-60e330b2fd5b:920726c0-53a5-4b6c-990d-5440659d0a9e
+[I 16:24:20.188 NotebookApp] Kernel restarted: ce040555-b8a4-4f81-94f4-60e330b2fd5b
+[I 16:24:20.191 NotebookApp] Starting buffering for ce040555-b8a4-4f81-94f4-60e330b2fd5b:920726c0-53a5-4b6c-990d-5440659d0a9e
+[I 16:24:20.194 NotebookApp] Restoring connection for ce040555-b8a4-4f81-94f4-60e330b2fd5b:920726c0-53a5-4b6c-990d-5440659d0a9e
+[I 16:24:57.553 NotebookApp] Kernel restarted: ce040555-b8a4-4f81-94f4-60e330b2fd5b
+[I 16:24:57.556 NotebookApp] Starting buffering for ce040555-b8a4-4f81-94f4-60e330b2fd5b:920726c0-53a5-4b6c-990d-5440659d0a9e
+[I 16:24:57.559 NotebookApp] Restoring connection for ce040555-b8a4-4f81-94f4-60e330b2fd5b:920726c0-53a5-4b6c-990d-5440659d0a9e
+[I 16:27:29.619 NotebookApp] Kernel restarted: ce040555-b8a4-4f81-94f4-60e330b2fd5b
+[I 16:27:29.622 NotebookApp] Starting buffering for ce040555-b8a4-4f81-94f4-60e330b2fd5b:920726c0-53a5-4b6c-990d-5440659d0a9e
+[I 16:27:29.626 NotebookApp] Restoring connection for ce040555-b8a4-4f81-94f4-60e330b2fd5b:920726c0-53a5-4b6c-990d-5440659d0a9e
+[I 16:28:06.064 NotebookApp] Kernel restarted: ce040555-b8a4-4f81-94f4-60e330b2fd5b
+[I 16:28:06.067 NotebookApp] Starting buffering for ce040555-b8a4-4f81-94f4-60e330b2fd5b:920726c0-53a5-4b6c-990d-5440659d0a9e
+[I 16:28:06.070 NotebookApp] Restoring connection for ce040555-b8a4-4f81-94f4-60e330b2fd5b:920726c0-53a5-4b6c-990d-5440659d0a9e
+[I 16:29:31.209 NotebookApp] Kernel restarted: ce040555-b8a4-4f81-94f4-60e330b2fd5b
+[I 16:29:31.212 NotebookApp] Starting buffering for ce040555-b8a4-4f81-94f4-60e330b2fd5b:920726c0-53a5-4b6c-990d-5440659d0a9e
+[I 16:29:31.216 NotebookApp] Restoring connection for ce040555-b8a4-4f81-94f4-60e330b2fd5b:920726c0-53a5-4b6c-990d-5440659d0a9e
+[I 16:30:02.589 NotebookApp] Kernel restarted: ce040555-b8a4-4f81-94f4-60e330b2fd5b
+[I 16:30:02.591 NotebookApp] Starting buffering for ce040555-b8a4-4f81-94f4-60e330b2fd5b:920726c0-53a5-4b6c-990d-5440659d0a9e
+[I 16:30:02.597 NotebookApp] Restoring connection for ce040555-b8a4-4f81-94f4-60e330b2fd5b:920726c0-53a5-4b6c-990d-5440659d0a9e
+[I 16:33:10.564 NotebookApp] Kernel restarted: ce040555-b8a4-4f81-94f4-60e330b2fd5b
+[I 16:33:10.567 NotebookApp] Starting buffering for ce040555-b8a4-4f81-94f4-60e330b2fd5b:920726c0-53a5-4b6c-990d-5440659d0a9e
+[I 16:33:10.570 NotebookApp] Restoring connection for ce040555-b8a4-4f81-94f4-60e330b2fd5b:920726c0-53a5-4b6c-990d-5440659d0a9e
+[I 16:35:13.000 NotebookApp] Kernel restarted: ce040555-b8a4-4f81-94f4-60e330b2fd5b
+[I 16:35:13.002 NotebookApp] Starting buffering for ce040555-b8a4-4f81-94f4-60e330b2fd5b:920726c0-53a5-4b6c-990d-5440659d0a9e
+[I 16:35:13.006 NotebookApp] Restoring connection for ce040555-b8a4-4f81-94f4-60e330b2fd5b:920726c0-53a5-4b6c-990d-5440659d0a9e
+[I 16:40:31.199 NotebookApp] Kernel restarted: ce040555-b8a4-4f81-94f4-60e330b2fd5b
+[I 16:40:31.201 NotebookApp] Starting buffering for ce040555-b8a4-4f81-94f4-60e330b2fd5b:920726c0-53a5-4b6c-990d-5440659d0a9e
+[I 16:40:31.204 NotebookApp] Restoring connection for ce040555-b8a4-4f81-94f4-60e330b2fd5b:920726c0-53a5-4b6c-990d-5440659d0a9e
+[I 16:41:25.374 NotebookApp] Kernel restarted: ce040555-b8a4-4f81-94f4-60e330b2fd5b
+[I 16:41:25.376 NotebookApp] Starting buffering for ce040555-b8a4-4f81-94f4-60e330b2fd5b:920726c0-53a5-4b6c-990d-5440659d0a9e
+[I 16:41:25.381 NotebookApp] Restoring connection for ce040555-b8a4-4f81-94f4-60e330b2fd5b:920726c0-53a5-4b6c-990d-5440659d0a9e

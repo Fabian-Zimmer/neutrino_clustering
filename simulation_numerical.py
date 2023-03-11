@@ -813,35 +813,10 @@ def load_dPsi_long_range(c_id, batches, out_dir):
 
     # Combine into one array by summing and save.
     dPsi_for_cell = np.sum(dPsi_raw, axis=0)
-    np.save(f'{out_dir}/cell{c_id}_long_range.npy', dPsi_for_cell)  
-
-
-def load_grid(root_dir, which, fname):
-
-    if which == 'derivatives':
-        grid = np.load(f'{root_dir}/dPsi_grid_{fname}.npy')
-
-    elif which == 'positions':
-        grid = np.load(f'{root_dir}/fin_grid_{fname}.npy')
-
-    return grid
-
-
-@nb.njit
-def nu_in_which_cell_OLD(nu_coords, cell_coords):
-
-    # Find distances to all cell centers, then take min.
-    dist = np.sqrt(np.sum((cell_coords-nu_coords)**2, axis=-1))
-    cell_idx = dist.argmin()
-
-    return cell_idx
+    np.save(f'{out_dir}/cell{c_id}_long_range.npy', dPsi_for_cell)
 
 
 def nu_in_which_cell(x_i, cell_coords, cell_gens, init_GRID_S):
-
-    # x_i.shape = (3,)
-    # cell_coords.shape = (cells, 1, 3)
-    # cell_gens.shape = (cells,)
 
     # Center neutrino coords. on each cell center (whole grid).
     x_i = np.repeat(np.expand_dims(x_i, axis=(0,1)), len(cell_coords), axis=0)
@@ -850,7 +825,6 @@ def nu_in_which_cell(x_i, cell_coords, cell_gens, init_GRID_S):
     # All cell lengths. Limit for the largest cell is GRID_S/2, not just 
     # GRID_S, therefore the cell_gen+1 !
     cell_lens = np.expand_dims(init_GRID_S/(2**(cell_gens+1)), axis=1)
-    # cell_lens.shape = (cells, 1)
 
     # Find index of cell in which neutrino is enclosed.
     in_cell = np.asarray(
@@ -858,7 +832,7 @@ def nu_in_which_cell(x_i, cell_coords, cell_gens, init_GRID_S):
         (np.abs(x_i[...,1]) < cell_lens) & 
         (np.abs(x_i[...,2]) < cell_lens)
     )
-    cell_idx = np.argwhere(in_cell==True)
+    cell_idx = np.argwhere(in_cell==True).flatten()[0]
 
     return cell_idx
 
@@ -974,19 +948,17 @@ def EOMs(s_val, y):
     snap_GRID_L = snaps_GRID_L[idx]
 
     # Neutrino inside cell grid.
-    if np.all(np.abs(x_i)) <= snap_GRID_L:
+    if np.all(np.abs(x_i) < snap_GRID_L):
 
-        # Find which (pre-calculated) derivative grid to use at current z.
-        simname = f'origID{halo_ID}_snap_{snap}'
-        dPsi_grid = load_grid(temp_dir, 'derivatives', simname)
-        cell_grid = load_grid(temp_dir, 'positions',   simname)
-
-        # Load files for current z, to find in which cell neutrino is.
-        cell_gens = ...
+        # Load files for current z, to find in which cell neutrino is. Then 
+        # load gravity for that cell.
+        fname = f'origID{halo_ID}_snap_{snap}'
+        dPsi_grid = np.load(f'{temp_dir}/dPsi_grid_{fname}.npy')
+        cell_grid = np.load(f'{temp_dir}/fin_grid_{fname}.npy')
+        cell_gens = np.load(f'{temp_dir}/cell_gen_{fname}.npy')
         
-
-        cell_idx = nu_in_which_cell(x_i, cell_grid)  # index of cell
-        grad_tot = dPsi_grid[cell_idx,:]             # derivative of cell
+        cell_idx = nu_in_which_cell(x_i, cell_grid, cell_gens, snap_GRID_L)
+        grad_tot = dPsi_grid[cell_idx,:]
 
     # Neutrino outside cell grid.
     else:
@@ -1029,7 +1001,7 @@ def backtrack_1_neutrino(y0_Nr):
 
 for halo_j, halo_ID in enumerate(halo_batch_IDs):
 
-    # '''
+    '''
     # ============================================== #
     # Run precalculations for current halo in batch. #
     # ============================================== #
@@ -1239,11 +1211,11 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
         np.save(f'{temp_dir}/dPsi_grid_{IDname}.npy', dPsi_grid)
 
 
-    np.save(f'{args.directory}/snaps_GRID_L.npy', np.array(snaps_GRID_L))
-    np.save(f'{args.directory}/snaps_DM_num.npy', np.array(snaps_DM_num))
-    np.save(f'{args.directory}/snaps_DM_com.npy', np.array(snaps_DM_com))
-    np.save(f'{args.directory}/snaps_QJ_abs.npy', np.array(snaps_QJ_abs))
-    # '''
+    np.save(f'{args.directory}/snaps_GRID_L.npy', np.array(save_GRID_L))
+    np.save(f'{args.directory}/snaps_DM_num.npy', np.array(save_DM_num))
+    np.save(f'{args.directory}/snaps_DM_com.npy', np.array(save_DM_com))
+    np.save(f'{args.directory}/snaps_QJ_abs.npy', np.array(save_QJ_abs))
+    '''
 
     # ========================================= #
     # Run simulation for current halo in batch. #
