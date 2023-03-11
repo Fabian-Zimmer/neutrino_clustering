@@ -356,6 +356,8 @@ def EOMs(s_val, y):
     # Find z corresponding to s via interpolation.
     z = np.interp(s_val, s_int_steps, z_int_steps)
 
+    # z = 0.  #? do not evolve halo in time, for testing 
+
     # Sum gradients of each halo. Seperate if statements, for adding any halos.
     grad_tot = np.zeros(len(x_i))
     if args.MW_halo:
@@ -375,6 +377,8 @@ def EOMs(s_val, y):
     grad_tot /= (kpc/s**2)
     x_i /= kpc
     u_i /= (kpc/s)
+
+    # grad_tot *= 0.  #? no halo, for testing
 
     # Hamilton eqns. for integration.
     dyds = -np.array([

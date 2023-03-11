@@ -39,8 +39,15 @@ CPUs_sim = sim_setup['CPUs_simulations']
 mem_lim_GB = sim_setup['memory_limit_GB']
 DM_lim = sim_setup['DM_in_cell_limit']
 integration_solver = sim_setup['integration_solver']
-init_x_dis = sim_setup['initial_haloGC_distance']
-init_xyz = np.array([init_x_dis, 0., 0.])
+
+# Don't place initial location (earth) exactly on x-axis. If exactly on x-axis, 
+# starting cell is not unique.
+init_dis = sim_setup['initial_haloGC_distance']
+xE = np.cos(np.deg2rad(Pi))*np.sin(np.deg2rad(Pi))*init_dis
+yE = np.sin(np.deg2rad(Pi))*np.sin(np.deg2rad(Pi))*init_dis
+zE = np.cos(np.deg2rad(Pi))*init_dis
+init_xyz = np.array([xE, yE, zE])
+
 neutrinos = sim_setup['neutrinos']
 
 # Load arrays.
@@ -823,9 +830,8 @@ def load_grid(root_dir, which, fname):
 @nb.njit
 def nu_in_which_cell(nu_coords, cell_coords):
 
-    # For now, just subtract nu_coords from all cell_coords, then take min.
-    #? is this correct with the axes? What shape does cell_coords have?
-    dist = np.sqrt(np.sum((np.abs(cell_coords-nu_coords)**2), axis=2))
+    # Find distances to all cell centers, then take min.
+    dist = np.sqrt(np.sum((cell_coords-nu_coords)**2, axis=-1))
     cell_idx = dist.argmin()
 
     return cell_idx
@@ -898,12 +904,15 @@ def number_densities_mass_range(
 
 
 
-# Make temporary folder to store files, s.t. parallel runs don't clash.
+Make temporary folder to store files, s.t. parallel runs don't clash.
 rand_code = ''.join(
     random.choices(string.ascii_uppercase + string.digits, k=4)
 )
 temp_dir = f'{args.directory}/temp_data_{rand_code}'
-os.makedirs(temp_dir)
+
+# temp_dir = f'{args.directory}/temp_data_TEST' #! for testing
+# if not os.path.exists(temp_dir):
+#     os.makedirs(temp_dir)
 
 
 hname = f'1e+{args.mass_gauge}_pm{args.mass_range}Msun'
@@ -946,7 +955,6 @@ def EOMs(s_val, y):
         dPsi_grid = load_grid(temp_dir, 'derivatives', simname)
         cell_grid = load_grid(temp_dir, 'positions',   simname)
 
-        #? is cell_grid in kpc? because careful: x_i has kpc multiplied!
         cell_idx = nu_in_which_cell(x_i, cell_grid)  # index of cell
         grad_tot = dPsi_grid[cell_idx,:]             # derivative of cell
 
@@ -994,6 +1002,7 @@ def backtrack_1_neutrino(y0_Nr):
 
 for halo_j, halo_ID in enumerate(halo_batch_IDs):
 
+    # '''
     # ============================================== #
     # Run precalculations for current halo in batch. #
     # ============================================== #
@@ -1203,6 +1212,12 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
         np.save(f'{temp_dir}/dPsi_grid_{IDname}.npy', dPsi_grid)
 
 
+    np.save(f'{args.directory}/snaps_GRID_L.npy', np.array(snaps_GRID_L))
+    np.save(f'{args.directory}/snaps_DM_num.npy', np.array(snaps_DM_num))
+    np.save(f'{args.directory}/snaps_DM_com.npy', np.array(snaps_DM_com))
+    np.save(f'{args.directory}/snaps_QJ_abs.npy', np.array(snaps_QJ_abs))
+    # '''
+
     # ========================================= #
     # Run simulation for current halo in batch. #
     # ========================================= #
@@ -1212,14 +1227,10 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
     # So these arrays are in this order. Even though our simulation runs 
     # backwards in time, we can leave them like this, since the correct element 
     # gets picked with the idx routine in the EOMs function above.
-    snaps_GRID_L = np.flip(np.array(save_GRID_L), axis=0)
-    snaps_DM_num = np.flip(np.array(save_num_DM), axis=0)
-    snaps_DM_com = np.flip(np.array(save_DM_com), axis=0)
-    snaps_QJ_abs = np.flip(np.array(save_QJ_abs), axis=0)
-    np.save(f'{args.directory}/snaps_GRID_L.npy', snaps_GRID_L)
-    np.save(f'{args.directory}/snaps_DM_num.npy', snaps_DM_num)
-    np.save(f'{args.directory}/snaps_DM_com.npy', snaps_DM_com)
-    np.save(f'{args.directory}/snaps_QJ_abs.npy', snaps_QJ_abs)
+    snaps_GRID_L = np.load(f'{args.directory}/snaps_GRID_L.npy')
+    snaps_DM_num = np.load(f'{args.directory}/snaps_DM_num.npy')
+    snaps_DM_com = np.load(f'{args.directory}/snaps_DM_com.npy')
+    snaps_QJ_abs = np.load(f'{args.directory}/snaps_QJ_abs.npy')
 
     # Display parameters for simulation.
     print(f'***Running simulation: mode = {args.sim_type}***')

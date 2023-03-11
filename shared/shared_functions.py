@@ -39,10 +39,9 @@ def number_density(p0, p1, pix_sr=4*Pi):
     FDvals = Fermi_Dirac(p1_sort)
 
     # Calculate number density.
-    #? switch to integration over log, it improves accuracy.
-    y = p0_sort**2 * FDvals
+    y = p0_sort**3 * FDvals
     x = p0_sort
-    n_raw = np.trapz(y, x, axis=-1)
+    n_raw = np.trapz(y, np.log(x), axis=-1)
 
     # Multiply by constants and/or solid angles and convert to 1/cm**3.
     n_cm3 = pix_sr * g/((2*Pi)**3) * n_raw / (1/cm**3)
