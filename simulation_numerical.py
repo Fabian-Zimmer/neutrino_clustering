@@ -866,7 +866,7 @@ def outside_gravity_quadrupole(x_i, com_halo, DM_sim_mass, DM_num, QJ_abs):
     term2 = term2_pre*(term2_aa+term2_ab)
 
     dPsi_multipole_cells = G*DM_sim_mass*(-term1+term2)
-    '''
+    # '''
 
     ### --------- ###
     ### Monopole. ###
@@ -905,14 +905,15 @@ def number_densities_mass_range(
 
 
 # Make temporary folder to store files, s.t. parallel runs don't clash.
-# rand_code = ''.join(
-#     random.choices(string.ascii_uppercase + string.digits, k=4)
-# )
-# temp_dir = f'{args.directory}/temp_data_{rand_code}'
+rand_code = ''.join(
+    random.choices(string.ascii_uppercase + string.digits, k=4)
+)
+temp_dir = f'{args.directory}/temp_data_{rand_code}'
+os.makedirs(temp_dir)
 
-temp_dir = f'{args.directory}/temp_data_TEST' #! for testing
-if not os.path.exists(temp_dir):
-    os.makedirs(temp_dir)
+# temp_dir = f'{args.directory}/temp_data_YLE9' #! for testing
+# if not os.path.exists(temp_dir):
+#     os.makedirs(temp_dir)
 
 
 hname = f'1e+{args.mass_gauge}_pm{args.mass_range}Msun'
@@ -1001,7 +1002,7 @@ def backtrack_1_neutrino(y0_Nr):
 
 for halo_j, halo_ID in enumerate(halo_batch_IDs):
 
-    '''
+    # '''
     # ============================================== #
     # Run precalculations for current halo in batch. #
     # ============================================== #
@@ -1014,7 +1015,7 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
 
     # Create empty arrays to save specifics of each loop.
     save_GRID_L = np.zeros(len(nums_snaps))
-    save_num_DM = np.zeros(len(nums_snaps))
+    save_DM_num = np.zeros(len(nums_snaps))
     save_DM_com = []
     save_QJ_abs = []
 
@@ -1107,7 +1108,7 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
         
         # Save snapshot specific parameters.
         save_GRID_L[j] = snap_GRID_L
-        save_num_DM[j] = np.sum(DM_count)
+        save_DM_num[j] = np.sum(DM_count)
         save_DM_com.append(DM_com)
 
 
@@ -1211,11 +1212,23 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
         np.save(f'{temp_dir}/dPsi_grid_{IDname}.npy', dPsi_grid)
 
 
-    np.save(f'{args.directory}/snaps_GRID_L.npy', np.array(save_GRID_L))
-    np.save(f'{args.directory}/snaps_DM_num.npy', np.array(save_DM_num))
-    np.save(f'{args.directory}/snaps_DM_com.npy', np.array(save_DM_com))
-    np.save(f'{args.directory}/snaps_QJ_abs.npy', np.array(save_QJ_abs))
-    '''
+    np.save(
+        f'{args.directory}/snaps_GRID_L_halo{halo_j+1}.npy', 
+        np.array(save_GRID_L)
+    )
+    np.save(
+        f'{args.directory}/snaps_DM_num_halo{halo_j+1}.npy', 
+        np.array(save_DM_num)
+    )
+    np.save(
+        f'{args.directory}/snaps_DM_com_halo{halo_j+1}.npy', 
+        np.array(save_DM_com)
+    )
+    np.save(
+        f'{args.directory}/snaps_QJ_abs_halo{halo_j+1}.npy', 
+        np.array(save_QJ_abs)
+    )
+    # '''
 
     # ========================================= #
     # Run simulation for current halo in batch. #
@@ -1226,10 +1239,16 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
     # So these arrays are in this order. Even though our simulation runs 
     # backwards in time, we can leave them like this, since the correct element 
     # gets picked with the idx routine in the EOMs function above.
-    snaps_GRID_L = np.load(f'{args.directory}/snaps_GRID_L.npy')
-    snaps_DM_num = np.load(f'{args.directory}/snaps_DM_num.npy')
-    snaps_DM_com = np.load(f'{args.directory}/snaps_DM_com.npy')
-    snaps_QJ_abs = np.load(f'{args.directory}/snaps_QJ_abs.npy')
+
+    snaps_GRID_L = np.load(f'{args.directory}/snaps_GRID_L_halo{halo_j+1}.npy')
+    snaps_DM_num = np.load(f'{args.directory}/snaps_DM_num_halo{halo_j+1}.npy')
+    snaps_DM_com = np.load(f'{args.directory}/snaps_DM_com_halo{halo_j+1}.npy')
+    snaps_QJ_abs = np.load(f'{args.directory}/snaps_QJ_abs_halo{halo_j+1}.npy')
+    # snaps_GRID_L = np.array(save_GRID_L)
+    # snaps_DM_num = np.array(save_DM_num)
+    # snaps_DM_com = np.array(save_DM_com)
+    # snaps_QJ_abs = np.array(save_QJ_abs)
+
 
     # Display parameters for simulation.
     print(f'***Running simulation: mode = {args.sim_type}***')
@@ -1261,13 +1280,15 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
         # For reference: ndarray with shape (10_000, 100, 6) is  48 MB.
         batches = math.ceil(neutrinos/10_000)
         split = np.array_split(neutrino_vectors, batches, axis=0)
+        vname = f'neutrino_vectors_numerical_halo{halo_j+1}'
         for i, elem in enumerate(split):
             np.save(
-                f'{args.directory}/neutrino_vectors_numerical_batch{i+1}.npy', elem
+                f'{args.directory}/{vname}_batch{i+1}.npy', elem
             )
 
         # Compute the number densities.
-        out_file = f'{args.directory}/number_densities_numerical.npy'
+        dname = f'number_densities_numerical_halo{halo_j+1}'
+        out_file = f'{args.directory}/{dname}.npy'
         number_densities_mass_range(
             neutrino_vectors[:,:,3:6], neutrino_massrange, out_file
         )
@@ -1323,7 +1344,7 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
     print(f'Sim time: {sim_time/60.} min, {sim_time/(60**2)} h.')
 
 # Remove temporary folder with all individual neutrino files.
-# shutil.rmtree(temp_dir)
+shutil.rmtree(temp_dir)
 
 total_time = time.perf_counter()-total_start
 print(f'Total time: {total_time/60.} min, {total_time/(60**2)} h.')
