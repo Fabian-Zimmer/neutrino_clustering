@@ -42,7 +42,7 @@ DM_shell_edges = np.load(f'{args.directory}/DM_shell_edges.npy')
 shell_multipliers = np.load(f'{args.directory}/shell_multipliers.npy')
 
 
-# Load constants and arrays, which the functions.py script needs.
+# Load constants and arrays, which some functions below need.
 FCT_h = box_setup['Cosmology']['h']
 FCT_H0 = FCT_h*100*km/s/Mpc
 FCT_Omega_M = box_setup['Cosmology']['Omega_M']

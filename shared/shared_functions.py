@@ -77,6 +77,19 @@ def velocity_to_momentum(sim_vels, m_arr):
     return p_dim, y
 
 
+def y_fmt(value, tick_number):
+    if value == 1e-3:
+        return r'1+$10^{-3}$'
+    elif value == 1e-2:
+        return r'1+$10^{-2}$'
+    elif value == 1e-1:
+        return r'1+$10^{-1}$'
+    elif value == 1e0:
+        return r'1+$10^0$'
+    elif value == 1e1:
+        return r'1+$10^1$'
+
+
 def delete_temp_data(path_to_wildcard_files):
 
     temp_files = glob.glob(path_to_wildcard_files, recursive=True)

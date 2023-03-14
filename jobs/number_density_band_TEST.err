@@ -1,4 +1,0 @@
-Traceback (most recent call last):
-  File "/home/zimmer/neutrino_clustering_V2/simulation_numerical.py", line 1215, in <module>
-    np.save(f'{args.directory}/snaps_GRID_L.npy', np.array(snaps_GRID_L))
-NameError: name 'snaps_GRID_L' is not defined

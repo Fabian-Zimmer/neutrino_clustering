@@ -61,7 +61,7 @@ DM_shell_edges = np.load(f'{args.directory}/DM_shell_edges.npy')
 shell_multipliers = np.load(f'{args.directory}/shell_multipliers.npy')
 
 
-# Load constants and arrays, which the functions.py script needs.
+# Load constants and arrays, which some functions below need.
 FCT_DM_shell_edges = np.copy(DM_shell_edges)
 FCT_shell_multipliers = np.copy(shell_multipliers)
 FCT_zeds = np.copy(z_int_steps)
@@ -847,7 +847,7 @@ def outside_gravity_quadrupole(x_i, com_halo, DM_sim_mass, DM_num, QJ_abs):
     x_i -= com_halo
     r_i = np.sqrt(np.sum(x_i**2))
     
-    '''
+    # '''
     # Permute order of coords by one, i.e. (x,y,z) -> (z,x,y).
     x_i_roll = np.roll(x_i, 1)
 
@@ -874,8 +874,8 @@ def outside_gravity_quadrupole(x_i, com_halo, DM_sim_mass, DM_num, QJ_abs):
     dPsi_monopole_cells = G*DM_num*DM_sim_mass*x_i/r_i**3
 
     # Minus sign, s.t. velocity changes correctly (see GoodNotes).
-    # derivative_lr = -(dPsi_multipole_cells + dPsi_monopole_cells)
-    derivative_lr = -dPsi_monopole_cells
+    derivative_lr = -(dPsi_multipole_cells + dPsi_monopole_cells)
+    # derivative_lr = -dPsi_monopole_cells
 
     return derivative_lr
 
@@ -911,7 +911,7 @@ rand_code = ''.join(
 temp_dir = f'{args.directory}/temp_data_{rand_code}'
 os.makedirs(temp_dir)
 
-# temp_dir = f'{args.directory}/temp_data_YLE9' #! for testing
+# temp_dir = f'{args.directory}/temp_data_A5EV' #! for testing
 # if not os.path.exists(temp_dir):
 #     os.makedirs(temp_dir)
 
@@ -1025,9 +1025,6 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
     for j, (snap, prog_ID) in enumerate(
         zip(nums_snaps, prog_IDs_np[::-1])
     ):
-        print(f'halo {halo_j+1}/{halo_num} ; snapshot {snap}')
-        prog_ID = int(prog_ID)
-
 
         # --------------------------- #
         # Read and load DM positions. #
@@ -1037,13 +1034,24 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
         IDname = f'origID{halo_ID}_snap_{snap}'
 
         if args.sim_type in ('single_halos', 'all_sky'):
-            
+
+            print(f'halo {halo_j+1}/{halo_num} ; snapshot {snap}')
             read_DM_halo_index(
-                snap, prog_ID, IDname, box_file_dir, temp_dir
+                snap, int(prog_ID), IDname, box_file_dir, temp_dir
             )
             DM_raw = np.load(f'{temp_dir}/DM_pos_{IDname}.npy')
             DM_com = np.load(f'{temp_dir}/DM_com_coord_{IDname}.npy')*kpc
             DM_particles = len(DM_raw)
+
+        elif 'benchmark' in args.sim_type:
+
+            print(f'benchmark halo; snapshot {snap}')
+            benchmark_file_dir = str(pathlib.Path(args.directory).parent)
+            DM_raw = np.load(
+                f'{benchmark_file_dir}/benchmark_halo_files/benchmark_halo_snap_{snap}.npy'
+            )
+            DM_particles = len(DM_raw)
+            DM_com = np.sum(DM_raw, axis=0)/len(DM_raw)*kpc
 
         else:
 
@@ -1059,9 +1067,10 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
                 )
             DM_raw = np.array(list(chain.from_iterable(DM_pre)))
             DM_particles = len(DM_raw)
-            DM_com = np.sum(DM_raw, axis=0)/len(DM_raw)
+            DM_com = np.sum(DM_raw, axis=0)/len(DM_raw)*kpc
             del DM_pre
 
+        #? make sure that the DM_raw is not with *kpc yet for else clause
 
         # ---------------------- #
         # Cell division process. #
@@ -1212,20 +1221,25 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
         np.save(f'{temp_dir}/dPsi_grid_{IDname}.npy', dPsi_grid)
 
 
+    if 'benchmark' in args.sim_type:
+        end_str = 'benchmark_halo'
+    else:
+        end_str = f'halo{halo_j+1}'
+
     np.save(
-        f'{args.directory}/snaps_GRID_L_halo{halo_j+1}.npy', 
+        f'{args.directory}/snaps_GRID_L_{end_str}.npy', 
         np.array(save_GRID_L)
     )
     np.save(
-        f'{args.directory}/snaps_DM_num_halo{halo_j+1}.npy', 
+        f'{args.directory}/snaps_DM_num_{end_str}.npy', 
         np.array(save_DM_num)
     )
     np.save(
-        f'{args.directory}/snaps_DM_com_halo{halo_j+1}.npy', 
+        f'{args.directory}/snaps_DM_com_{end_str}.npy', 
         np.array(save_DM_com)
     )
     np.save(
-        f'{args.directory}/snaps_QJ_abs_halo{halo_j+1}.npy', 
+        f'{args.directory}/snaps_QJ_abs_{end_str}.npy', 
         np.array(save_QJ_abs)
     )
     # '''
@@ -1240,14 +1254,15 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
     # backwards in time, we can leave them like this, since the correct element 
     # gets picked with the idx routine in the EOMs function above.
 
-    snaps_GRID_L = np.load(f'{args.directory}/snaps_GRID_L_halo{halo_j+1}.npy')
-    snaps_DM_num = np.load(f'{args.directory}/snaps_DM_num_halo{halo_j+1}.npy')
-    snaps_DM_com = np.load(f'{args.directory}/snaps_DM_com_halo{halo_j+1}.npy')
-    snaps_QJ_abs = np.load(f'{args.directory}/snaps_QJ_abs_halo{halo_j+1}.npy')
-    # snaps_GRID_L = np.array(save_GRID_L)
-    # snaps_DM_num = np.array(save_DM_num)
-    # snaps_DM_com = np.array(save_DM_com)
-    # snaps_QJ_abs = np.array(save_QJ_abs)
+    if 'benchmark' in args.sim_type:
+        end_str = 'benchmark_halo'
+    else:
+        end_str = f'halo{halo_j+1}'
+    
+    snaps_GRID_L = np.load(f'{args.directory}/snaps_GRID_L_{end_str}.npy')
+    snaps_DM_num = np.load(f'{args.directory}/snaps_DM_num_{end_str}.npy')
+    snaps_DM_com = np.load(f'{args.directory}/snaps_DM_com_{end_str}.npy')
+    snaps_QJ_abs = np.load(f'{args.directory}/snaps_QJ_abs_{end_str}.npy')
 
 
     # Display parameters for simulation.
@@ -1256,7 +1271,7 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
 
     sim_start = time.perf_counter()
 
-    if args.sim_type in ('single_halos', 'spheres'):
+    if args.sim_type in ('single_halos', 'spheres', 'benchmark'):
 
         # Load initial velocities.
         ui = np.load(f'{args.directory}/initial_velocities.npy')
@@ -1280,14 +1295,14 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
         # For reference: ndarray with shape (10_000, 100, 6) is  48 MB.
         batches = math.ceil(neutrinos/10_000)
         split = np.array_split(neutrino_vectors, batches, axis=0)
-        vname = f'neutrino_vectors_numerical_halo{halo_j+1}'
+        vname = f'neutrino_vectors_numerical_{end_str}'
         for i, elem in enumerate(split):
             np.save(
                 f'{args.directory}/{vname}_batch{i+1}.npy', elem
             )
 
         # Compute the number densities.
-        dname = f'number_densities_numerical_halo{halo_j+1}'
+        dname = f'number_densities_numerical_{end_str}'
         out_file = f'{args.directory}/{dname}.npy'
         number_densities_mass_range(
             neutrino_vectors[:,:,3:6], neutrino_massrange, out_file
@@ -1339,9 +1354,12 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
         # Delete arrays not compatible with github file limit size.
         delete_temp_data(f'{args.directory}/initial_velocities.npy')
 
-
+        
     sim_time = time.perf_counter()-sim_start
     print(f'Sim time: {sim_time/60.} min, {sim_time/(60**2)} h.')
+    
+    if 'benchmark' in args.sim_type:
+        break
 
 # Remove temporary folder with all individual neutrino files.
 shutil.rmtree(temp_dir)
