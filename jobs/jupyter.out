@@ -1,2 +1,2 @@
 Copy following command into VSCode terminal, from home directory:
-ssh -L 5290:localhost:5290 tcn253.local.snellius.surf.nl
+ssh -L 5979:localhost:5979 tcn415.local.snellius.surf.nl
