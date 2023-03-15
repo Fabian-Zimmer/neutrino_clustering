@@ -41,7 +41,7 @@ from multiprocessing import Pool
 from scipy.integrate import solve_ivp, quad, simpson
 from scipy.interpolate import UnivariateSpline, interp1d
 from scipy.special import expit, zeta
-import scipy.stats as stats
+import scipy.stats as stat
 
 # plotting
 import matplotlib.pyplot as plt

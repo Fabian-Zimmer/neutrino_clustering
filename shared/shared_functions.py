@@ -1,6 +1,36 @@
 from shared.preface import *
 
 
+@nb.njit
+def rho_crit(z, H0, Omega_M, Omega_L):
+    """Critical density of the universe as a function of redshift, assuming
+    matter domination, only Omega_m and Omega_Lambda in Friedmann equation. See 
+    notes for derivation.
+
+    Args:
+        z (array): redshift
+
+    Returns:
+        array: critical density at redshift z
+    """    
+    
+    H_squared = H0**2 * (Omega_M*(1.+z)**3 + Omega_L) 
+    rho_crit = 3.*H_squared / (8.*Pi*G)
+
+    return np.float64(rho_crit)
+
+
+def scale_density_NFW(c, z):
+    """Eqn. (2) from arXiv:1302.0288. c=r_200/r_s."""
+    numer = 200 * c**3
+    denom = 3 * (np.log(1+c) - (c/(1+c)))
+    delta_c = numer/denom
+
+    rho_crit = fct.rho_crit(z)
+
+    return rho_crit*delta_c
+
+
 def Fermi_Dirac(p):
     """Fermi-Dirac phase-space distribution for CNB neutrinos. 
     Zero chem. potential and temp. T_CNB (CNB temp. today). 
@@ -75,6 +105,39 @@ def velocity_to_momentum(sim_vels, m_arr):
     y = p_dim/T_CNB
 
     return p_dim, y
+
+
+def bin_volumes(radial_bins):
+    """Returns the volumes of the bins. """
+
+    single_vol = lambda x: (4.0 / 3.0) * np.pi * x ** 3
+    outer = single_vol(radial_bins[1:])
+    inner = single_vol(radial_bins[:-1])
+    return outer - inner
+
+
+def bin_centers(radial_bins):
+    """Returns the centers of the bins. """
+
+    outer = radial_bins[1:]
+    inner = radial_bins[:-1]
+    return 0.5 * (outer + inner)
+
+
+def analyse_halo(mass, pos):
+    # Define radial bins [log scale, kpc units]
+    radial_bins = np.arange(0, 5, 0.1)
+    radial_bins = 10 ** radial_bins
+
+    # Radial coordinates [kpc units]
+    r = np.sqrt(np.sum(pos ** 2, axis=1))
+
+    SumMasses, _, _ = stat.binned_statistic(
+        x=r, values=np.ones(len(r)) * mass, 
+        statistic="sum", bins=radial_bins
+    )
+    density = (SumMasses / bin_volumes(radial_bins))  # Msun/kpc^3
+    return density
 
 
 def y_fmt(value, tick_number):
