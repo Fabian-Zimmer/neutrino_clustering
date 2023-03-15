@@ -124,7 +124,7 @@ def velocity_to_momentum(sim_vels, m_arr):
     return p_dim, y
 
 
-def escape_momentum_analytical(x_i, z, R_vir, R_s, rho_0, m_nu_eV, m_nu_sim_eV):
+def escape_momentum_analytical(x_i, z, R_vir, R_s, rho_0, m_nu_eV):
     
     # Calculate gravitational potential at coords. x_i.
     r = np.sqrt(np.sum(x_i**2))
@@ -136,7 +136,7 @@ def escape_momentum_analytical(x_i, z, R_vir, R_s, rho_0, m_nu_eV, m_nu_sim_eV):
     potential = prefactor * (term1 - term2)
 
     # Escape momentum formula from Ringwald & Wong (2004).
-    p_esc = np.sqrt(2*np.abs(potential)) * m_nu_eV/m_nu_sim_eV
+    p_esc = np.sqrt(2*np.abs(potential)) * m_nu_eV
     y_esc = p_esc/T_CNB
 
     return p_esc, y_esc

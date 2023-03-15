@@ -1350,54 +1350,6 @@ def dPsi_dxi_NFW(x_i, z, rho_0, M_vir, R_vir, R_s, halo:str):
     return np.asarray(-derivative, dtype=np.float64)
 
 
-@nb.njit
-def grav_pot(x_i, z, rho_0, M_vir, R_vir, R_s, halo:str):
-    
-    if halo in ('MW', 'VC', 'AG'):
-        # Compute values dependent on redshift.
-        r_vir = R_vir_fct(z, M_vir)
-        r_s = r_vir / c_vir(z, M_vir, R_vir, R_s)
-    else:
-        # If function is used to calculate NFW gravity for arbitrary halo.
-        r_vir = R_vir
-        r_s = R_s
-        x_i_cent = x_i
-        r = np.sqrt(np.sum(x_i_cent**2))
-
-    # Distance from respective halo center with current coords. x_i.
-    if halo == 'MW':
-        x_i_cent = x_i  # x_i - X_GC, but GC is coord. center, i.e. [0,0,0].
-        r = np.sqrt(np.sum(x_i_cent**2))
-    elif halo == 'VC':
-        x_i_cent = x_i - (X_VC*kpc)  # center w.r.t. Virgo Cluster
-        r = np.sqrt(np.sum(x_i_cent**2))
-    elif halo == 'AG':
-        x_i_cent = x_i - (X_AG*kpc)  # center w.r.t. Andromeda Galaxy
-        r = np.sqrt(np.sum(x_i_cent**2))
-
-    # Gravitational potential in compact notation with m and M.
-    m = np.minimum(r, r_vir)
-    M = np.maximum(r, r_vir)
-    prefactor = -4.*Pi*G*rho_0*r_s**2
-    term1 = np.log(1. + (m/r_s)) / (r/r_s)
-    term2 = (r_vir/M) / (1. + (r_vir/r_s))
-    potential = prefactor * (term1 - term2)
-
-    return np.asarray(potential, dtype=np.float64)
-
-
-def escape_momentum(x_i, z, rho_0, M_vir, R_vir, R_s, m_nu, halo:str):
-
-    # Gravitational potential at position x_i.
-    grav = grav_pot(x_i, z, rho_0, M_vir, R_vir, R_s, halo)
-
-    # Escape momentum formula from Ringwald & Wong (2004).
-    p_esc = np.sqrt(2*np.abs(grav)) * m_nu/FCT_neutrino_simulation_mass_eV
-    y_esc = p_esc/T_CNB
-
-    return p_esc, y_esc
-
-
 def Fermi_Dirac(p):
     """Fermi-Dirac phase-space distribution for CNB neutrinos. 
     Zero chem. potential and temp. T_CNB (CNB temp. today). 
