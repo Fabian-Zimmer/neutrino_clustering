@@ -130,64 +130,6 @@ def halo_batch_indices(
     np.save(f'{out_dir}/halo_batch_{fname}_params.npy', halo_params)
 
 
-def read_DM_halo_index(snap, halo_ID, fname, sim_dir, out_dir):
-
-    # ---------------- #
-    # Open data files. #
-    # ---------------- #
-
-    snaps = h5py.File(f'{sim_dir}/snapshot_{snap}.hdf5')
-    group = h5py.File(f'{sim_dir}/subhalo_{snap}.catalog_groups')
-    parts = h5py.File(f'{sim_dir}/subhalo_{snap}.catalog_particles')
-    props = h5py.File(f'{sim_dir}/subhalo_{snap}.properties')
-
-    # Positions.
-    a = snaps["/Header"].attrs["Scale-factor"]
-    pos = snaps['PartType1/Coordinates'][:][:] * a
-    
-    # Critical M_200.
-    m200c = props['Mass_200crit'][:] * 1e10  # now in Msun
-    m200c[m200c <= 0] = 1
-    m200c = np.log10(m200c)  
-
-
-    # ------------------------------------------------ #
-    # Find DM particles gravitationally bound to halo. #
-    # ------------------------------------------------ #
-
-    halo_start_pos = group["Offset"][halo_ID]
-    halo_end_pos = group["Offset"][halo_ID + 1]
-
-    particle_ids_in_halo = parts["Particle_IDs"][halo_start_pos:halo_end_pos]
-    particle_ids_from_snapshot = snaps["PartType1/ParticleIDs"][...]
-
-    # Get indices of elements, which are present in both arrays.
-    _, _, indices_p = np.intersect1d(
-        particle_ids_in_halo, particle_ids_from_snapshot, 
-        assume_unique=True, return_indices=True
-    )
-
-
-    # ------------------------------------------ #
-    # Save DM positions centered on CoP of halo. #
-    # ------------------------------------------ #
-
-    CoP = np.zeros((len(m200c), 3))
-    CoP[:, 0] = props["Xcminpot"][:]
-    CoP[:, 1] = props["Ycminpot"][:]
-    CoP[:, 2] = props["Zcminpot"][:]
-    CoP_halo = CoP[halo_ID, :]
-
-    DM_pos = pos[indices_p, :]  # x,y,z of each DM particle
-    DM_pos -= CoP_halo
-    DM_pos *= 1e3  # to kpc
-    np.save(f'{out_dir}/DM_pos_{fname}.npy', DM_pos)
-
-    # Save c.o.m. coord of all DM particles (used for outside_gravity).
-    DM_com_coord = np.sum(DM_pos, axis=0)/len(DM_pos)
-    np.save(f'{out_dir}/DM_com_coord_{fname}.npy', DM_com_coord)
-
-
 def grid_3D(l, s, origin_coords=[0.,0.,0.,]):
     """
     Generate 3D cell center coordinate grid (built around origin_coords) 

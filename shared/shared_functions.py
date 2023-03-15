@@ -1,8 +1,25 @@
 from shared.preface import *
 
 
+def NFW_profile(r, rho_0, r_s):
+    """NFW density profile.
+
+    Args:
+        r (array): radius from center
+        rho_0 (array): normalisation 
+        r_s (array): scale radius
+
+    Returns:
+        array: density at radius r
+    """    
+
+    rho = rho_0 / (r/r_s) / np.power(1.+(r/r_s), 2.)
+
+    return rho
+
+
 @nb.njit
-def rho_crit(z, H0, Omega_M, Omega_L):
+def fct_rho_crit(z, H0, Omega_M, Omega_L):
     """Critical density of the universe as a function of redshift, assuming
     matter domination, only Omega_m and Omega_Lambda in Friedmann equation. See 
     notes for derivation.
@@ -20,13 +37,13 @@ def rho_crit(z, H0, Omega_M, Omega_L):
     return np.float64(rho_crit)
 
 
-def scale_density_NFW(c, z):
+def scale_density_NFW(c, z, H0, Omega_M, Omega_L):
     """Eqn. (2) from arXiv:1302.0288. c=r_200/r_s."""
     numer = 200 * c**3
     denom = 3 * (np.log(1+c) - (c/(1+c)))
     delta_c = numer/denom
 
-    rho_crit = fct.rho_crit(z)
+    rho_crit = fct_rho_crit(z, H0, Omega_M, Omega_L)
 
     return rho_crit*delta_c
 
@@ -105,6 +122,86 @@ def velocity_to_momentum(sim_vels, m_arr):
     y = p_dim/T_CNB
 
     return p_dim, y
+
+
+def escape_momentum_analytical(x_i, z, R_vir, R_s, rho_0, m_nu_eV, m_nu_sim_eV):
+    
+    # Calculate gravitational potential at coords. x_i.
+    r = np.sqrt(np.sum(x_i**2))
+    m = np.minimum(r, R_vir)
+    M = np.maximum(r, R_vir)
+    prefactor = -4.*Pi*G*rho_0*R_s**2
+    term1 = np.log(1. + (m/R_s)) / (r/R_s)
+    term2 = (R_vir/M) / (1. + (R_vir/R_s))
+    potential = prefactor * (term1 - term2)
+
+    # Escape momentum formula from Ringwald & Wong (2004).
+    p_esc = np.sqrt(2*np.abs(potential)) * m_nu_eV/m_nu_sim_eV
+    y_esc = p_esc/T_CNB
+
+    return p_esc, y_esc
+
+
+def read_DM_halo_index(snap, halo_ID, fname, sim_dir, out_dir, direct=False):
+
+    # ---------------- #
+    # Open data files. #
+    # ---------------- #
+
+    snaps = h5py.File(f'{sim_dir}/snapshot_{snap}.hdf5')
+    group = h5py.File(f'{sim_dir}/subhalo_{snap}.catalog_groups')
+    parts = h5py.File(f'{sim_dir}/subhalo_{snap}.catalog_particles')
+    props = h5py.File(f'{sim_dir}/subhalo_{snap}.properties')
+
+    # Positions.
+    a = snaps["/Header"].attrs["Scale-factor"]
+    pos = snaps['PartType1/Coordinates'][:][:] * a
+    
+    # Critical M_200.
+    m200c = props['Mass_200crit'][:] * 1e10  # now in Msun
+    m200c[m200c <= 0] = 1
+    m200c = np.log10(m200c)  
+
+
+    # ------------------------------------------------ #
+    # Find DM particles gravitationally bound to halo. #
+    # ------------------------------------------------ #
+
+    halo_start_pos = group["Offset"][halo_ID]
+    halo_end_pos = group["Offset"][halo_ID + 1]
+
+    particle_ids_in_halo = parts["Particle_IDs"][halo_start_pos:halo_end_pos]
+    particle_ids_from_snapshot = snaps["PartType1/ParticleIDs"][...]
+
+    # Get indices of elements, which are present in both arrays.
+    _, _, indices_p = np.intersect1d(
+        particle_ids_in_halo, particle_ids_from_snapshot, 
+        assume_unique=True, return_indices=True
+    )
+
+
+    # ------------------------------------------ #
+    # Save DM positions centered on CoP of halo. #
+    # ------------------------------------------ #
+
+    CoP = np.zeros((len(m200c), 3))
+    CoP[:, 0] = props["Xcminpot"][:]
+    CoP[:, 1] = props["Ycminpot"][:]
+    CoP[:, 2] = props["Zcminpot"][:]
+    CoP_halo = CoP[halo_ID, :]
+
+    DM_pos = pos[indices_p, :]  # x,y,z of each DM particle
+    DM_pos -= CoP_halo
+    DM_pos *= 1e3  # to kpc
+
+    # Save c.o.m. coord of all DM particles (used for outside_gravity).
+    DM_com_coord = np.sum(DM_pos, axis=0)/len(DM_pos)
+
+    if direct:
+        return DM_pos, DM_com_coord
+    else:
+        np.save(f'{out_dir}/DM_pos_{fname}.npy', DM_pos)
+        np.save(f'{out_dir}/DM_com_coord_{fname}.npy', DM_com_coord)
 
 
 def bin_volumes(radial_bins):
