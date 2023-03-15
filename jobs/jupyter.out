@@ -1,2 +1,16 @@
 Copy following command into VSCode terminal, from home directory:
 ssh -L 5979:localhost:5979 tcn415.local.snellius.surf.nl
+
+JOB STATISTICS
+==============
+Job ID: 2445100
+Cluster: snellius
+User/Group: zimmer/zimmer
+State: TIMEOUT (exit code 0)
+Nodes: 1
+Cores per node: 128
+CPU Utilized: 00:00:00
+CPU Efficiency: 0.00% of 10-16:51:12 core-walltime
+Job Wall-clock time: 02:00:24
+Memory Utilized: 11.86 GB
+Memory Efficiency: 5.42% of 218.75 GB
