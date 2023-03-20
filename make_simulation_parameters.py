@@ -93,6 +93,14 @@ def make_sim_parameters(
     ### Create .yaml file for simulation parameters. ###
     ### ============================================ ###
 
+    # Only save nr. of angles, in all_sky simulation type.
+    if sim_type == 'all_sky':
+        phis_nr = len(phis)
+        thetas_nr = len(thetas)
+    else:
+        phis_nr = phis
+        thetas_nr = thetas
+
     sim_parameters = {
         "simulation type": sim_type,
         "neutrinos": neutrinos,
@@ -102,8 +110,8 @@ def make_sim_parameters(
         "neutrino_mass_num": nu_mass_num,
         "neutrino_simulation_mass_eV": nu_mass_eV,
         "neutrino_simulation_mass_kg": float(nu_mass_kg),
-        "phis": phis,
-        "thetas": thetas,
+        "phis": phis_nr,
+        "thetas": thetas_nr,
         "momentum_start": p_start,
         "momentum_stop": p_stop,
         "momentum_num": p_num,
@@ -141,7 +149,6 @@ def make_sim_parameters(
     if sim_type == 'all_sky':
 
         # Each coord. pair gets whole momentum, i.e. velocity range.
-        u_i = np.ones(neutrinos)
         uxs = np.array(
             [-u_i*np.cos(ps)*np.sin(ts) for ps, ts in zip(phis, thetas)]
         )
@@ -217,9 +224,9 @@ args = parser.parse_args()
 # Adjust phi and theta angles for different modes.
 if args.sim_type == 'all_sky':
     
-    Nside = 2**1              # Specify nside parameter
-    Npix = 12 * Nside**2      # Number of pixels
-    pix_sr = (4*np.pi)/Npix   # Pixel size  [sr]
+    Nside = int(args.healpix_nside)  # Specified nside parameter, power of 2
+    Npix = 12 * Nside**2  # Number of pixels
+    pix_sr = (4*np.pi)/Npix  # Pixel size  [sr]
     
     theta_angles, phi_angles = np.array(
         hp.pixelfunc.pix2ang(Nside, np.arange(Npix))

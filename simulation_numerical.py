@@ -1247,13 +1247,14 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
         dname = f'number_densities_numerical_{end_str}'
         out_file = f'{args.directory}/{dname}.npy'
         number_densities_mass_range(
-            neutrino_vectors[:,:,3:6], neutrino_massrange, out_file
+            neutrino_vectors[...,3:6], neutrino_massrange, out_file
         )
 
     else:
 
-        # Load initial velocities for all_sky mode. Note that this array is not 
-        # github compatible, and will be deleted afterwards.
+        # Load initial velocities for all_sky mode. Note that this array is 
+        # (mostly, if Nside is larger than 2**1) not github compatible, and 
+        # will be deleted afterwards.
         ui = np.load(f'{args.directory}/initial_velocities.npy')
 
         # Empty list to append number densitites of each angle coord. pair.
@@ -1280,17 +1281,16 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
             # Compute the number densities.
             number_densities_pairs.append(
                 number_densities_mass_range(
-                    neutrino_vectors[:,:,3:6], 
+                    neutrino_vectors[...,3:6], 
                     neutrino_massrange, 
                     sim_type=args.sim_type
                 )
             )
 
-
         # Combine number densities with angle pairs: First 2 entries are angles.
         nu_dens_pairs = np.array(number_densities_pairs)
         angle_pairs = np.load(f'{args.directory}/all_sky_angles.npy')
-        nu_final = np.concatenate((angle_pairs, nu_dens_pairs), axis=2)
+        nu_final = np.concatenate((angle_pairs, nu_dens_pairs), axis=-1)
         np.save(f'{args.directory}/number_densities_numerical.npy', nu_final)
 
         # Delete arrays not compatible with github file limit size.

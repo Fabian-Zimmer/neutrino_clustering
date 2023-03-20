@@ -1,0 +1,39 @@
+#!/bin/bash
+#SBATCH --job-name=5Halos
+#SBATCH -p thin
+#SBATCH -t 05:00:00
+#SBATCH -N 1
+#SBATCH --tasks-per-node=1
+#SBATCH --cpus-per-task=128
+#SBATCH --mem=224000
+#SBATCH -o jobs/number_density_band_5Halos.out
+#SBATCH -e jobs/number_density_band_5Halos.err
+#SBATCH -v
+#SBATCH --exclusive
+
+module purge
+
+source $HOME/.conda/envs/neutrino_clustering/bin/activate
+
+sim_boxtype=L025N752/DMONLY/SigmaConstant00
+sim_fullname=low_res_1Halo_plus_benchmark
+
+# python $HOME/neutrino_clustering_V2/simulation_numerical.py \
+# -d $HOME/neutrino_clustering_V2/$sim_boxtype/$sim_fullname \
+# -st benchmark \
+# -mg 12.0 \
+# -mr 0.6 \
+# -hn 1
+
+python $HOME/neutrino_clustering_V2/simulation_numerical.py \
+-d $HOME/neutrino_clustering_V2/$sim_boxtype/$sim_fullname \
+-st single_halos \
+-mg 12.0 \
+-mr 0.6 \
+-hn 5
+
+# python $HOME/neutrino_clustering_V2/simulation_analytical.py \
+# -d $HOME/neutrino_clustering_V2/$sim_boxtype/$sim_fullname \
+# --MW_halo \
+# --no-VC_halo \
+# --no-AG_halo
