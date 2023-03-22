@@ -14,6 +14,7 @@ parser.add_argument('-st', '--sim_type', required=True)
 parser.add_argument('-mg', '--mass_gauge', required=True)
 parser.add_argument('-mr', '--mass_range', required=True)
 parser.add_argument('-hn', '--halo_num', required=True)
+parser.add_argument('-sh', '--shells', required=False)
 args = parser.parse_args()
 
 
@@ -997,9 +998,8 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
 
         else:
 
-            # Define how many shells are used, out of len(DM_SHELL_EDGES)-1.
-            shells = 1
-            DM_shell_edges = DM_shell_edges[:shells+1]
+            # Determine inclusion region based on input of number of shells.
+            DM_shell_edges = DM_shell_edges[:args.shells+1]
             
             fct.read_DM_all_inRange(
                 snap, int(proj_ID), DM_shell_edges, 
@@ -1008,7 +1008,7 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
 
             # Load DM from all used shells.
             DM_pre = []
-            for shell_i in range(shells):
+            for shell_i in range(args.shells):
                 DM_pre.append(
                     np.load(f'{temp_dir}/DM_pos_{IDname}_shell{shell_i}.npy')
                 )

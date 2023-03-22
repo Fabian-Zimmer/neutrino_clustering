@@ -217,7 +217,7 @@ def read_DM_all_inRange(
 
     # Positions.
     a = snaps["/Header"].attrs["Scale-factor"]
-    pos = snaps['PartType1/Coordinates'][:][:] * a
+    pos = snaps['PartType1/Coordinates'][:][:]*a
 
     # Masses of all halos in sim.
     m200c = props['Mass_200crit'][:]
@@ -239,11 +239,11 @@ def read_DM_all_inRange(
     # Save DM in spherical shell batches. #
     # ----------------------------------- #
 
-    # DM_shell_edges from physical to comoving.
-    DM_shell_edges_com = DM_shell_edges*(a/kpc/1e3)  # sync to Camilas Gpc units
+    # DM_shell_edges from physical to comoving, sync to Camilas Gpc units
+    DM_shell_edges_sync = DM_shell_edges*(a/kpc/1e3)
 
     for i, (shell_start, shell_end) in enumerate(
-        zip(DM_shell_edges_com[:-1], DM_shell_edges_com[1:])
+        zip(DM_shell_edges_sync[:-1], DM_shell_edges_sync[1:])
     ):
 
         DM_pos = pos[(shell_start < DM_dis) & (DM_dis <= shell_end), :]*1e3
