@@ -1,6 +1,8 @@
 CPUs_precalculations: 128
 CPUs_simulations: 128
 DM_in_cell_limit: 10000
+Npix: 48
+Nside: 2
 cosmo_neutrino_density: 112.0137477613158
 initial_haloGC_distance: 8.5
 integration_solver: RK23
@@ -15,6 +17,7 @@ neutrino_simulation_mass_eV: 0.3
 neutrino_simulation_mass_kg: 5.34739616939369e-37
 neutrinos: 23040000
 phis: 48
+pix_sr: 0.2617993877991494
 simulation type: all_sky
 thetas: 48
 z_inegration_num: 100

@@ -11,6 +11,7 @@ def make_sim_parameters(
         int_solver,
         CPUs_precalculations, CPUs_simulations, memory_limit_GB,
         DM_in_cell_limit, 
+        Nside=None, Npix=None, pix_sr=None
     ):
 
     # Load simulation box parameters.
@@ -112,6 +113,9 @@ def make_sim_parameters(
         "neutrino_simulation_mass_kg": float(nu_mass_kg),
         "phis": phis_nr,
         "thetas": thetas_nr,
+        "Nside": Nside,
+        "Npix": Npix,
+        "pix_sr": pix_sr,
         "momentum_start": p_start,
         "momentum_stop": p_stop,
         "momentum_num": p_num,
@@ -236,6 +240,10 @@ else:
     phi_angles = int(args.phis)
     theta_angles = int(args.thetas)
 
+    Nside = None
+    Npix = None
+    pix_sr = None
+
 
 make_sim_parameters(
     sim_dir=args.sim_dir,
@@ -257,5 +265,9 @@ make_sim_parameters(
     CPUs_precalculations=int(args.CPUs_precalculations),
     CPUs_simulations=int(args.CPUs_simulations),
     memory_limit_GB=int(args.memory_limit_GB),
-    DM_in_cell_limit=int(args.DM_in_cell_limit)
+    DM_in_cell_limit=int(args.DM_in_cell_limit),
+    Nside=Nside,
+    Npix=Npix,
+    pix_sr=pix_sr
+
 )
