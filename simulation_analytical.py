@@ -4,6 +4,7 @@ from shared.shared_functions import Fermi_Dirac, number_density, velocity_to_mom
 # Argparse inputs.
 parser = argparse.ArgumentParser()
 parser.add_argument('-d', '--directory', required=True)
+parser.add_argument('-st', '--sim_type', required=True)
 parser.add_argument(
     '--MW_halo', required=True, action=argparse.BooleanOptionalAction
 )
@@ -313,7 +314,7 @@ def dPsi_dxi_NFW(x_i, z, rho_0, M_vir, R_vir, R_s, halo:str):
 
 
 def number_densities_mass_range(
-    sim_vels, nu_masses, out_file, pix_sr=4*Pi,
+    sim_vels, nu_masses, out_file=None, pix_sr=4*Pi,
     average=False, m_start=0.01, z_start=0., sim_type='single_halos'
 ):
     
@@ -405,53 +406,86 @@ def backtrack_1_neutrino(y0_Nr):
 
 sim_start = time.perf_counter()
 
+
 # Draw initial velocities.
-ui = np.load(f'{args.directory}/initial_velocities.npy')
+ui_array = np.load(f'{args.directory}/initial_velocities.npy')
 
-# Combine vectors and append neutrino particle number.
-y0_Nr = np.array(
-    [np.concatenate((init_xyz, ui[k], [k+1])) for k in range(neutrinos)]
+
+if ui_array.ndim == 2:
+    ui_array = np.expand_dims(ui_array, axis=0)
+    key_str = 'single_halos'
+else:
+    key_str = 'all_sky'
+    all_sky_number_densities = []
+
+
+for cp, ui in enumerate(ui_array):
+    # Combine vectors and append neutrino particle number.
+    y0_Nr = np.array(
+        [np.concatenate((init_xyz, ui[k], [k+1])) for k in range(len(ui))]
+        )
+
+    if key_str == 'all_sky':
+        print(f'***Coord. pair {cp+1}/{len(ui_array)} ***')
+
+    # Run simulation on multiple cores, in batches.
+    # (important for other solvers (e.g. Rk45), due to memory increase)
+    batch_size = 10_000
+    ticks = np.arange(0, len(ui)/batch_size, dtype=int)
+    for i in ticks:
+
+        id_min = (i*batch_size) + 1
+        id_max = ((i+1)*batch_size) + 1
+        print(f'From {id_min} to and incl. {id_max-1}')
+
+        if i == 0:
+            id_min = 0
+
+        with ProcessPoolExecutor(CPUs_sim) as ex:
+            ex.map(backtrack_1_neutrino, y0_Nr[id_min:id_max])
+
+        print(f'Batch {i+1}/{len(ticks)} done!')
+
+
+    # Compactify all neutrino vectors into 1 file.
+    neutrino_vectors = np.array(
+        [np.load(f'{temp_dir}/nu_{i+1}.npy') for i in range(len(ui))]
     )
 
-# Run simulation on multiple cores, in batches.
-# (important for other solvers (e.g. Rk45), due to memory increase)
-batch_size = 10_000
-ticks = np.arange(0, neutrinos/batch_size, dtype=int)
-for i in ticks:
+    # For these modes (i.e. not all_sky), save all neutrino vectors.
+    # Split velocities and positions into 10k neutrino batches.
+    # For reference: ndarray with shape (10_000, 100, 6) is  48 MB.
+    batches = math.ceil(len(ui)/10_000)
+    split = np.array_split(neutrino_vectors, batches, axis=0)
+    for i, elem in enumerate(split):
+        np.save(
+            f'{args.directory}/neutrino_vectors_analytical_batch{i+1}.npy', elem
+        )
 
-    id_min = (i*batch_size) + 1
-    id_max = ((i+1)*batch_size) + 1
-    print(f'From {id_min} to and incl. {id_max-1}')
+    # Compute the number densities.
+    if key_str == 'single_halos':
+        out_file = f'{args.directory}/number_densities_analytical_{key_str}.npy'
+        number_densities_mass_range(
+            neutrino_vectors[...,3:6], neutrino_massrange, out_file,
+            sim_type=key_str
+        )
+    elif key_str == 'all_sky':
+        pix_sr_sim = sim_setup['pix_sr']
+        all_sky_number_densities.append(
+            number_densities_mass_range(
+                neutrino_vectors[...,3:6], neutrino_massrange, 
+                sim_type=key_str,
+                pix_sr=pix_sr_sim
+            )
+        )
 
-    if i == 0:
-        id_min = 0
 
-    with ProcessPoolExecutor(CPUs_sim) as ex:
-        ex.map(backtrack_1_neutrino, y0_Nr[id_min:id_max])
-
-    print(f'Batch {i+1}/{len(ticks)} done!')
-
-
-# Compactify all neutrino vectors into 1 file.
-neutrino_vectors = np.array(
-    [np.load(f'{temp_dir}/nu_{i+1}.npy') for i in range(neutrinos)]
-)
-
-# For these modes (i.e. not all_sky), save all neutrino vectors.
-# Split velocities and positions into 10k neutrino batches.
-# For reference: ndarray with shape (10_000, 100, 6) is  48 MB.
-batches = math.ceil(neutrinos/10_000)
-split = np.array_split(neutrino_vectors, batches, axis=0)
-for i, elem in enumerate(split):
+if key_str == 'all_sky':
     np.save(
-        f'{args.directory}/neutrino_vectors_analytical_batch{i+1}.npy', elem
+        f'{args.directory}/number_densities_analytical_all_sky.npy', 
+        np.array(all_sky_number_densities)
     )
 
-# Compute the number densities.
-out_file = f'{args.directory}/number_densities_analytical.npy'
-number_densities_mass_range(
-    neutrino_vectors[:,:,3:6], neutrino_massrange, out_file
-)
 
 # Remove temporary folder with all individual neutrino files.
 shutil.rmtree(temp_dir)   

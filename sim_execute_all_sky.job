@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=AllSky
 #SBATCH -p thin
-#SBATCH -t 02:00:00
+#SBATCH -t 06:00:00
 #SBATCH -N 1
 #SBATCH --tasks-per-node=1
 #SBATCH --cpus-per-task=128
@@ -18,22 +18,16 @@ source $HOME/.conda/envs/neutrino_clustering/bin/activate
 sim_boxtype=L025N752/DMONLY/SigmaConstant00
 sim_fullname=low_res_all_sky
 
-# python $HOME/neutrino_clustering_V2/simulation_numerical.py \
-# -d $HOME/neutrino_clustering_V2/$sim_boxtype/$sim_fullname \
-# -st benchmark \
-# -mg 12.0 \
-# -mr 0.6 \
-# -hn 1
-
 python $HOME/neutrino_clustering_V2/simulation_numerical.py \
 -d $HOME/neutrino_clustering_V2/$sim_boxtype/$sim_fullname \
 -st all_sky \
 -mg 12.0 \
 -mr 0.6 \
--hn 1
+-hn 3
 
-# python $HOME/neutrino_clustering_V2/simulation_analytical.py \
-# -d $HOME/neutrino_clustering_V2/$sim_boxtype/$sim_fullname \
-# --MW_halo \
-# --no-VC_halo \
-# --no-AG_halo
+python $HOME/neutrino_clustering_V2/simulation_analytical.py \
+-d $HOME/neutrino_clustering_V2/$sim_boxtype/$sim_fullname \
+-st all_sky \
+--MW_halo \
+--no-VC_halo \
+--no-AG_halo

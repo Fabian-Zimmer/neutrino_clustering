@@ -34,6 +34,7 @@ python $HOME/neutrino_clustering_V2/simulation_numerical.py \
 
 # python $HOME/neutrino_clustering_V2/simulation_analytical.py \
 # -d $HOME/neutrino_clustering_V2/$sim_boxtype/$sim_fullname \
+# -st single_halos \
 # --MW_halo \
 # --no-VC_halo \
 # --no-AG_halo

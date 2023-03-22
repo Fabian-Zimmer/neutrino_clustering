@@ -57,7 +57,7 @@ zeds_snaps = np.load(f'{args.directory}/zeds_snaps.npy')
 z_int_steps = np.load(f'{args.directory}/z_int_steps.npy')
 s_int_steps = np.load(f'{args.directory}/s_int_steps.npy')
 neutrino_massrange = np.load(f'{args.directory}/neutrino_massrange_eV.npy')*eV
-DM_shell_edges = np.load(f'{args.directory}/DM_shell_edges.npy')
+DM_shell_edges = np.load(f'{args.directory}/DM_shell_edges.npy')  # *kpc already
 shell_multipliers = np.load(f'{args.directory}/shell_multipliers.npy')
 
 
@@ -823,7 +823,7 @@ def outside_gravity_quadrupole(x_i, com_halo, DM_sim_mass, DM_num, QJ_abs):
 
 
 def number_densities_mass_range(
-    sim_vels, nu_masses, out_file, pix_sr=4*Pi,
+    sim_vels, nu_masses, out_file=None, pix_sr=4*Pi,
     average=False, m_start=0.01, z_start=0., sim_type='single_halos'
 ):
     
@@ -853,7 +853,7 @@ rand_code = ''.join(
 temp_dir = f'{args.directory}/temp_data_{rand_code}'
 os.makedirs(temp_dir)
 
-# temp_dir = f'{args.directory}/temp_data_A5EV' #! for testing
+# temp_dir = f'{args.directory}/temp_data_G12Q' #! for testing
 # if not os.path.exists(temp_dir):
 #     os.makedirs(temp_dir)
 
@@ -1001,6 +1001,11 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
             shells = 1
             DM_shell_edges = DM_shell_edges[:shells+1]
             
+            fct.read_DM_all_inRange(
+                snap, int(proj_ID), DM_shell_edges, 
+                IDname, box_file_dir, temp_dir
+            )
+
             # Load DM from all used shells.
             DM_pre = []
             for shell_i in range(shells):
@@ -1009,10 +1014,9 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
                 )
             DM_raw = np.array(list(chain.from_iterable(DM_pre)))
             DM_particles = len(DM_raw)
-            DM_com = np.sum(DM_raw, axis=0)/len(DM_raw)*kpc
+            DM_com = (np.sum(DM_raw, axis=0)/len(DM_raw))*kpc
             del DM_pre
 
-        #? make sure that the DM_raw is not with *kpc yet for else clause
 
         # ---------------------- #
         # Cell division process. #
@@ -1252,6 +1256,8 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
 
     else:
 
+        pix_sr_sim = sim_setup['pix_sr']
+
         # Load initial velocities for all_sky mode. Note that this array is 
         # (mostly, if Nside is larger than 2**1) not github compatible, and 
         # will be deleted afterwards.
@@ -1260,9 +1266,9 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
         # Empty list to append number densitites of each angle coord. pair.
         number_densities_pairs = []
 
-        for i, ui_elem in enumerate(ui):
+        for cp, ui_elem in enumerate(ui):
 
-            print(f'Coord. pair {i+1}/{len(ui)}')
+            print(f'Coord. pair {cp+1}/{len(ui)}')
 
             # Combine vectors and append neutrino particle number.
             y0_Nr = np.array([np.concatenate(
@@ -1275,7 +1281,10 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
 
             # Compactify all neutrino vectors into 1 file.
             neutrino_vectors = np.array(
-                [np.load(f'{temp_dir}/nu_{i+1}.npy') for i in range(neutrinos)]
+                [
+                    np.load(f'{temp_dir}/nu_{i+1}.npy') 
+                    for i in range(len(ui_elem))
+                ]
             )
 
             # Compute the number densities.
@@ -1283,18 +1292,18 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
                 number_densities_mass_range(
                     neutrino_vectors[...,3:6], 
                     neutrino_massrange, 
-                    sim_type=args.sim_type
+                    sim_type=args.sim_type,
+                    pix_sr=pix_sr_sim
+
                 )
             )
 
-        # Combine number densities with angle pairs: First 2 entries are angles.
-        nu_dens_pairs = np.array(number_densities_pairs)
-        angle_pairs = np.load(f'{args.directory}/all_sky_angles.npy')
-        nu_final = np.concatenate((angle_pairs, nu_dens_pairs), axis=-1)
-        np.save(f'{args.directory}/number_densities_numerical.npy', nu_final)
+        # Save number densities for current halo.
+        np.save(
+            f'{args.directory}/number_densities_numerical_halo{halo_j+1}_all_sky.npy', 
+            np.array(number_densities_pairs)
+        )
 
-        # Delete arrays not compatible with github file limit size.
-        delete_temp_data(f'{args.directory}/initial_velocities.npy')
 
         
     sim_time = time.perf_counter()-sim_start
@@ -1302,6 +1311,9 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
     
     if 'benchmark' in args.sim_type:
         break
+
+# Delete arrays not compatible with github file limit size.
+delete_temp_data(f'{args.directory}/initial_velocities.npy')
 
 # Remove temporary folder with all individual neutrino files.
 shutil.rmtree(temp_dir)

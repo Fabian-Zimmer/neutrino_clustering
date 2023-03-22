@@ -142,16 +142,16 @@ def escape_momentum_analytical(x_i, z, R_vir, R_s, rho_0, m_nu_eV):
     return p_esc, y_esc
 
 
-def read_DM_halo_index(snap, halo_ID, fname, sim_dir, out_dir, direct=False):
+def read_DM_halo_index(snap, halo_ID, fname, box_file_dir, out_dir, direct=False):
 
     # ---------------- #
     # Open data files. #
     # ---------------- #
 
-    snaps = h5py.File(f'{sim_dir}/snapshot_{snap}.hdf5')
-    group = h5py.File(f'{sim_dir}/subhalo_{snap}.catalog_groups')
-    parts = h5py.File(f'{sim_dir}/subhalo_{snap}.catalog_particles')
-    props = h5py.File(f'{sim_dir}/subhalo_{snap}.properties')
+    snaps = h5py.File(f'{box_file_dir}/snapshot_{snap}.hdf5')
+    group = h5py.File(f'{box_file_dir}/subhalo_{snap}.catalog_groups')
+    parts = h5py.File(f'{box_file_dir}/subhalo_{snap}.catalog_particles')
+    props = h5py.File(f'{box_file_dir}/subhalo_{snap}.properties')
 
     # Positions.
     a = snaps["/Header"].attrs["Scale-factor"]
@@ -202,6 +202,53 @@ def read_DM_halo_index(snap, halo_ID, fname, sim_dir, out_dir, direct=False):
     else:
         np.save(f'{out_dir}/DM_pos_{fname}.npy', DM_pos)
         np.save(f'{out_dir}/DM_com_coord_{fname}.npy', DM_com_coord)
+
+
+def read_DM_all_inRange(
+    snap, halo_ID, DM_shell_edges, fname, box_file_dir, out_dir
+):
+
+    # --------------- #
+    # Initialize data #
+    # --------------- #
+
+    snaps = h5py.File(f'{box_file_dir}/snapshot_{snap}.hdf5')
+    props = h5py.File(f'{box_file_dir}/subhalo_{snap}.properties')
+
+    # Positions.
+    a = snaps["/Header"].attrs["Scale-factor"]
+    pos = snaps['PartType1/Coordinates'][:][:] * a
+
+    # Masses of all halos in sim.
+    m200c = props['Mass_200crit'][:]
+
+    # Center of Potential coordinates, for all halos.
+    CoP = np.zeros((len(m200c), 3))
+    del m200c
+    CoP[:, 0] = props["Xcminpot"][:]
+    CoP[:, 1] = props["Ycminpot"][:]
+    CoP[:, 2] = props["Zcminpot"][:]
+    CoP_halo = CoP[halo_ID, :]
+    del CoP
+
+    # Center all DM on selected halo and calculate distance from halo center.
+    pos -= CoP_halo
+    DM_dis = np.sqrt(np.sum(pos**2, axis=1))
+
+    # ----------------------------------- #
+    # Save DM in spherical shell batches. #
+    # ----------------------------------- #
+
+    # DM_shell_edges from physical to comoving.
+    DM_shell_edges_com = DM_shell_edges*(a/kpc/1e3)  # sync to Camilas Gpc units
+
+    for i, (shell_start, shell_end) in enumerate(
+        zip(DM_shell_edges_com[:-1], DM_shell_edges_com[1:])
+    ):
+
+        DM_pos = pos[(shell_start < DM_dis) & (DM_dis <= shell_end), :]*1e3
+        np.save(f'{out_dir}/DM_pos_{fname}_shell{i}.npy', DM_pos)
+
 
 
 def bin_volumes(radial_bins):
