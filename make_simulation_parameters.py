@@ -127,7 +127,7 @@ def make_sim_parameters(
         "CPUs_simulations": CPUs_simulations,
         "memory_limit_GB": memory_limit_GB,
         "DM_in_cell_limit": DM_in_cell_limit,
-        "cosmo_neutrino_density": float(n0)
+        "cosmo_neutrino_density [cm^-3]": float(n0)
     }
 
     with open(f'{sim_dir}/sim_parameters.yaml', 'w') as file:
