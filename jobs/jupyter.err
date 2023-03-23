@@ -1,19 +1,16 @@
-[I 13:08:49.310 NotebookApp] Serving notebooks from local directory: /gpfs/home4/zimmer/neutrino_clustering_V2
-[I 13:08:49.310 NotebookApp] Jupyter Notebook 6.4.12 is running at:
-[I 13:08:49.310 NotebookApp] http://localhost:5508/?token=82253cca906fa0b8df58cabf2cdbcc653645e9da0a4ee275
-[I 13:08:49.310 NotebookApp]  or http://127.0.0.1:5508/?token=82253cca906fa0b8df58cabf2cdbcc653645e9da0a4ee275
-[I 13:08:49.310 NotebookApp] Use Control-C to stop this server and shut down all kernels (twice to skip confirmation).
-[C 13:08:49.320 NotebookApp] 
+[I 14:45:05.602 NotebookApp] Serving notebooks from local directory: /gpfs/home4/zimmer/neutrino_clustering_V2
+[I 14:45:05.602 NotebookApp] Jupyter Notebook 6.4.12 is running at:
+[I 14:45:05.602 NotebookApp] http://localhost:5671/?token=a7c6ade7022a00180cf8ea6dfa63a63cf53adb12b7fef9fd
+[I 14:45:05.602 NotebookApp]  or http://127.0.0.1:5671/?token=a7c6ade7022a00180cf8ea6dfa63a63cf53adb12b7fef9fd
+[I 14:45:05.602 NotebookApp] Use Control-C to stop this server and shut down all kernels (twice to skip confirmation).
+[C 14:45:07.195 NotebookApp] 
     
     To access the notebook, open this file in a browser:
-        file:///gpfs/home4/zimmer/.local/share/jupyter/runtime/nbserver-2450192-open.html
+        file:///gpfs/home4/zimmer/.local/share/jupyter/runtime/nbserver-1763918-open.html
     Or copy and paste one of these URLs:
-        http://localhost:5508/?token=82253cca906fa0b8df58cabf2cdbcc653645e9da0a4ee275
-     or http://127.0.0.1:5508/?token=82253cca906fa0b8df58cabf2cdbcc653645e9da0a4ee275
-[I 13:19:19.668 NotebookApp] Creating new notebook in 
-[I 13:19:19.806 NotebookApp] Kernel started: 1eec5a13-4244-4cd5-afc5-d38a27965d48, name: python3
-[W 13:19:19.816 NotebookApp] delete /analysis-jvsc-1019c685-c8d0-41cd-b04d-d288ec56ecea591d5d7d-f22c-4b32-8499-a4ed4dd3bb03.ipynb
-[W 13:19:19.816 NotebookApp] Skipping trash for /gpfs/home4/zimmer/neutrino_clustering_V2/analysis-jvsc-1019c685-c8d0-41cd-b04d-d288ec56ecea591d5d7d-f22c-4b32-8499-a4ed4dd3bb03.ipynb, [Errno 13] Permission denied: b'/gpfs/home4/.Trash-59104'
-[I 13:24:32.972 NotebookApp] Kernel interrupted: 1eec5a13-4244-4cd5-afc5-d38a27965d48
-slurmstepd: error: *** JOB 2479659 ON tcn470 CANCELLED AT 2023-03-21T16:08:36 DUE TO TIME LIMIT ***
-[I 16:08:36.942 NotebookApp] Starting buffering for 1eec5a13-4244-4cd5-afc5-d38a27965d48:696d09ff-a7b4-4108-a914-cae2d7128181
+        http://localhost:5671/?token=a7c6ade7022a00180cf8ea6dfa63a63cf53adb12b7fef9fd
+     or http://127.0.0.1:5671/?token=a7c6ade7022a00180cf8ea6dfa63a63cf53adb12b7fef9fd
+[I 14:46:46.545 NotebookApp] Creating new notebook in 
+[I 14:46:51.268 NotebookApp] Kernel started: e360f262-51bf-4d75-be4b-11d1c61ddb6f, name: python3
+[W 14:46:51.281 NotebookApp] delete /analysis-jvsc-58cf9c20-64c0-49ba-91f4-dfbe07c4780caeeb8cbe-95e7-4fe5-abbb-f2d136d09d5e.ipynb
+[W 14:46:51.281 NotebookApp] Skipping trash for /gpfs/home4/zimmer/neutrino_clustering_V2/analysis-jvsc-58cf9c20-64c0-49ba-91f4-dfbe07c4780caeeb8cbe-95e7-4fe5-abbb-f2d136d09d5e.ipynb, [Errno 13] Permission denied: b'/gpfs/home4/.Trash-59104'

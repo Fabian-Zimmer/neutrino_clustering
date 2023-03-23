@@ -288,7 +288,9 @@ def escape_momentum_analytical(x_i, z, R_vir, R_s, rho_0, m_nu_eV):
     return p_esc, y_esc
 
 
-def read_DM_halo_index(snap, halo_ID, fname, box_file_dir, out_dir, direct=False):
+def read_DM_halo_index(
+    snap, halo_ID, fname, box_file_dir, out_dir, direct=False
+):
 
     # ---------------- #
     # Open data files. #
