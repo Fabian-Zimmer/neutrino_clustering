@@ -14,3 +14,5 @@
 [I 14:33:39.335 NotebookApp] Kernel started: 38082c6c-d641-4940-881a-832756bab350, name: python3
 [W 14:33:39.348 NotebookApp] delete /analysis-jvsc-47a8b006-5b41-454d-8893-0147117583744c8b624f-56fb-4e6c-9a6a-889ebcb03adb.ipynb
 [W 14:33:39.349 NotebookApp] Skipping trash for /gpfs/home4/zimmer/neutrino_clustering_V2/analysis-jvsc-47a8b006-5b41-454d-8893-0147117583744c8b624f-56fb-4e6c-9a6a-889ebcb03adb.ipynb, [Errno 13] Permission denied: b'/gpfs/home4/.Trash-59104'
+[I 16:13:17.995 NotebookApp] Starting buffering for 38082c6c-d641-4940-881a-832756bab350:0a51df6e-a659-4b8d-bdd0-dfdd8c497196
+slurmstepd: error: *** JOB 2498016 ON tcn156 CANCELLED AT 2023-03-24T16:23:45 DUE TO TIME LIMIT ***
