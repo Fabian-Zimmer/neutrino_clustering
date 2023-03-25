@@ -29,4 +29,5 @@
             "type": "pythonEnvironment"
         }
     ],
+    "python.analysis.typeCheckingMode": "off",
 }
