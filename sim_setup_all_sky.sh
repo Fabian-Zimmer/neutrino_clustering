@@ -14,14 +14,14 @@ python make_box_parameters_and_merger_tree.py \
 python make_simulation_parameters.py \
 --sim_dir L025N752/DMONLY/SigmaConstant00/$sim_fullname \
 --sim_type all_sky \
---healpix_nside 2 \
+--healpix_nside 4 \
 --nu_mass_start 0.01 \
 --nu_mass_stop 0.3 \
 --nu_mass_num 100 \
 --nu_sim_mass 0.3 \
 --p_start 0.01 \
 --p_stop 400 \
---p_num 10_000 \
+--p_num 1_000 \
 --init_x_dis 8.5 \
 --z_int_shift 0.1 \
 --z_int_stop 4 \

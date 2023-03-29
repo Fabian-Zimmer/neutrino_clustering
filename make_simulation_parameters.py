@@ -154,13 +154,13 @@ def make_sim_parameters(
 
         # Each coord. pair gets whole momentum, i.e. velocity range.
         uxs = np.array(
-            [-u_i*np.cos(ps)*np.sin(ts) for ps, ts in zip(phis, thetas)]
+            [u_i*np.cos(ps)*np.sin(ts) for ps, ts in zip(phis, thetas)]
         )
         uys = np.array(
-            [-u_i*np.sin(ps)*np.sin(ts) for ps, ts in zip(phis, thetas)]
+            [u_i*np.sin(ps)*np.sin(ts) for ps, ts in zip(phis, thetas)]
         )
         uzs = np.array(
-            [-u_i*np.cos(ts) for ts in thetas]
+            [u_i*np.cos(ts) for ts in thetas]
         )
         u_i_array = np.stack((uxs, uys, uzs), axis=2)
 

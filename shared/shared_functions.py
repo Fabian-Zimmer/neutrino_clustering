@@ -353,7 +353,8 @@ def read_DM_halo_index(
 
 
 def read_DM_all_inRange(
-    snap, halo_ID, DM_shell_edges, fname, box_file_dir, out_dir
+    snap, halo_ID, mode, DM_shell_edges,
+    fname, box_file_dir, out_dir
 ):
 
     # --------------- #
@@ -383,19 +384,31 @@ def read_DM_all_inRange(
     pos -= CoP_halo
     DM_dis = np.sqrt(np.sum(pos**2, axis=1))
 
-    # ----------------------------------- #
-    # Save DM in spherical shell batches. #
-    # ----------------------------------- #
-
     # DM_shell_edges from physical to comoving, sync to Camilas Gpc units
-    DM_shell_edges_sync = DM_shell_edges*(a/kpc/1e3)
+    DM_dis_lims = DM_shell_edges*(a/kpc/1e3)
 
-    for i, (shell_start, shell_end) in enumerate(
-        zip(DM_shell_edges_sync[:-1], DM_shell_edges_sync[1:])
-    ):
+    if mode == 'single_halos':
+        # ----------------------------------- #
+        # Save DM content up to Rvir of halo. #
+        # ----------------------------------- #
+        
+        DM_pos = pos[DM_dis <= DM_dis_lims, :]*1e3
+        DM_com_coord = np.sum(DM_pos, axis=0)/len(DM_pos)
+        
+        np.save(f'{out_dir}/DM_pos_{fname}.npy', DM_pos)
+        np.save(f'{out_dir}/DM_com_coord_{fname}.npy', DM_com_coord)
 
-        DM_pos = pos[(shell_start < DM_dis) & (DM_dis <= shell_end), :]*1e3
-        np.save(f'{out_dir}/DM_pos_{fname}_shell{i}.npy', DM_pos)
+    elif mode == 'spheres':
+        # ----------------------------------- #
+        # Save DM in spherical shell batches. #
+        # ----------------------------------- #
+
+        for i, (shell_start, shell_end) in enumerate(
+            zip(DM_dis_lims[:-1], DM_dis_lims[1:])
+        ):
+
+            DM_pos = pos[(shell_start < DM_dis) & (DM_dis <= shell_end), :]*1e3
+            np.save(f'{out_dir}/DM_pos_{fname}_shell{i}.npy', DM_pos)
 
 
 

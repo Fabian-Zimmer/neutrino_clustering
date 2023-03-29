@@ -15,6 +15,9 @@ parser.add_argument('-mg', '--mass_gauge', required=True)
 parser.add_argument('-mr', '--mass_range', required=True)
 parser.add_argument('-hn', '--halo_num', required=True)
 parser.add_argument('-sh', '--shells', required=False)
+parser.add_argument(
+    '--upto_Rvir', required=True, action=argparse.BooleanOptionalAction
+)
 args = parser.parse_args()
 
 
@@ -44,10 +47,10 @@ integration_solver = sim_setup['integration_solver']
 # Don't place initial location (earth) exactly on x-axis. If exactly on x-axis, 
 # starting cell is not unique.
 init_dis = sim_setup['initial_haloGC_distance']
-xE = np.cos(np.deg2rad(Pi))*np.sin(np.deg2rad(Pi))*init_dis
-yE = np.sin(np.deg2rad(Pi))*np.sin(np.deg2rad(Pi))*init_dis
-zE = np.cos(np.deg2rad(Pi))*init_dis
-init_xyz = np.array([xE, yE, zE])
+# xE = np.cos(np.deg2rad(Pi))*np.sin(np.deg2rad(Pi))*init_dis
+# yE = np.sin(np.deg2rad(Pi))*np.sin(np.deg2rad(Pi))*init_dis
+# zE = np.cos(np.deg2rad(Pi))*init_dis
+init_xyz = np.array([init_dis, 1e-3, 1e-3])
 
 neutrinos = sim_setup['neutrinos']
 
@@ -854,9 +857,7 @@ rand_code = ''.join(
 temp_dir = f'{args.directory}/temp_data_{rand_code}'
 os.makedirs(temp_dir)
 
-# temp_dir = f'{args.directory}/temp_data_G12Q' #! for testing
-# if not os.path.exists(temp_dir):
-#     os.makedirs(temp_dir)
+# temp_dir = f'{args.directory}/temp_data_NUA8' #! for testing
 
 
 hname = f'1e+{args.mass_gauge}_pm{args.mass_range}Msun'
@@ -945,6 +946,9 @@ def backtrack_1_neutrino(y0_Nr):
 
 for halo_j, halo_ID in enumerate(halo_batch_IDs):
 
+    # if halo_j == 2:
+    #     break
+
     # '''
     # ============================================== #
     # Run precalculations for current halo in batch. #
@@ -959,6 +963,8 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
     # Create empty arrays to save specifics of each loop.
     save_GRID_L = np.zeros(len(nums_snaps))
     save_DM_num = np.zeros(len(nums_snaps))
+    save_CC_num = np.zeros(len(nums_snaps))
+    save_progID = np.zeros(len(nums_snaps), dtype=int)
     save_DM_com = []
     save_QJ_abs = []
 
@@ -968,6 +974,7 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
     for j, (snap, prog_ID) in enumerate(
         zip(nums_snaps, prog_IDs_np[::-1])
     ):
+        save_progID[j] = int(prog_ID)
 
         # --------------------------- #
         # Read and load DM positions. #
@@ -979,9 +986,21 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
         if args.sim_type in ('single_halos', 'all_sky'):
 
             print(f'halo {halo_j+1}/{halo_num} ; snapshot {snap}')
-            read_DM_halo_index(
-                snap, int(prog_ID), IDname, box_file_dir, temp_dir
-            )
+
+            if args.upto_Rvir:
+
+                DM_incl_limit = halo_batch_params[halo_j, 0]*kpc
+
+                read_DM_all_inRange(
+                    snap, int(prog_ID), 'single_halos', DM_incl_limit,
+                    IDname, box_file_dir, temp_dir
+                )
+            
+            else:
+                read_DM_halo_index(
+                    snap, int(prog_ID), IDname, box_file_dir, temp_dir
+                )
+
             DM_raw = np.load(f'{temp_dir}/DM_pos_{IDname}.npy')
             DM_com = np.load(f'{temp_dir}/DM_com_coord_{IDname}.npy')*kpc
             DM_particles = len(DM_raw)
@@ -1001,8 +1020,8 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
             # Determine inclusion region based on input of number of shells.
             DM_shell_edges = DM_shell_edges[:args.shells+1]
             
-            fct.read_DM_all_inRange(
-                snap, int(proj_ID), DM_shell_edges, 
+            read_DM_all_inRange(
+                snap, int(prog_ID), 'spheres', DM_shell_edges, 
                 IDname, box_file_dir, temp_dir
             )
 
@@ -1064,6 +1083,7 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
         # Save snapshot specific parameters.
         save_GRID_L[j] = snap_GRID_L
         save_DM_num[j] = np.sum(DM_count)
+        save_CC_num[j] = DM_particles
         save_DM_com.append(DM_com)
 
 
@@ -1132,7 +1152,7 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
 
         # Determine long-range chuncksize based on available memory and cells.
         # chunksize_lr = chunksize_long_range(cells, core_mem_MB)
-        chunksize_lr = 501
+        chunksize_lr = 2001
 
         # Split workload into batches (if necessary).
         DM_in_cell_IDs = np.load(f'{temp_dir}/DM_in_cell_IDs_{IDname}.npy')
@@ -1181,6 +1201,14 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
         np.array(save_DM_num)
     )
     np.save(
+        f'{args.directory}/snaps_CC_num_{end_str}.npy', 
+        np.array(save_CC_num)
+    )
+    np.save(
+        f'{args.directory}/snaps_progID_{end_str}.npy', 
+        np.array(save_progID)
+    )
+    np.save(
         f'{args.directory}/snaps_DM_com_{end_str}.npy', 
         np.array(save_DM_com)
     )
@@ -1207,6 +1235,8 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
     
     snaps_GRID_L = np.load(f'{args.directory}/snaps_GRID_L_{end_str}.npy')
     snaps_DM_num = np.load(f'{args.directory}/snaps_DM_num_{end_str}.npy')
+    snaps_CC_num = np.load(f'{args.directory}/snaps_CC_num_{end_str}.npy')
+    snaps_progID = np.load(f'{args.directory}/snaps_progID_{end_str}.npy')
     snaps_DM_com = np.load(f'{args.directory}/snaps_DM_com_{end_str}.npy')
     snaps_QJ_abs = np.load(f'{args.directory}/snaps_QJ_abs_{end_str}.npy')
 

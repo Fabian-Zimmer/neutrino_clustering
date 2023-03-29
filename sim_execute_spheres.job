@@ -23,7 +23,8 @@ python $HOME/neutrino_clustering_V2/simulation_numerical.py \
 -st all_sky \
 -mg 12.0 \
 -mr 0.6 \
--hn 3
+-hn 3 \
+--no-upto_Rvir
 
 python $HOME/neutrino_clustering_V2/simulation_analytical.py \
 -d $HOME/neutrino_clustering_V2/$sim_boxtype/$sim_fullname \

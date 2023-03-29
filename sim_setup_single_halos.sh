@@ -1,6 +1,6 @@
 #!/bin/bash
 
-sim_fullname=low_res_1Halo_plus_benchmark
+sim_fullname=low_res_upto_Rvir
 
 python make_box_parameters_and_merger_tree.py \
 --box_directory /projects/0/einf180/Tango_sims \
