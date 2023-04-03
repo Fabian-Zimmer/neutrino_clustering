@@ -1,4 +1,0 @@
-usage: simulation_numerical.py [-h] -d DIRECTORY -st SIM_TYPE -mg MASS_GAUGE
-                               -mr MASS_RANGE -hn HALO_NUM [-sh SHELLS]
-                               --upto_Rvir | --no-upto_Rvir
-simulation_numerical.py: error: the following arguments are required: --upto_Rvir/--no-upto_Rvir

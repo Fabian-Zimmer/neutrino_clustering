@@ -1,14 +1,461 @@
+********Numerical Simulation: Mode=all_sky********
+Halo batch params (Rvir,Mvir,cNFW):
+[[253.5523526   12.24058042   6.9286026 ]
+ [158.62979351  11.62953177   8.03988676]
+ [137.07912107  11.43929142   9.41292697]]
+***********************************
+halo 1/3 ; snapshot 0012
+halo 1/3 ; snapshot 0013
+halo 1/3 ; snapshot 0014
+halo 1/3 ; snapshot 0015
+halo 1/3 ; snapshot 0016
+halo 1/3 ; snapshot 0017
+halo 1/3 ; snapshot 0018
+halo 1/3 ; snapshot 0019
+halo 1/3 ; snapshot 0020
+halo 1/3 ; snapshot 0021
+halo 1/3 ; snapshot 0022
+halo 1/3 ; snapshot 0023
+halo 1/3 ; snapshot 0024
+halo 1/3 ; snapshot 0025
+halo 1/3 ; snapshot 0026
+halo 1/3 ; snapshot 0027
+halo 1/3 ; snapshot 0028
+halo 1/3 ; snapshot 0029
+halo 1/3 ; snapshot 0030
+halo 1/3 ; snapshot 0031
+halo 1/3 ; snapshot 0032
+halo 1/3 ; snapshot 0033
+halo 1/3 ; snapshot 0034
+halo 1/3 ; snapshot 0035
+halo 1/3 ; snapshot 0036
+***Running simulation: mode = all_sky***
+halo=1/3, CPUs=128
+Coord. pair 1/192
+Coord. pair 2/192
+Coord. pair 3/192
+Coord. pair 4/192
+Coord. pair 5/192
+Coord. pair 6/192
+Coord. pair 7/192
+Coord. pair 8/192
+Coord. pair 9/192
+Coord. pair 10/192
+Coord. pair 11/192
+Coord. pair 12/192
+Coord. pair 13/192
+Coord. pair 14/192
+Coord. pair 15/192
+Coord. pair 16/192
+Coord. pair 17/192
+Coord. pair 18/192
+Coord. pair 19/192
+Coord. pair 20/192
+Coord. pair 21/192
+Coord. pair 22/192
+Coord. pair 23/192
+Coord. pair 24/192
+Coord. pair 25/192
+Coord. pair 26/192
+Coord. pair 27/192
+Coord. pair 28/192
+Coord. pair 29/192
+Coord. pair 30/192
+Coord. pair 31/192
+Coord. pair 32/192
+Coord. pair 33/192
+Coord. pair 34/192
+Coord. pair 35/192
+Coord. pair 36/192
+Coord. pair 37/192
+Coord. pair 38/192
+Coord. pair 39/192
+Coord. pair 40/192
+Coord. pair 41/192
+Coord. pair 42/192
+Coord. pair 43/192
+Coord. pair 44/192
+Coord. pair 45/192
+Coord. pair 46/192
+Coord. pair 47/192
+Coord. pair 48/192
+Coord. pair 49/192
+Coord. pair 50/192
+Coord. pair 51/192
+Coord. pair 52/192
+Coord. pair 53/192
+Coord. pair 54/192
+Coord. pair 55/192
+Coord. pair 56/192
+Coord. pair 57/192
+Coord. pair 58/192
+Coord. pair 59/192
+Coord. pair 60/192
+Coord. pair 61/192
+Coord. pair 62/192
+Coord. pair 63/192
+Coord. pair 64/192
+Coord. pair 65/192
+Coord. pair 66/192
+Coord. pair 67/192
+Coord. pair 68/192
+Coord. pair 69/192
+Coord. pair 70/192
+Coord. pair 71/192
+Coord. pair 72/192
+Coord. pair 73/192
+Coord. pair 74/192
+Coord. pair 75/192
+Coord. pair 76/192
+Coord. pair 77/192
+Coord. pair 78/192
+Coord. pair 79/192
+Coord. pair 80/192
+Coord. pair 81/192
+Coord. pair 82/192
+Coord. pair 83/192
+Coord. pair 84/192
+Coord. pair 85/192
+Coord. pair 86/192
+Coord. pair 87/192
+Coord. pair 88/192
+Coord. pair 89/192
+Coord. pair 90/192
+Coord. pair 91/192
+Coord. pair 92/192
+Coord. pair 93/192
+Coord. pair 94/192
+Coord. pair 95/192
+Coord. pair 96/192
+Coord. pair 97/192
+Coord. pair 98/192
+Coord. pair 99/192
+Coord. pair 100/192
+Coord. pair 101/192
+Coord. pair 102/192
+Coord. pair 103/192
+Coord. pair 104/192
+Coord. pair 105/192
+Coord. pair 106/192
+Coord. pair 107/192
+Coord. pair 108/192
+Coord. pair 109/192
+Coord. pair 110/192
+Coord. pair 111/192
+Coord. pair 112/192
+Coord. pair 113/192
+Coord. pair 114/192
+Coord. pair 115/192
+Coord. pair 116/192
+Coord. pair 117/192
+Coord. pair 118/192
+Coord. pair 119/192
+Coord. pair 120/192
+Coord. pair 121/192
+Coord. pair 122/192
+Coord. pair 123/192
+Coord. pair 124/192
+Coord. pair 125/192
+Coord. pair 126/192
+Coord. pair 127/192
+Coord. pair 128/192
+Coord. pair 129/192
+Coord. pair 130/192
+Coord. pair 131/192
+Coord. pair 132/192
+Coord. pair 133/192
+Coord. pair 134/192
+Coord. pair 135/192
+Coord. pair 136/192
+Coord. pair 137/192
+Coord. pair 138/192
+Coord. pair 139/192
+Coord. pair 140/192
+Coord. pair 141/192
+Coord. pair 142/192
+Coord. pair 143/192
+Coord. pair 144/192
+Coord. pair 145/192
+Coord. pair 146/192
+Coord. pair 147/192
+Coord. pair 148/192
+Coord. pair 149/192
+Coord. pair 150/192
+Coord. pair 151/192
+Coord. pair 152/192
+Coord. pair 153/192
+Coord. pair 154/192
+Coord. pair 155/192
+Coord. pair 156/192
+Coord. pair 157/192
+Coord. pair 158/192
+Coord. pair 159/192
+Coord. pair 160/192
+Coord. pair 161/192
+Coord. pair 162/192
+Coord. pair 163/192
+Coord. pair 164/192
+Coord. pair 165/192
+Coord. pair 166/192
+Coord. pair 167/192
+Coord. pair 168/192
+Coord. pair 169/192
+Coord. pair 170/192
+Coord. pair 171/192
+Coord. pair 172/192
+Coord. pair 173/192
+Coord. pair 174/192
+Coord. pair 175/192
+Coord. pair 176/192
+Coord. pair 177/192
+Coord. pair 178/192
+Coord. pair 179/192
+Coord. pair 180/192
+Coord. pair 181/192
+Coord. pair 182/192
+Coord. pair 183/192
+Coord. pair 184/192
+Coord. pair 185/192
+Coord. pair 186/192
+Coord. pair 187/192
+Coord. pair 188/192
+Coord. pair 189/192
+Coord. pair 190/192
+Coord. pair 191/192
+Coord. pair 192/192
+Sim time: 31.859248324468112 min, 0.5309874720744685 h.
+halo 2/3 ; snapshot 0012
+halo 2/3 ; snapshot 0013
+halo 2/3 ; snapshot 0014
+halo 2/3 ; snapshot 0015
+halo 2/3 ; snapshot 0016
+halo 2/3 ; snapshot 0017
+halo 2/3 ; snapshot 0018
+halo 2/3 ; snapshot 0019
+halo 2/3 ; snapshot 0020
+halo 2/3 ; snapshot 0021
+halo 2/3 ; snapshot 0022
+halo 2/3 ; snapshot 0023
+halo 2/3 ; snapshot 0024
+halo 2/3 ; snapshot 0025
+halo 2/3 ; snapshot 0026
+halo 2/3 ; snapshot 0027
+halo 2/3 ; snapshot 0028
+halo 2/3 ; snapshot 0029
+halo 2/3 ; snapshot 0030
+halo 2/3 ; snapshot 0031
+halo 2/3 ; snapshot 0032
+halo 2/3 ; snapshot 0033
+halo 2/3 ; snapshot 0034
+halo 2/3 ; snapshot 0035
+halo 2/3 ; snapshot 0036
+***Running simulation: mode = all_sky***
+halo=2/3, CPUs=128
+Coord. pair 1/192
+Coord. pair 2/192
+Coord. pair 3/192
+Coord. pair 4/192
+Coord. pair 5/192
+Coord. pair 6/192
+Coord. pair 7/192
+Coord. pair 8/192
+Coord. pair 9/192
+Coord. pair 10/192
+Coord. pair 11/192
+Coord. pair 12/192
+Coord. pair 13/192
+Coord. pair 14/192
+Coord. pair 15/192
+Coord. pair 16/192
+Coord. pair 17/192
+Coord. pair 18/192
+Coord. pair 19/192
+Coord. pair 20/192
+Coord. pair 21/192
+Coord. pair 22/192
+Coord. pair 23/192
+Coord. pair 24/192
+Coord. pair 25/192
+Coord. pair 26/192
+Coord. pair 27/192
+Coord. pair 28/192
+Coord. pair 29/192
+Coord. pair 30/192
+Coord. pair 31/192
+Coord. pair 32/192
+Coord. pair 33/192
+Coord. pair 34/192
+Coord. pair 35/192
+Coord. pair 36/192
+Coord. pair 37/192
+Coord. pair 38/192
+Coord. pair 39/192
+Coord. pair 40/192
+Coord. pair 41/192
+Coord. pair 42/192
+Coord. pair 43/192
+Coord. pair 44/192
+Coord. pair 45/192
+Coord. pair 46/192
+Coord. pair 47/192
+Coord. pair 48/192
+Coord. pair 49/192
+Coord. pair 50/192
+Coord. pair 51/192
+Coord. pair 52/192
+Coord. pair 53/192
+Coord. pair 54/192
+Coord. pair 55/192
+Coord. pair 56/192
+Coord. pair 57/192
+Coord. pair 58/192
+Coord. pair 59/192
+Coord. pair 60/192
+Coord. pair 61/192
+Coord. pair 62/192
+Coord. pair 63/192
+Coord. pair 64/192
+Coord. pair 65/192
+Coord. pair 66/192
+Coord. pair 67/192
+Coord. pair 68/192
+Coord. pair 69/192
+Coord. pair 70/192
+Coord. pair 71/192
+Coord. pair 72/192
+Coord. pair 73/192
+Coord. pair 74/192
+Coord. pair 75/192
+Coord. pair 76/192
+Coord. pair 77/192
+Coord. pair 78/192
+Coord. pair 79/192
+Coord. pair 80/192
+Coord. pair 81/192
+Coord. pair 82/192
+Coord. pair 83/192
+Coord. pair 84/192
+Coord. pair 85/192
+Coord. pair 86/192
+Coord. pair 87/192
+Coord. pair 88/192
+Coord. pair 89/192
+Coord. pair 90/192
+Coord. pair 91/192
+Coord. pair 92/192
+Coord. pair 93/192
+Coord. pair 94/192
+Coord. pair 95/192
+Coord. pair 96/192
+Coord. pair 97/192
+Coord. pair 98/192
+Coord. pair 99/192
+Coord. pair 100/192
+Coord. pair 101/192
+Coord. pair 102/192
+Coord. pair 103/192
+Coord. pair 104/192
+Coord. pair 105/192
+Coord. pair 106/192
+Coord. pair 107/192
+Coord. pair 108/192
+Coord. pair 109/192
+Coord. pair 110/192
+Coord. pair 111/192
+Coord. pair 112/192
+Coord. pair 113/192
+Coord. pair 114/192
+Coord. pair 115/192
+Coord. pair 116/192
+Coord. pair 117/192
+Coord. pair 118/192
+Coord. pair 119/192
+Coord. pair 120/192
+Coord. pair 121/192
+Coord. pair 122/192
+Coord. pair 123/192
+Coord. pair 124/192
+Coord. pair 125/192
+Coord. pair 126/192
+Coord. pair 127/192
+Coord. pair 128/192
+Coord. pair 129/192
+Coord. pair 130/192
+Coord. pair 131/192
+Coord. pair 132/192
+Coord. pair 133/192
+Coord. pair 134/192
+Coord. pair 135/192
+Coord. pair 136/192
+Coord. pair 137/192
+Coord. pair 138/192
+Coord. pair 139/192
+Coord. pair 140/192
+Coord. pair 141/192
+Coord. pair 142/192
+Coord. pair 143/192
+Coord. pair 144/192
+Coord. pair 145/192
+Coord. pair 146/192
+Coord. pair 147/192
+Coord. pair 148/192
+Coord. pair 149/192
+Coord. pair 150/192
+Coord. pair 151/192
+Coord. pair 152/192
+Coord. pair 153/192
+Coord. pair 154/192
+Coord. pair 155/192
+Coord. pair 156/192
+Coord. pair 157/192
+Coord. pair 158/192
+Coord. pair 159/192
+Coord. pair 160/192
+Coord. pair 161/192
+Coord. pair 162/192
+Coord. pair 163/192
+Coord. pair 164/192
+Coord. pair 165/192
+Coord. pair 166/192
+Coord. pair 167/192
+Coord. pair 168/192
+Coord. pair 169/192
+Coord. pair 170/192
+Coord. pair 171/192
+Coord. pair 172/192
+Coord. pair 173/192
+Coord. pair 174/192
+Coord. pair 175/192
+Coord. pair 176/192
+Coord. pair 177/192
+Coord. pair 178/192
+Coord. pair 179/192
+Coord. pair 180/192
+Coord. pair 181/192
+Coord. pair 182/192
+Coord. pair 183/192
+Coord. pair 184/192
+Coord. pair 185/192
+Coord. pair 186/192
+Coord. pair 187/192
+Coord. pair 188/192
+Coord. pair 189/192
+Coord. pair 190/192
+Coord. pair 191/192
+Coord. pair 192/192
+Sim time: 29.606086221469255 min, 0.4934347703578209 h.
+Total time: 143.0894377201718 min, 2.384823962002863 h.
 
 JOB STATISTICS
 ==============
-Job ID: 2512845
+Job ID: 2515013
 Cluster: snellius
 User/Group: zimmer/zimmer
-State: FAILED (exit code 2)
+State: COMPLETED (exit code 0)
 Nodes: 1
 Cores per node: 128
-CPU Utilized: 00:00:16
-CPU Efficiency: 0.74% of 00:36:16 core-walltime
-Job Wall-clock time: 00:00:17
-Memory Utilized: 1.67 MB
-Memory Efficiency: 0.00% of 218.75 GB
+CPU Utilized: 1-00:42:05
+CPU Efficiency: 8.04% of 12-19:12:00 core-walltime
+Job Wall-clock time: 02:24:00
+Memory Utilized: 37.50 GB
+Memory Efficiency: 17.14% of 218.75 GB

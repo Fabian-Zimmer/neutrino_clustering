@@ -1,6 +1,6 @@
 #!/bin/bash
 
-sim_fullname=low_res_all_sky
+sim_fullname=high_res_all_sky
 
 python make_box_parameters_and_merger_tree.py \
 --box_directory /projects/0/einf180/Tango_sims \
@@ -30,4 +30,4 @@ python make_simulation_parameters.py \
 --CPUs_precalculations 128 \
 --CPUs_simulations 128 \
 --memory_limit_GB 224 \
---DM_in_cell_limit 10_000
+--DM_in_cell_limit 1_000

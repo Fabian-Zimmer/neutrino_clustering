@@ -1,0 +1,12 @@
+Traceback (most recent call last):
+  File "/home/zimmer/neutrino_clustering_V2/simulation_numerical.py", line 1253, in <module>
+    ui = np.load(f'{args.directory}/initial_velocities.npy')
+  File "/home/zimmer/.conda/envs/neutrino_clustering/lib/python3.9/site-packages/numpy/lib/npyio.py", line 407, in load
+    fid = stack.enter_context(open(os_fspath(file), "rb"))
+FileNotFoundError: [Errno 2] No such file or directory: '/home/zimmer/neutrino_clustering_V2/L025N752/DMONLY/SigmaConstant00/low_res_upto_Rvir/initial_velocities.npy'
+Traceback (most recent call last):
+  File "/home/zimmer/neutrino_clustering_V2/simulation_analytical.py", line 411, in <module>
+    ui_array = np.load(f'{args.directory}/initial_velocities.npy')
+  File "/home/zimmer/.conda/envs/neutrino_clustering/lib/python3.9/site-packages/numpy/lib/npyio.py", line 407, in load
+    fid = stack.enter_context(open(os_fspath(file), "rb"))
+FileNotFoundError: [Errno 2] No such file or directory: '/home/zimmer/neutrino_clustering_V2/L025N752/DMONLY/SigmaConstant00/low_res_upto_Rvir/initial_velocities.npy'

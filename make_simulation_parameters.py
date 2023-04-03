@@ -177,13 +177,13 @@ def make_sim_parameters(
         # Minus signs due to choice of coord. system setup (see notes/drawings).
         #                              (<-- outer loops, --> inner loops)
         uxs = [
-            -u*np.cos(p)*np.sqrt(1-ct**2) for ct in cts for p in ps for u in u_i
+            u*np.cos(p)*np.sqrt(1-ct**2) for ct in cts for p in ps for u in u_i
         ]
         uys = [
-            -u*np.sin(p)*np.sqrt(1-ct**2) for ct in cts for p in ps for u in u_i
+            u*np.sin(p)*np.sqrt(1-ct**2) for ct in cts for p in ps for u in u_i
         ]
         uzs = [
-            -u*ct for ct in cts for _ in ps for u in u_i
+            u*ct for ct in cts for _ in ps for u in u_i
         ]
 
         u_i_array = np.array(

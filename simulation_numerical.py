@@ -946,9 +946,6 @@ def backtrack_1_neutrino(y0_Nr):
 
 for halo_j, halo_ID in enumerate(halo_batch_IDs):
 
-    # if halo_j == 2:
-    #     break
-
     # '''
     # ============================================== #
     # Run precalculations for current halo in batch. #
@@ -1335,15 +1332,16 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
         )
 
 
-        
     sim_time = time.perf_counter()-sim_start
     print(f'Sim time: {sim_time/60.} min, {sim_time/(60**2)} h.')
     
     if 'benchmark' in args.sim_type:
         break
 
-# Delete arrays not compatible with github file limit size.
-delete_temp_data(f'{args.directory}/initial_velocities.npy')
+
+if args.sim_type == 'all_sky':
+    # Delete arrays not compatible with github file limit size.
+    delete_temp_data(f'{args.directory}/initial_velocities.npy')
 
 # Remove temporary folder with all individual neutrino files.
 shutil.rmtree(temp_dir)
