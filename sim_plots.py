@@ -31,7 +31,8 @@ Analysis = analyze_simulation_outputs(
 )
 
 # Generate suite of plots.
-Analysis.plot_overdensity_band(plot_ylims=(3*1e-4,1e1))
+# Analysis.plot_overdensity_band(plot_ylims=(3*1e-4,1e1))
+Analysis.plot_overdensity_band(plot_ylims=None)
 # Analysis.plot_overdensity_evolution(plot_ylims=(1e-4,1e1))
 # Analysis.plot_phase_space(mass_gauge=12.0, mass_range=0.6, most_likely=True)
 # Analysis.plot_density_profiles(mass_gauge=12.0, mass_range=0.6, NFW_orig=True)

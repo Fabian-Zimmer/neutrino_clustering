@@ -49,6 +49,7 @@ class analyze_simulation_outputs(object):
                 halo_num = len(np.load(
                     glob.glob(f'{self.sim_dir}/halo*params.npy')[0]
                 ))
+                halo_num = 3
 
                 for halo in range(1, halo_num+1): 
                     
@@ -92,7 +93,7 @@ class analyze_simulation_outputs(object):
                 self.vectors_analytical = np.array(self.vectors_analytical)
 
                 self.etas_analytical = np.load(
-                    f'{self.sim_dir}/number_densities_analytical.npy'
+                    f'{self.sim_dir}/number_densities_analytical_single_halos.npy'
                 )/N0
 
 
@@ -106,8 +107,7 @@ class analyze_simulation_outputs(object):
                     glob.glob(f'{self.sim_dir}/halo*params.npy')[0]
                 ))
 
-                # for halo in range(1, halo_num+1):
-                for halo in range(3, 3+1): #! modified for testing
+                for halo in range(1, halo_num+1):
                     
                     # Append overdensities.
                     self.number_densities_numerical_all_sky.append(
@@ -128,7 +128,7 @@ class analyze_simulation_outputs(object):
                 )
             
 
-    def plot_overdensity_band(self, plot_ylims:tuple):
+    def plot_overdensity_band(self, plot_ylims):
 
         ### ------------- ###
         ### Setup figure. ###
@@ -140,7 +140,10 @@ class analyze_simulation_outputs(object):
         ax.set_title(f'Overdensity band')
         ax.set_xlabel(r'$m_{\nu}$ [meV]')
         ax.set_ylabel(r'$n_{\nu} / n_{\nu, 0}$')
-        ax.set_ylim(plot_ylims[0], plot_ylims[1])
+
+        if plot_ylims is not None:
+            ax.set_ylim(plot_ylims[0], plot_ylims[1])
+        
         plt.grid(True, which="both", ls="-")
 
         savefig_args = dict(
@@ -894,72 +897,6 @@ class analyze_simulation_outputs(object):
             title=f'All-sky view of DM content as seen from Earth',
             unit=r'DM particles in pixel',
             cmap='Purples',
-            graticule=True,
-            graticule_labels=True,
-            xlabel="longitude",
-            ylabel="latitude",
-            cb_orientation="horizontal",
-            projection_type="mollweide",
-            flip='astro',
-            # cbar_ticks=[],
-            show_tickmarkers=True,
-
-        )
-        plt.show()
-
-        savefig_args = dict(
-            bbox_inches='tight'
-        )
-        plt.savefig(
-            f'{self.fig_dir}/DM_projected_healpix_halo{halo}.pdf', 
-            **savefig_args
-        )
-
-
-    def plot_project_DM_healpix_V2(self, halo, DM_pos, Obs_pos, Nside):
-
-        # Dark matter positions centered on observer location.
-        DM_pos -= Obs_pos
-
-        # Dark matter distance to observer in projected XY-plane only.
-        DM_XYplane_dis = np.sqrt(np.sum(DM_pos[:,:2]**2, axis=-1))
-
-        # Theta and Phi angles of DM particles on a sphere around observer.
-        thetas = np.arctan2(DM_pos[:,2], DM_XYplane_dis)
-        phis = np.arctan2(DM_pos[:,1], DM_pos[:,0])
-
-        # Healpy uses a different convention for theta and phi.
-        hp_thetas, hp_phis = Pi/2. - thetas, Pi - phis  #! unsure if correct
-
-        # Convert angles to pixel indices using ang2pix.
-        pixel_indices = hp.ang2pix(Nside, hp_thetas, hp_phis)
-
-        # Create a Healpix map and increment the corresponding pixels.
-        healpix_map = np.zeros(hp.nside2npix(Nside))
-        np.add.at(healpix_map, pixel_indices, 1)
-
-        # Calculate the Euler angles, to match frame of Earth. This will be the 
-        # new frame in which DM particles get projected to an all sky map.
-        zAngle = np.arctan2(Obs_pos[1], Obs_pos[0])
-        yAngle = np.arctan2(Obs_pos[2], np.linalg.norm(Obs_pos[:2]))
-        rot_angles = (-zAngle, yAngle, 0)
-
-        # Create a rotator object
-        RotObj = hp.Rotator(
-            rot=rot_angles, deg=False, inv=True, eulertype='ZYX'
-        )
-
-        pixel_array = ...
-
-        # Rotate the pixel array
-        healpix_map_rotated = RotObj.rotate_map_pixel(pixel_array)
-
-        hp.newvisufunc.projview(
-            healpix_map_rotated,
-            coord=['G'],
-            title=f'All-sky view of DM content as seen from Earth',
-            unit=r'DM particles in pixel',
-            cmap=cc.cm.CET_D1A,
             graticule=True,
             graticule_labels=True,
             xlabel="longitude",

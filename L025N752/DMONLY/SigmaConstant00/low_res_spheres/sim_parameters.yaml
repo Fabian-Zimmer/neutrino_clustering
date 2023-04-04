@@ -4,7 +4,7 @@ DM_in_cell_limit: 10000
 Npix: null
 Nside: null
 cosmo_neutrino_density [cm^-3]: 112.0137477613158
-initial_haloGC_distance: 8.5
+initial_haloGC_distance: 8.178
 integration_solver: RK23
 memory_limit_GB: 224
 momentum_num: 100

@@ -1,5 +1,5 @@
 from shared.preface import *
-from shared.shared_functions import Fermi_Dirac, number_density, velocity_to_momentum
+from shared.shared_functions import Fermi_Dirac, number_density, velocity_to_momentum, delete_temp_data
 
 # Argparse inputs.
 parser = argparse.ArgumentParser()
@@ -31,9 +31,10 @@ with open(f'{args.directory}/sim_parameters.yaml', 'r') as file:
 
 CPUs_sim = sim_setup['CPUs_simulations']
 integration_solver = sim_setup['integration_solver']
+neutrinos = sim_setup['neutrinos']
+
 init_x_dis = sim_setup['initial_haloGC_distance']
 init_xyz = np.array([init_x_dis, 0., 0.])
-neutrinos = sim_setup['neutrinos']
 
 # Load arrays.
 z_int_steps = np.load(f'{args.directory}/z_int_steps.npy')
@@ -360,8 +361,22 @@ def EOMs(s_val, y):
     # Sum gradients of each halo. Seperate if statements, for adding any halos.
     grad_tot = np.zeros(len(x_i))
     if args.MW_halo:
+        # note: Original.
+        # grad_tot += dPsi_dxi_NFW(
+        #     x_i, z, rho0_MW, Mvir_MW, Rvir_MW, Rs_MW, 'MW'
+        #     )
+
+        # note: With medians from box halo sample.
+        halo_params = np.load(
+            glob.glob(f'{args.directory}/halo*params.npy')[0]
+        )
+        # (Rvir,Mvir,cNFW)
+        Rvir_med = np.median(halo_params[:,0])*kpc
+        Mvir_med = (10**np.median(halo_params[:,1]))*Msun
+        cNFW_med = np.median(halo_params[:,2])
+        Rs_med = Rvir_med/cNFW_med
         grad_tot += dPsi_dxi_NFW(
-            x_i, z, rho0_MW, Mvir_MW, Rvir_MW, Rs_MW, 'MW'
+            x_i, z, None, Mvir_med, Rvir_med, Rs_med, 'MW'
             )
     if args.VC_halo:
         grad_tot += dPsi_dxi_NFW(
@@ -403,13 +418,10 @@ def backtrack_1_neutrino(y0_Nr):
 ### ========================== ###
 ### Run analytical simulation. ###
 ### ========================== ###
-
 sim_start = time.perf_counter()
-
 
 # Draw initial velocities.
 ui_array = np.load(f'{args.directory}/initial_velocities.npy')
-
 
 if ui_array.ndim == 2:
     ui_array = np.expand_dims(ui_array, axis=0)
@@ -436,7 +448,7 @@ for cp, ui in enumerate(ui_array):
 
         id_min = (i*batch_size) + 1
         id_max = ((i+1)*batch_size) + 1
-        print(f'From {id_min} to and incl. {id_max-1}')
+        # print(f'From {id_min} to and incl. {id_max-1}')
 
         if i == 0:
             id_min = 0
@@ -444,7 +456,7 @@ for cp, ui in enumerate(ui_array):
         with ProcessPoolExecutor(CPUs_sim) as ex:
             ex.map(backtrack_1_neutrino, y0_Nr[id_min:id_max])
 
-        print(f'Batch {i+1}/{len(ticks)} done!')
+        # print(f'Batch {i+1}/{len(ticks)} done!')
 
 
     # Compactify all neutrino vectors into 1 file.
@@ -485,6 +497,10 @@ if key_str == 'all_sky':
         f'{args.directory}/number_densities_analytical_all_sky.npy', 
         np.array(all_sky_number_densities)
     )
+
+# if args.sim_type == 'all_sky':
+    # Delete arrays not compatible with github file limit size.
+    # delete_temp_data(f'{args.directory}/initial_velocities.npy')
 
 
 # Remove temporary folder with all individual neutrino files.

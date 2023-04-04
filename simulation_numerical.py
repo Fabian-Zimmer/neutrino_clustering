@@ -43,16 +43,13 @@ CPUs_sim = sim_setup['CPUs_simulations']
 mem_lim_GB = sim_setup['memory_limit_GB']
 DM_lim = sim_setup['DM_in_cell_limit']
 integration_solver = sim_setup['integration_solver']
+neutrinos = sim_setup['neutrinos']
 
 # Don't place initial location (earth) exactly on x-axis. If exactly on x-axis, 
 # starting cell is not unique.
 init_dis = sim_setup['initial_haloGC_distance']
-# xE = np.cos(np.deg2rad(Pi))*np.sin(np.deg2rad(Pi))*init_dis
-# yE = np.sin(np.deg2rad(Pi))*np.sin(np.deg2rad(Pi))*init_dis
-# zE = np.cos(np.deg2rad(Pi))*init_dis
-init_xyz = np.array([init_dis, 1e-3, 1e-3])
+init_xyz = np.array([init_dis, 1e-6, 1e-6])
 
-neutrinos = sim_setup['neutrinos']
 
 # Load arrays.
 nums_snaps = np.load(f'{args.directory}/nums_snaps.npy')
@@ -972,6 +969,7 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
         zip(nums_snaps, prog_IDs_np[::-1])
     ):
         save_progID[j] = int(prog_ID)
+        print(f'halo {halo_j+1}/{halo_num} ; snapshot {snap}')
 
         # --------------------------- #
         # Read and load DM positions. #
@@ -981,8 +979,6 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
         IDname = f'origID{halo_ID}_snap_{snap}'
 
         if args.sim_type in ('single_halos', 'all_sky'):
-
-            print(f'halo {halo_j+1}/{halo_num} ; snapshot {snap}')
 
             if args.upto_Rvir:
 
@@ -1002,7 +998,7 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
             DM_com = np.load(f'{temp_dir}/DM_com_coord_{IDname}.npy')*kpc
             DM_particles = len(DM_raw)
 
-        elif 'benchmark' in args.sim_type:
+        elif args.sim_type == 'benchmark':
 
             print(f'benchmark halo; snapshot {snap}')
             benchmark_file_dir = str(pathlib.Path(args.directory).parent)
@@ -1012,10 +1008,11 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
             DM_particles = len(DM_raw)
             DM_com = np.sum(DM_raw, axis=0)/len(DM_raw)*kpc
 
-        else:
+        elif args.sim_type == 'spheres':
 
             # Determine inclusion region based on input of number of shells.
-            DM_shell_edges = DM_shell_edges[:args.shells+1]
+            DM_shell_edges = DM_shell_edges[:int(args.shells)+1]
+            # np.array([0,5,10,15,20,40,100])*100*kpc
             
             read_DM_all_inRange(
                 snap, int(prog_ID), 'spheres', DM_shell_edges, 
@@ -1024,7 +1021,7 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
 
             # Load DM from all used shells.
             DM_pre = []
-            for shell_i in range(args.shells):
+            for shell_i in range(int(args.shells)):
                 DM_pre.append(
                     np.load(f'{temp_dir}/DM_pos_{IDname}_shell{shell_i}.npy')
                 )
@@ -1245,6 +1242,10 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
     sim_start = time.perf_counter()
 
     if args.sim_type in ('single_halos', 'spheres', 'benchmark'):
+        
+        # Special case for spheres, such that files get named appropriately.
+        if args.sim_type == 'spheres':
+            end_str = f'{end_str}_{args.shells}shells'
 
         # Load initial velocities.
         ui = np.load(f'{args.directory}/initial_velocities.npy')

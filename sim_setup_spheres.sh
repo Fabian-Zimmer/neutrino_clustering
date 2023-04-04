@@ -23,7 +23,7 @@ python make_simulation_parameters.py \
 --p_num 100 \
 --phis 10 \
 --thetas 10 \
---init_x_dis 8.5 \
+--init_x_dis 8.178 \
 --z_int_shift 0.1 \
 --z_int_stop 4 \
 --z_int_num 100 \

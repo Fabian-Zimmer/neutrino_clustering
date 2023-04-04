@@ -152,20 +152,38 @@ def make_sim_parameters(
 
     if sim_type == 'all_sky':
 
+        # For spherical coordinates.
+
         # Each coord. pair gets whole momentum, i.e. velocity range.
+        # uxs = np.array(
+        #     [u_i*np.cos(ps)*np.sin(ts) for ps, ts in zip(phis, thetas)]
+        # )
+        # uys = np.array(
+        #     [u_i*np.sin(ps)*np.sin(ts) for ps, ts in zip(phis, thetas)]
+        # )
+        # uzs = np.array(
+        #     [u_i*np.cos(ts) for ts in thetas]
+        # )
+        # u_i_array = np.stack((uxs, uys, uzs), axis=2)
+
+        # For galactic coordinates.
+
+        # Each coord. pair gets whole momentum, i.e. velocity range.
+        glat = np.deg2rad(thetas)
+        glon = np.deg2rad(phis) - Pi
         uxs = np.array(
-            [u_i*np.cos(ps)*np.sin(ts) for ps, ts in zip(phis, thetas)]
+            [u_i*np.cos(ts)*np.cos(ps) for ts, ps in zip(glat, glon)]
         )
         uys = np.array(
-            [u_i*np.sin(ps)*np.sin(ts) for ps, ts in zip(phis, thetas)]
+            [u_i*np.cos(ts)*np.sin(ps) for ts, ps in zip(glat, glon)]
         )
         uzs = np.array(
-            [u_i*np.cos(ts) for ts in thetas]
+            [u_i*np.sin(ts) for ts in glat]
         )
         u_i_array = np.stack((uxs, uys, uzs), axis=2)
 
         # Save the theta and phi angles as numpy arrays.
-        np.save(f'{sim_dir}/all_sky_angles.npy', np.transpose((phis, thetas)))
+        np.save(f'{sim_dir}/all_sky_angles.npy', np.transpose((thetas, phis)))
 
     else:
 
@@ -232,8 +250,14 @@ if args.sim_type == 'all_sky':
     Npix = 12 * Nside**2  # Number of pixels
     pix_sr = (4*np.pi)/Npix  # Pixel size  [sr]
     
-    theta_angles, phi_angles = np.array(
-        hp.pixelfunc.pix2ang(Nside, np.arange(Npix))
+    # Spherical coordinates.
+    # theta_angles, phi_angles = np.array(
+    #     hp.pixelfunc.pix2ang(Nside, np.arange(Npix))
+    # )
+
+    # Galactic coordinates.
+    phi_angles, theta_angles = np.array(
+        hp.pixelfunc.pix2ang(Nside, np.arange(Npix), lonlat=True)
     )
 else:
 

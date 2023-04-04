@@ -1,0 +1,22 @@
+********Numerical Simulation: Mode=spheres********
+Halo batch params (Rvir,Mvir,cNFW):
+[[253.5523526   12.24058042   6.9286026 ]]
+***********************************
+***Running simulation: mode = spheres***
+halo=1/1, CPUs=128
+Sim time: 1.0817870245470356 min, 0.01802978374245059 h.
+Total time: 18.770086228001553 min, 0.31283477046669256 h.
+
+JOB STATISTICS
+==============
+Job ID: 2540354
+Cluster: snellius
+User/Group: zimmer/zimmer
+State: COMPLETED (exit code 0)
+Nodes: 1
+Cores per node: 128
+CPU Utilized: 01:58:11
+CPU Efficiency: 4.85% of 1-16:38:24 core-walltime
+Job Wall-clock time: 00:19:03
+Memory Utilized: 37.90 GB
+Memory Efficiency: 17.32% of 218.75 GB

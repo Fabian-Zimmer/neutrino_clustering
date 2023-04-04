@@ -1,45 +1,15 @@
-********Numerical Simulation: Mode=benchmark********
-Halo batch params (Rvir,Mvir,cNFW):
-[[253.5523526   12.24058042   6.9286026 ]]
-***********************************
-benchmark halo; snapshot 0012
-benchmark halo; snapshot 0013
-benchmark halo; snapshot 0014
-benchmark halo; snapshot 0015
-benchmark halo; snapshot 0016
-benchmark halo; snapshot 0017
-benchmark halo; snapshot 0018
-benchmark halo; snapshot 0019
-benchmark halo; snapshot 0020
-benchmark halo; snapshot 0021
-benchmark halo; snapshot 0022
-benchmark halo; snapshot 0023
-benchmark halo; snapshot 0024
-benchmark halo; snapshot 0025
-benchmark halo; snapshot 0026
-benchmark halo; snapshot 0027
-benchmark halo; snapshot 0028
-benchmark halo; snapshot 0029
-benchmark halo; snapshot 0030
-benchmark halo; snapshot 0031
-benchmark halo; snapshot 0032
-benchmark halo; snapshot 0033
-benchmark halo; snapshot 0034
-benchmark halo; snapshot 0035
-benchmark halo; snapshot 0036
-***Running simulation: mode = benchmark***
-halo=1/1, CPUs=128
+Sim time: 8.223554488116255 min, 0.13705924146860424 h.
 
 JOB STATISTICS
 ==============
-Job ID: 2515047
+Job ID: 2540034
 Cluster: snellius
 User/Group: zimmer/zimmer
-State: FAILED (exit code 1)
+State: COMPLETED (exit code 0)
 Nodes: 1
 Cores per node: 128
-CPU Utilized: 01:33:12
-CPU Efficiency: 6.19% of 1-01:06:08 core-walltime
-Job Wall-clock time: 00:11:46
-Memory Utilized: 30.16 GB
-Memory Efficiency: 13.79% of 218.75 GB
+CPU Utilized: 02:06:01
+CPU Efficiency: 11.58% of 18:08:00 core-walltime
+Job Wall-clock time: 00:08:30
+Memory Utilized: 11.63 GB
+Memory Efficiency: 5.32% of 218.75 GB

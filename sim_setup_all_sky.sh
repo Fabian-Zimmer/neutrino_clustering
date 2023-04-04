@@ -1,6 +1,6 @@
 #!/bin/bash
 
-sim_fullname=high_res_all_sky
+sim_fullname=all_sky_high_res
 
 python make_box_parameters_and_merger_tree.py \
 --box_directory /projects/0/einf180/Tango_sims \
@@ -22,7 +22,7 @@ python make_simulation_parameters.py \
 --p_start 0.01 \
 --p_stop 400 \
 --p_num 1_000 \
---init_x_dis 8.5 \
+--init_x_dis 8.178 \
 --z_int_shift 0.1 \
 --z_int_stop 4 \
 --z_int_num 100 \
@@ -30,4 +30,4 @@ python make_simulation_parameters.py \
 --CPUs_precalculations 128 \
 --CPUs_simulations 128 \
 --memory_limit_GB 224 \
---DM_in_cell_limit 1_000
+--DM_in_cell_limit 10_000

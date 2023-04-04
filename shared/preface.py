@@ -153,6 +153,7 @@ DIST_VC = 16.5e3*kpc                               # Distance
 # Translated to cartesian coordinates [kpc] in our setup (from fct.halo_pos).
 X_VC     = np.array([-4289.63477282, 1056.51861602, 15895.27621304])
 
+'''
 # NFW parameters for Andromeda.
 Mvir_AG  = 8.0e11*Msun                             # Virial mass
 rho0_AG  = 3.89e6*(Msun/kpc**3)                    # density normalization
@@ -166,6 +167,15 @@ DIST_AG = 0.784e3*kpc                              # Distance
 
 # Translated to cartesian coordinates [kpc] in our setup (from fct.halo_pos).
 X_AG    = np.array([632.29742673, -377.40315121, -288.27006757])
+'''
+
+# NFW parameters for ARTIFICIAL HALO FOR TESTING.
+Mvir_AG  = 1.e8*Msun                               # Virial mass
+rho0_AG  = 3.89e6*(Msun/kpc**3)                    # density normalization
+Rs_AG    = 21.8*kpc                                # scale radius 
+Rvir_AG  = .7*kpc                               # virial radius
+
+X_AG    = np.array([0., 40., 8.])
 
 # CMB temperature from Planck 2018.
 T_CMB = 2.72548*K 
