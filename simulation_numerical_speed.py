@@ -412,7 +412,7 @@ def batch_generators_short_range(cell_coords, cell_gen, chunksize):
     return batch_arr, cell_chunks, cgen_chunks
 
 
-def cell_gravity_short_range(
+def cell_gravity_short_range_OLD(
     cell_coords_in, cell_gen, init_GRID_S,
     DM_pos, DM_lim, DM_sim_mass, smooth_l,
     out_dir, b_id, max_b_len
@@ -496,6 +496,42 @@ def cell_gravity_short_range(
     # note: Minus sign, s.t. velocity changes correctly (see GoodNotes).
     derivative = -G*DM_sim_mass*np.nansum(quot, axis=1)    
     np.save(f'{out_dir}/batch{b_id}_short_range.npy', derivative)
+
+
+@nb.njit
+def cell_gravity_short_range(
+    cell_coords_in, cell_gen, init_GRID_S,
+    DM_pos, DM_lim, DM_sim_mass, smooth_l,
+    out_dir, b_id, max_b_len
+):
+
+    cells, _ = cell_coords_in.shape
+    _, DM_particles, _ = DM_pos.shape
+
+    DM_pos_sync = np.empty((cells, DM_particles, 3))
+    cell_len = np.empty(cells)
+
+    for i in range(cells):
+        DM_pos_sync[i] = DM_pos - cell_coords_in[i]
+        cell_len[i] = init_GRID_S / (2 ** (cell_gen[i] + 1))
+
+    DM_in_cell_IDs = np.abs(DM_pos_sync) < cell_len[:, np.newaxis, np.newaxis]
+
+    DM_in_cell_IDs_compact = np.argwhere(DM_in_cell_IDs)
+    DM_in_cell_IDs_compact[:, 0] += max_b_len * b_id
+
+    DM_in = np.sort(DM_pos_sync, axis=1)[:, :DM_lim * FCT_shell_multipliers[-1], :]
+
+    DM_dis = np.sqrt(np.einsum('ijk,ijk->ij', DM_in, DM_in))
+
+    eps = smooth_l / 2.
+
+    quot = (-DM_in) / ((DM_dis[..., np.newaxis]**2 + eps**2)**(3/2))
+
+    derivative = -G * DM_sim_mass * np.nansum(quot, axis=1)
+    np.save(f'{out_dir}/batch{b_id}_short_range.npy', derivative)
+
+
 
 
 def chunksize_long_range(cells, core_mem_MB):
@@ -759,26 +795,6 @@ def load_dPsi_long_range(c_id, batches, out_dir):
     np.save(f'{out_dir}/cell{c_id}_long_range.npy', dPsi_for_cell)
 
 
-# def nu_in_which_cell(x_i, cell_coords, cell_gens, init_GRID_S):
-
-#     # Center neutrino coords. on each cell center (whole grid).
-#     x_i = np.repeat(np.expand_dims(x_i, axis=(0,1)), len(cell_coords), axis=0)
-#     x_i -= cell_coords
-
-#     # All cell lengths. Limit for the largest cell is GRID_S/2, not just 
-#     # GRID_S, therefore the cell_gen+1 !
-#     cell_lens = np.expand_dims(init_GRID_S/(2**(cell_gens+1)), axis=1)
-
-#     # Find index of cell in which neutrino is enclosed.
-#     in_cell = np.asarray(
-#         (np.abs(x_i[...,0]) < cell_lens) & 
-#         (np.abs(x_i[...,1]) < cell_lens) & 
-#         (np.abs(x_i[...,2]) < cell_lens)
-#     )
-#     cell_idx = np.argwhere(in_cell==True).flatten()[0]
-
-#     return cell_idx
-
 @nb.njit
 def nu_in_which_cell(x_i, cell_coords, cell_gens, init_GRID_S):
     
@@ -930,13 +946,12 @@ def EOMs(s_val, y):
     # Neutrino outside cell grid.
     else:
 
-        # DM_com = snaps_DM_com[idx]
-        # DM_num = snaps_DM_num[idx]
-        # QJ_abs = snaps_QJ_abs[idx]
-        # grad_tot = outside_gravity_quadrupole(
-        #     x_i, DM_com, DM_mass, DM_num, QJ_abs
-        # )
-        grad_tot = np.zeros(3)
+        DM_com = snaps_DM_com[idx]
+        DM_num = snaps_DM_num[idx]
+        QJ_abs = snaps_QJ_abs[idx]
+        grad_tot = outside_gravity_quadrupole(
+            x_i, DM_com, DM_mass, DM_num, QJ_abs
+        )
 
     # Switch to "physical reality" here.
     grad_tot /= (kpc/s**2)
@@ -973,7 +988,7 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
     if halo_j in (1,2,3,4):
         continue
 
-    '''
+    # '''
     # ============================================== #
     # Run precalculations for current halo in batch. #
     # ============================================== #
@@ -1390,6 +1405,9 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
                 )
             )
 
+            # Remove nu_* files, s.t. when testing it will show me errors.
+            delete_temp_data(f'{temp_dir}/nu_*.npy')
+
         # Save number densities for current halo.
         np.save(
             f'{args.directory}/number_densities_numerical_halo{halo_j+1}_all_sky.npy', 
@@ -1404,6 +1422,7 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
         break
 
     # '''
+
 
 # if args.sim_type == 'all_sky':
     # Delete arrays not compatible with github file limit size.

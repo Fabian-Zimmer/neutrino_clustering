@@ -590,6 +590,16 @@ def cell_gravity_long_range_quadrupole(
     max_b_len, cellC_gen
 ):
     # Prefix "cellC" denotes the cell to calculate the long-range forces for.
+    print('***SHAPES LONG_RANGE***')
+    print(np.array(c_id).shape)
+    print(np.array(cib_ids).shape)
+    print(np.array(b_id).shape)
+    print(np.array(cellC_cc).shape)
+    print(np.array(cell_com).shape)
+    print(np.array(cell_gen).shape)
+    print(np.array(DM_pos).shape)
+    print(np.array(DM_count).shape)
+    print(np.array(DM_in_cell_IDs).shape)
 
     # Convert the list inputs to numpy arrays.
     cib_ids = np.array(cib_ids)
@@ -944,11 +954,7 @@ def backtrack_1_neutrino(y0_Nr):
 for halo_j, halo_ID in enumerate(halo_batch_IDs):
     grav_time = time.perf_counter()
 
-    #! manually skip halos.
-    if halo_j in (0,1,2,3):
-        continue
-
-    '''
+    # '''
     # ============================================== #
     # Run precalculations for current halo in batch. #
     # ============================================== #
@@ -1351,6 +1357,9 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
         break
 
     # '''
+
+# Remove nu_* files, s.t. when testing it will show me if not produced.
+delete_temp_data(f'{temp_dir}/nu_*.npy')
 
 # if args.sim_type == 'all_sky':
     # Delete arrays not compatible with github file limit size.
