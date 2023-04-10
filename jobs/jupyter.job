@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=Jupyter
 #SBATCH -p thin
-#SBATCH -t 00:15:00
+#SBATCH -t 00:10:00
 #SBATCH -N 1
 #SBATCH --tasks-per-node=1
 #SBATCH --cpus-per-task=128
@@ -28,4 +28,6 @@ echo "ssh -L ${PORT}:localhost:${PORT} ${BATCH_HOST}"
 # echo "After connection is established in your local browser go to the address:"
 # echo "http://localhost:${PORT}"
  
-jupyter notebook --no-browser --port $PORT
+#? Not sure if problem with not seeing remote lernel is here...
+# jupyter notebook --no-browser --port $PORT 
+jupyter notebook --no-browser --port $PORT --NotebookApp.allow_origin='*'

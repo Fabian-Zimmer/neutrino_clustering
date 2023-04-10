@@ -412,77 +412,47 @@ def batch_generators_short_range(cell_coords, cell_gen, chunksize):
     return batch_arr, cell_chunks, cgen_chunks
 
 
-def cell_gravity_short_range_OLD(
+def cell_gravity_short_range(
     cell_coords_in, cell_gen, init_GRID_S,
     DM_pos, DM_lim, DM_sim_mass, smooth_l,
     out_dir, b_id, max_b_len
 ):
 
-    cell_coords = np.expand_dims(np.array(cell_coords_in), axis=1)
-    cell_gen = np.array(cell_gen)
+    # Cell lengths to limit DM particles. Limit for the largest cell is 
+    # GRID_S/2, not just GRID_S, therefore the cell_gen+1
+    cell_len = init_GRID_S / (2 ** (cell_gen + 1))
 
     # Center all DM positions w.r.t. cell center.
     # DM_pos already in shape = (1, DM_particles, 3)
-    DM_pos_sync = np.repeat(DM_pos, len(cell_coords), axis=0)
-    DM_pos_sync -= cell_coords
+    DM_pos_cent = DM_pos - cell_coords_in[:, np.newaxis, :]
 
-    # Cell lengths to limit DM particles. Limit for the largest cell is 
-    # GRID_S/2, not just GRID_S, therefore the cell_gen+1 !
-    cell_len = np.expand_dims(init_GRID_S/(2**(cell_gen+1)), axis=1)
-    
-    # Select DM particles inside each cell based on cube length generation.
-    DM_in_cell_IDs = np.asarray(
-        (np.abs(DM_pos_sync[...,0]) < cell_len) & 
-        (np.abs(DM_pos_sync[...,1]) < cell_len) & 
-        (np.abs(DM_pos_sync[...,2]) < cell_len)
+    # Select DM particles inside each cell based on cube length generation
+    DM_in_cell_IDs = (
+        (np.abs(DM_pos_cent[..., 0]) < cell_len[:, np.newaxis]) &
+        (np.abs(DM_pos_cent[..., 1]) < cell_len[:, np.newaxis]) &
+        (np.abs(DM_pos_cent[..., 2]) < cell_len[:, np.newaxis])
     )
-    #? < results in 1 missing DM particle. Using <= though overcounts
-    #? is there a way to get every DM particle by adjusting rtol and atol ?
-    # note: -> not pressing for now however
-    del cell_gen, cell_len
 
     # Set DM outside cell to nan values.
-    DM_pos_sync[~DM_in_cell_IDs] = np.nan
+    DM_pos_cent[~DM_in_cell_IDs] = np.nan
 
     # Save the DM IDs, such that we know which particles are in which cell.
     # This will be used in the long-range gravity calculations.
-    DM_in_cell_IDs_compact = np.argwhere(DM_in_cell_IDs==True)
-    DM_in_cell_IDs_compact[:,0] += (max_b_len*b_id)
-    
-    del DM_in_cell_IDs
+    DM_in_cell_IDs_compact = np.argwhere(DM_in_cell_IDs)
+    DM_in_cell_IDs_compact[:, 0] += max_b_len * b_id
     np.save(f'{out_dir}/batch{b_id}_DM_in_cell_IDs.npy', DM_in_cell_IDs_compact)
     del DM_in_cell_IDs_compact
 
     # Sort all nan values to the bottom of axis 1, i.e. the DM-in-cell-X axis 
     # and truncate array based on DM_lim parameter. This simple way works since 
     # each cell cannot have more than DM_lim (times the last shell multiplier).
-    ind_2D = DM_pos_sync[:,:,0].argsort(axis=1)
+    ind_2D = DM_pos_cent[:,:,0].argsort(axis=1)
     ind_3D = np.repeat(np.expand_dims(ind_2D, axis=2), 3, axis=2)
-    DM_sort = np.take_along_axis(DM_pos_sync, ind_3D, axis=1)
+    DM_sort = np.take_along_axis(DM_pos_cent, ind_3D, axis=1)
     DM_in = DM_sort[:,:DM_lim*FCT_shell_multipliers[-1],:]
-    
-    # note: Visual to see, if DM_in is grouped into the right cells.
-    # fig = plt.figure()
-    # ax = fig.add_subplot(111, projection='3d')
-    # ss = 5
-    # for elem in (DM_in+cell_coords)/kpc:
-    #     x, y, z = elem[:,0][::ss], elem[:,1][::ss], elem[:,2][::ss]
-    #     ax.scatter(x,y,z, alpha=0.5, s=0.5)
 
-    # ss = 100
-    # x, y, z = DM_pos[...,0][::ss], DM_pos[...,1][::ss], DM_pos[...,2][::ss]
-    # ax.scatter(x/kpc,y/kpc,z/kpc, alpha=0.1, c='blueviolet', marker='x', s=0.001)
-    # ax.view_init(elev=90, azim=20)
-    # plt.show()
-
-    # note: Memory peaks here, due to these arrays:
-    # print(DM_pos_sync.shape, ind_2D.shape, ind_3D.shape, DM_sort.shape, DM_in.shape)
-    # mem_inc = gso(cell_coords)+gso(DM_pos_sync)+gso(ind_2D)+gso(ind_3D)+gso(DM_sort)+gso(DM_in)
-    # print('MEM_PEAK:', mem_inc/1e6)
-    del DM_pos_sync, ind_2D, ind_3D, DM_sort
-
-    # Calculate distances of DM and adjust array dimensionally.
-    DM_dis = np.expand_dims(np.sqrt(np.sum(DM_in**2, axis=2)), axis=2)
+    # Calculate distances of DM to respective cell center.
+    DM_dis = np.sqrt(np.sum(DM_in**2, axis=2))
 
     # Offset DM positions by smoothening length of Camila's simulations.
     eps = smooth_l / 2.
@@ -490,48 +460,9 @@ def cell_gravity_short_range_OLD(
     # Quotient in sum (see formula). Can contain nan values, thus the np.nansum 
     # for the derivative, s.t. these values don't contribute. We center DM on 
     # c.o.m. of cell C, so we only need DM_in in numerator.
-    #? does DM_in also need to be shifted by eps?
-    quot = (-DM_in)/np.power((DM_dis**2 + eps**2), 3./2.)
-    
-    # note: Minus sign, s.t. velocity changes correctly (see GoodNotes).
-    derivative = -G*DM_sim_mass*np.nansum(quot, axis=1)    
-    np.save(f'{out_dir}/batch{b_id}_short_range.npy', derivative)
-
-
-@nb.njit
-def cell_gravity_short_range(
-    cell_coords_in, cell_gen, init_GRID_S,
-    DM_pos, DM_lim, DM_sim_mass, smooth_l,
-    out_dir, b_id, max_b_len
-):
-
-    cells, _ = cell_coords_in.shape
-    _, DM_particles, _ = DM_pos.shape
-
-    DM_pos_sync = np.empty((cells, DM_particles, 3))
-    cell_len = np.empty(cells)
-
-    for i in range(cells):
-        DM_pos_sync[i] = DM_pos - cell_coords_in[i]
-        cell_len[i] = init_GRID_S / (2 ** (cell_gen[i] + 1))
-
-    DM_in_cell_IDs = np.abs(DM_pos_sync) < cell_len[:, np.newaxis, np.newaxis]
-
-    DM_in_cell_IDs_compact = np.argwhere(DM_in_cell_IDs)
-    DM_in_cell_IDs_compact[:, 0] += max_b_len * b_id
-
-    DM_in = np.sort(DM_pos_sync, axis=1)[:, :DM_lim * FCT_shell_multipliers[-1], :]
-
-    DM_dis = np.sqrt(np.einsum('ijk,ijk->ij', DM_in, DM_in))
-
-    eps = smooth_l / 2.
-
     quot = (-DM_in) / ((DM_dis[..., np.newaxis]**2 + eps**2)**(3/2))
-
     derivative = -G * DM_sim_mass * np.nansum(quot, axis=1)
     np.save(f'{out_dir}/batch{b_id}_short_range.npy', derivative)
-
-
 
 
 def chunksize_long_range(cells, core_mem_MB):
@@ -1133,6 +1064,7 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
         cell_coords = np.squeeze(fin_grid, axis=1)
         cells = len(cell_coords)
 
+        print(f'DM Particles = {DM_particles}, cells = {cells}')
 
         # -------------------- #
         # Short-range gravity. #
@@ -1153,14 +1085,21 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
             cell_coords, cell_gen, chunksize_sr
         )
 
-        with ProcessPoolExecutor(CPUs_pre) as ex:
-            ex.map(
-                cell_gravity_short_range, 
-                cell_chunks, cgen_chunks, repeat(snap_GRID_L), 
-                repeat(DM_pos), repeat(DM_lim), repeat(DM_mass), 
-                repeat(Smooth_L), repeat(temp_dir), batch_arr, 
-                repeat(chunksize_sr)
-            )
+        cell_gravity_short_range(
+            cell_chunks[0], cgen_chunks[0], snap_GRID_L, 
+            DM_pos, DM_lim, DM_mass, 
+            Smooth_L, temp_dir, batch_arr, 
+            chunksize_sr
+        ) 
+                
+        # with ProcessPoolExecutor(CPUs_pre) as ex:
+        #     ex.map(
+        #         cell_gravity_short_range, 
+        #         cell_chunks, cgen_chunks, repeat(snap_GRID_L), 
+        #         repeat(DM_pos), repeat(DM_lim), repeat(DM_mass), 
+        #         repeat(Smooth_L), repeat(temp_dir), batch_arr, 
+        #         repeat(chunksize_sr)
+        #     )
 
         # Combine short-range batch files.
         dPsi_short_range_batches = [

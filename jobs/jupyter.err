@@ -1,13 +1,13 @@
-[I 11:05:47.401 NotebookApp] Serving notebooks from local directory: /gpfs/home4/zimmer/neutrino_clustering_V2
-[I 11:05:47.401 NotebookApp] Jupyter Notebook 6.4.12 is running at:
-[I 11:05:47.401 NotebookApp] http://localhost:5571/?token=1a79ce4c82cf1df4d2673a954602d4805d5ba8ab3a67ba10
-[I 11:05:47.401 NotebookApp]  or http://127.0.0.1:5571/?token=1a79ce4c82cf1df4d2673a954602d4805d5ba8ab3a67ba10
-[I 11:05:47.401 NotebookApp] Use Control-C to stop this server and shut down all kernels (twice to skip confirmation).
-[C 11:05:47.410 NotebookApp] 
+[I 14:25:11.870 NotebookApp] Serving notebooks from local directory: /gpfs/home4/zimmer/neutrino_clustering_V2
+[I 14:25:11.871 NotebookApp] Jupyter Notebook 6.4.12 is running at:
+[I 14:25:11.871 NotebookApp] http://localhost:5529/?token=2fbb0f0ecbc127f8f4cd729e3029ad071228f400ae3e213c
+[I 14:25:11.871 NotebookApp]  or http://127.0.0.1:5529/?token=2fbb0f0ecbc127f8f4cd729e3029ad071228f400ae3e213c
+[I 14:25:11.871 NotebookApp] Use Control-C to stop this server and shut down all kernels (twice to skip confirmation).
+[C 14:25:11.878 NotebookApp] 
     
     To access the notebook, open this file in a browser:
-        file:///gpfs/home4/zimmer/.local/share/jupyter/runtime/nbserver-756998-open.html
+        file:///gpfs/home4/zimmer/.local/share/jupyter/runtime/nbserver-530540-open.html
     Or copy and paste one of these URLs:
-        http://localhost:5571/?token=1a79ce4c82cf1df4d2673a954602d4805d5ba8ab3a67ba10
-     or http://127.0.0.1:5571/?token=1a79ce4c82cf1df4d2673a954602d4805d5ba8ab3a67ba10
-slurmstepd: error: *** JOB 2558930 ON tcn408 CANCELLED AT 2023-04-07T11:20:32 DUE TO TIME LIMIT ***
+        http://localhost:5529/?token=2fbb0f0ecbc127f8f4cd729e3029ad071228f400ae3e213c
+     or http://127.0.0.1:5529/?token=2fbb0f0ecbc127f8f4cd729e3029ad071228f400ae3e213c
+slurmstepd: error: *** JOB 2584655 ON tcn129 CANCELLED AT 2023-04-10T14:35:02 DUE TO TIME LIMIT ***

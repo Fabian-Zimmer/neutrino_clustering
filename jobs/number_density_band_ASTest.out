@@ -7,21 +7,18 @@ Halo batch params (Rvir,Mvir,cNFW):
  [306.35586267  12.48705608  11.48652354]]
 ***********************************
 halo 1/5 ; snapshot 0012
-halo 1/5 ; snapshot 0013
-halo 1/5 ; snapshot 0014
-halo 1/5 ; snapshot 0015
-halo 1/5 ; snapshot 0016
+DM Particles = 24419, cells = 8
 
 JOB STATISTICS
 ==============
-Job ID: 2584161
+Job ID: 2584667
 Cluster: snellius
 User/Group: zimmer/zimmer
-State: TIMEOUT (exit code 0)
+State: FAILED (exit code 1)
 Nodes: 1
 Cores per node: 128
-CPU Utilized: 00:00:00
-CPU Efficiency: 0.00% of 10:46:24 core-walltime
-Job Wall-clock time: 00:05:03
-Memory Utilized: 20.04 GB
-Memory Efficiency: 9.16% of 218.75 GB
+CPU Utilized: 00:01:06
+CPU Efficiency: 0.78% of 02:20:48 core-walltime
+Job Wall-clock time: 00:01:06
+Memory Utilized: 19.61 GB
+Memory Efficiency: 8.96% of 218.75 GB
