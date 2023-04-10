@@ -5,6 +5,7 @@ from shared.plot_class import analyze_simulation_outputs
 parser = argparse.ArgumentParser()
 parser.add_argument('-sd', '--sim_directory', required=True)
 parser.add_argument('-st', '--sim_type', required=True)
+parser.add_argument('-sh', '--shells', required=False)
 parser.add_argument(
     '--NFW_halo', required=True, action=argparse.BooleanOptionalAction
 )
@@ -27,7 +28,8 @@ objects = objects \
 Analysis = analyze_simulation_outputs(
     sim_dir = args.sim_directory,
     objects = objects,
-    sim_type = args.sim_type
+    sim_type = args.sim_type,
+    shells = args.shells
 )
 
 # Generate suite of plots.

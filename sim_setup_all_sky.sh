@@ -1,14 +1,14 @@
 #!/bin/bash
 
-sim_fullname=all_sky_high_res
+sim_fullname=all_sky_TEST
 
-python make_box_parameters_and_merger_tree.py \
---box_directory /projects/0/einf180/Tango_sims \
---box_name L025N752 \
---box_version DMONLY/SigmaConstant00 \
---sim_fullname $sim_fullname \
---initial_snap_z0 36 \
---final_snap_z4 12
+# python make_box_parameters_and_merger_tree.py \
+# --box_directory /projects/0/einf180/Tango_sims \
+# --box_name L025N752 \
+# --box_version DMONLY/SigmaConstant00 \
+# --sim_fullname $sim_fullname \
+# --initial_snap_z0 36 \
+# --final_snap_z4 12
 
 
 python make_simulation_parameters.py \

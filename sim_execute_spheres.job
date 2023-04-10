@@ -16,7 +16,7 @@ module purge
 source $HOME/.conda/envs/neutrino_clustering/bin/activate
 
 sim_boxtype=L025N752/DMONLY/SigmaConstant00
-sim_fullname=low_res_spheres
+sim_fullname=all_sky_TEST
 
 python $HOME/neutrino_clustering_V2/simulation_numerical.py \
 -d $HOME/neutrino_clustering_V2/$sim_boxtype/$sim_fullname \

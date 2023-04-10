@@ -1,0 +1,65 @@
+3D plot for halo 1
+Generating DM 3D plot for snap 0012
+snap=0012 DM_particles=173528
+Generating DM 3D plot for snap 0013
+snap=0013 DM_particles=194211
+Generating DM 3D plot for snap 0014
+snap=0014 DM_particles=213492
+Generating DM 3D plot for snap 0015
+snap=0015 DM_particles=228961
+Generating DM 3D plot for snap 0016
+snap=0016 DM_particles=244639
+Generating DM 3D plot for snap 0017
+snap=0017 DM_particles=262183
+Generating DM 3D plot for snap 0018
+snap=0018 DM_particles=287360
+Generating DM 3D plot for snap 0019
+snap=0019 DM_particles=304481
+Generating DM 3D plot for snap 0020
+snap=0020 DM_particles=342886
+Generating DM 3D plot for snap 0021
+snap=0021 DM_particles=392275
+Generating DM 3D plot for snap 0022
+snap=0022 DM_particles=420987
+Generating DM 3D plot for snap 0023
+snap=0023 DM_particles=443486
+Generating DM 3D plot for snap 0024
+snap=0024 DM_particles=467235
+Generating DM 3D plot for snap 0025
+snap=0025 DM_particles=494672
+Generating DM 3D plot for snap 0026
+snap=0026 DM_particles=512450
+Generating DM 3D plot for snap 0027
+snap=0027 DM_particles=532926
+Generating DM 3D plot for snap 0028
+snap=0028 DM_particles=554675
+Generating DM 3D plot for snap 0029
+snap=0029 DM_particles=573178
+Generating DM 3D plot for snap 0030
+snap=0030 DM_particles=600764
+Generating DM 3D plot for snap 0031
+snap=0031 DM_particles=649599
+Generating DM 3D plot for snap 0032
+snap=0032 DM_particles=706269
+Generating DM 3D plot for snap 0033
+snap=0033 DM_particles=789089
+Generating DM 3D plot for snap 0034
+snap=0034 DM_particles=893438
+Generating DM 3D plot for snap 0035
+snap=0035 DM_particles=940886
+Generating DM 3D plot for snap 0036
+snap=0036 DM_particles=977760
+
+JOB STATISTICS
+==============
+Job ID: 2554075
+Cluster: snellius
+User/Group: zimmer/zimmer
+State: COMPLETED (exit code 0)
+Nodes: 1
+Cores per node: 32
+CPU Utilized: 00:11:26
+CPU Efficiency: 3.24% of 05:53:04 core-walltime
+Job Wall-clock time: 00:11:02
+Memory Utilized: 22.52 GB
+Memory Efficiency: 41.17% of 54.69 GB

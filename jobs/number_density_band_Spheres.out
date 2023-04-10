@@ -4,19 +4,19 @@ Halo batch params (Rvir,Mvir,cNFW):
 ***********************************
 ***Running simulation: mode = spheres***
 halo=1/1, CPUs=128
-Sim time: 1.0817870245470356 min, 0.01802978374245059 h.
-Total time: 18.770086228001553 min, 0.31283477046669256 h.
+Sim time: 55.91143406951663 min, 0.9318572344919438 h.
+Total time: 55.919878334400046 min, 0.9319979722400007 h.
 
 JOB STATISTICS
 ==============
-Job ID: 2540354
+Job ID: 2555591
 Cluster: snellius
 User/Group: zimmer/zimmer
 State: COMPLETED (exit code 0)
 Nodes: 1
 Cores per node: 128
-CPU Utilized: 01:58:11
-CPU Efficiency: 4.85% of 1-16:38:24 core-walltime
-Job Wall-clock time: 00:19:03
-Memory Utilized: 37.90 GB
-Memory Efficiency: 17.32% of 218.75 GB
+CPU Utilized: 15:24:25
+CPU Efficiency: 12.87% of 4-23:45:04 core-walltime
+Job Wall-clock time: 00:56:08
+Memory Utilized: 8.15 GB
+Memory Efficiency: 3.73% of 218.75 GB

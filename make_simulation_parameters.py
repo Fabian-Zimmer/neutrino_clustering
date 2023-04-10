@@ -58,7 +58,7 @@ def make_sim_parameters(
     if isinstance(phis, int):
         neutrinos = phis*thetas*p_num
     else:
-        neutrinos = len(phis)*len(thetas)*p_num
+        neutrinos = len(thetas)*p_num
 
     # Neutrino masses.
     nu_mass_eV = nu_sim_mass*eV
@@ -170,16 +170,10 @@ def make_sim_parameters(
 
         # Each coord. pair gets whole momentum, i.e. velocity range.
         glat = np.deg2rad(thetas)
-        glon = np.deg2rad(phis) - Pi
-        uxs = np.array(
-            [u_i*np.cos(ts)*np.cos(ps) for ts, ps in zip(glat, glon)]
-        )
-        uys = np.array(
-            [u_i*np.cos(ts)*np.sin(ps) for ts, ps in zip(glat, glon)]
-        )
-        uzs = np.array(
-            [u_i*np.sin(ts) for ts in glat]
-        )
+        glon = np.deg2rad(phis)
+        uxs = np.array([u_i*np.cos(b)*np.cos(l) for b, l in zip(glat, glon)])
+        uys = np.array([u_i*np.cos(b)*np.sin(l) for b, l in zip(glat, glon)])
+        uzs = np.array([u_i*np.sin(b) for b in glat])
         u_i_array = np.stack((uxs, uys, uzs), axis=2)
 
         # Save the theta and phi angles as numpy arrays.

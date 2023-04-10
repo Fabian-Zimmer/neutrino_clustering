@@ -4,7 +4,7 @@ from shared.shared_functions import *
 
 class analyze_simulation_outputs(object):
 
-    def __init__(self, sim_dir, objects, sim_type):
+    def __init__(self, sim_dir, objects, sim_type, shells=None):
 
         # Required:
         self.sim_dir = sim_dir
@@ -49,7 +49,7 @@ class analyze_simulation_outputs(object):
                 halo_num = len(np.load(
                     glob.glob(f'{self.sim_dir}/halo*params.npy')[0]
                 ))
-                halo_num = 3
+                halo_num = 3  #! testing
 
                 for halo in range(1, halo_num+1): 
                     
@@ -126,7 +126,48 @@ class analyze_simulation_outputs(object):
                 self.number_densities_analytical_all_sky = np.load(
                     f'{self.sim_dir}/number_densities_analytical_all_sky.npy'
                 )
+
+
+        elif self.sim_type == 'spheres':
+
+            if 'box_halos' in self.objects:
+
+                self.etas_numerical = []
+                self.vectors_numerical = []
+
+                halo_num = len(np.load(
+                    glob.glob(f'{self.sim_dir}/halo*params.npy')[0]
+                ))
+
+                for halo in range(1, halo_num+1): 
+                    
+                    # Find all batch paths belonging to current halo.
+                    batch_paths = glob.glob(
+                        f'{self.sim_dir}/neutrino_vectors_numerical_halo{halo}_{shells}shells_batch*.npy'
+                    )
+
+                    # Concatenate all vector batches into one array.
+                    vectors_halo = []
+                    for batch_path in batch_paths:
+                        vectors_halo.append(np.load(batch_path))
+                    vectors_halo = np.squeeze(np.array(vectors_halo))
+
+                    # Append vectors.
+                    self.vectors_numerical.append(vectors_halo)
+
+                    # Append overdensities.
+                    self.etas_numerical.append(
+                        np.load(
+                            f'{self.sim_dir}/number_densities_numerical_halo{halo}_{shells}shells.npy'
+                        )/N0
+                    )
+
+                self.etas_numerical = np.array(self.etas_numerical)
+                self.vectors_numerical = np.array(self.vectors_numerical)
             
+        else:
+            pass
+        
 
     def plot_overdensity_band(self, plot_ylims):
 
@@ -847,8 +888,8 @@ class analyze_simulation_outputs(object):
         # new frame in which DM particles get projected to an all sky map.
         zAngle = np.arctan2(Obs_pos_orig[1], Obs_pos_orig[0])
         yAngle = np.arctan2(Obs_pos_orig[2], np.linalg.norm(Obs_pos_orig[:2]))
-        ic(zAngle)
-        ic(yAngle)
+        # ic(zAngle)
+        # ic(yAngle)
 
         # note: Rotation (-Pi,Pi,0) in order zyx will put Obs_pos_orig at 
         # note: (x,-y,-z) in this newly rotated (earths) frame.
@@ -867,6 +908,11 @@ class analyze_simulation_outputs(object):
 
         # Dark matter positions centered on observer location.
         DM_obs_cent = DM_orig_in_rot_frame - Obs_pos_orig
+        
+        #! Important: 
+        # Invert x-axis coordinates, since particles infront of us have neg. 
+        # rel. coords., but we want to project them infront of us.
+        DM_obs_cent[:,0] *= -1
 
         # Dark matter line-of-sight distance from observer.
         DM_los_dis = np.sqrt(np.sum(DM_obs_cent**2, axis=-1))
@@ -881,11 +927,11 @@ class analyze_simulation_outputs(object):
         thetas = np.arctan2(DM_obs_cent[:,2], DM_proj_XY_plane_dis)
         phis = np.arctan2(DM_obs_cent[:,1], DM_obs_cent[:,0])
 
-        # Healpy uses a different convention for theta and phi.
-        hp_thetas, hp_phis = Pi/2. - thetas, Pi - phis
+        # Convert to galactic latitude and longitude (in degrees) for healpy.
+        hp_glon, hp_glat = np.rad2deg(phis), np.rad2deg(thetas)
 
-        # Convert angles to pixel indices using ang2pix
-        pixel_indices = hp.ang2pix(Nside, hp_thetas, hp_phis)
+        # Convert angles to pixel indices using ang2pix.
+        pixel_indices = hp.ang2pix(Nside, hp_glon, hp_glat, lonlat=True)
 
         # Create a Healpix map and increment the corresponding pixels
         healpix_map = np.zeros(hp.nside2npix(Nside))
@@ -908,7 +954,6 @@ class analyze_simulation_outputs(object):
             show_tickmarkers=True,
 
         )
-        plt.show()
 
         savefig_args = dict(
             bbox_inches='tight'
@@ -917,3 +962,124 @@ class analyze_simulation_outputs(object):
             f'{self.fig_dir}/DM_projected_healpix_halo{halo}.pdf', 
             **savefig_args
         )
+
+
+    def plot_DM_3D(
+            self, halo, snap_range, 
+            zoom_lim=None, view_angle=None, shells=0
+    ):
+
+        # Box parameters.
+        with open(f'{self.sim_dir}/box_parameters.yaml', 'r') as file:
+            box_setup = yaml.safe_load(file)
+        box_file_dir = box_setup['File Paths']['Box File Directory']
+        
+        # Simulation parameters.
+        with open(f'{self.sim_dir}/sim_parameters.yaml', 'r') as file:
+            sim_setup = yaml.safe_load(file)
+
+        halo_batch_IDs = np.load(
+            glob.glob(f'{self.sim_dir}/halo_batch*indices.npy')[0]            
+        )
+        halo_batch_params = np.load(
+            glob.glob(f'{self.sim_dir}/halo_batch*params.npy')[0]            
+        )
+
+        halo_ID = halo_batch_IDs[halo-1]
+
+        with h5py.File(f'{self.sim_dir}/MergerTree.hdf5') as tree:
+            prog_IDs = tree['Assembly_history/Progenitor_index'][halo_ID,:]
+            prog_IDs_np = np.array(np.expand_dims(prog_IDs, axis=1), dtype=int)
+
+        # Determine inclusion region based on input of number of shells.
+        DM_shell_edges = np.load(f'{self.sim_dir}/DM_shell_edges.npy')
+        # np.array([0,5,10,15,20,40,100])*100*kpc
+
+        nums_snaps = np.load(f'{self.sim_dir}/nums_snaps.npy')
+
+        # rand_code = ''.join(
+        #     random.choices(string.ascii_uppercase + string.digits, k=4)
+        # )
+        # temp_dir = f'{self.sim_dir}/temp_data_{rand_code}'
+        temp_dir = f'{self.sim_dir}/temp_data_FIG'
+        # os.makedirs(temp_dir)
+
+
+        # Limit snapshot range.
+        snap_IDs = np.array(
+            [np.where(s == nums_snaps) for s in snap_range]
+        ).flatten()
+
+        filenames = []
+        for j, (snap, prog_ID) in enumerate(
+            zip(nums_snaps[snap_IDs], prog_IDs_np[::-1][snap_IDs])
+        ):
+            
+            print(f'Generating DM 3D plot for snap {snap}')
+
+            # Load DM.
+            IDname = f'snap{snap}_halo{halo}'
+            read_DM_all_inRange(
+                snap, int(prog_ID), 'spheres', DM_shell_edges[:int(shells)+1], 
+                IDname, box_file_dir, temp_dir
+            )
+
+            # Concatenate DM from all used shells.
+            DM_pre = []
+            for shell_i in range(int(shells)):
+                DM_pre.append(
+                    np.load(f'{temp_dir}/DM_pos_{IDname}_shell{shell_i}.npy')
+                )
+            DM_raw = np.array(list(chain.from_iterable(DM_pre)))
+            DM_particles = len(DM_raw)
+            print(f'snap={snap} DM_particles={DM_particles}')
+            DM_com = (np.sum(DM_raw, axis=0)/len(DM_raw))*kpc
+            del DM_pre
+
+
+            fig = plt.figure()
+            ax = fig.add_subplot(111, projection='3d')
+
+            step = 10  # >1 to thin out the plot
+            xDM, yDM, zDM = DM_raw[:,0], DM_raw[:,1], DM_raw[:,2]
+            ax.scatter(
+                xDM[1::step], yDM[1::step], zDM[1::step], 
+                alpha=1, c='blueviolet', s=0.0001, label='DM particles'
+            )
+            ax.scatter(8.178, 0, 0, c='green', s=100, label='Earth')
+            
+            ax.set_title(f'{IDname}')
+
+            ax.set_xlabel('x-axis')
+            ax.set_xlabel('y-axis')
+            ax.set_xlabel('z-axis')
+            
+            if zoom_lim is not None:
+                ax.set_xlim(-zoom_lim, zoom_lim)
+                ax.set_ylim(-zoom_lim, zoom_lim)
+                ax.set_zlim(-zoom_lim, zoom_lim)
+            if view_angle is not None:
+                ax.view_init(elev=0, azim=0)
+
+            plt.legend(loc='upper right')
+            savefig_args = dict(
+                bbox_inches='tight'
+            )
+
+            fname = f'{self.fig_dir}/DM_spheres_{IDname}_{shells}shells.png'
+            filenames.append(fname)
+            plt.savefig(fname,) # **savefig_args)
+            plt.close()
+
+        # Make GIF.
+        with imageio.get_writer(
+            f'{self.fig_dir}/DM_3D_halo{halo}_{shells}shells.gif', 
+            mode='I', duration=0.5
+        ) as writer:
+            for filename in filenames[::-1]:  #! starting from z=0
+                image = imageio.imread(filename)
+                writer.append_data(image)
+
+
+        # Remove temporary folder.
+        # shutil.rmtree(temp_dir)

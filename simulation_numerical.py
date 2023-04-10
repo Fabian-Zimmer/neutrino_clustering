@@ -848,13 +848,13 @@ def number_densities_mass_range(
 
 
 # Make temporary folder to store files, s.t. parallel runs don't clash.
-rand_code = ''.join(
-    random.choices(string.ascii_uppercase + string.digits, k=4)
-)
-temp_dir = f'{args.directory}/temp_data_{rand_code}'
-os.makedirs(temp_dir)
+# rand_code = ''.join(
+#     random.choices(string.ascii_uppercase + string.digits, k=4)
+# )
+# temp_dir = f'{args.directory}/temp_data_{rand_code}'
+temp_dir = f'{args.directory}/temp_data_TEST' #! for testing
+# os.makedirs(temp_dir)
 
-# temp_dir = f'{args.directory}/temp_data_NUA8' #! for testing
 
 
 hname = f'1e+{args.mass_gauge}_pm{args.mass_range}Msun'
@@ -942,8 +942,13 @@ def backtrack_1_neutrino(y0_Nr):
 
 
 for halo_j, halo_ID in enumerate(halo_batch_IDs):
+    grav_time = time.perf_counter()
 
-    # '''
+    #! manually skip halos.
+    if halo_j in (0,1,2,3):
+        continue
+
+    '''
     # ============================================== #
     # Run precalculations for current halo in batch. #
     # ============================================== #
@@ -1027,6 +1032,7 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
                 )
             DM_raw = np.array(list(chain.from_iterable(DM_pre)))
             DM_particles = len(DM_raw)
+            print(f'snap={snap} DM_particles={DM_particles}')
             DM_com = (np.sum(DM_raw, axis=0)/len(DM_raw))*kpc
             del DM_pre
 
@@ -1181,6 +1187,10 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
         np.save(f'{temp_dir}/dPsi_grid_{IDname}.npy', dPsi_grid)
 
 
+    grav_time_tot = time.perf_counter()-grav_time
+    print(f'Grid time: {grav_time_tot/60.} min, {grav_time_tot/(60**2)} h.')
+
+
     if 'benchmark' in args.sim_type:
         end_str = 'benchmark_halo'
     else:
@@ -1210,6 +1220,7 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
         f'{args.directory}/snaps_QJ_abs_{end_str}.npy', 
         np.array(save_QJ_abs)
     )
+    
     # '''
 
     # ========================================= #
@@ -1302,7 +1313,7 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
             y0_Nr = np.array([np.concatenate(
                 (init_xyz, ui_elem[k], [k+1])) for k in range(len(ui_elem))
             ])
-            
+
             # Run simulation on multiple cores.
             with ProcessPoolExecutor(CPUs_sim) as ex:
                 ex.map(backtrack_1_neutrino, y0_Nr)
@@ -1339,13 +1350,14 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
     if 'benchmark' in args.sim_type:
         break
 
+    # '''
 
-if args.sim_type == 'all_sky':
+# if args.sim_type == 'all_sky':
     # Delete arrays not compatible with github file limit size.
-    delete_temp_data(f'{args.directory}/initial_velocities.npy')
+    # delete_temp_data(f'{args.directory}/initial_velocities.npy')
 
-# Remove temporary folder with all individual neutrino files.
-shutil.rmtree(temp_dir)
+# Remove temporary folder.
+# shutil.rmtree(temp_dir)
 
 total_time = time.perf_counter()-total_start
 print(f'Total time: {total_time/60.} min, {total_time/(60**2)} h.')

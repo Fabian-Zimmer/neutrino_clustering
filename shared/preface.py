@@ -50,6 +50,7 @@ import matplotlib.ticker as ticker
 import matplotlib.patches as mpatches
 from mpl_toolkits import mplot3d
 import colorcet as cc
+import imageio
 
 import code
 def raise_sys_exit():

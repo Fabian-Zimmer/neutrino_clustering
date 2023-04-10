@@ -15,7 +15,7 @@ neutrino_mass_start: 0.01
 neutrino_mass_stop: 0.3
 neutrino_simulation_mass_eV: 0.3
 neutrino_simulation_mass_kg: 5.34739616939369e-37
-neutrinos: 36864000
+neutrinos: 192000
 phis: 192
 pix_sr: 0.06544984694978735
 simulation type: all_sky

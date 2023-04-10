@@ -354,7 +354,7 @@ def read_DM_halo_index(
 
 def read_DM_all_inRange(
     snap, halo_ID, mode, DM_shell_edges,
-    fname, box_file_dir, out_dir
+    fname, box_file_dir, out_dir, direct=False
 ):
 
     # --------------- #
@@ -394,9 +394,12 @@ def read_DM_all_inRange(
         
         DM_pos = pos[DM_dis <= DM_dis_lims, :]*1e3
         DM_com_coord = np.sum(DM_pos, axis=0)/len(DM_pos)
-        
-        np.save(f'{out_dir}/DM_pos_{fname}.npy', DM_pos)
-        np.save(f'{out_dir}/DM_com_coord_{fname}.npy', DM_com_coord)
+
+        if direct:
+            return DM_pos, DM_com_coord
+        else:        
+            np.save(f'{out_dir}/DM_pos_{fname}.npy', DM_pos)
+            np.save(f'{out_dir}/DM_com_coord_{fname}.npy', DM_com_coord)
 
     elif mode == 'spheres':
         # ----------------------------------- #
