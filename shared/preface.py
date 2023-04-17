@@ -35,7 +35,7 @@ import healpy as hp
 # speed improvement
 import numba as nb
 from concurrent.futures import ProcessPoolExecutor, as_completed
-from multiprocessing import Pool
+from multiprocessing import Pool, cpu_count
 
 # scipy packages
 from scipy.integrate import solve_ivp, quad, simpson

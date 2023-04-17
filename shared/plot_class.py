@@ -941,14 +941,6 @@ class analyze_simulation_outputs(object):
             alpha=0.8
         )
 
-        # plt.savefig(
-        #     f'{self.fig_dir}/all_sky_map_numerical_halo{halo}_{nu_mass_eV}eV.pdf', 
-        #     **savefig_args
-        # )
-        # plt.show()
-        # plt.close()
-
-
         def rotation_matrix(theta1, theta2, theta3):
             """In order "zyx", angles in radian. """
 
@@ -1056,6 +1048,7 @@ class analyze_simulation_outputs(object):
         )
 
         return healpix_map_etas
+
 
 
     def plot_DM_3D(
