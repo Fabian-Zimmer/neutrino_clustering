@@ -1,0 +1,73 @@
+********Numerical Simulation: Mode=spheres********
+Halo batch params (Rvir,Mvir,cNFW):
+[[253.5523526   12.24058042   6.9286026 ]]
+***********************************
+halo 1/1 ; snapshot 0012
+DM Particles = 85026, cells = 729
+halo 1/1 ; snapshot 0013
+DM Particles = 83100, cells = 610
+halo 1/1 ; snapshot 0014
+DM Particles = 117214, cells = 757
+halo 1/1 ; snapshot 0015
+DM Particles = 121376, cells = 750
+halo 1/1 ; snapshot 0016
+DM Particles = 141821, cells = 792
+halo 1/1 ; snapshot 0017
+DM Particles = 199845, cells = 1016
+halo 1/1 ; snapshot 0018
+DM Particles = 206753, cells = 1079
+halo 1/1 ; snapshot 0019
+DM Particles = 217423, cells = 1100
+halo 1/1 ; snapshot 0020
+DM Particles = 227746, cells = 1128
+halo 1/1 ; snapshot 0021
+DM Particles = 229985, cells = 1079
+halo 1/1 ; snapshot 0022
+DM Particles = 226236, cells = 1030
+halo 1/1 ; snapshot 0023
+DM Particles = 244715, cells = 1058
+halo 1/1 ; snapshot 0024
+DM Particles = 303316, cells = 1247
+halo 1/1 ; snapshot 0025
+DM Particles = 352221, cells = 1352
+halo 1/1 ; snapshot 0026
+DM Particles = 421812, cells = 1527
+halo 1/1 ; snapshot 0027
+DM Particles = 453903, cells = 1667
+halo 1/1 ; snapshot 0028
+DM Particles = 467208, cells = 1667
+halo 1/1 ; snapshot 0029
+DM Particles = 476713, cells = 1751
+halo 1/1 ; snapshot 0030
+DM Particles = 501341, cells = 1842
+halo 1/1 ; snapshot 0031
+DM Particles = 532048, cells = 2024
+halo 1/1 ; snapshot 0032
+DM Particles = 555466, cells = 2045
+halo 1/1 ; snapshot 0033
+DM Particles = 580633, cells = 2024
+halo 1/1 ; snapshot 0034
+DM Particles = 601576, cells = 2073
+halo 1/1 ; snapshot 0035
+DM Particles = 554516, cells = 1954
+halo 1/1 ; snapshot 0036
+DM Particles = 582184, cells = 2017
+Grid time: 274.8599415603016 min, 4.580999026005027 h.
+***Running simulation: mode = spheres***
+halo=1/1, CPUs=128
+Sim time: 9.606425551061209 min, 0.1601070925176868 h.
+Total time: 284.4821758430296 min, 4.741369597383827 h.
+
+JOB STATISTICS
+==============
+Job ID: 2599667
+Cluster: snellius
+User/Group: zimmer/zimmer
+State: OUT_OF_MEMORY (exit code 0)
+Nodes: 1
+Cores per node: 128
+CPU Utilized: 1-02:07:06
+CPU Efficiency: 4.29% of 25-09:06:08 core-walltime
+Job Wall-clock time: 04:45:31
+Memory Utilized: 213.78 GB
+Memory Efficiency: 97.73% of 218.75 GB

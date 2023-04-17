@@ -1,0 +1,28 @@
+#!/bin/bash
+#SBATCH --job-name=SphFat
+#SBATCH -p fat
+#SBATCH -t 06:00:00
+#SBATCH -N 1
+#SBATCH --tasks-per-node=1
+#SBATCH --cpus-per-task=128
+#SBATCH --mem=960000
+#SBATCH -o jobs/number_density_band_SphFat.out
+#SBATCH -e jobs/number_density_band_SphFat.err
+#SBATCH -v
+#SBATCH --exclusive
+
+module purge
+
+source $HOME/.conda/envs/neutrino_clustering/bin/activate
+
+sim_boxtype=L025N752/DMONLY/SigmaConstant00
+sim_fullname=spheres_high_res
+
+python $HOME/neutrino_clustering_V2/simulation_numerical.py \
+-d $HOME/neutrino_clustering_V2/$sim_boxtype/$sim_fullname \
+--sim_type spheres \
+--mass_gauge 12.0 \
+--mass_range 0.6 \
+--halo_num 1 \
+--shells 3 \
+--no-upto_Rvir

@@ -107,6 +107,8 @@ class analyze_simulation_outputs(object):
                     glob.glob(f'{self.sim_dir}/halo*params.npy')[0]
                 ))
 
+                halo_num = 3  #! testing
+
                 for halo in range(1, halo_num+1):
                     
                     # Append overdensities.
@@ -141,26 +143,34 @@ class analyze_simulation_outputs(object):
 
                 for halo in range(1, halo_num+1): 
                     
-                    # Find all batch paths belonging to current halo.
-                    batch_paths = glob.glob(
-                        f'{self.sim_dir}/neutrino_vectors_numerical_halo{halo}_{shells}shells_batch*.npy'
-                    )
+                    si_etas_numerical = []
+                    si_vectors_numerical = []
 
-                    # Concatenate all vector batches into one array.
-                    vectors_halo = []
-                    for batch_path in batch_paths:
-                        vectors_halo.append(np.load(batch_path))
-                    vectors_halo = np.squeeze(np.array(vectors_halo))
+                    for si in range(1, shells+1):
+                        
+                        # Find all batch paths belonging to current halo.
+                        batch_paths = glob.glob(
+                            f'{self.sim_dir}/neutrino_vectors_numerical_halo{halo}_{si}shells_batch*.npy'
+                        )
 
-                    # Append vectors.
-                    self.vectors_numerical.append(vectors_halo)
+                        # Concatenate all vector batches into one array.
+                        vectors_halo = []
+                        for batch_path in batch_paths:
+                            vectors_halo.append(np.load(batch_path))
+                        vectors_halo = np.squeeze(np.array(vectors_halo))
 
-                    # Append overdensities.
-                    self.etas_numerical.append(
-                        np.load(
-                            f'{self.sim_dir}/number_densities_numerical_halo{halo}_{shells}shells.npy'
-                        )/N0
-                    )
+                        # Append vectors.
+                        si_vectors_numerical.append(vectors_halo)
+
+                        # Append overdensities.
+                        si_etas_numerical.append(
+                            np.load(
+                                f'{self.sim_dir}/number_densities_numerical_halo{halo}_{si}shells.npy'
+                            )/N0
+                        )
+                    
+                    self.etas_numerical.append(si_etas_numerical)
+                    self.vectors_numerical.append(si_vectors_numerical)
 
                 self.etas_numerical = np.array(self.etas_numerical)
                 self.vectors_numerical = np.array(self.vectors_numerical)
@@ -205,29 +215,44 @@ class analyze_simulation_outputs(object):
 
         if 'box_halos' in self.objects:
 
-            etas_median = np.median(
-                self.etas_numerical, axis=0)
-            etas_perc2p5 = np.percentile(
-                self.etas_numerical, q=2.5, axis=0)
-            etas_perc97p5 = np.percentile(
-                self.etas_numerical, q=97.5, axis=0)
-            etas_perc16 = np.percentile(
-                self.etas_numerical, q=16, axis=0)
-            etas_perc84 = np.percentile(
-                self.etas_numerical, q=84, axis=0)
-            
-            ax.plot(
-                self.mrange*1e3, (etas_median-1), color='blue', 
-                label='Box Halos: medians'
-            )
-            ax.fill_between(
-                self.mrange*1e3, (etas_perc2p5-1), (etas_perc97p5-1), 
-                color='blue', alpha=0.2, label='Box Halos: 2.5-97.5 % C.L.'
-            )
-            ax.fill_between(
-                self.mrange*1e3, (etas_perc16-1), (etas_perc84-1), 
-                color='blue', alpha=0.3, label='Box Halos: 16-84 % C.L.'
-            )
+
+            if self.sim_type == 'spheres':
+
+                print(self.etas_numerical.shape)
+                halo_num = self.etas_numerical.shape[0]
+                si_num = self.etas_numerical.shape[1]
+                for halo in range(halo_num):
+                    for si in range(si_num):
+                        ax.plot(
+                            self.mrange*1e3, 
+                            (self.etas_numerical[halo, si, :]-1), 
+                            label=f'halo {halo+1}, {si+1} shells'
+                        )
+
+            else:
+                etas_median = np.median(
+                    self.etas_numerical, axis=0)
+                etas_perc2p5 = np.percentile(
+                    self.etas_numerical, q=2.5, axis=0)
+                etas_perc97p5 = np.percentile(
+                    self.etas_numerical, q=97.5, axis=0)
+                etas_perc16 = np.percentile(
+                    self.etas_numerical, q=16, axis=0)
+                etas_perc84 = np.percentile(
+                    self.etas_numerical, q=84, axis=0)
+                
+                ax.plot(
+                    self.mrange*1e3, (etas_median-1), color='blue', 
+                    label='Box Halos: medians'
+                )
+                ax.fill_between(
+                    self.mrange*1e3, (etas_perc2p5-1), (etas_perc97p5-1), 
+                    color='blue', alpha=0.2, label='Box Halos: 2.5-97.5 % C.L.'
+                )
+                ax.fill_between(
+                    self.mrange*1e3, (etas_perc16-1), (etas_perc84-1), 
+                    color='blue', alpha=0.3, label='Box Halos: 16-84 % C.L.'
+                )
 
         if 'analytical_halo' in self.objects:
 
@@ -245,6 +270,7 @@ class analyze_simulation_outputs(object):
         plt.legend(loc='lower right')
         ax.yaxis.set_major_formatter(ticker.FuncFormatter(y_fmt))
         plt.savefig(f'{self.fig_dir}/overdensity_band.pdf', **savefig_args)
+        plt.show()
         plt.close()
 
 
@@ -771,7 +797,7 @@ class analyze_simulation_outputs(object):
         print(zeds_esc_nr)
 
 
-    def plot_all_sky_map(self, nu_mass_eV, sim_method, halo=None):
+    def plot_all_sky_map_part1(self, nu_mass_eV, sim_method, halo=None):
 
         savefig_args = dict(
             bbox_inches='tight'
@@ -781,6 +807,7 @@ class analyze_simulation_outputs(object):
         with open(f'{self.sim_dir}/sim_parameters.yaml', 'r') as file:
             sim_setup = yaml.safe_load(file)
 
+        # Automatic.
         Nside = sim_setup['Nside']
         Npix = sim_setup['Npix']
         pix_sr = sim_setup['pix_sr']
@@ -789,13 +816,13 @@ class analyze_simulation_outputs(object):
         if sim_method == 'analytical':
 
             dens_nu = self.number_densities_analytical_all_sky[:,nu_mass_idx]
-            etas_nu = dens_nu*(pix_sr/4*Pi)/N0_pix
+            etas_nu = dens_nu/N0_pix
 
             healpix_map = etas_nu
 
             hp.newvisufunc.projview(
                 healpix_map,
-                coord=["G"],
+                coord=['G'],
                 title=f'Analytical (Npix={Npix}, {nu_mass_eV}eV)',
                 unit=r'$n_{\nu, pix} / n_{\nu, pix, 0}$',
                 cmap=cc.cm.CET_D1A,
@@ -805,6 +832,7 @@ class analyze_simulation_outputs(object):
                 ylabel="latitude",
                 cb_orientation="horizontal",
                 projection_type="mollweide",
+                flip='astro',
                 # cbar_ticks=[],
                 # show_tickmarkers=True,
             )
@@ -823,34 +851,32 @@ class analyze_simulation_outputs(object):
             halo_params = np.load(
                 glob.glob(f'{self.sim_dir}/halo*params.npy')[0]
             )
-            Mvir = halo_params[halo-1,1]
-            print('***here***')
+            # Mvir = halo_params[halo-1,1]
+            
+            # Initial pixel array.
             dens_nu = self.number_densities_numerical_all_sky[...,nu_mass_idx]
-            etas_nu = dens_nu*(pix_sr/4*Pi)/N0_pix
-
-            # The initial angles are in the simulation frame of reference. We 
-            # want to make the projection, such that we're looking at the 
-            # center of the halo, such that we can superimpose the DM content 
-            # on it. Thus we apply a rotation to the array.
-            ...
-
+            etas_nu = dens_nu/N0_pix
             healpix_map = etas_nu[halo-1,:]
 
             hp.newvisufunc.projview(
                 healpix_map,
-                coord=["G"],
-                title=f'Numerical, Halo {halo} Mvir={10**Mvir:.2e}Msun (Npix={Npix})',
+                # healpix_map_rotated,
+                coord=['G'],
+                # title=f'Numerical, Halo {halo} Mvir={10**Mvir:.2e}Msun (Npix={Npix})',
+                title=f'Numerical, Halo {halo} (Npix={Npix})',
                 unit=r'$n_{\nu, pix} / n_{\nu, pix, 0}$',
-                cmap=cc.cm.CET_D1A,
+                # cmap=cc.cm.CET_D1A,
+                cmap=cc.cm.CET_L19,
                 graticule=True,
                 graticule_labels=True,
                 xlabel="longitude",
                 ylabel="latitude",
                 cb_orientation="horizontal",
                 projection_type="mollweide",
+                flip='astro',
                 # cbar_ticks=[],
                 # show_tickmarkers=True,
-
+                norm='log'
             )
 
             plt.savefig(
@@ -863,7 +889,65 @@ class analyze_simulation_outputs(object):
             return healpix_map
 
 
-    def plot_project_DM_healpix(self, halo, DM_pos_orig, Obs_pos_orig, Nside):
+    def plot_all_sky_map(
+            self, halo, DM_pos_orig, Obs_pos_orig, Nside, nu_mass_eV
+        ):
+
+
+        savefig_args = dict(
+            bbox_inches='tight'
+        )
+        nu_mass_idx = (np.abs(self.mrange-nu_mass_eV)).argmin()
+
+        with open(f'{self.sim_dir}/sim_parameters.yaml', 'r') as file:
+            sim_setup = yaml.safe_load(file)
+
+        # Automatic.
+        Nside = sim_setup['Nside']
+        Npix = sim_setup['Npix']
+        pix_sr = sim_setup['pix_sr']
+        N0_pix = N0/Npix
+
+        halo_params = np.load(
+            glob.glob(f'{self.sim_dir}/halo*params.npy')[0]
+        )
+        # Mvir = halo_params[halo-1,1]
+        
+        # Initial pixel array.
+        dens_nu = self.number_densities_numerical_all_sky[...,nu_mass_idx]
+        etas_nu = dens_nu/N0_pix
+        healpix_map_etas = etas_nu[halo-1,:]
+
+        hp.newvisufunc.projview(
+            healpix_map_etas,
+            # healpix_map_rotated,
+            coord=['G'],
+            # title=f'Numerical, Halo {halo} Mvir={10**Mvir:.2e}Msun (Npix={Npix})',
+            title=f'Numerical, Halo {halo} (Npix={Npix})',
+            unit=r'$n_{\nu, pix} / n_{\nu, pix, 0}$',
+            # cmap=cc.cm.CET_D1A,
+            cmap=cc.cm.CET_L19,
+            graticule=True,
+            graticule_labels=True,
+            xlabel="longitude",
+            ylabel="latitude",
+            cb_orientation="horizontal",
+            projection_type="mollweide",
+            flip='astro',
+            # cbar_ticks=[],
+            # show_tickmarkers=True,
+            norm='log',
+            hold=True,
+            alpha=0.8
+        )
+
+        # plt.savefig(
+        #     f'{self.fig_dir}/all_sky_map_numerical_halo{halo}_{nu_mass_eV}eV.pdf', 
+        #     **savefig_args
+        # )
+        # plt.show()
+        # plt.close()
+
 
         def rotation_matrix(theta1, theta2, theta3):
             """In order "zyx", angles in radian. """
@@ -913,6 +997,9 @@ class analyze_simulation_outputs(object):
         # Invert x-axis coordinates, since particles infront of us have neg. 
         # rel. coords., but we want to project them infront of us.
         DM_obs_cent[:,0] *= -1
+        # Invert y-axis coordinates, since positive direction is to the right 
+        # (in our python/simulation space), but that has to appear on the left.
+        DM_obs_cent[:,1] *= -1
 
         # Dark matter line-of-sight distance from observer.
         DM_los_dis = np.sqrt(np.sum(DM_obs_cent**2, axis=-1))
@@ -942,6 +1029,7 @@ class analyze_simulation_outputs(object):
             coord=['G'],
             title=f'All-sky view of DM content as seen from Earth',
             unit=r'DM particles in pixel',
+            # cmap=cc.cm.CET_L17,
             cmap='Purples',
             graticule=True,
             graticule_labels=True,
@@ -952,16 +1040,22 @@ class analyze_simulation_outputs(object):
             flip='astro',
             # cbar_ticks=[],
             show_tickmarkers=True,
-
+            # min=0,
+            # max=100,
+            norm='log',
+            hold=True,
+            alpha=0.5
         )
 
         savefig_args = dict(
             bbox_inches='tight'
         )
         plt.savefig(
-            f'{self.fig_dir}/DM_projected_healpix_halo{halo}.pdf', 
+            f'{self.fig_dir}/All_Sky_halo{halo}.pdf', 
             **savefig_args
         )
+
+        return healpix_map_etas
 
 
     def plot_DM_3D(

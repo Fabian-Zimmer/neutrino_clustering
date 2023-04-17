@@ -1,6 +1,6 @@
 #!/bin/bash
 
-sim_fullname=all_sky_TEST
+sim_fullname=spheres_high_res
 
 python sim_plots.py \
 --sim_directory L025N752/DMONLY/SigmaConstant00/$sim_fullname \

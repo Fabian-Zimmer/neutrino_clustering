@@ -1,19 +1,18 @@
 Plot for halo 1
 Plot for halo 2
 Plot for halo 3
-Plot for halo 4
-Plot for halo 5
 
 JOB STATISTICS
 ==============
-Job ID: 2548857
+Job ID: 2606203
 Cluster: snellius
 User/Group: zimmer/zimmer
-State: COMPLETED (exit code 0)
+State: RUNNING
 Nodes: 1
 Cores per node: 32
-CPU Utilized: 00:07:13
-CPU Efficiency: 2.77% of 04:20:48 core-walltime
-Job Wall-clock time: 00:08:09
-Memory Utilized: 20.23 GB
-Memory Efficiency: 37.00% of 54.69 GB
+CPU Utilized: 00:04:08
+CPU Efficiency: 3.09% of 02:13:52 core-walltime
+Job Wall-clock time: 00:04:11
+Memory Utilized: 20.30 GB
+Memory Efficiency: 37.11% of 54.69 GB
+WARNING: Efficiency statistics may be misleading for RUNNING jobs.

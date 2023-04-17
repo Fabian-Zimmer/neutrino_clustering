@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=ASTest
 #SBATCH -p thin
-#SBATCH -t 00:05:00
+#SBATCH -t 09:00:00
 #SBATCH -N 1
 #SBATCH --tasks-per-node=1
 #SBATCH --cpus-per-task=128
@@ -16,9 +16,9 @@ module purge
 source $HOME/.conda/envs/neutrino_clustering/bin/activate
 
 sim_boxtype=L025N752/DMONLY/SigmaConstant00
-sim_fullname=all_sky_TEST
+sim_fullname=all_sky_high_res_TEST
 
-python $HOME/neutrino_clustering_V2/simulation_numerical_speed.py \
+python $HOME/neutrino_clustering_V2/simulation_numerical.py \
 -d $HOME/neutrino_clustering_V2/$sim_boxtype/$sim_fullname \
 -st all_sky \
 -mg 12.0 \

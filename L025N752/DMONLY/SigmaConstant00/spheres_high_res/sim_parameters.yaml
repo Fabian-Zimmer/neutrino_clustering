@@ -1,0 +1,25 @@
+CPUs_precalculations: 128
+CPUs_simulations: 128
+DM_in_cell_limit: 1000
+Npix: null
+Nside: null
+cosmo_neutrino_density [cm^-3]: 112.0137477613158
+initial_haloGC_distance: 8.178
+integration_solver: RK23
+memory_limit_GB: 224
+momentum_num: 200
+momentum_start: 0.01
+momentum_stop: 400.0
+neutrino_mass_num: 100
+neutrino_mass_start: 0.01
+neutrino_mass_stop: 0.3
+neutrino_simulation_mass_eV: 0.3
+neutrino_simulation_mass_kg: 5.34739616939369e-37
+neutrinos: 80000
+phis: 20
+pix_sr: null
+simulation type: spheres
+thetas: 20
+z_inegration_num: 100
+z_inegration_start: 0
+z_inegration_stop: 4.0

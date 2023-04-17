@@ -152,28 +152,12 @@ def make_sim_parameters(
 
     if sim_type == 'all_sky':
 
-        # For spherical coordinates.
-
-        # Each coord. pair gets whole momentum, i.e. velocity range.
-        # uxs = np.array(
-        #     [u_i*np.cos(ps)*np.sin(ts) for ps, ts in zip(phis, thetas)]
-        # )
-        # uys = np.array(
-        #     [u_i*np.sin(ps)*np.sin(ts) for ps, ts in zip(phis, thetas)]
-        # )
-        # uzs = np.array(
-        #     [u_i*np.cos(ts) for ts in thetas]
-        # )
-        # u_i_array = np.stack((uxs, uys, uzs), axis=2)
-
-        # For galactic coordinates.
-
         # Each coord. pair gets whole momentum, i.e. velocity range.
         glat = np.deg2rad(thetas)
         glon = np.deg2rad(phis)
         uxs = np.array([u_i*np.cos(b)*np.cos(l) for b, l in zip(glat, glon)])
         uys = np.array([u_i*np.cos(b)*np.sin(l) for b, l in zip(glat, glon)])
-        uzs = np.array([u_i*np.sin(b) for b in glat])
+        uzs = np.array([-u_i*np.sin(b) for b in glat])
         u_i_array = np.stack((uxs, uys, uzs), axis=2)
 
         # Save the theta and phi angles as numpy arrays.
@@ -195,7 +179,7 @@ def make_sim_parameters(
             u*np.sin(p)*np.sqrt(1-ct**2) for ct in cts for p in ps for u in u_i
         ]
         uzs = [
-            u*ct for ct in cts for _ in ps for u in u_i
+            -u*ct for ct in cts for _ in ps for u in u_i
         ]
 
         u_i_array = np.array(
@@ -243,11 +227,6 @@ if args.sim_type == 'all_sky':
     Nside = int(args.healpix_nside)  # Specified nside parameter, power of 2
     Npix = 12 * Nside**2  # Number of pixels
     pix_sr = (4*np.pi)/Npix  # Pixel size  [sr]
-    
-    # Spherical coordinates.
-    # theta_angles, phi_angles = np.array(
-    #     hp.pixelfunc.pix2ang(Nside, np.arange(Npix))
-    # )
 
     # Galactic coordinates.
     phi_angles, theta_angles = np.array(

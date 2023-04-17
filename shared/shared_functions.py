@@ -414,6 +414,120 @@ def read_DM_all_inRange(
             np.save(f'{out_dir}/DM_pos_{fname}_shell{i}.npy', DM_pos)
 
 
+def halo_DM(halo_idx, snap, pos, snap_Particle_IDs, sim_dir, out_dir):
+
+    # Open data files.
+    group = h5py.File(f'{sim_dir}/subhalo_{snap}.catalog_groups')
+    parts = h5py.File(f'{sim_dir}/subhalo_{snap}.catalog_particles')
+
+    # Start and stop index for current halo.
+    halo_init = group["Offset"][int(halo_idx)]
+    halo_stop = group["Offset"][int(halo_idx) + 1]
+
+    # Particle IDs of halo and snapshot.
+    halo_Particle_IDs = parts["Particle_IDs"][int(halo_init):int(halo_stop)]
+
+    # Particle IDs present in both above arrays.
+    _, _, indices_p = np.intersect1d(
+        halo_Particle_IDs, snap_Particle_IDs, 
+        assume_unique=True, return_indices=True
+    )
+
+    # Save DM positions.
+    DM_pos = pos[indices_p, :]  # x,y,z of each DM particle
+    np.save(f'{out_dir}/DM_of_haloID{halo_idx}.npy', DM_pos)
+
+
+def read_DM_halos_shells(
+    snap, halo_ID, DM_shell_edges, halo_limits, fname, sim_dir, out_dir, CPUs
+):
+
+    # --------------- #
+    # Initialize data #
+    # --------------- #
+
+    snaps = h5py.File(f'{sim_dir}/snapshot_{snap}.hdf5')
+    props = h5py.File(f'{sim_dir}/subhalo_{snap}.properties')
+
+    # Positions.
+    a = snaps["/Header"].attrs["Scale-factor"]
+    pos = snaps['PartType1/Coordinates'][:][:] * a
+
+    # Masses of all halos in sim.
+    m200c = props['Mass_200crit'][:]
+
+    # Center of Potential coordinates, for all halos.
+    CoP = np.zeros((len(m200c), 3))
+    del m200c
+    CoP[:, 0] = props["Xcminpot"][:]
+    CoP[:, 1] = props["Ycminpot"][:]
+    CoP[:, 2] = props["Zcminpot"][:]
+    CoP_halo = CoP[halo_ID, :]
+
+
+    # --------------------------------- #
+    # Combine DM of all halos in range. #
+    # --------------------------------- #
+
+    # Center all center-of-potential coords. on selected (host) halo c.o.p.
+    CoP_cent = CoP - CoP_halo
+    halo_dis = np.sqrt(np.sum(CoP_cent**2, axis=1))
+
+    # DM_shell_edges from physical to comoving, sync to TangoSIDM Gpc units
+    DM_dis_lims = DM_shell_edges*(a/kpc/1e3)
+
+
+    # Select all halos in shell segments.
+    shells = len(DM_shell_edges) - 1
+    halo_IDs = [np.array([halo_ID])]
+    for i, (shell_start, shell_end, shell_lim) in enumerate(
+        zip(DM_dis_lims[:-1], DM_dis_lims[1:], halo_limits[:shells])
+    ):
+        shell_cond = (halo_dis > shell_start) & (halo_dis <= shell_end)
+        halos_in_shells = np.where(shell_cond)[0]
+
+        # Keep only most massive ones (determined by halo_limit) in each shell
+        lim_IDs = halos_in_shells[:shell_lim]
+
+        # For first shell, remove ID of selected (host) halo
+        fin_IDs = np.delete(lim_IDs, np.s_[lim_IDs==halo_ID])
+
+        halo_IDs.append(fin_IDs)
+
+    halo_IDs_for_starmap = np.array(list(chain.from_iterable(halo_IDs)))
+    
+    # Arrays to only load once.
+    snap_Particle_IDs = snaps["PartType1/ParticleIDs"][...]
+
+    with Pool(CPUs) as pool:
+        pool.starmap(halo_DM, zip(
+            halo_IDs_for_starmap,
+            repeat(snap), repeat(pos), repeat(snap_Particle_IDs),
+            repeat(sim_dir), repeat(out_dir)
+        ))
+        
+    # Combine DM from all halos into 1 file.
+    DM_halos = [
+        np.load(f'{out_dir}/DM_of_haloID{i}.npy') for i in halo_IDs_for_starmap
+    ]
+
+    # note: Something for plotting...maybe still useful
+    # DM_lengths = np.zeros(len(DM_halos))
+    # for i, DM_elem in enumerate(DM_halos):
+    #     DM_lengths[i] = len(DM_elem)
+    # np.save(f'{out_dir}/DM_lengths_{fname}.npy', DM_lengths)
+
+    # Combine all DM particles from selected halos into one file.
+    DM_total = np.concatenate(DM_halos, axis=0)
+    DM_total -= CoP_halo
+    DM_total *= 1e3
+    np.save(f'{out_dir}/DM_pos_{fname}.npy', DM_total) 
+    delete_temp_data(f'{out_dir}/DM_of_haloID*.npy')
+
+    # Save c.o.m. coord of all DM particles (used for outside_gravity fct.).
+    DM_com_coord = np.sum(DM_total, axis=0)/len(DM_total)
+    np.save(f'{out_dir}/DM_com_coord_{fname}.npy', DM_com_coord)
+
 
 def bin_volumes(radial_bins):
     """Returns the volumes of the bins. """

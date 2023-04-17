@@ -22,16 +22,25 @@ halo_batch_IDs = np.load(
     glob.glob(f'{args.sim_directory}/halo_batch*indices.npy')[0]
 )
 
+objects = (
+    # 'NFW_halo', 
+    'box_halos', 
+    # 'analytical_halo'
+)
+
 # Initialize Analysis class.
 Analysis = analyze_simulation_outputs(
     sim_dir = args.sim_directory,
-    objects = '',
-    sim_type = '',
+    objects = objects,
+    sim_type = 'all_sky',
     shells = ''
 )
 
 # Generate DM projection for all halos in sim directory.
 for halo_j, halo_ID in enumerate(halo_batch_IDs):
+
+    if halo_j in (3,4):
+        continue
 
     halo_j += 1
     print(f'Plot for halo {halo_j}')
@@ -47,6 +56,7 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
     )
 
     # Generate plot.
-    Analysis.plot_project_DM_healpix(
-        halo=halo_j, DM_pos_orig=DM_pos_orig, Obs_pos_orig=init_xyz, Nside=2**2
+    Analysis.plot_all_sky_map(
+        halo=halo_j, DM_pos_orig=DM_pos_orig, Obs_pos_orig=init_xyz, Nside=2**4,
+        nu_mass_eV=0.3
     )
