@@ -45,10 +45,8 @@ DM_lim = sim_setup['DM_in_cell_limit']
 integration_solver = sim_setup['integration_solver']
 neutrinos = sim_setup['neutrinos']
 
-# Don't place initial location (earth) exactly on x-axis. If exactly on x-axis, 
-# starting cell is not unique.
+# Initial distance from center (Earth-GC) cell must approximate.
 init_dis = sim_setup['initial_haloGC_distance']
-init_xyz = np.array([init_dis, 1e-6, 1e-6])
 
 
 # Load arrays.
@@ -888,10 +886,10 @@ def EOMs(s_val, y):
 
         if z == 0.:
             np.save(
-                f'{args.directory}/cell_len_init_halo{halo_j+1}.npy', cell_len0
+                f'{args.directory}/cell_len_init_{end_str}.npy', cell_len0
             )
             np.save(
-                f'{args.directory}/cell_cc_init_halo{halo_j+1}.npy', cell_cc0
+                f'{args.directory}/cell_cc_init_{end_str}.npy', cell_cc0
             )
 
 
@@ -938,7 +936,7 @@ def backtrack_1_neutrino(y0_Nr):
 for halo_j, halo_ID in enumerate(halo_batch_IDs):
     grav_time = time.perf_counter()
 
-    # '''
+    '''
     # ============================================== #
     # Run precalculations for current halo in batch. #
     # ============================================== #
@@ -1297,7 +1295,7 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
     # Take first cell, which is in Earth-like position (there can be multiple).
     # Needs to be without kpc units (thus doing /kpc) for simulation start.
     init_xyz = cell_ccs[np.abs(cell_dis - init_dis).argsort()][0]/kpc.flatten()
-    np.save(f'{args.directory}/init_xyz_halo{halo_j+1}.npy', init_xyz)
+    np.save(f'{args.directory}/init_xyz_{end_str}.npy', init_xyz)
 
     # Display parameters for simulation.
     print(f'***Running simulation: mode = {args.sim_type}***')
@@ -1392,7 +1390,7 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
 
         # Save number densities for current halo.
         np.save(
-            f'{args.directory}/number_densities_numerical_halo{halo_j+1}_all_sky.npy', 
+            f'{args.directory}/number_densities_numerical_{end_str}_all_sky.npy', 
             np.array(number_densities_pairs)
         )
 
