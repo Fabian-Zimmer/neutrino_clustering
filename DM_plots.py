@@ -39,9 +39,6 @@ Analysis = analyze_simulation_outputs(
 # Generate DM projection for all halos in sim directory.
 for halo_j, halo_ID in enumerate(halo_batch_IDs):
 
-    if halo_j in (3,4):
-        continue
-
     halo_j += 1
     print(f'Plot for halo {halo_j}')
 

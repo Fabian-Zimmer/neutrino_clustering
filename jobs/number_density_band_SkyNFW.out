@@ -1,0 +1,92 @@
+********Numerical Simulation: Mode=benchmark_all_sky********
+Halo batch params (Rvir,Mvir,cNFW):
+[[253.5523526   12.24058042   6.9286026 ]]
+***********************************
+halo 1/1 ; snapshot 0012
+DM Particles = 105076, cells = 400
+halo 1/1 ; snapshot 0013
+DM Particles = 138860, cells = 568
+halo 1/1 ; snapshot 0014
+DM Particles = 177908, cells = 568
+halo 1/1 ; snapshot 0015
+DM Particles = 221051, cells = 834
+halo 1/1 ; snapshot 0016
+DM Particles = 268379, cells = 960
+halo 1/1 ; snapshot 0017
+DM Particles = 318475, cells = 960
+halo 1/1 ; snapshot 0018
+DM Particles = 372108, cells = 1268
+halo 1/1 ; snapshot 0019
+DM Particles = 428157, cells = 1352
+halo 1/1 ; snapshot 0020
+DM Particles = 485249, cells = 1716
+halo 1/1 ; snapshot 0021
+DM Particles = 545545, cells = 2192
+halo 1/1 ; snapshot 0022
+DM Particles = 604332, cells = 2304
+halo 1/1 ; snapshot 0023
+DM Particles = 668737, cells = 2346
+halo 1/1 ; snapshot 0024
+DM Particles = 729365, cells = 2724
+halo 1/1 ; snapshot 0025
+DM Particles = 789473, cells = 2962
+halo 1/1 ; snapshot 0026
+DM Particles = 848176, cells = 2976
+halo 1/1 ; snapshot 0027
+DM Particles = 910390, cells = 3074
+halo 1/1 ; snapshot 0028
+DM Particles = 970011, cells = 3515
+halo 1/1 ; snapshot 0029
+DM Particles = 1026140, cells = 3844
+halo 1/1 ; snapshot 0030
+DM Particles = 1084547, cells = 3872
+halo 1/1 ; snapshot 0031
+DM Particles = 1145125, cells = 3935
+halo 1/1 ; snapshot 0032
+DM Particles = 1200658, cells = 4236
+halo 1/1 ; snapshot 0033
+DM Particles = 1257601, cells = 4544
+halo 1/1 ; snapshot 0034
+DM Particles = 1308400, cells = 4621
+halo 1/1 ; snapshot 0035
+DM Particles = 1359891, cells = 4719
+halo 1/1 ; snapshot 0036
+DM Particles = 1411805, cells = 4824
+Grid time: 150.27606296561038 min, 2.5046010494268396 h.
+***Running simulation: mode = benchmark_all_sky***
+halo=1/1, CPUs=128
+Coord. pair 1/768
+Coord. pair 2/768
+Coord. pair 3/768
+Coord. pair 4/768
+Coord. pair 5/768
+Coord. pair 6/768
+Coord. pair 7/768
+Coord. pair 8/768
+Coord. pair 9/768
+Coord. pair 10/768
+Coord. pair 11/768
+Coord. pair 12/768
+Coord. pair 13/768
+Coord. pair 14/768
+Coord. pair 15/768
+Coord. pair 16/768
+Coord. pair 17/768
+Coord. pair 18/768
+Coord. pair 19/768
+Coord. pair 20/768
+Coord. pair 21/768
+
+JOB STATISTICS
+==============
+Job ID: 2651312
+Cluster: snellius
+User/Group: zimmer/zimmer
+State: TIMEOUT (exit code 0)
+Nodes: 1
+Cores per node: 128
+CPU Utilized: 00:00:00
+CPU Efficiency: 0.00% of 16-01:04:00 core-walltime
+Job Wall-clock time: 03:00:30
+Memory Utilized: 98.63 GB
+Memory Efficiency: 45.09% of 218.75 GB

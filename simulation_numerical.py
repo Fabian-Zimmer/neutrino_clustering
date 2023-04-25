@@ -754,8 +754,10 @@ def nu_in_which_cell(x_i, cell_coords, cell_gens, init_GRID_S):
         (np.abs(x_cent[...,2]) < cell_lens)
     )
     cell_idx = np.argwhere(in_cell).flatten()[0]
+    cell_len = cell_lens[cell_idx]
+    cell_ccs = cell_coords[cell_idx, :]
 
-    return cell_idx
+    return cell_idx, cell_len, cell_ccs
 
 
 @nb.njit
@@ -879,8 +881,19 @@ def EOMs(s_val, y):
         cell_grid = snap_data['cell_grid']
         cell_gens = snap_data['cell_gens']
         
-        cell_idx = nu_in_which_cell(x_i, cell_grid, cell_gens, snap_GRID_L)
+        cell_idx, cell_len0, cell_cc0 = nu_in_which_cell(
+            x_i, cell_grid, cell_gens, snap_GRID_L
+        )
         grad_tot = dPsi_grid[cell_idx,:]
+
+        if z == 0.:
+            np.save(
+                f'{args.directory}/cell_len_init_halo{halo_j+1}.npy', cell_len0
+            )
+            np.save(
+                f'{args.directory}/cell_cc_init_halo{halo_j+1}.npy', cell_cc0
+            )
+
 
     # Neutrino outside cell grid.
     else:
@@ -925,7 +938,7 @@ def backtrack_1_neutrino(y0_Nr):
 for halo_j, halo_ID in enumerate(halo_batch_IDs):
     grav_time = time.perf_counter()
 
-    '''
+    # '''
     # ============================================== #
     # Run precalculations for current halo in batch. #
     # ============================================== #
@@ -977,11 +990,14 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
                     snap, int(prog_ID), IDname, box_file_dir, temp_dir
                 )
 
+                if snap == '0036':
+                    break
+
             DM_raw = np.load(f'{temp_dir}/DM_pos_{IDname}.npy')
             DM_com = np.load(f'{temp_dir}/DM_com_coord_{IDname}.npy')*kpc
             DM_particles = len(DM_raw)
 
-        elif args.sim_type == 'benchmark':
+        elif 'benchmark' in args.sim_type:
 
             benchmark_file_dir = str(pathlib.Path(args.directory).parent)
             DM_raw = np.load(
@@ -1269,6 +1285,19 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
     # Create an instance of the PreloadedData class
     preloaded_data = PreloadedData(halo_ID, nums_snaps, temp_dir)
 
+
+    # Find a cell fitting initial distance criterium, then get (x,y,z) of that 
+    # cell for starting position.
+
+    # Load grid data and compute radial distances from center of cell centers.
+    cell_ccs = np.squeeze(preloaded_data.get_data_for_snap('0036')['cell_grid'])
+    cell_ccs_kpc = cell_ccs/kpc
+    cell_dis = np.linalg.norm(cell_ccs_kpc, axis=-1)
+
+    # Take first cell, which is in Earth-like position (there can be multiple).
+    # Needs to be without kpc units (thus doing /kpc) for simulation start.
+    init_xyz = cell_ccs[np.abs(cell_dis - init_dis).argsort()][0]/kpc.flatten()
+    np.save(f'{args.directory}/init_xyz_halo{halo_j+1}.npy', init_xyz)
 
     # Display parameters for simulation.
     print(f'***Running simulation: mode = {args.sim_type}***')

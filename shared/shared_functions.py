@@ -270,7 +270,7 @@ def velocity_to_momentum(sim_vels, m_arr):
     return p_dim, y
 
 
-def escape_momentum_analytical(x_i, z, R_vir, R_s, rho_0, m_nu_eV):
+def escape_momentum_analytical(x_i, R_vir, R_s, rho_0, m_nu_eV):
     
     # Calculate gravitational potential at coords. x_i.
     r = np.sqrt(np.sum(x_i**2))
@@ -282,10 +282,13 @@ def escape_momentum_analytical(x_i, z, R_vir, R_s, rho_0, m_nu_eV):
     potential = prefactor * (term1 - term2)
 
     # Escape momentum formula from Ringwald & Wong (2004).
-    p_esc = np.sqrt(2*np.abs(potential)) * m_nu_eV
-    y_esc = p_esc/T_CNB
-
-    return p_esc, y_esc
+    if m_nu_eV is None:
+        v_esc = np.sqrt(2*np.abs(potential))
+        return v_esc
+    else:
+        p_esc = np.sqrt(2*np.abs(potential)) * m_nu_eV
+        y_esc = p_esc/T_CNB
+        return p_esc, y_esc
 
 
 def read_DM_halo_index(
@@ -348,6 +351,7 @@ def read_DM_halo_index(
     if direct:
         return DM_pos, DM_com_coord
     else:
+        np.save(f'{out_dir}/DM_pos_indices_{fname}', indices_p)
         np.save(f'{out_dir}/DM_pos_{fname}.npy', DM_pos)
         np.save(f'{out_dir}/DM_com_coord_{fname}.npy', DM_com_coord)
 

@@ -918,15 +918,28 @@ class analyze_simulation_outputs(object):
         etas_nu = dens_nu/N0_pix
         healpix_map_etas = etas_nu[halo-1,:]
 
+        fig = plt.figure(figsize =(12, 4))
+        ax1 = fig.add_subplot(121)
+        ax2 = fig.add_subplot(122)
+        ax1.spines['top'].set_visible(False)
+        ax1.spines['right'].set_visible(False)
+        ax1.spines['bottom'].set_visible(False)
+        ax1.spines['left'].set_visible(False)
+        ax1.get_xaxis().set_ticks([])
+        ax1.get_yaxis().set_ticks([])
+        ax2.spines['top'].set_visible(False)
+        ax2.spines['right'].set_visible(False)
+        ax2.spines['bottom'].set_visible(False)
+        ax2.spines['left'].set_visible(False)
+        ax2.get_xaxis().set_ticks([])
+        ax2.get_yaxis().set_ticks([])
+
         hp.newvisufunc.projview(
             healpix_map_etas,
-            # healpix_map_rotated,
             coord=['G'],
-            # title=f'Numerical, Halo {halo} Mvir={10**Mvir:.2e}Msun (Npix={Npix})',
             title=f'Numerical, Halo {halo} (Npix={Npix})',
             unit=r'$n_{\nu, pix} / n_{\nu, pix, 0}$',
-            # cmap=cc.cm.CET_D1A,
-            cmap=cc.cm.CET_L19,
+            cmap=cc.cm.CET_D1A,
             graticule=True,
             graticule_labels=True,
             xlabel="longitude",
@@ -935,10 +948,11 @@ class analyze_simulation_outputs(object):
             projection_type="mollweide",
             flip='astro',
             # cbar_ticks=[],
-            # show_tickmarkers=True,
+            show_tickmarkers=True,
             norm='log',
-            hold=True,
-            alpha=0.8
+            alpha=1,
+            phi_convention='counterclockwise',
+            sub=121
         )
 
         def rotation_matrix(theta1, theta2, theta3):
@@ -984,7 +998,7 @@ class analyze_simulation_outputs(object):
 
         # Dark matter positions centered on observer location.
         DM_obs_cent = DM_orig_in_rot_frame - Obs_pos_orig
-        
+
         #! Important: 
         # Invert x-axis coordinates, since particles infront of us have neg. 
         # rel. coords., but we want to project them infront of us.
@@ -1006,6 +1020,7 @@ class analyze_simulation_outputs(object):
         thetas = np.arctan2(DM_obs_cent[:,2], DM_proj_XY_plane_dis)
         phis = np.arctan2(DM_obs_cent[:,1], DM_obs_cent[:,0])
 
+        '''
         # Convert to galactic latitude and longitude (in degrees) for healpy.
         hp_glon, hp_glat = np.rad2deg(phis), np.rad2deg(thetas)
 
@@ -1037,6 +1052,39 @@ class analyze_simulation_outputs(object):
             norm='log',
             hold=True,
             alpha=0.5
+        )
+        # '''
+
+        # Calculate the point density in 3D.
+        xyz = np.vstack([DM_obs_cent[:,0],DM_obs_cent[:,1],DM_obs_cent[:,2]])
+        kde = stat.gaussian_kde(xyz)
+        density = kde(xyz)
+
+        hp.newvisufunc.projview(
+            np.zeros_like(healpix_map_etas),
+            coord=['G'],
+            title=f'Numerical, Halo {halo} (Npix={Npix})',
+            unit=r'$n_{\nu, pix} / n_{\nu, pix, 0}$',
+            cmap=cc.cm.gray_r,
+            graticule=True,
+            graticule_labels=True,
+            xlabel="longitude",
+            ylabel="latitude",
+            cb_orientation="horizontal",
+            projection_type="mollweide",
+            flip='astro',
+            # cbar_ticks=[],
+            show_tickmarkers=True,
+            # norm='log',
+            min=1.,
+            alpha=1,
+            phi_convention='counterclockwise',
+            sub=122
+        )
+
+        plt.scatter(
+            phis, thetas, c=density,
+            cmap=cc.cm.CET_L7_r, s=20, alpha=0.2
         )
 
         savefig_args = dict(

@@ -157,7 +157,7 @@ def make_sim_parameters(
         glon = np.deg2rad(phis)
         uxs = np.array([u_i*np.cos(b)*np.cos(l) for b, l in zip(glat, glon)])
         uys = np.array([u_i*np.cos(b)*np.sin(l) for b, l in zip(glat, glon)])
-        uzs = np.array([-u_i*np.sin(b) for b in glat])
+        uzs = np.array([u_i*np.sin(b) for b in glat])
         u_i_array = np.stack((uxs, uys, uzs), axis=2)
 
         # Save the theta and phi angles as numpy arrays.
@@ -179,14 +179,15 @@ def make_sim_parameters(
             u*np.sin(p)*np.sqrt(1-ct**2) for ct in cts for p in ps for u in u_i
         ]
         uzs = [
-            -u*ct for ct in cts for _ in ps for u in u_i
+            u*ct for ct in cts for _ in ps for u in u_i
         ]
 
         u_i_array = np.array(
             [[ux, uy, uz] for ux,uy,uz in zip(uxs,uys,uzs)]
         )
 
-    np.save(f'{sim_dir}/initial_velocities.npy', u_i_array)
+    # note: sim goes backwards in time, hence minus sign (see GoodNotes)
+    np.save(f'{sim_dir}/initial_velocities.npy', -u_i_array)
 
 
 # Argparse inputs.

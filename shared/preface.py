@@ -51,6 +51,7 @@ import matplotlib.patches as mpatches
 from mpl_toolkits import mplot3d
 import colorcet as cc
 import imageio
+from sklearn.neighbors import KernelDensity
 
 import code
 def raise_sys_exit():

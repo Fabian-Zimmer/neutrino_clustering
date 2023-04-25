@@ -82,7 +82,7 @@ def read_data(which_halos,snap,folder,output_path,name,mass_select):
     num_halos = len(select_halos)
 
     density_all = np.zeros((len(centers), num_halos))
-
+density_all
     for halo in range(0, num_halos):
         halo_j = select_halos[halo]
 
