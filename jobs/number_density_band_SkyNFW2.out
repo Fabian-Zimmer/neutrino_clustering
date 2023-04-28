@@ -96,3 +96,59 @@ Coord. pair 89/192
 Coord. pair 90/192
 Coord. pair 91/192
 Coord. pair 92/192
+Coord. pair 93/192
+Coord. pair 94/192
+Coord. pair 95/192
+Coord. pair 96/192
+Coord. pair 97/192
+Coord. pair 98/192
+Coord. pair 99/192
+Coord. pair 100/192
+Coord. pair 101/192
+Coord. pair 102/192
+Coord. pair 103/192
+Coord. pair 104/192
+Coord. pair 105/192
+Coord. pair 106/192
+Coord. pair 107/192
+Coord. pair 108/192
+Coord. pair 109/192
+Coord. pair 110/192
+Coord. pair 111/192
+Coord. pair 112/192
+Coord. pair 113/192
+Coord. pair 114/192
+Coord. pair 115/192
+Coord. pair 116/192
+Coord. pair 117/192
+Coord. pair 118/192
+Coord. pair 119/192
+Coord. pair 120/192
+Coord. pair 121/192
+Coord. pair 122/192
+Coord. pair 123/192
+Coord. pair 124/192
+Coord. pair 125/192
+Coord. pair 126/192
+Coord. pair 127/192
+Coord. pair 128/192
+Coord. pair 129/192
+Coord. pair 130/192
+Coord. pair 131/192
+Coord. pair 132/192
+Coord. pair 133/192
+Coord. pair 134/192
+
+JOB STATISTICS
+==============
+Job ID: 2660227
+Cluster: snellius
+User/Group: zimmer/zimmer
+State: TIMEOUT (exit code 0)
+Nodes: 1
+Cores per node: 128
+CPU Utilized: 00:00:00
+CPU Efficiency: 0.00% of 5-08:42:40 core-walltime
+Job Wall-clock time: 01:00:20
+Memory Utilized: 13.91 GB
+Memory Efficiency: 6.36% of 218.75 GB

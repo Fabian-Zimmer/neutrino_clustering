@@ -74,9 +74,6 @@ def make_sim_parameters(
     # using the analytical expression for Fermions.
     n0 = 2*zeta(3.)/Pi**2 *T_CNB**3 *(3./4.) /(1/cm**3)
 
-    # Starting position of neutrinos.
-    neutrino_init_position = np.array([init_x_dis, 0., 0.])
-
     # Logarithmic redshift spacing, and conversion to integration variable s.
     z_int_steps = np.geomspace(z_int_shift, z_int_stop+z_int_shift, z_int_num)
     z_int_steps -= z_int_shift
@@ -136,7 +133,6 @@ def make_sim_parameters(
     # Save arrays as .npy files.
     np.save(f'{sim_dir}/neutrino_massrange_eV.npy', neutrino_massrange_eV)
     np.save(f'{sim_dir}/neutrino_momenta.npy', neutrino_momenta)
-    np.save(f'{sim_dir}/neutrino_init_position.npy', neutrino_init_position)
     np.save(f'{sim_dir}/z_int_steps.npy', z_int_steps)
     np.save(f'{sim_dir}/s_int_steps.npy', s_int_steps)
     np.save(f'{sim_dir}/DM_shell_edges.npy', DM_shell_edges)
@@ -186,7 +182,7 @@ def make_sim_parameters(
             [[ux, uy, uz] for ux,uy,uz in zip(uxs,uys,uzs)]
         )
 
-    # note: sim goes backwards in time, hence minus sign (see GoodNotes)
+    # note: sim goes backwards in time, hence minus sign (see GoodNotes)'
     np.save(f'{sim_dir}/initial_velocities.npy', -u_i_array)
 
 

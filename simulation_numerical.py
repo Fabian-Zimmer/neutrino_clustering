@@ -820,7 +820,7 @@ def number_densities_mass_range(
     else:
         num_densities = number_density(p_arr[...,0], p_arr[...,-1], pix_sr)
 
-    if sim_type == 'all_sky':
+    if 'all_sky' in sim_type:
         return num_densities
     else:
         np.save(f'{out_file}', num_densities)
@@ -884,13 +884,13 @@ def EOMs(s_val, y):
         )
         grad_tot = dPsi_grid[cell_idx,:]
 
-        if z == 0.:
-            np.save(
-                f'{args.directory}/cell_len_init_{end_str}.npy', cell_len0
-            )
-            np.save(
-                f'{args.directory}/cell_cc_init_{end_str}.npy', cell_cc0
-            )
+        # if z == 0.:
+        #     np.save(
+        #         f'{args.directory}/cell_len_init_{end_str}.npy', cell_len0
+        #     )
+        #     np.save(
+        #         f'{args.directory}/cell_cc_init_{end_str}.npy', cell_cc0
+        #     )
 
 
     # Neutrino outside cell grid.
@@ -1294,7 +1294,7 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
 
     # Take first cell, which is in Earth-like position (there can be multiple).
     # Needs to be without kpc units (thus doing /kpc) for simulation start.
-    init_xyz = cell_ccs[np.abs(cell_dis - init_dis).argsort()][0]/kpc.flatten()
+    init_xyz = cell_ccs[np.abs(cell_dis - init_dis).argsort()][1]/kpc.flatten()
     np.save(f'{args.directory}/init_xyz_{end_str}.npy', init_xyz)
 
     # Display parameters for simulation.

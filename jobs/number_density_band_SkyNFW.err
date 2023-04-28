@@ -1,1 +1,8 @@
-slurmstepd: error: *** JOB 2651312 ON tcn344 CANCELLED AT 2023-04-24T18:51:33 DUE TO TIME LIMIT ***
+Traceback (most recent call last):
+  File "/home/zimmer/neutrino_clustering_V2/simulation_numerical.py", line 1374, in <module>
+    [
+  File "/home/zimmer/neutrino_clustering_V2/simulation_numerical.py", line 1375, in <listcomp>
+    np.load(f'{temp_dir}/nu_{i+1}.npy') 
+  File "/home/zimmer/.conda/envs/neutrino_clustering/lib/python3.9/site-packages/numpy/lib/npyio.py", line 435, in load
+    raise ValueError("Cannot load file containing pickled data "
+ValueError: Cannot load file containing pickled data when allow_pickle=False
