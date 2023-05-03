@@ -1,13 +1,13 @@
 #!/bin/bash
-#SBATCH --job-name=HDAllSky
+#SBATCH --job-name=SkyBox3
 #SBATCH -p thin
 #SBATCH -t 03:00:00
 #SBATCH -N 1
 #SBATCH --tasks-per-node=1
 #SBATCH --cpus-per-task=128
 #SBATCH --mem=224000
-#SBATCH -o jobs/number_density_band_HDAllSky.out
-#SBATCH -e jobs/number_density_band_HDAllSky.err
+#SBATCH -o jobs/number_density_band_SkyBox3.out
+#SBATCH -e jobs/number_density_band_SkyBox3.err
 #SBATCH -v
 #SBATCH --exclusive
 
@@ -16,7 +16,7 @@ module purge
 source $HOME/.conda/envs/neutrino_clustering/bin/activate
 
 sim_boxtype=L025N752/DMONLY/SigmaConstant00
-sim_fullname=all_sky_high_res_TEST
+sim_fullname=all_sky_final
 
 python $HOME/neutrino_clustering_V2/simulation_numerical.py \
 -d $HOME/neutrino_clustering_V2/$sim_boxtype/$sim_fullname \

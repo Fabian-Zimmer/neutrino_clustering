@@ -308,10 +308,10 @@ def dPsi_dxi_NFW(x_i, z, rho_0, M_vir, R_vir, R_s, halo:str):
     prefactor = 4.*Pi*G*rho_0_NEW*r_s**2*x_i_cent/r**2
     term1 = np.log(1. + (m/r_s)) / (r/r_s)
     term2 = (r_vir/M) / (1. + (m/r_s))
-    derivative = prefactor * (term1 - term2)
+    gradient = prefactor * (term1 - term2)
 
-    #NOTE: Minus sign, s.t. velocity changes correctly (see GoodNotes).
-    return np.asarray(-derivative, dtype=np.float64)
+    # Acceleration is negative value of (grav. pot.) gradient.
+    return np.asarray(-gradient, dtype=np.float64)
 
 
 def number_densities_mass_range(
@@ -362,22 +362,24 @@ def EOMs(s_val, y):
     grad_tot = np.zeros(len(x_i))
     if args.MW_halo:
         # note: Original.
-        # grad_tot += dPsi_dxi_NFW(
-        #     x_i, z, rho0_MW, Mvir_MW, Rvir_MW, Rs_MW, 'MW'
-        #     )
+        grad_tot += dPsi_dxi_NFW(
+            x_i, z, rho0_MW, Mvir_MW, Rvir_MW, Rs_MW, 'MW'
+            )
 
         # note: With medians from box halo sample.
-        halo_params = np.load(
-            glob.glob(f'{args.directory}/halo*params.npy')[0]
-        )
-        # (Rvir,Mvir,cNFW)
-        Rvir_med = np.median(halo_params[:,0])*kpc
-        Mvir_med = (10**np.median(halo_params[:,1]))*Msun
-        cNFW_med = np.median(halo_params[:,2])
-        Rs_med = Rvir_med/cNFW_med
-        grad_tot += dPsi_dxi_NFW(
-            x_i, z, None, Mvir_med, Rvir_med, Rs_med, 'MW'
-            )
+        # halo_params = np.load(
+        #     glob.glob(f'{args.directory}/halo*params.npy')[0]
+        # )
+        # # (Rvir,Mvir,cNFW)
+        # Rvir_med = np.median(halo_params[:,0])*kpc
+        # Mvir_med = (10**np.median(halo_params[:,1]))*Msun
+        # cNFW_med = np.median(halo_params[:,2])
+        # Rs_med = Rvir_med/cNFW_med
+
+        # grad_tot += dPsi_dxi_NFW(
+        #     x_i, z, None, Mvir_med, Rvir_med, Rs_med, 'MW'
+        #     )
+
     if args.VC_halo:
         grad_tot += dPsi_dxi_NFW(
             x_i, z, rho0_VC, Mvir_VC, Rvir_VC, Rs_VC, 'VC'
@@ -421,7 +423,7 @@ def backtrack_1_neutrino(y0_Nr):
 sim_start = time.perf_counter()
 
 # Draw initial velocities.
-ui_array = np.load(f'{args.directory}/initial_velocities.npy')
+ui_array = np.load(f'{args.directory}/initial_velocities_analytical.npy')
 
 if ui_array.ndim == 2:
     ui_array = np.expand_dims(ui_array, axis=0)

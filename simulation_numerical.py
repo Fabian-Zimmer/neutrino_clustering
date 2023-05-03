@@ -466,9 +466,11 @@ def cell_gravity_short_range(
     # c.o.m. of cell C, so we only need DM_in in numerator.
     quot = (-DM_in)/np.power((DM_dis**2 + eps**2), 3./2.)
     
-    # note: Minus sign, s.t. velocity changes correctly (see GoodNotes).
-    derivative = -G*DM_sim_mass*np.nansum(quot, axis=1)    
-    np.save(f'{out_dir}/batch{b_id}_short_range.npy', derivative)
+    # Gradient of potential.
+    gradient = G*DM_sim_mass*np.nansum(quot, axis=1)
+
+    # Acceleration is negative value of (grav. pot.) gradient.
+    np.save(f'{out_dir}/batch{b_id}_short_range.npy', -gradient)
 
 
 def chunksize_long_range(cells, core_mem_MB):
@@ -714,10 +716,11 @@ def cell_gravity_long_range_quadrupole(
     dPsi_monopole_cells = G*DM_sim_mass*np.nansum(
         DM_count_mono_sync*cellC_Jcoms_mono_2D/(cellC_dis_mono**3), axis=0)
 
-    # Minus sign, s.t. velocity changes correctly (see GoodNotes).
-    derivative_lr = -(dPsi_multipole_cells + dPsi_monopole_cells)
+    # Total gradient.
+    gradient_lr = dPsi_multipole_cells + dPsi_monopole_cells
     
-    np.save(f'{out_dir}/cell{c_id}_batch{b_id}_long_range.npy', derivative_lr)
+    # Acceleration is negative value of (grav. pot.) gradient.
+    np.save(f'{out_dir}/cell{c_id}_batch{b_id}_long_range.npy', -gradient_lr)
 
 
 def load_dPsi_long_range(c_id, batches, out_dir):
@@ -797,10 +800,11 @@ def outside_gravity_quadrupole(x_i, com_halo, DM_sim_mass, DM_num, QJ_abs):
 
     dPsi_monopole_cells = G*DM_num*DM_sim_mass*x_i/r_i**3
 
-    # Minus sign, s.t. velocity changes correctly (see GoodNotes).
-    derivative_lr = -(dPsi_multipole_cells+dPsi_monopole_cells)
+    # Total outside gravity gradient.
+    gradient_out = dPsi_multipole_cells+dPsi_monopole_cells
 
-    return derivative_lr
+    # Acceleration is negative value of (grav. pot.) gradient.
+    return -gradient_out
 
 
 def number_densities_mass_range(
@@ -936,301 +940,301 @@ def backtrack_1_neutrino(y0_Nr):
 for halo_j, halo_ID in enumerate(halo_batch_IDs):
     grav_time = time.perf_counter()
 
-    '''
-    # ============================================== #
-    # Run precalculations for current halo in batch. #
-    # ============================================== #
+    precalculations = False
 
-    # Generate progenitor index array for current halo.
-    with h5py.File(f'{args.directory}/MergerTree.hdf5') as tree:
-        prog_IDs = tree['Assembly_history/Progenitor_index'][halo_ID,:]
-        prog_IDs_np = np.array(np.expand_dims(prog_IDs, axis=1), dtype=int)
+    if precalculations:
 
+        # ============================================== #
+        # Run precalculations for current halo in batch. #
+        # ============================================== #
 
-    # Create empty arrays to save specifics of each loop.
-    save_GRID_L = np.zeros(len(nums_snaps))
-    save_DM_num = np.zeros(len(nums_snaps))
-    save_CC_num = np.zeros(len(nums_snaps))
-    save_progID = np.zeros(len(nums_snaps), dtype=int)
-    save_DM_com = []
-    save_QJ_abs = []
+        # Generate progenitor index array for current halo.
+        with h5py.File(f'{args.directory}/MergerTree.hdf5') as tree:
+            prog_IDs = tree['Assembly_history/Progenitor_index'][halo_ID,:]
+            prog_IDs_np = np.array(np.expand_dims(prog_IDs, axis=1), dtype=int)
 
 
-    # Generate the gravity grids from the earliest snapshot to the latest, i.e. 
-    # from z=4 to z=0 in our case.
-    for j, (snap, prog_ID) in enumerate(
-        zip(nums_snaps, prog_IDs_np[::-1])
-    ):
+        # Create empty arrays to save specifics of each loop.
+        save_GRID_L = np.zeros(len(nums_snaps))
+        save_DM_num = np.zeros(len(nums_snaps))
+        save_CC_num = np.zeros(len(nums_snaps))
+        save_progID = np.zeros(len(nums_snaps), dtype=int)
+        save_DM_com = []
+        save_QJ_abs = []
 
-        save_progID[j] = int(prog_ID)
-        print(f'halo {halo_j+1}/{halo_num} ; snapshot {snap}')
 
-        # --------------------------- #
-        # Read and load DM positions. #
-        # --------------------------- #
+        # Generate the gravity grids from the earliest snapshot to the latest, i.e. 
+        # from z=4 to z=0 in our case.
+        for j, (snap, prog_ID) in enumerate(
+            zip(nums_snaps, prog_IDs_np[::-1])
+        ):
 
-        # Name for file identification of current halo for current snapshot.
-        IDname = f'origID{halo_ID}_snap_{snap}'
+            save_progID[j] = int(prog_ID)
+            print(f'halo {halo_j+1}/{halo_num} ; snapshot {snap}')
 
-        if args.sim_type in ('single_halos', 'all_sky'):
+            # --------------------------- #
+            # Read and load DM positions. #
+            # --------------------------- #
 
-            if args.upto_Rvir:
+            # Name for file identification of current halo for current snapshot.
+            IDname = f'origID{halo_ID}_snap_{snap}'
 
-                DM_incl_limit = halo_batch_params[halo_j, 0]*kpc
+            if args.sim_type in ('single_halos', 'all_sky'):
 
+                if args.upto_Rvir:
+
+                    DM_incl_limit = halo_batch_params[halo_j, 0]*kpc
+
+                    read_DM_all_inRange(
+                        snap, int(prog_ID), 'single_halos', DM_incl_limit,
+                        IDname, box_file_dir, temp_dir
+                    )
+                
+                else:
+                    read_DM_halo_index(
+                        snap, int(prog_ID), IDname, box_file_dir, temp_dir
+                    )
+
+                DM_raw = np.load(f'{temp_dir}/DM_pos_{IDname}.npy')
+                DM_com = np.load(f'{temp_dir}/DM_com_coord_{IDname}.npy')*kpc
+                DM_particles = len(DM_raw)
+
+            elif 'benchmark' in args.sim_type:
+
+                benchmark_file_dir = str(pathlib.Path(args.directory).parent)
+                DM_raw = np.load(
+                    f'{benchmark_file_dir}/benchmark_halo_files/benchmark_halo_snap_{snap}.npy'
+                )
+                DM_particles = len(DM_raw)
+                DM_com = np.sum(DM_raw, axis=0)/len(DM_raw)*kpc
+
+            elif args.sim_type == 'spheres':
+                
+                # note: the relevant arrays are:
+                # DM_shell_edges = np.array([0,5,10,15,20,40,100])*100*kpc
+                # DM_shell_multipliers = np.array([1,3,6,9,12,15])
+                halo_limits = np.array([10, 8, 6, 4, 2, 1])
+
+                # Determine inclusion region based on input of number of shells.
+                DM_shell_edges = DM_shell_edges[:int(args.shells)+1]
+                
                 read_DM_all_inRange(
-                    snap, int(prog_ID), 'single_halos', DM_incl_limit,
+                    snap, int(prog_ID), 'spheres', DM_shell_edges, 
                     IDname, box_file_dir, temp_dir
                 )
+
+                # read_DM_halos_shells(
+                #     snap, int(prog_ID), DM_shell_edges, halo_limits,
+                #     IDname, box_file_dir, temp_dir, CPUs_pre
+                # )
+
+                DM_raw = np.load(f'{temp_dir}/DM_pos_{IDname}.npy')
+                DM_com = np.load(f'{temp_dir}/DM_com_coord_{IDname}.npy')*kpc
+                DM_particles = len(DM_raw)
+
+                # Load DM from all used shells.
+                # DM_pre = []
+                # for shell_i in range(int(args.shells)):
+                #     DM_pre.append(
+                #         np.load(f'{temp_dir}/DM_pos_{IDname}_shell{shell_i}.npy')
+                #     )
+                # DM_raw = np.array(list(chain.from_iterable(DM_pre)))
+                # DM_particles = len(DM_raw)
+                # print(f'snap={snap} DM_particles={DM_particles}')
+                # DM_com = (np.sum(DM_raw, axis=0)/len(DM_raw))*kpc
+                # del DM_pre
+
+
+            # ---------------------- #
+            # Cell division process. #
+            # ---------------------- #
+
+            # Initialize grid.
+            snap_GRID_L = (int(np.abs(DM_raw).max()) + 1)*kpc
+            raw_grid = grid_3D(snap_GRID_L, snap_GRID_L)
+            init_grid = np.expand_dims(raw_grid, axis=1)
+
+            # Prepare arrays for cell division.
+            DM_raw *= kpc
+            DM_pos = np.expand_dims(DM_raw, axis=0)
+            DM_pos_for_cell_division = np.repeat(DM_pos, len(init_grid), axis=0)
+
             
-            else:
-                read_DM_halo_index(
-                    snap, int(prog_ID), IDname, box_file_dir, temp_dir
+            ### Interlude: Calculate QJ_aa and QJ_ab for complete halo. ###
+            
+            # Center all DM particles of halo on c.o.m. of halo and get distances.
+            DM_raw -= DM_com
+            DM_raw_dis = np.expand_dims(np.sqrt(np.sum(DM_raw**2, axis=1)), axis=1)
+
+            # Permute order of coords by one, i.e. (x,y,z) -> (z,x,y).
+            DM_raw_roll = np.roll(DM_raw, 1)
+
+            # Terms appearing in the quadrupole term.
+            QJ_aa = np.sum(3*DM_raw**2 - DM_raw_dis**2, axis=0)
+            QJ_ab = np.sum(3*DM_raw*DM_raw_roll, axis=0)
+            del DM_raw
+            save_QJ_abs.append(np.array([QJ_aa, QJ_ab]))
+
+
+            # Cell division.
+            cell_division_count = cell_division(
+                init_grid, DM_pos_for_cell_division, snap_GRID_L, DM_lim, None, temp_dir, IDname
+            )
+            del DM_pos_for_cell_division
+
+            # Load files from cell division.
+            fin_grid = np.load(f'{temp_dir}/fin_grid_{IDname}.npy')
+            DM_count = np.load(f'{temp_dir}/DM_count_{IDname}.npy')
+            cell_com = np.load(f'{temp_dir}/cell_com_{IDname}.npy')
+            cell_gen = np.load(f'{temp_dir}/cell_gen_{IDname}.npy')
+            
+            # Save snapshot specific parameters.
+            save_GRID_L[j] = snap_GRID_L
+            save_DM_num[j] = np.sum(DM_count)
+            save_CC_num[j] = DM_particles
+            save_DM_com.append(DM_com)
+
+
+            # --------------------------------------------- #
+            # Calculate gravity grid (in batches of cells). #
+            # --------------------------------------------- #
+            cell_coords = np.squeeze(fin_grid, axis=1)
+            cells = len(cell_coords)
+
+            print(f'DM Particles = {DM_particles}, cells = {cells}')
+
+            # -------------------- #
+            # Short-range gravity. #
+            # -------------------- #
+
+            # Calculate available memory per core.
+            mem_so_far = (psutil.virtual_memory().used - OS_MEM)/MB_UNIT
+            mem_left = mem_lim_GB*1e3 - mem_so_far
+            core_mem_MB = mem_left / CPUs_pre
+
+            # Determine short-range chuncksize based on available memory and cells.
+            chunksize_sr = chunksize_short_range(
+                cells, DM_particles, DM_lim*shell_multipliers[-1], core_mem_MB
+            )
+
+            # Split workload into batches (if necessary).
+            batch_arr, cell_chunks, cgen_chunks = batch_generators_short_range(
+                cell_coords, cell_gen, chunksize_sr
+            )
+
+            with ProcessPoolExecutor(CPUs_pre) as ex:
+                ex.map(
+                    cell_gravity_short_range, 
+                    cell_chunks, cgen_chunks, repeat(snap_GRID_L), 
+                    repeat(DM_pos), repeat(DM_lim), repeat(DM_mass), 
+                    repeat(Smooth_L), repeat(temp_dir), batch_arr, 
+                    repeat(chunksize_sr)
                 )
 
-                if snap == '0036':
-                    break
-
-            DM_raw = np.load(f'{temp_dir}/DM_pos_{IDname}.npy')
-            DM_com = np.load(f'{temp_dir}/DM_com_coord_{IDname}.npy')*kpc
-            DM_particles = len(DM_raw)
-
-        elif 'benchmark' in args.sim_type:
-
-            benchmark_file_dir = str(pathlib.Path(args.directory).parent)
-            DM_raw = np.load(
-                f'{benchmark_file_dir}/benchmark_halo_files/benchmark_halo_snap_{snap}.npy'
+            # Combine short-range batch files.
+            dPsi_short_range_batches = [
+                np.load(f'{temp_dir}/batch{b}_short_range.npy') for b in batch_arr
+            ]
+            dPsi_short_range = np.array(
+                list(chain.from_iterable(dPsi_short_range_batches))
             )
-            DM_particles = len(DM_raw)
-            DM_com = np.sum(DM_raw, axis=0)/len(DM_raw)*kpc
 
-        elif args.sim_type == 'spheres':
+            # Combine DM_in_cell_IDs batches (needed for long-range gravity).
+            DM_in_cell_IDs_l = []
+            for b_id in batch_arr:
+                DM_in_cell_IDs_l.append(
+                    np.load(f'{temp_dir}/batch{b_id}_DM_in_cell_IDs.npy')
+                )
+            DM_in_cell_IDs_np = np.array(
+                list(chain.from_iterable(DM_in_cell_IDs_l)))
+            np.save(f'{temp_dir}/DM_in_cell_IDs_{IDname}.npy', DM_in_cell_IDs_np)
             
-            # note: the relevant arrays are:
-            # DM_shell_edges = np.array([0,5,10,15,20,40,100])*100*kpc
-            # DM_shell_multipliers = np.array([1,3,6,9,12,15])
-            halo_limits = np.array([10, 8, 6, 4, 2, 1])
 
-            # Determine inclusion region based on input of number of shells.
-            DM_shell_edges = DM_shell_edges[:int(args.shells)+1]
+            # ------------------- #
+            # Long-range gravity. #
+            # ------------------- #
             
-            read_DM_all_inRange(
-                snap, int(prog_ID), 'spheres', DM_shell_edges, 
-                IDname, box_file_dir, temp_dir
+            # Calculate available memory per core.
+            mem_so_far = (psutil.virtual_memory().used - OS_MEM)/MB_UNIT
+            mem_left = mem_lim_GB*1e3 - mem_so_far
+            core_mem_MB = mem_left / CPUs_pre
+
+            # Determine long-range chuncksize based on available memory and cells.
+            # chunksize_lr = chunksize_long_range(cells, core_mem_MB)
+            #! adjust/reduce manually to avoid out-of-memory errors.
+            #note: 2000 for all_sky or single_halos on thin node.
+            #note: 1000 for 1 shell, 500 for 2 shells, both for thin node.
+            #note: 500 for 3 shells on fat node.
+            chunksize_lr = 2000
+
+            # Split workload into batches (if necessary).
+            DM_in_cell_IDs = np.load(f'{temp_dir}/DM_in_cell_IDs_{IDname}.npy')
+            batch_IDs, cellC_rep, cellC_cc, gen_rep, cib_IDs_gens, count_gens, com_gens, gen_gens = batch_generators_long_range(
+                cell_coords, cell_com, cell_gen, DM_count, chunksize_lr
             )
 
-            # read_DM_halos_shells(
-            #     snap, int(prog_ID), DM_shell_edges, halo_limits,
-            #     IDname, box_file_dir, temp_dir, CPUs_pre
-            # )
+            with ProcessPoolExecutor(CPUs_pre) as ex:
+                ex.map(
+                    cell_gravity_long_range_quadrupole, 
+                    cellC_rep, cib_IDs_gens, batch_IDs, 
+                    cellC_cc, com_gens, gen_gens, repeat(snap_GRID_L),
+                    repeat(np.squeeze(DM_pos, axis=0)), count_gens, 
+                    repeat(DM_in_cell_IDs), repeat(DM_mass), 
+                    repeat(temp_dir), repeat(chunksize_lr), gen_rep
+                )
 
-            DM_raw = np.load(f'{temp_dir}/DM_pos_{IDname}.npy')
-            DM_com = np.load(f'{temp_dir}/DM_com_coord_{IDname}.npy')*kpc
-            DM_particles = len(DM_raw)
+            # Combine long-range batch files.
+            c_labels = np.unique(cellC_rep)
+            b_labels = np.unique(batch_IDs)
+            with ProcessPoolExecutor(CPUs_pre) as ex:
+                ex.map(
+                    load_dPsi_long_range, c_labels, 
+                    repeat(b_labels), repeat(temp_dir)
+                )
 
-            # Load DM from all used shells.
-            # DM_pre = []
-            # for shell_i in range(int(args.shells)):
-            #     DM_pre.append(
-            #         np.load(f'{temp_dir}/DM_pos_{IDname}_shell{shell_i}.npy')
-            #     )
-            # DM_raw = np.array(list(chain.from_iterable(DM_pre)))
-            # DM_particles = len(DM_raw)
-            # print(f'snap={snap} DM_particles={DM_particles}')
-            # DM_com = (np.sum(DM_raw, axis=0)/len(DM_raw))*kpc
-            # del DM_pre
+            dPsi_long_range = np.array(
+                [np.load(f'{temp_dir}/cell{c}_long_range.npy') for c in c_labels])
 
-
-        # ---------------------- #
-        # Cell division process. #
-        # ---------------------- #
-
-        # Initialize grid.
-        snap_GRID_L = (int(np.abs(DM_raw).max()) + 1)*kpc
-        raw_grid = grid_3D(snap_GRID_L, snap_GRID_L)
-        init_grid = np.expand_dims(raw_grid, axis=1)
-
-        # Prepare arrays for cell division.
-        DM_raw *= kpc
-        DM_pos = np.expand_dims(DM_raw, axis=0)
-        DM_pos_for_cell_division = np.repeat(DM_pos, len(init_grid), axis=0)
-
-        
-        ### Interlude: Calculate QJ_aa and QJ_ab for complete halo. ###
-        
-        # Center all DM particles of halo on c.o.m. of halo and get distances.
-        DM_raw -= DM_com
-        DM_raw_dis = np.expand_dims(np.sqrt(np.sum(DM_raw**2, axis=1)), axis=1)
-
-        # Permute order of coords by one, i.e. (x,y,z) -> (z,x,y).
-        DM_raw_roll = np.roll(DM_raw, 1)
-
-        # Terms appearing in the quadrupole term.
-        QJ_aa = np.sum(3*DM_raw**2 - DM_raw_dis**2, axis=0)
-        QJ_ab = np.sum(3*DM_raw*DM_raw_roll, axis=0)
-        del DM_raw
-        save_QJ_abs.append(np.array([QJ_aa, QJ_ab]))
+            # Combine short- and long-range forces.
+            dPsi_grid = dPsi_short_range + dPsi_long_range
+            np.save(f'{temp_dir}/dPsi_grid_{IDname}.npy', dPsi_grid)
 
 
-        # Cell division.
-        cell_division_count = cell_division(
-            init_grid, DM_pos_for_cell_division, snap_GRID_L, DM_lim, None, temp_dir, IDname
+        grav_time_tot = time.perf_counter()-grav_time
+        print(f'Grid time: {grav_time_tot/60.} min, {grav_time_tot/(60**2)} h.')
+
+
+        if 'benchmark' in args.sim_type:
+            end_str = 'benchmark_halo'
+        else:
+            end_str = f'halo{halo_j+1}'
+
+        np.save(
+            f'{args.directory}/snaps_GRID_L_{end_str}.npy', 
+            np.array(save_GRID_L)
         )
-        del DM_pos_for_cell_division
-
-        # Load files from cell division.
-        fin_grid = np.load(f'{temp_dir}/fin_grid_{IDname}.npy')
-        DM_count = np.load(f'{temp_dir}/DM_count_{IDname}.npy')
-        cell_com = np.load(f'{temp_dir}/cell_com_{IDname}.npy')
-        cell_gen = np.load(f'{temp_dir}/cell_gen_{IDname}.npy')
-        
-        # Save snapshot specific parameters.
-        save_GRID_L[j] = snap_GRID_L
-        save_DM_num[j] = np.sum(DM_count)
-        save_CC_num[j] = DM_particles
-        save_DM_com.append(DM_com)
-
-
-        # --------------------------------------------- #
-        # Calculate gravity grid (in batches of cells). #
-        # --------------------------------------------- #
-        cell_coords = np.squeeze(fin_grid, axis=1)
-        cells = len(cell_coords)
-
-        print(f'DM Particles = {DM_particles}, cells = {cells}')
-
-        # -------------------- #
-        # Short-range gravity. #
-        # -------------------- #
-
-        # Calculate available memory per core.
-        mem_so_far = (psutil.virtual_memory().used - OS_MEM)/MB_UNIT
-        mem_left = mem_lim_GB*1e3 - mem_so_far
-        core_mem_MB = mem_left / CPUs_pre
-
-        # Determine short-range chuncksize based on available memory and cells.
-        chunksize_sr = chunksize_short_range(
-            cells, DM_particles, DM_lim*shell_multipliers[-1], core_mem_MB
+        np.save(
+            f'{args.directory}/snaps_DM_num_{end_str}.npy', 
+            np.array(save_DM_num)
         )
-
-        # Split workload into batches (if necessary).
-        batch_arr, cell_chunks, cgen_chunks = batch_generators_short_range(
-            cell_coords, cell_gen, chunksize_sr
+        np.save(
+            f'{args.directory}/snaps_CC_num_{end_str}.npy', 
+            np.array(save_CC_num)
         )
-
-        with ProcessPoolExecutor(CPUs_pre) as ex:
-            ex.map(
-                cell_gravity_short_range, 
-                cell_chunks, cgen_chunks, repeat(snap_GRID_L), 
-                repeat(DM_pos), repeat(DM_lim), repeat(DM_mass), 
-                repeat(Smooth_L), repeat(temp_dir), batch_arr, 
-                repeat(chunksize_sr)
-            )
-
-        # Combine short-range batch files.
-        dPsi_short_range_batches = [
-            np.load(f'{temp_dir}/batch{b}_short_range.npy') for b in batch_arr
-        ]
-        dPsi_short_range = np.array(
-            list(chain.from_iterable(dPsi_short_range_batches))
+        np.save(
+            f'{args.directory}/snaps_progID_{end_str}.npy', 
+            np.array(save_progID)
         )
-
-        # Combine DM_in_cell_IDs batches (needed for long-range gravity).
-        DM_in_cell_IDs_l = []
-        for b_id in batch_arr:
-            DM_in_cell_IDs_l.append(
-                np.load(f'{temp_dir}/batch{b_id}_DM_in_cell_IDs.npy')
-            )
-        DM_in_cell_IDs_np = np.array(
-            list(chain.from_iterable(DM_in_cell_IDs_l)))
-        np.save(f'{temp_dir}/DM_in_cell_IDs_{IDname}.npy', DM_in_cell_IDs_np)
+        np.save(
+            f'{args.directory}/snaps_DM_com_{end_str}.npy', 
+            np.array(save_DM_com)
+        )
+        np.save(
+            f'{args.directory}/snaps_QJ_abs_{end_str}.npy', 
+            np.array(save_QJ_abs)
+        )
         
 
-        # ------------------- #
-        # Long-range gravity. #
-        # ------------------- #
-        
-        # Calculate available memory per core.
-        mem_so_far = (psutil.virtual_memory().used - OS_MEM)/MB_UNIT
-        mem_left = mem_lim_GB*1e3 - mem_so_far
-        core_mem_MB = mem_left / CPUs_pre
-
-        # Determine long-range chuncksize based on available memory and cells.
-        # chunksize_lr = chunksize_long_range(cells, core_mem_MB)
-        #! adjust/reduce manually to avoid out-of-memory errors.
-        #note: 2000 for all_sky or single_halos on thin node.
-        #note: 1000 for 1 shell, 500 for 2 shells, both for thin node.
-        #note: 500 for 3 shells on fat node.
-        chunksize_lr = 2000
-
-        # Split workload into batches (if necessary).
-        DM_in_cell_IDs = np.load(f'{temp_dir}/DM_in_cell_IDs_{IDname}.npy')
-        batch_IDs, cellC_rep, cellC_cc, gen_rep, cib_IDs_gens, count_gens, com_gens, gen_gens = batch_generators_long_range(
-            cell_coords, cell_com, cell_gen, DM_count, chunksize_lr
-        )
-
-        with ProcessPoolExecutor(CPUs_pre) as ex:
-            ex.map(
-                cell_gravity_long_range_quadrupole, 
-                cellC_rep, cib_IDs_gens, batch_IDs, 
-                cellC_cc, com_gens, gen_gens, repeat(snap_GRID_L),
-                repeat(np.squeeze(DM_pos, axis=0)), count_gens, 
-                repeat(DM_in_cell_IDs), repeat(DM_mass), 
-                repeat(temp_dir), repeat(chunksize_lr), gen_rep
-            )
-
-        # Combine long-range batch files.
-        c_labels = np.unique(cellC_rep)
-        b_labels = np.unique(batch_IDs)
-        with ProcessPoolExecutor(CPUs_pre) as ex:
-            ex.map(
-                load_dPsi_long_range, c_labels, 
-                repeat(b_labels), repeat(temp_dir)
-            )
-
-        dPsi_long_range = np.array(
-            [np.load(f'{temp_dir}/cell{c}_long_range.npy') for c in c_labels])
-
-        # Combine short- and long-range forces.
-        dPsi_grid = dPsi_short_range + dPsi_long_range
-        np.save(f'{temp_dir}/dPsi_grid_{IDname}.npy', dPsi_grid)
-
-
-    grav_time_tot = time.perf_counter()-grav_time
-    print(f'Grid time: {grav_time_tot/60.} min, {grav_time_tot/(60**2)} h.')
-
-
-    if 'benchmark' in args.sim_type:
-        end_str = 'benchmark_halo'
-    else:
-        end_str = f'halo{halo_j+1}'
-
-    np.save(
-        f'{args.directory}/snaps_GRID_L_{end_str}.npy', 
-        np.array(save_GRID_L)
-    )
-    np.save(
-        f'{args.directory}/snaps_DM_num_{end_str}.npy', 
-        np.array(save_DM_num)
-    )
-    np.save(
-        f'{args.directory}/snaps_CC_num_{end_str}.npy', 
-        np.array(save_CC_num)
-    )
-    np.save(
-        f'{args.directory}/snaps_progID_{end_str}.npy', 
-        np.array(save_progID)
-    )
-    np.save(
-        f'{args.directory}/snaps_DM_com_{end_str}.npy', 
-        np.array(save_DM_com)
-    )
-    np.save(
-        f'{args.directory}/snaps_QJ_abs_{end_str}.npy', 
-        np.array(save_QJ_abs)
-    )
-    
-    # '''
 
     # ========================================= #
     # Run simulation for current halo in batch. #
@@ -1294,7 +1298,7 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
 
     # Take first cell, which is in Earth-like position (there can be multiple).
     # Needs to be without kpc units (thus doing /kpc) for simulation start.
-    init_xyz = cell_ccs[np.abs(cell_dis - init_dis).argsort()][1]/kpc.flatten()
+    init_xyz = cell_ccs[np.abs(cell_dis - init_dis).argsort()][0]/kpc.flatten()
     np.save(f'{args.directory}/init_xyz_{end_str}.npy', init_xyz)
 
     # Display parameters for simulation.
