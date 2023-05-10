@@ -49,7 +49,7 @@ class analyze_simulation_outputs(object):
                 halo_num = len(np.load(
                     glob.glob(f'{self.sim_dir}/halo*params.npy')[0]
                 ))
-                halo_num = 3  #! testing
+                halo_num = 12  #! testing
 
                 for halo in range(1, halo_num+1): 
                     
@@ -80,8 +80,26 @@ class analyze_simulation_outputs(object):
 
             if 'analytical_halo' in self.objects:
 
+                # Milky Way params as in Mertsch et al.
                 batch_paths = glob.glob(
                     f'{self.sim_dir}/neutrino_vectors_analytical_batch*.npy'
+                )
+                
+                self.vectors_analytical = []
+                for batch_path in batch_paths:
+                    self.vectors_analytical.append(np.load(batch_path))
+                self.vectors_analytical = np.squeeze(
+                    np.array(self.vectors_analytical)
+                )
+                self.vectors_analytical_Mertsch = np.array(self.vectors_analytical)
+
+                self.etas_analytical_Mertsch = np.load(
+                    f'{self.sim_dir}/number_densities_analytical_single_halos.npy'
+                )/N0
+
+                # Using median parameters of box halo sample. 
+                batch_paths = glob.glob(
+                    f'{self.sim_dir}/neutrino_vectors_analytical_median_batch*.npy'
                 )
                 
                 self.vectors_analytical = []
@@ -93,7 +111,7 @@ class analyze_simulation_outputs(object):
                 self.vectors_analytical = np.array(self.vectors_analytical)
 
                 self.etas_analytical = np.load(
-                    f'{self.sim_dir}/number_densities_analytical_single_halos.npy'
+                    f'{self.sim_dir}/number_densities_analytical_median_single_halos.npy'
                 )/N0
 
 
@@ -265,6 +283,12 @@ class analyze_simulation_outputs(object):
             x_ends = [1e1, 3*1e2]
             y_ends = [3*1e-3, 4]
             ax.scatter(x_ends, y_ends, marker='x', s=15, color='orange')
+            
+            # Plot reproduction of Mertsch et al., using their MW params.
+            plt.plot(
+                self.mrange*1e3, self.etas_analytical_Mertsch-1, 
+                color='red', ls='dashed', label='Parameters from Mertsch et al.(2020)'
+            )
 
 
         plt.legend(loc='lower right')
