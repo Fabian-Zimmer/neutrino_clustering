@@ -12,7 +12,8 @@ parser = argparse.ArgumentParser()
 parser.add_argument('-d', '--directory', required=True)
 parser.add_argument('-st', '--sim_type', required=True)
 parser.add_argument('-mg', '--mass_gauge', required=True)
-parser.add_argument('-mr', '--mass_range', required=True)
+parser.add_argument('-ml', '--mass_lower', required=True)
+parser.add_argument('-mu', '--mass_upper', required=True)
 parser.add_argument('-hn', '--halo_num', required=True)
 parser.add_argument('-sh', '--shells', required=False)
 parser.add_argument(
@@ -70,7 +71,7 @@ FCT_zeds = np.copy(z_int_steps)
 ### ==================================== ###
 # Defined in order of usage.
 
-def halo_batch_indices(
+def halo_batch_indices_OLD(
     snap, mass_gauge, mass_range, 
     halo_type, halo_limit, fname, sim_dir, out_dir
 ):
@@ -127,6 +128,80 @@ def halo_batch_indices(
 
     np.save(f'{out_dir}/halo_batch_{fname}_indices.npy', select_halos)
     np.save(f'{out_dir}/halo_batch_{fname}_params.npy', halo_params)
+
+
+def halo_batch_indices(
+    snap, mass_gauge, mass_lower, mass_upper, 
+    halo_type, halo_limit, fname, sim_dir, out_dir
+):
+
+    # ---------------------------------- #
+    # Read in parameters of halo in sim. #
+    # ---------------------------------- #
+
+    props = h5py.File(f'{sim_dir}/subhalo_{snap}.properties')
+
+    cNFW = props['cNFW_200crit'][:]  # NFW concentration.
+    rvir = props['R_200crit'][:]*1e3 # Virial radius (to kpc with *1e3)
+    m200c = props['Mass_200crit'][:] *1e10  # Crit. M_200 (to Msun with *1e10)
+    m200c[m200c <= 0] = 1
+    m200c = np.log10(m200c)  
+
+
+    # -------------------------------------------------- #
+    # Select a halo sample based on mass and mass range. #
+    # -------------------------------------------------- #
+
+    select_halos = np.where(
+        (m200c >= mass_gauge-mass_lower) & (m200c <= mass_gauge+mass_upper)
+    )[0]
+
+    # Selecting subhalos or (host/main) halos.
+    subtype = props["Structuretype"][:]
+    if halo_type == 'subhalos':
+        select = np.where(subtype[select_halos] > 10)[0]
+        select_halos = select_halos[select]
+    else:
+        select = np.where(subtype[select_halos] == 10)[0]
+        select_halos = select_halos[select]
+
+    # Limit amount of halos to given size.
+    halo_number = len(select_halos)
+    # if halo_number >= halo_limit:
+
+    #     # Fix pseudo-random choice of halos.
+    #     # np.random.seed(1)
+    #     random.seed(1)
+        
+    #     # Select non-repeating indices for halos.
+    #     # rand_IDs = np.random.randint(0, halo_number-1, size=(halo_limit))
+    #     rand_IDs = random.sample(list(np.arange(halo_number)), halo_limit)
+    #     select_halos = select_halos[rand_IDs]
+
+
+    # Save cNFW, rvir and Mvir of halos in batch.
+    halo_params = np.zeros((len(select_halos), 3))
+    for j, halo_idx in enumerate(select_halos):
+        halo_params[j, 0] = rvir[halo_idx]
+        halo_params[j, 1] = m200c[halo_idx]
+        halo_params[j, 2] = cNFW[halo_idx]
+
+    # Sort arrays by concentration (in descending order)
+    order = halo_params[:,2].argsort()[::-1]
+    select_halos_sorted = select_halos[order]
+    halo_params_sorted = halo_params[order]
+
+    # Delete entries with 0. concentration (erroneous halos)
+    not0c = ~np.any(halo_params_sorted==0, axis=1)
+    select_halos_trimmed = select_halos_sorted[not0c]
+    halo_params_trimmed = halo_params_sorted[not0c]
+
+    if halo_number >= halo_limit:
+        select_halos_lim = select_halos_trimmed[:halo_limit]
+        halo_params_lim = halo_params_trimmed[:halo_limit]
+
+    np.save(f'{out_dir}/halo_batch_{fname}_indices.npy', select_halos_lim)
+    np.save(f'{out_dir}/halo_batch_{fname}_params.npy', halo_params_lim)
 
 
 def grid_3D(l, s, origin_coords=[0.,0.,0.,]):
@@ -836,14 +911,22 @@ def number_densities_mass_range(
 #     random.choices(string.ascii_uppercase + string.digits, k=4)
 # )
 # temp_dir = f'{args.directory}/temp_data_{rand_code}'
-temp_dir = f'{args.directory}/temp_data_TEST' #! for testing
-# os.makedirs(temp_dir)
+parent = str(pathlib.Path(f'{args.directory}').parent)
+temp_dir = f'{parent}/final_19halos_noNFW'  #! for testing
+# temp_dir = f'{args.directory}/temp_data_TEST' 
+# os.makedirs(temp_dir) 
 
+def M12_to_M12X(M12_val):
+    return np.log(M12_val*10.**12)/np.log(10.)
 
-
-hname = f'1e+{args.mass_gauge}_pm{args.mass_range}Msun'
+# hname = f'1e+{args.mass_gauge}_pm{args.mass_range}Msun'
+hname = f'{args.mass_lower}-{args.mass_upper}x1e+{args.mass_gauge}_Msun'
+mass_neg = np.abs(float(args.mass_gauge) - M12_to_M12X(float(args.mass_lower)))
+mass_pos = np.abs(float(args.mass_gauge) - M12_to_M12X(float(args.mass_upper)))
 halo_batch_indices(
-    z0_snap_4cif, float(args.mass_gauge), float(args.mass_range), 'halos', int(args.halo_num), 
+    z0_snap_4cif, 
+    float(args.mass_gauge), mass_neg, mass_pos,
+    'halos', int(args.halo_num), 
     hname, box_file_dir, args.directory
 )
 halo_batch_IDs = np.load(f'{args.directory}/halo_batch_{hname}_indices.npy')
@@ -939,6 +1022,9 @@ def backtrack_1_neutrino(y0_Nr):
 
 for halo_j, halo_ID in enumerate(halo_batch_IDs):
     grav_time = time.perf_counter()
+
+    if halo_j in (0,1,2,3,4):
+        continue
 
     precalculations = False
 
@@ -1234,7 +1320,6 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
             np.array(save_QJ_abs)
         )
         
-
 
     # ========================================= #
     # Run simulation for current halo in batch. #

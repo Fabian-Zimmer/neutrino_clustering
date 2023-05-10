@@ -11,6 +11,8 @@
 #SBATCH -v
 #SBATCH --exclusive
 
+#! sim_setup has to have the correct memory_limit_GB value!
+
 module purge
 
 source $HOME/.conda/envs/neutrino_clustering/bin/activate

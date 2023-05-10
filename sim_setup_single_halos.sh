@@ -1,6 +1,6 @@
 #!/bin/bash
 
-sim_fullname=single_halos_low_res
+sim_fullname=single_halos
 
 python make_box_parameters_and_merger_tree.py \
 --box_directory /projects/0/einf180/Tango_sims \
@@ -20,9 +20,9 @@ python make_simulation_parameters.py \
 --nu_sim_mass 0.3 \
 --p_start 0.01 \
 --p_stop 400 \
---p_num 100 \
---phis 10 \
---thetas 10 \
+--p_num 200 \
+--phis 20 \
+--thetas 20 \
 --init_x_dis 8.178 \
 --z_int_shift 0.1 \
 --z_int_stop 4 \
@@ -31,4 +31,4 @@ python make_simulation_parameters.py \
 --CPUs_precalculations 128 \
 --CPUs_simulations 128 \
 --memory_limit_GB 224 \
---DM_in_cell_limit 10_000
+--DM_in_cell_limit 1_000

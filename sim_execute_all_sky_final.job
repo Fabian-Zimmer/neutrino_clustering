@@ -1,13 +1,13 @@
 #!/bin/bash
-#SBATCH --job-name=SkyBox3
+#SBATCH --job-name=AllSky
 #SBATCH -p thin
-#SBATCH -t 03:00:00
+#SBATCH -t 00:05:00
 #SBATCH -N 1
 #SBATCH --tasks-per-node=1
 #SBATCH --cpus-per-task=128
 #SBATCH --mem=224000
-#SBATCH -o jobs/number_density_band_SkyBox3.out
-#SBATCH -e jobs/number_density_band_SkyBox3.err
+#SBATCH -o jobs/all_sky_10file.out
+#SBATCH -e jobs/all_sky_10file.err
 #SBATCH -v
 #SBATCH --exclusive
 
@@ -19,11 +19,12 @@ sim_boxtype=L025N752/DMONLY/SigmaConstant00
 sim_fullname=all_sky_final
 
 python $HOME/neutrino_clustering_V2/simulation_numerical.py \
--d $HOME/neutrino_clustering_V2/$sim_boxtype/$sim_fullname \
--st all_sky \
--mg 12.0 \
--mr 0.6 \
--hn 5 \
+--directory $HOME/neutrino_clustering_V2/$sim_boxtype/$sim_fullname \
+--sim_type all_sky \
+--mass_gauge 12.0 \
+--mass_lower 0.6 \
+--mass_upper 2.0 \
+--halo_num 10 \
 --no-upto_Rvir
 
 # python $HOME/neutrino_clustering_V2/simulation_analytical.py \

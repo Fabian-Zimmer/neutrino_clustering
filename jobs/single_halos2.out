@@ -1,0 +1,683 @@
+********Numerical Simulation: Mode=single_halos********
+Halo batch params (Rvir,Mvir,cNFW):
+[[195.3424681   11.9007675   15.48444863]
+ [194.97879531  11.89833964  13.51959415]
+ [214.54252395  12.02291765  12.08975218]
+ [199.37428206  11.9273849   11.35265197]
+ [183.64964056  11.82034774  10.55165154]
+ [177.88001291  11.77875895  10.30545612]
+ [240.5941061   12.17223244  10.22142522]
+ [209.30144442  11.99069417  10.09273464]
+ [180.32118176  11.79651773  10.05675352]
+ [255.14942265  12.24876126   9.80394087]
+ [213.10930498  12.01418473   9.51800267]
+ [192.47865208  11.8815252    9.4550728 ]
+ [222.49963801  12.07036542   9.31457463]
+ [246.34769058  12.20302298   9.30188562]
+ [244.33141522  12.19231542   8.79795185]
+ [184.67901268  11.82763012   8.55809029]
+ [187.40111968  11.84669403   8.36287611]
+ [202.10764251  11.9451257    8.06603798]
+ [257.47239044  12.26056949   7.77063493]
+ [188.26903005  11.85271415   7.69653869]
+ [240.52254202  12.17184485   7.39127504]
+ [207.56604357  11.97984641   7.24410871]
+ [214.95037599  12.02539212   7.11221569]
+ [207.31363261  11.97826108   7.07854006]
+ [190.92998087  11.87099988   7.03921462]
+ [240.37086032  12.17102294   6.93400558]
+ [253.5523526   12.24058042   6.9286026 ]
+ [209.71271559  11.99325178   6.87727775]
+ [233.28108187  12.13201605   6.40366504]
+ [196.2775635   11.90698947   6.00463057]]
+***********************************
+***Running simulation: mode = single_halos***
+halo=1/30, CPUs=128
+Sim time: 3.245617480116683 min, 0.05409362466861138 h.
+***Running simulation: mode = single_halos***
+halo=2/30, CPUs=128
+Sim time: 1.2070135252499312 min, 0.020116892087498853 h.
+halo 3/30 ; snapshot 0012
+DM Particles = 7885, cells = 57
+halo 3/30 ; snapshot 0013
+DM Particles = 9964, cells = 57
+halo 3/30 ; snapshot 0014
+DM Particles = 12488, cells = 134
+halo 3/30 ; snapshot 0015
+DM Particles = 16882, cells = 169
+halo 3/30 ; snapshot 0016
+DM Particles = 46643, cells = 260
+halo 3/30 ; snapshot 0017
+DM Particles = 130851, cells = 540
+halo 3/30 ; snapshot 0018
+DM Particles = 102295, cells = 428
+halo 3/30 ; snapshot 0019
+DM Particles = 159572, cells = 659
+halo 3/30 ; snapshot 0020
+DM Particles = 161678, cells = 638
+halo 3/30 ; snapshot 0021
+DM Particles = 178042, cells = 680
+halo 3/30 ; snapshot 0022
+DM Particles = 188123, cells = 785
+halo 3/30 ; snapshot 0023
+DM Particles = 207092, cells = 820
+halo 3/30 ; snapshot 0024
+DM Particles = 223442, cells = 897
+halo 3/30 ; snapshot 0025
+DM Particles = 252514, cells = 1023
+halo 3/30 ; snapshot 0026
+DM Particles = 280973, cells = 1093
+halo 3/30 ; snapshot 0027
+DM Particles = 331533, cells = 1240
+halo 3/30 ; snapshot 0028
+DM Particles = 354663, cells = 1324
+halo 3/30 ; snapshot 0029
+DM Particles = 368919, cells = 1422
+halo 3/30 ; snapshot 0030
+DM Particles = 382439, cells = 1422
+halo 3/30 ; snapshot 0031
+DM Particles = 402494, cells = 1436
+halo 3/30 ; snapshot 0032
+DM Particles = 412213, cells = 1513
+halo 3/30 ; snapshot 0033
+DM Particles = 425797, cells = 1583
+halo 3/30 ; snapshot 0034
+DM Particles = 446205, cells = 1632
+halo 3/30 ; snapshot 0035
+DM Particles = 462702, cells = 1786
+halo 3/30 ; snapshot 0036
+DM Particles = 483757, cells = 1779
+Grid time: 47.99507077473342 min, 0.799917846245557 h.
+***Running simulation: mode = single_halos***
+halo=3/30, CPUs=128
+Sim time: 1.3277932659832004 min, 0.022129887766386674 h.
+halo 4/30 ; snapshot 0012
+DM Particles = 31522, cells = 232
+halo 4/30 ; snapshot 0013
+DM Particles = 51910, cells = 260
+halo 4/30 ; snapshot 0014
+DM Particles = 56982, cells = 295
+halo 4/30 ; snapshot 0015
+DM Particles = 60074, cells = 295
+halo 4/30 ; snapshot 0016
+DM Particles = 63757, cells = 295
+halo 4/30 ; snapshot 0017
+DM Particles = 80162, cells = 344
+halo 4/30 ; snapshot 0018
+DM Particles = 100986, cells = 400
+halo 4/30 ; snapshot 0019
+DM Particles = 113793, cells = 428
+halo 4/30 ; snapshot 0020
+DM Particles = 116590, cells = 442
+halo 4/30 ; snapshot 0021
+DM Particles = 121537, cells = 491
+halo 4/30 ; snapshot 0022
+DM Particles = 136520, cells = 547
+halo 4/30 ; snapshot 0023
+DM Particles = 167422, cells = 694
+halo 4/30 ; snapshot 0024
+DM Particles = 114494, cells = 505
+halo 4/30 ; snapshot 0025
+DM Particles = 242896, cells = 960
+halo 4/30 ; snapshot 0026
+DM Particles = 237392, cells = 953
+halo 4/30 ; snapshot 0027
+DM Particles = 248919, cells = 953
+halo 4/30 ; snapshot 0028
+DM Particles = 264605, cells = 1121
+halo 4/30 ; snapshot 0029
+DM Particles = 266945, cells = 1121
+halo 4/30 ; snapshot 0030
+DM Particles = 284646, cells = 1072
+halo 4/30 ; snapshot 0031
+DM Particles = 302660, cells = 1163
+halo 4/30 ; snapshot 0032
+DM Particles = 312118, cells = 1212
+halo 4/30 ; snapshot 0033
+DM Particles = 338227, cells = 1317
+halo 4/30 ; snapshot 0034
+DM Particles = 357928, cells = 1387
+halo 4/30 ; snapshot 0035
+DM Particles = 371440, cells = 1415
+halo 4/30 ; snapshot 0036
+DM Particles = 391365, cells = 1464
+Grid time: 43.000108053133104 min, 0.7166684675522185 h.
+***Running simulation: mode = single_halos***
+halo=4/30, CPUs=128
+Sim time: 1.333214886416681 min, 0.022220248106944684 h.
+halo 5/30 ; snapshot 0012
+DM Particles = 41392, cells = 204
+halo 5/30 ; snapshot 0013
+DM Particles = 50888, cells = 253
+halo 5/30 ; snapshot 0014
+DM Particles = 51483, cells = 267
+halo 5/30 ; snapshot 0015
+DM Particles = 52496, cells = 309
+halo 5/30 ; snapshot 0016
+DM Particles = 54346, cells = 323
+halo 5/30 ; snapshot 0017
+DM Particles = 57685, cells = 323
+halo 5/30 ; snapshot 0018
+DM Particles = 66030, cells = 344
+halo 5/30 ; snapshot 0019
+DM Particles = 97412, cells = 421
+halo 5/30 ; snapshot 0020
+DM Particles = 129010, cells = 526
+halo 5/30 ; snapshot 0021
+DM Particles = 131498, cells = 519
+halo 5/30 ; snapshot 0022
+DM Particles = 120634, cells = 470
+halo 5/30 ; snapshot 0023
+DM Particles = 142801, cells = 617
+halo 5/30 ; snapshot 0024
+DM Particles = 147789, cells = 582
+halo 5/30 ; snapshot 0025
+DM Particles = 154650, cells = 645
+halo 5/30 ; snapshot 0026
+DM Particles = 166533, cells = 708
+halo 5/30 ; snapshot 0027
+DM Particles = 172060, cells = 708
+halo 5/30 ; snapshot 0028
+DM Particles = 175919, cells = 680
+halo 5/30 ; snapshot 0029
+DM Particles = 186098, cells = 750
+halo 5/30 ; snapshot 0030
+DM Particles = 196461, cells = 722
+halo 5/30 ; snapshot 0031
+DM Particles = 211237, cells = 792
+halo 5/30 ; snapshot 0032
+DM Particles = 222697, cells = 869
+halo 5/30 ; snapshot 0033
+DM Particles = 237782, cells = 967
+halo 5/30 ; snapshot 0034
+DM Particles = 241637, cells = 981
+halo 5/30 ; snapshot 0035
+DM Particles = 265671, cells = 1023
+halo 5/30 ; snapshot 0036
+DM Particles = 305406, cells = 1128
+Grid time: 38.77288247159983 min, 0.6462147078599971 h.
+***Running simulation: mode = single_halos***
+halo=5/30, CPUs=128
+Sim time: 1.2351201982334412 min, 0.02058533663722402 h.
+halo 6/30 ; snapshot 0012
+DM Particles = 8301, cells = 64
+halo 6/30 ; snapshot 0013
+DM Particles = 8122, cells = 36
+halo 6/30 ; snapshot 0014
+DM Particles = 8370, cells = 50
+halo 6/30 ; snapshot 0015
+DM Particles = 21835, cells = 113
+halo 6/30 ; snapshot 0016
+DM Particles = 40000, cells = 211
+halo 6/30 ; snapshot 0017
+DM Particles = 47572, cells = 246
+halo 6/30 ; snapshot 0018
+DM Particles = 51061, cells = 246
+halo 6/30 ; snapshot 0019
+DM Particles = 55663, cells = 267
+halo 6/30 ; snapshot 0020
+DM Particles = 58518, cells = 323
+halo 6/30 ; snapshot 0021
+DM Particles = 65816, cells = 309
+halo 6/30 ; snapshot 0022
+DM Particles = 76390, cells = 393
+halo 6/30 ; snapshot 0023
+DM Particles = 107231, cells = 463
+halo 6/30 ; snapshot 0024
+DM Particles = 127782, cells = 519
+halo 6/30 ; snapshot 0025
+DM Particles = 173750, cells = 701
+halo 6/30 ; snapshot 0026
+DM Particles = 181676, cells = 701
+halo 6/30 ; snapshot 0027
+DM Particles = 206821, cells = 841
+halo 6/30 ; snapshot 0028
+DM Particles = 192031, cells = 792
+halo 6/30 ; snapshot 0029
+DM Particles = 188502, cells = 757
+halo 6/30 ; snapshot 0030
+DM Particles = 200209, cells = 799
+halo 6/30 ; snapshot 0031
+DM Particles = 212659, cells = 883
+halo 6/30 ; snapshot 0032
+DM Particles = 222812, cells = 897
+halo 6/30 ; snapshot 0033
+DM Particles = 238091, cells = 953
+halo 6/30 ; snapshot 0034
+DM Particles = 256985, cells = 974
+halo 6/30 ; snapshot 0035
+DM Particles = 280781, cells = 1072
+halo 6/30 ; snapshot 0036
+DM Particles = 301341, cells = 1163
+Grid time: 38.925104855 min, 0.6487517475833334 h.
+***Running simulation: mode = single_halos***
+halo=6/30, CPUs=128
+Sim time: 1.3061832576999828 min, 0.02176972096166638 h.
+halo 7/30 ; snapshot 0012
+DM Particles = 17762, cells = 176
+halo 7/30 ; snapshot 0013
+DM Particles = 36337, cells = 190
+halo 7/30 ; snapshot 0014
+DM Particles = 38814, cells = 211
+halo 7/30 ; snapshot 0015
+DM Particles = 41704, cells = 239
+halo 7/30 ; snapshot 0016
+DM Particles = 46555, cells = 260
+halo 7/30 ; snapshot 0017
+DM Particles = 59406, cells = 267
+halo 7/30 ; snapshot 0018
+DM Particles = 66103, cells = 288
+halo 7/30 ; snapshot 0019
+DM Particles = 80710, cells = 302
+halo 7/30 ; snapshot 0020
+DM Particles = 104826, cells = 463
+halo 7/30 ; snapshot 0021
+DM Particles = 131836, cells = 568
+halo 7/30 ; snapshot 0022
+DM Particles = 147273, cells = 652
+halo 7/30 ; snapshot 0023
+DM Particles = 155064, cells = 603
+halo 7/30 ; snapshot 0024
+DM Particles = 235122, cells = 953
+halo 7/30 ; snapshot 0025
+DM Particles = 276258, cells = 1086
+halo 7/30 ; snapshot 0026
+DM Particles = 178936, cells = 736
+halo 7/30 ; snapshot 0027
+DM Particles = 284068, cells = 1107
+halo 7/30 ; snapshot 0028
+DM Particles = 391324, cells = 1513
+halo 7/30 ; snapshot 0029
+DM Particles = 543472, cells = 2010
+halo 7/30 ; snapshot 0030
+DM Particles = 517532, cells = 1856
+halo 7/30 ; snapshot 0031
+DM Particles = 525539, cells = 1989
+halo 7/30 ; snapshot 0032
+DM Particles = 551037, cells = 1989
+halo 7/30 ; snapshot 0033
+DM Particles = 599657, cells = 2192
+halo 7/30 ; snapshot 0034
+DM Particles = 628605, cells = 2297
+halo 7/30 ; snapshot 0035
+DM Particles = 648930, cells = 2402
+halo 7/30 ; snapshot 0036
+DM Particles = 671060, cells = 2444
+Grid time: 58.67513267539956 min, 0.977918877923326 h.
+***Running simulation: mode = single_halos***
+halo=7/30, CPUs=128
+Sim time: 1.5210047727669007 min, 0.025350079546115012 h.
+halo 8/30 ; snapshot 0012
+DM Particles = 81337, cells = 344
+halo 8/30 ; snapshot 0013
+DM Particles = 108071, cells = 407
+halo 8/30 ; snapshot 0014
+DM Particles = 144120, cells = 533
+halo 8/30 ; snapshot 0015
+DM Particles = 161072, cells = 624
+halo 8/30 ; snapshot 0016
+DM Particles = 181837, cells = 750
+halo 8/30 ; snapshot 0017
+DM Particles = 184700, cells = 708
+halo 8/30 ; snapshot 0018
+DM Particles = 191139, cells = 792
+halo 8/30 ; snapshot 0019
+DM Particles = 210910, cells = 834
+halo 8/30 ; snapshot 0020
+DM Particles = 230490, cells = 883
+halo 8/30 ; snapshot 0021
+DM Particles = 251232, cells = 967
+halo 8/30 ; snapshot 0022
+DM Particles = 270212, cells = 1044
+halo 8/30 ; snapshot 0023
+DM Particles = 274482, cells = 1037
+halo 8/30 ; snapshot 0024
+DM Particles = 278202, cells = 1016
+halo 8/30 ; snapshot 0025
+DM Particles = 298057, cells = 1121
+halo 8/30 ; snapshot 0026
+DM Particles = 311309, cells = 1156
+halo 8/30 ; snapshot 0027
+DM Particles = 319757, cells = 1184
+halo 8/30 ; snapshot 0028
+DM Particles = 333732, cells = 1233
+halo 8/30 ; snapshot 0029
+DM Particles = 347434, cells = 1310
+halo 8/30 ; snapshot 0030
+DM Particles = 363151, cells = 1359
+halo 8/30 ; snapshot 0031
+DM Particles = 383482, cells = 1415
+halo 8/30 ; snapshot 0032
+DM Particles = 401249, cells = 1457
+halo 8/30 ; snapshot 0033
+DM Particles = 416476, cells = 1513
+halo 8/30 ; snapshot 0034
+DM Particles = 431643, cells = 1513
+halo 8/30 ; snapshot 0035
+DM Particles = 443796, cells = 1667
+halo 8/30 ; snapshot 0036
+DM Particles = 452876, cells = 1646
+Grid time: 49.05108295233367 min, 0.8175180492055613 h.
+***Running simulation: mode = single_halos***
+halo=8/30, CPUs=128
+Sim time: 1.452236293516762 min, 0.02420393822527937 h.
+halo 9/30 ; snapshot 0012
+DM Particles = 8851, cells = 92
+halo 9/30 ; snapshot 0013
+DM Particles = 9058, cells = 85
+halo 9/30 ; snapshot 0014
+DM Particles = 5914, cells = 22
+halo 9/30 ; snapshot 0015
+DM Particles = 17103, cells = 134
+halo 9/30 ; snapshot 0016
+DM Particles = 8234, cells = 50
+halo 9/30 ; snapshot 0017
+DM Particles = 23164, cells = 162
+halo 9/30 ; snapshot 0018
+DM Particles = 24099, cells = 183
+halo 9/30 ; snapshot 0019
+DM Particles = 75933, cells = 323
+halo 9/30 ; snapshot 0020
+DM Particles = 85022, cells = 344
+halo 9/30 ; snapshot 0021
+DM Particles = 127569, cells = 512
+halo 9/30 ; snapshot 0022
+DM Particles = 138246, cells = 582
+halo 9/30 ; snapshot 0023
+DM Particles = 150046, cells = 596
+halo 9/30 ; snapshot 0024
+DM Particles = 178911, cells = 708
+halo 9/30 ; snapshot 0025
+DM Particles = 214837, cells = 869
+halo 9/30 ; snapshot 0026
+DM Particles = 223154, cells = 918
+halo 9/30 ; snapshot 0027
+DM Particles = 268774, cells = 1058
+halo 9/30 ; snapshot 0028
+DM Particles = 290564, cells = 1107
+halo 9/30 ; snapshot 0029
+DM Particles = 294097, cells = 1156
+halo 9/30 ; snapshot 0030
+DM Particles = 297326, cells = 1184
+halo 9/30 ; snapshot 0031
+DM Particles = 302801, cells = 1121
+halo 9/30 ; snapshot 0032
+DM Particles = 312990, cells = 1170
+halo 9/30 ; snapshot 0033
+DM Particles = 334105, cells = 1247
+halo 9/30 ; snapshot 0034
+DM Particles = 359012, cells = 1296
+halo 9/30 ; snapshot 0035
+DM Particles = 364403, cells = 1303
+halo 9/30 ; snapshot 0036
+DM Particles = 374639, cells = 1331
+Grid time: 42.46268057494987 min, 0.7077113429158312 h.
+***Running simulation: mode = single_halos***
+halo=9/30, CPUs=128
+Sim time: 1.3123552475832791 min, 0.02187258745972132 h.
+halo 10/30 ; snapshot 0012
+DM Particles = 28825, cells = 197
+halo 10/30 ; snapshot 0013
+DM Particles = 42922, cells = 274
+halo 10/30 ; snapshot 0014
+DM Particles = 61541, cells = 330
+halo 10/30 ; snapshot 0015
+DM Particles = 85718, cells = 351
+halo 10/30 ; snapshot 0016
+DM Particles = 96058, cells = 400
+halo 10/30 ; snapshot 0017
+DM Particles = 111840, cells = 498
+halo 10/30 ; snapshot 0018
+DM Particles = 127375, cells = 547
+halo 10/30 ; snapshot 0019
+DM Particles = 145010, cells = 638
+halo 10/30 ; snapshot 0020
+DM Particles = 144526, cells = 624
+halo 10/30 ; snapshot 0021
+DM Particles = 176111, cells = 701
+halo 10/30 ; snapshot 0022
+DM Particles = 224474, cells = 918
+halo 10/30 ; snapshot 0023
+DM Particles = 210771, cells = 813
+halo 10/30 ; snapshot 0024
+DM Particles = 323139, cells = 1310
+halo 10/30 ; snapshot 0025
+DM Particles = 342883, cells = 1268
+halo 10/30 ; snapshot 0026
+DM Particles = 337681, cells = 1261
+halo 10/30 ; snapshot 0027
+DM Particles = 382173, cells = 1422
+halo 10/30 ; snapshot 0028
+DM Particles = 408122, cells = 1625
+halo 10/30 ; snapshot 0029
+DM Particles = 168366, cells = 736
+halo 10/30 ; snapshot 0030
+DM Particles = 430044, cells = 1597
+halo 10/30 ; snapshot 0031
+DM Particles = 545098, cells = 2031
+halo 10/30 ; snapshot 0032
+DM Particles = 632641, cells = 2290
+halo 10/30 ; snapshot 0033
+DM Particles = 615398, cells = 2199
+halo 10/30 ; snapshot 0034
+DM Particles = 658144, cells = 2360
+halo 10/30 ; snapshot 0035
+DM Particles = 677917, cells = 2409
+halo 10/30 ; snapshot 0036
+DM Particles = 692695, cells = 2444
+Grid time: 62.393850943416574 min, 1.0398975157236094 h.
+***Running simulation: mode = single_halos***
+halo=10/30, CPUs=128
+Sim time: 1.5193160239665304 min, 0.025321933732775505 h.
+halo 11/30 ; snapshot 0012
+DM Particles = 22070, cells = 169
+halo 11/30 ; snapshot 0013
+DM Particles = 44679, cells = 281
+halo 11/30 ; snapshot 0014
+DM Particles = 53824, cells = 323
+halo 11/30 ; snapshot 0015
+DM Particles = 67556, cells = 316
+halo 11/30 ; snapshot 0016
+DM Particles = 83444, cells = 365
+halo 11/30 ; snapshot 0017
+DM Particles = 81367, cells = 344
+halo 11/30 ; snapshot 0018
+DM Particles = 96935, cells = 428
+halo 11/30 ; snapshot 0019
+DM Particles = 113394, cells = 491
+halo 11/30 ; snapshot 0020
+DM Particles = 171666, cells = 694
+halo 11/30 ; snapshot 0021
+DM Particles = 149323, cells = 624
+halo 11/30 ; snapshot 0022
+DM Particles = 279581, cells = 1065
+halo 11/30 ; snapshot 0023
+DM Particles = 260858, cells = 1009
+halo 11/30 ; snapshot 0024
+DM Particles = 249849, cells = 988
+halo 11/30 ; snapshot 0025
+DM Particles = 253233, cells = 995
+halo 11/30 ; snapshot 0026
+DM Particles = 263393, cells = 995
+halo 11/30 ; snapshot 0027
+DM Particles = 284556, cells = 1156
+halo 11/30 ; snapshot 0028
+DM Particles = 304679, cells = 1219
+halo 11/30 ; snapshot 0029
+DM Particles = 351452, cells = 1310
+halo 11/30 ; snapshot 0030
+DM Particles = 417004, cells = 1548
+halo 11/30 ; snapshot 0031
+DM Particles = 530207, cells = 1947
+halo 11/30 ; snapshot 0032
+DM Particles = 542444, cells = 1898
+halo 11/30 ; snapshot 0033
+DM Particles = 543493, cells = 2003
+halo 11/30 ; snapshot 0034
+DM Particles = 553334, cells = 2059
+halo 11/30 ; snapshot 0035
+DM Particles = 551320, cells = 2003
+halo 11/30 ; snapshot 0036
+DM Particles = 557106, cells = 2003
+Grid time: 54.46655283916674 min, 0.9077758806527789 h.
+***Running simulation: mode = single_halos***
+halo=11/30, CPUs=128
+Sim time: 1.4232618852664018 min, 0.023721031421106698 h.
+halo 12/30 ; snapshot 0012
+DM Particles = 69, cells = 8
+halo 12/30 ; snapshot 0013
+DM Particles = 11341, cells = 64
+halo 12/30 ; snapshot 0014
+DM Particles = 39197, cells = 211
+halo 12/30 ; snapshot 0015
+DM Particles = 50319, cells = 267
+halo 12/30 ; snapshot 0016
+DM Particles = 49078, cells = 246
+halo 12/30 ; snapshot 0017
+DM Particles = 63105, cells = 316
+halo 12/30 ; snapshot 0018
+DM Particles = 92569, cells = 379
+halo 12/30 ; snapshot 0019
+DM Particles = 98572, cells = 533
+halo 12/30 ; snapshot 0020
+DM Particles = 116464, cells = 512
+halo 12/30 ; snapshot 0021
+DM Particles = 111028, cells = 449
+halo 12/30 ; snapshot 0022
+DM Particles = 129061, cells = 505
+halo 12/30 ; snapshot 0023
+DM Particles = 155771, cells = 610
+halo 12/30 ; snapshot 0024
+DM Particles = 175519, cells = 715
+halo 12/30 ; snapshot 0025
+DM Particles = 182975, cells = 701
+halo 12/30 ; snapshot 0026
+DM Particles = 191970, cells = 701
+halo 12/30 ; snapshot 0027
+DM Particles = 203500, cells = 841
+halo 12/30 ; snapshot 0028
+DM Particles = 215418, cells = 869
+halo 12/30 ; snapshot 0029
+DM Particles = 224941, cells = 890
+halo 12/30 ; snapshot 0030
+DM Particles = 239899, cells = 974
+halo 12/30 ; snapshot 0031
+DM Particles = 265945, cells = 1065
+halo 12/30 ; snapshot 0032
+DM Particles = 285445, cells = 1093
+halo 12/30 ; snapshot 0033
+DM Particles = 316295, cells = 1170
+halo 12/30 ; snapshot 0034
+DM Particles = 338554, cells = 1247
+halo 12/30 ; snapshot 0035
+DM Particles = 349712, cells = 1317
+halo 12/30 ; snapshot 0036
+DM Particles = 356537, cells = 1310
+Grid time: 40.90632619685008 min, 0.6817721032808347 h.
+***Running simulation: mode = single_halos***
+halo=12/30, CPUs=128
+Sim time: 1.3161442510332564 min, 0.02193573751722094 h.
+halo 13/30 ; snapshot 0012
+DM Particles = 52616, cells = 232
+halo 13/30 ; snapshot 0013
+DM Particles = 73909, cells = 323
+halo 13/30 ; snapshot 0014
+DM Particles = 103546, cells = 435
+halo 13/30 ; snapshot 0015
+DM Particles = 120652, cells = 498
+halo 13/30 ; snapshot 0016
+DM Particles = 132119, cells = 491
+halo 13/30 ; snapshot 0017
+DM Particles = 139610, cells = 547
+halo 13/30 ; snapshot 0018
+DM Particles = 210884, cells = 806
+halo 13/30 ; snapshot 0019
+DM Particles = 244824, cells = 946
+halo 13/30 ; snapshot 0020
+DM Particles = 255592, cells = 1009
+halo 13/30 ; snapshot 0021
+DM Particles = 261836, cells = 988
+halo 13/30 ; snapshot 0022
+DM Particles = 290162, cells = 1107
+halo 13/30 ; snapshot 0023
+DM Particles = 319778, cells = 1247
+halo 13/30 ; snapshot 0024
+DM Particles = 344026, cells = 1310
+halo 13/30 ; snapshot 0025
+DM Particles = 362564, cells = 1394
+halo 13/30 ; snapshot 0026
+DM Particles = 371909, cells = 1401
+halo 13/30 ; snapshot 0027
+DM Particles = 392339, cells = 1555
+halo 13/30 ; snapshot 0028
+DM Particles = 415235, cells = 1604
+halo 13/30 ; snapshot 0029
+DM Particles = 430727, cells = 1562
+halo 13/30 ; snapshot 0030
+DM Particles = 468421, cells = 1709
+halo 13/30 ; snapshot 0031
+DM Particles = 522040, cells = 1933
+halo 13/30 ; snapshot 0032
+DM Particles = 525335, cells = 1996
+halo 13/30 ; snapshot 0033
+DM Particles = 535945, cells = 1940
+halo 13/30 ; snapshot 0034
+DM Particles = 553869, cells = 2094
+halo 13/30 ; snapshot 0035
+DM Particles = 574461, cells = 2136
+halo 13/30 ; snapshot 0036
+DM Particles = 600626, cells = 2213
+Grid time: 59.82093824566691 min, 0.9970156374277819 h.
+***Running simulation: mode = single_halos***
+halo=13/30, CPUs=128
+Sim time: 1.4282662729165168 min, 0.023804437881941944 h.
+halo 14/30 ; snapshot 0012
+DM Particles = 77486, cells = 323
+halo 14/30 ; snapshot 0013
+DM Particles = 114259, cells = 540
+halo 14/30 ; snapshot 0014
+DM Particles = 120237, cells = 519
+halo 14/30 ; snapshot 0015
+DM Particles = 119155, cells = 526
+halo 14/30 ; snapshot 0016
+DM Particles = 182310, cells = 736
+halo 14/30 ; snapshot 0017
+DM Particles = 272598, cells = 1065
+halo 14/30 ; snapshot 0018
+DM Particles = 260754, cells = 981
+halo 14/30 ; snapshot 0019
+DM Particles = 296671, cells = 1177
+halo 14/30 ; snapshot 0020
+DM Particles = 320697, cells = 1282
+halo 14/30 ; snapshot 0021
+DM Particles = 345605, cells = 1352
+halo 14/30 ; snapshot 0022
+DM Particles = 384636, cells = 1422
+halo 14/30 ; snapshot 0023
+DM Particles = 447008, cells = 1653
+halo 14/30 ; snapshot 0024
+DM Particles = 487692, cells = 1765
+halo 14/30 ; snapshot 0025
+DM Particles = 513368, cells = 1940
+halo 14/30 ; snapshot 0026
+DM Particles = 510022, cells = 1856
+halo 14/30 ; snapshot 0027
+DM Particles = 542400, cells = 2045
+halo 14/30 ; snapshot 0028
+DM Particles = 568664, cells = 2052
+halo 14/30 ; snapshot 0029
+DM Particles = 631328, cells = 2276
+
+JOB STATISTICS
+==============
+Job ID: 2694288
+Cluster: snellius
+User/Group: zimmer/zimmer
+State: TIMEOUT (exit code 0)
+Nodes: 1
+Cores per node: 128
+CPU Utilized: 00:00:00
+CPU Efficiency: 0.00% of 53-08:04:16 core-walltime
+Job Wall-clock time: 10:00:02
+Memory Utilized: 69.12 GB
+Memory Efficiency: 31.60% of 218.75 GB

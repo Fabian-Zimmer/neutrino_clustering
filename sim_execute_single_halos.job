@@ -1,13 +1,13 @@
 #!/bin/bash
 #SBATCH --job-name=Singles
 #SBATCH -p thin
-#SBATCH -t 00:20:00
+#SBATCH -t 12:00:00
 #SBATCH -N 1
 #SBATCH --tasks-per-node=1
 #SBATCH --cpus-per-task=128
 #SBATCH --mem=224000
-#SBATCH -o jobs/number_density_band_single_halos.out
-#SBATCH -e jobs/number_density_band_single_halos.err
+#SBATCH -o jobs/single_halos3.out
+#SBATCH -e jobs/single_halos3.err
 #SBATCH -v
 #SBATCH --exclusive
 
@@ -16,27 +16,29 @@ module purge
 source $HOME/.conda/envs/neutrino_clustering/bin/activate
 
 sim_boxtype=L025N752/DMONLY/SigmaConstant00
-sim_fullname=low_res_upto_Rvir
+sim_fullname=single_halos
 
-python $HOME/neutrino_clustering_V2/simulation_analytical.py \
--d $HOME/neutrino_clustering_V2/$sim_boxtype/$sim_fullname \
--st single_halos \
---MW_halo \
---no-VC_halo \
---no-AG_halo
+python $HOME/neutrino_clustering_V2/simulation_numerical.py \
+--directory $HOME/neutrino_clustering_V2/$sim_boxtype/$sim_fullname \
+--sim_type single_halos \
+--mass_gauge 12.0 \
+--mass_lower 0.6 \
+--mass_upper 2.0 \
+--halo_num 30 \
+--no-upto_Rvir
 
 # python $HOME/neutrino_clustering_V2/simulation_numerical.py \
 # -d $HOME/neutrino_clustering_V2/$sim_boxtype/$sim_fullname \
-# -st benchmark \
-# -mg 12.0 \
-# -mr 0.6 \
-# -hn 3 \
+# --sim_type benchmark \
+# --mass_gauge 12.0 \
+# --mass_lower 0.6 \
+# --mass_upper 2.0 \
+# --halo_num 30 \
 # --no-upto_Rvir
 
-# python $HOME/neutrino_clustering_V2/simulation_numerical.py \
+# python $HOME/neutrino_clustering_V2/simulation_analytical.py \
 # -d $HOME/neutrino_clustering_V2/$sim_boxtype/$sim_fullname \
 # -st single_halos \
-# -mg 12.0 \
-# -mr 0.6 \
-# -hn 3 \
-# --upto_Rvir
+# --MW_halo \
+# --no-VC_halo \
+# --no-AG_halo

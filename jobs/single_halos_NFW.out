@@ -1,0 +1,103 @@
+********Numerical Simulation: Mode=benchmark********
+Halo batch params (Rvir,Mvir,cNFW):
+[[195.3424681   11.9007675   15.48444863]
+ [194.97879531  11.89833964  13.51959415]
+ [214.54252395  12.02291765  12.08975218]
+ [199.37428206  11.9273849   11.35265197]
+ [183.64964056  11.82034774  10.55165154]
+ [177.88001291  11.77875895  10.30545612]
+ [240.5941061   12.17223244  10.22142522]
+ [209.30144442  11.99069417  10.09273464]
+ [180.32118176  11.79651773  10.05675352]
+ [255.14942265  12.24876126   9.80394087]
+ [213.10930498  12.01418473   9.51800267]
+ [192.47865208  11.8815252    9.4550728 ]
+ [222.49963801  12.07036542   9.31457463]
+ [246.34769058  12.20302298   9.30188562]
+ [244.33141522  12.19231542   8.79795185]
+ [184.67901268  11.82763012   8.55809029]
+ [187.40111968  11.84669403   8.36287611]
+ [202.10764251  11.9451257    8.06603798]
+ [257.47239044  12.26056949   7.77063493]
+ [188.26903005  11.85271415   7.69653869]
+ [240.52254202  12.17184485   7.39127504]
+ [207.56604357  11.97984641   7.24410871]
+ [214.95037599  12.02539212   7.11221569]
+ [207.31363261  11.97826108   7.07854006]
+ [190.92998087  11.87099988   7.03921462]
+ [240.37086032  12.17102294   6.93400558]
+ [253.5523526   12.24058042   6.9286026 ]
+ [209.71271559  11.99325178   6.87727775]
+ [233.28108187  12.13201605   6.40366504]
+ [196.2775635   11.90698947   6.00463057]]
+***********************************
+halo 1/30 ; snapshot 0012
+DM Particles = 61514, cells = 176
+halo 1/30 ; snapshot 0013
+DM Particles = 79286, cells = 246
+halo 1/30 ; snapshot 0014
+DM Particles = 99370, cells = 400
+halo 1/30 ; snapshot 0015
+DM Particles = 121136, cells = 561
+halo 1/30 ; snapshot 0016
+DM Particles = 144614, cells = 568
+halo 1/30 ; snapshot 0017
+DM Particles = 169106, cells = 603
+halo 1/30 ; snapshot 0018
+DM Particles = 194996, cells = 624
+halo 1/30 ; snapshot 0019
+DM Particles = 221753, cells = 834
+halo 1/30 ; snapshot 0020
+DM Particles = 248746, cells = 960
+halo 1/30 ; snapshot 0021
+DM Particles = 277015, cells = 960
+halo 1/30 ; snapshot 0022
+DM Particles = 304377, cells = 960
+halo 1/30 ; snapshot 0023
+DM Particles = 334163, cells = 967
+halo 1/30 ; snapshot 0024
+DM Particles = 362049, cells = 1114
+halo 1/30 ; snapshot 0025
+DM Particles = 389575, cells = 1366
+halo 1/30 ; snapshot 0026
+DM Particles = 416360, cells = 1569
+halo 1/30 ; snapshot 0027
+DM Particles = 444662, cells = 1576
+halo 1/30 ; snapshot 0028
+DM Particles = 471723, cells = 1576
+halo 1/30 ; snapshot 0029
+DM Particles = 497158, cells = 1590
+halo 1/30 ; snapshot 0030
+DM Particles = 523602, cells = 1660
+halo 1/30 ; snapshot 0031
+DM Particles = 551021, cells = 1905
+halo 1/30 ; snapshot 0032
+DM Particles = 576169, cells = 2108
+halo 1/30 ; snapshot 0033
+DM Particles = 601988, cells = 2346
+halo 1/30 ; snapshot 0034
+DM Particles = 625067, cells = 2472
+halo 1/30 ; snapshot 0035
+DM Particles = 648529, cells = 2472
+halo 1/30 ; snapshot 0036
+DM Particles = 672278, cells = 2472
+Grid time: 28.497532526899402 min, 0.4749588754483233 h.
+***Running simulation: mode = benchmark***
+halo=1/30, CPUs=128
+Sim time: 2.503314554466245 min, 0.04172190924110408 h.
+Total time: 31.01172170395051 min, 0.5168620283991752 h.
+
+JOB STATISTICS
+==============
+Job ID: 2698511
+Cluster: snellius
+User/Group: zimmer/zimmer
+State: RUNNING
+Nodes: 1
+Cores per node: 128
+CPU Utilized: 00:00:00
+CPU Efficiency: 0.00% of 2-19:50:24 core-walltime
+Job Wall-clock time: 00:31:48
+Memory Utilized: 0.00 MB (estimated maximum)
+Memory Efficiency: 0.00% of 218.75 GB (218.75 GB/node)
+WARNING: Efficiency statistics may be misleading for RUNNING jobs.

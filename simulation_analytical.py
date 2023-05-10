@@ -345,6 +345,13 @@ temp_dir = f'{args.directory}/temp_data_{rand_code}'
 os.makedirs(temp_dir)
 
 
+# Load median parameters of box halo sample from numerical simulation.
+halo_params = np.load(glob.glob(f'{args.directory}/halo*params.npy')[0])
+Rvir_med = np.median(halo_params[:,0])*kpc
+Mvir_med = (10**np.median(halo_params[:,1]))*Msun
+cNFW_med = np.median(halo_params[:,2])
+Rs_med = Rvir_med/cNFW_med
+
 def EOMs(s_val, y):
     """Equations of motion for all x_i's and u_i's in terms of s."""
 
@@ -367,15 +374,6 @@ def EOMs(s_val, y):
             )
 
         # note: With medians from box halo sample.
-        # halo_params = np.load(
-        #     glob.glob(f'{args.directory}/halo*params.npy')[0]
-        # )
-        # # (Rvir,Mvir,cNFW)
-        # Rvir_med = np.median(halo_params[:,0])*kpc
-        # Mvir_med = (10**np.median(halo_params[:,1]))*Msun
-        # cNFW_med = np.median(halo_params[:,2])
-        # Rs_med = Rvir_med/cNFW_med
-
         # grad_tot += dPsi_dxi_NFW(
         #     x_i, z, None, Mvir_med, Rvir_med, Rs_med, 'MW'
         #     )
@@ -423,7 +421,7 @@ def backtrack_1_neutrino(y0_Nr):
 sim_start = time.perf_counter()
 
 # Draw initial velocities.
-ui_array = np.load(f'{args.directory}/initial_velocities_analytical.npy')
+ui_array = np.load(f'{args.directory}/initial_velocities.npy')
 
 if ui_array.ndim == 2:
     ui_array = np.expand_dims(ui_array, axis=0)
