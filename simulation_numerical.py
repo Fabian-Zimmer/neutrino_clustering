@@ -911,9 +911,9 @@ def number_densities_mass_range(
 #     random.choices(string.ascii_uppercase + string.digits, k=4)
 # )
 # temp_dir = f'{args.directory}/temp_data_{rand_code}'
-parent = str(pathlib.Path(f'{args.directory}').parent)
-temp_dir = f'{parent}/final_19halos_noNFW'  #! for testing
-# temp_dir = f'{args.directory}/temp_data_TEST' 
+# parent = str(pathlib.Path(f'{args.directory}').parent)
+# temp_dir = f'{parent}/final_19halos_noNFW'
+temp_dir = f'{args.directory}/halo_data' 
 # os.makedirs(temp_dir) 
 
 def M12_to_M12X(M12_val):
@@ -1023,10 +1023,10 @@ def backtrack_1_neutrino(y0_Nr):
 for halo_j, halo_ID in enumerate(halo_batch_IDs):
     grav_time = time.perf_counter()
 
-    if halo_j in (0,1,2,3,4):
+    if halo_j in (0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18):
         continue
 
-    precalculations = False
+    precalculations = True
 
     if precalculations:
 
