@@ -674,6 +674,10 @@ class analyze_simulation_outputs_test(object):
         plt.show(); plt.close()
 
 
+    def plot_2d_params(self,):
+        ...
+
+
     def plot_eta_vs_init_dis(self, nu_mass_eV, halo):
 
         # Closest mass (index) for chosen neutrino mass.
