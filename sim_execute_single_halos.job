@@ -1,13 +1,13 @@
 #!/bin/bash
 #SBATCH --job-name=Singles
 #SBATCH -p thin
-#SBATCH -t 12:00:00
+#SBATCH -t 00:15:00
 #SBATCH -N 1
 #SBATCH --tasks-per-node=1
 #SBATCH --cpus-per-task=128
 #SBATCH --mem=224000
-#SBATCH -o jobs/single_halos4.out
-#SBATCH -e jobs/single_halos4.err
+#SBATCH -o jobs/single_halos_T.out
+#SBATCH -e jobs/single_halos_T.err
 #SBATCH -v
 #SBATCH --exclusive
 

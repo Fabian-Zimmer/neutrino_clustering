@@ -1,0 +1,17 @@
+#!/bin/bash
+#SBATCH --job-name=TEST
+#SBATCH -p thin
+#SBATCH -t 00:05:00
+#SBATCH -N 1
+#SBATCH --tasks-per-node=1
+#SBATCH --cpus-per-task=32
+#SBATCH --mem=56000
+#SBATCH -o jobs/Test.out
+#SBATCH -e jobs/Test.err
+#SBATCH -v
+
+module purge
+
+source $HOME/.conda/envs/neutrino_clustering/bin/activate
+
+python $HOME/neutrino_clustering_V2/test.py 
