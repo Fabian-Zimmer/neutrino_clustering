@@ -4,6 +4,9 @@ from shared.plot_class import analyze_simulation_outputs
 import matplotlib.colors as mcolors
 from mpl_toolkits.mplot3d import Axes3D
 from mycolorpy import colorlist as mcp
+from scipy.stats import pearsonr
+from scipy.optimize import brentq
+
 
 class analyze_simulation_outputs_test(object):
 
@@ -28,7 +31,7 @@ class analyze_simulation_outputs_test(object):
             glob.glob(f'{self.sim_dir}/halo_batch*params.npy')[0]
         )
         halo_num = len(self.halo_params)
-        halo_num = 19  #! testing
+        halo_num = 10  #! testing
 
         if self.sim_type == 'single_halos':
 
@@ -212,6 +215,60 @@ class analyze_simulation_outputs_test(object):
         smooth_rot_map = hp.smoothing(rotated_map, sigma=sigma_rad)
 
         return smooth_rot_map
+
+
+    def get_neighbours(self, ipix, radius, nside):
+        # Get the theta, phi coordinates of the pixel
+        theta, phi = hp.pix2ang(nside, ipix)
+
+        # Get the pixel indices within the disc
+        indices = hp.query_disc(nside, hp.ang2vec(theta, phi), radius)
+
+        return indices
+
+
+    def local_correlation(self, map1, map2, radius):
+        nside = hp.get_nside(map1)  # Assumes map1 and map2 have the same nside
+
+        local_corr_map = np.zeros_like(map1)
+
+        for ipix in range(hp.nside2npix(nside)):
+            neighbours = self.get_neighbours(ipix, radius, nside)
+
+            local_corr_map[ipix], _ = pearsonr(
+                map1[neighbours], map2[neighbours]
+            )
+
+        return local_corr_map
+
+
+    def estimate_pixels_in_radius(self, nside, radius):
+        # Pixel area
+        pixel_area = hp.nside2pixarea(nside)
+
+        # Approximate number of pixels within a disc of radius r
+        num_pixels = int(2*np.pi*(1 - np.cos(radius))/pixel_area)
+
+        return num_pixels
+
+
+    def exact_pixels_in_radius(self, nside, radius):
+        # Spherical coordinates of the Galactic Center
+        theta = np.pi / 2  # 90 degrees
+        phi = 0  # 0 degrees
+
+        # Convert to 3D Cartesian coordinates
+        vec = hp.ang2vec(theta, phi)
+
+        # note: the pixel count inside a given radius can vary slightly depending on the pixel used for reference above (we use gal. center). However, it will not vary significantly for our purposes and Nsides.
+
+        # Get the pixel indices within the disc
+        indices = hp.query_disc(nside, vec, radius)
+
+        # Number of pixels within the disc
+        num_pixels = len(indices)
+
+        return num_pixels
 
 
     def plot_all_sky_map(
@@ -465,6 +522,50 @@ class analyze_simulation_outputs_test(object):
                 cl = hp.sphtfunc.anafast(etas_halo)
                 cross = hp.sphtfunc.anafast(healpix_map, DM_healpix_map)
 
+                # For halo 5: multipole l where max anti-correlation.
+                ell = np.arange(len(cl))
+                y_axis = ell*(ell+1)*cross/(2*Pi)
+                ell_min = ell[y_axis.argmin()]
+                l_in_rad = np.deg2rad(180/ell_min)
+
+                pearson_r, _ = pearsonr(healpix_map, DM_healpix_map)
+
+                pixel_area = hp.nside2pixarea(Nside)
+
+                # Function to compute the number of pixels within a disc of radius r
+                def pixels_in_disc(r):
+                    return 2*np.pi*(1 - np.cos(r))/pixel_area
+
+                # Find the minimum radius such that pixels_in_disc(r) >= min_pixels
+                # We search for a root of the equation pixels_in_disc(r) - min_pixels = 0,
+                # with r in the interval [0, pi]. We use Brent's method, which combines
+                # a bracketing strategy with a bisection method, and is generally quite robust.
+                min_pixels = 25
+                radius = brentq(
+                    lambda r: pixels_in_disc(r) - min_pixels, 0, np.pi)
+
+                print('Radius for query_disc:', radius)
+                print('Radius for query_disc (from l):', l_in_rad)
+
+                # Compare the two maps within a local radius. But compare the relative (to the median or mean) pixel values of the maps. In this way, a DM neighbourhood with a lower count than the median/mean value, and a higher number density region will then be correctly seen as anti-correlated.
+                # n_nu_ref = np.median(healpix_map)
+                n_nu_ref = 1.
+                DM_ref = np.median(DM_healpix_map)
+                
+                healpix_map_rel = (healpix_map-n_nu_ref)/n_nu_ref
+                DM_healpix_map_rel = (DM_healpix_map-DM_ref)/DM_ref
+
+                local_corr_map = self.local_correlation(
+                    healpix_map, DM_healpix_map_rel, radius
+                )
+
+                print('Exact pixels in this radius (cross-check for input)',
+                    self.exact_pixels_in_radius(Nside, radius)
+                )
+                print('Exact pixels in this radius (via multipole l)',
+                    self.exact_pixels_in_radius(Nside, l_in_rad)
+                )
+
                 # step = 20
                 # plt.scatter(
                 #     plt_phi[::step], plt_theta[::step], c=density[::step],
@@ -484,10 +585,10 @@ class analyze_simulation_outputs_test(object):
             #     f'{self.fig_dir}/All_sky_maps_{end_str}.pdf', 
             #     bbox_inches='tight'
             # )
-            plt.show()
+            # plt.show()
             # plt.close()
 
-            return healpix_map, cl, cross
+            return healpix_map, cl, cross, pearson_r, local_corr_map
 
 
     def plot_neutrinos_inside_Rvir(self):
@@ -611,13 +712,16 @@ class analyze_simulation_outputs_test(object):
         
         return cl
 
+
     def plot_eta_vs_halo_params(self):
         
+        # Get halo parameters.
         until = 19
         Rvir = self.halo_params[:,0][:until]
         Mvir = 10**self.halo_params[:,1][:until]
         conc = self.halo_params[:,2][:until]
 
+        # Get initial distances (of cells at z=0).
         init_xyz_paths = glob.glob(f'{self.sim_dir}/init_xyz_halo*.npy')
         init_xyz_halos = np.array([np.load(path) for path in init_xyz_paths])
         init_dis_halos = np.linalg.norm(init_xyz_halos, axis=-1)
@@ -671,11 +775,67 @@ class analyze_simulation_outputs_test(object):
         ax4.set_xlabel('initial distance')
 
         fig.tight_layout()
+        plt.savefig(
+            f'{self.fig_dir}/Clustering_halo_params_dependence.pdf', 
+            bbox_inches='tight'
+        )
         plt.show(); plt.close()
 
 
-    def plot_2d_params(self,):
-        ...
+    def plot_2d_params(self, nu_mass_eV):
+        
+        # Make scatterplot with Mvir vs. conc. (for example).
+        # Coloring is then from lowest to highest (f-\bar{f})/\bar{f},
+        # i.e. the relative clustering factor.
+        # (choose different colorscheme than blue to red to not confuse with other plot idea)
+
+        # Get halo parameters.
+        until = 19
+        Rvir = self.halo_params[:,0][:until]
+        Mvir = 10**self.halo_params[:,1][:until]
+        conc = self.halo_params[:,2][:until]
+
+        # Get initial distances (of cells at z=0).
+        init_xyz_paths = glob.glob(f'{self.sim_dir}/init_xyz_halo*.npy')
+        init_xyz_halos = np.array([np.load(path) for path in init_xyz_paths])
+        init_dis_halos = np.linalg.norm(init_xyz_halos, axis=-1)[:until]
+
+        # Closest mass (index) for chosen neutrino mass.
+        nu_mass_idx = (np.abs(self.mrange-nu_mass_eV)).argmin()
+
+        # Get number densities and convert to clustering factors.
+        etas_nu = self.etas_numerical[...,nu_mass_idx]
+        
+        # Show relative change to median for each mass.
+        etas_0 = np.median(etas_nu, axis=0)
+        etas_nu = (etas_nu-etas_0)/etas_0
+
+        fig = plt.figure(figsize=(10, 5))
+        cmap_plot = np.array(mcp.gen_color(cmap='bwr', n=len(etas_nu)))
+        size = 50
+
+        ax1 = fig.add_subplot(121)
+        ax2 = fig.add_subplot(122, sharey=ax1)
+
+        # Sort arrays by (relative) clustering factors.
+        plot_ind = etas_nu.argsort()
+        Mvir_plot = Mvir[plot_ind]
+        conc_plot = conc[plot_ind]
+        init_plot = init_dis_halos[plot_ind]
+        etas_plot = etas_nu[plot_ind]
+        # cmap_plot = cmap_custom[plot_ind]
+
+        ax1.scatter(conc_plot, Mvir_plot, c=cmap_plot, s=size)
+        ax1.set_ylabel(r'$M_{vir}$')
+        ax1.set_xlabel('concentration')
+        
+        ax2.scatter(init_plot, Mvir_plot, c=cmap_plot, s=size)
+        ax2.set_xlabel('initial distance')
+
+        # plt.colorbar()
+        ax1.grid()
+        ax2.grid()
+        plt.savefig(f'{self.fig_dir}/2D_params.pdf', bbox_inches='tight')
 
 
     def plot_eta_vs_init_dis(self, nu_mass_eV, halo):
@@ -702,7 +862,8 @@ class analyze_simulation_outputs_test(object):
         
 
 
-
+# ======================== #
+'''
 sim_dir = f'L025N752/DMONLY/SigmaConstant00/single_halos'
 
 objects = (
@@ -717,4 +878,85 @@ Analysis = analyze_simulation_outputs_test(
 )
 
 # Analysis.plot_eta_vs_init_dis(0.3, 5)
-Analysis.plot_eta_vs_halo_params()
+# Analysis.plot_eta_vs_halo_params()
+Analysis.plot_2d_params(nu_mass_eV=0.3)
+# '''
+# ======================== #
+
+
+
+
+# ======================== #
+# '''
+sim_dir = f'L025N752/DMONLY/SigmaConstant00/all_sky_final'
+
+objects = (
+    # 'NFW_halo', 
+    'box_halos', 
+    # 'analytical_halo'
+)
+Analysis = analyze_simulation_outputs_test(
+    sim_dir = sim_dir,
+    objects = objects,
+    sim_type = 'all_sky',
+)
+
+_, cl, cross, pearson_r, local_corr_map = Analysis.plot_all_sky_map(
+    0.3, 'numerical', 5, two_plots=True
+)
+
+'''
+fig = plt.figure(figsize =(12, 4))
+fig.tight_layout()
+
+muKsq_unit = 1e12
+
+ax1 = fig.add_subplot(121)
+ax1.loglog(ell, ell*(ell+1)*cl/(2*Pi)*muKsq_unit)
+ax1.set_xlabel("$\ell$")
+ax1.set_xlim(1,)
+ax1.set_ylabel("$\ell(\ell+1)C_{\ell}$")
+ax1.grid()
+
+ax2 = fig.add_subplot(122)
+ax2.plot(ell, ell*(ell+1)*cross/(2*Pi)*muKsq_unit)
+ax2.set_xlabel("$\ell$")
+# ax2.set_xlim(1,)
+ax2.set_ylabel("$\ell(\ell+1)C_{\ell}$")
+ax2.grid()
+
+plt.savefig(f'anafast.pdf', bbox_inches='tight')
+# '''
+
+healpy_dict = dict(
+    coord=['G'],
+    graticule=True,
+    graticule_labels=True,
+    xlabel="longitude",
+    ylabel="latitude",
+    cb_orientation="horizontal",
+    projection_type="mollweide",
+    flip='astro',
+    latitude_grid_spacing=45,
+    longitude_grid_spacing=45,
+    phi_convention='counterclockwise',
+)
+
+divnorm = mcolors.TwoSlopeNorm(vcenter=0.)
+hp.newvisufunc.projview( 
+    local_corr_map,
+    unit='Pearsons R correlation coefficient', cbar=True, 
+    override_plot_properties={
+        "cbar_pad": 0.1,
+        "cbar_label_pad": 1,
+    },
+    cmap='bwr',
+    cbar_ticks=[np.min(local_corr_map), 0, np.max(local_corr_map)],
+    norm=divnorm,
+    **healpy_dict
+)
+
+plt.savefig(f'local_correlation_map.pdf', bbox_inches='tight')
+
+# '''
+# ======================== #

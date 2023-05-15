@@ -1023,7 +1023,15 @@ def backtrack_1_neutrino(y0_Nr):
 for halo_j, halo_ID in enumerate(halo_batch_IDs):
     grav_time = time.perf_counter()
 
-    if halo_j in (0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18):
+    # note: "Broken" halo, no DM position data at snapshot 0012.
+    if halo_j == 19:
+        continue
+
+    if halo_j in (
+        0,1,2,3,4,5,6,7,8,9,
+        10,11,12,13,14,15,16,17,18,19,
+        20,21,22,23,24,25,26
+    ):
         continue
 
     precalculations = True

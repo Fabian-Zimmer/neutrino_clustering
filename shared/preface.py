@@ -43,6 +43,9 @@ from scipy.interpolate import UnivariateSpline, interp1d
 from scipy.special import expit, zeta
 import scipy.stats as stat
 
+from scipy.stats import pearsonr
+from scipy.optimize import brentq
+
 # plotting
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
@@ -50,6 +53,7 @@ import matplotlib.ticker as ticker
 import matplotlib.patches as mpatches
 from mpl_toolkits import mplot3d
 import colorcet as cc
+from mycolorpy import colorlist as mcp
 import imageio
 from sklearn.neighbors import KernelDensity
 
