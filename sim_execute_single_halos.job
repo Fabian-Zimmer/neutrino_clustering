@@ -1,13 +1,13 @@
 #!/bin/bash
-#SBATCH --job-name=Singles5
+#SBATCH --job-name=Singles
 #SBATCH -p thin
 #SBATCH -t 08:00:00
 #SBATCH -N 1
 #SBATCH --tasks-per-node=1
 #SBATCH --cpus-per-task=128
 #SBATCH --mem=224000
-#SBATCH -o jobs/single_halos5.out
-#SBATCH -e jobs/single_halos5.err
+#SBATCH -o jobs/single_halos.out
+#SBATCH -e jobs/single_halos.err
 #SBATCH -v
 #SBATCH --exclusive
 
@@ -24,7 +24,7 @@ python $HOME/neutrino_clustering_V2/simulation_numerical.py \
 --mass_gauge 12.0 \
 --mass_lower 0.6 \
 --mass_upper 2.0 \
---halo_num 31 \
+--halo_num 30 \
 --no-upto_Rvir
 
 # python $HOME/neutrino_clustering_V2/simulation_numerical.py \
