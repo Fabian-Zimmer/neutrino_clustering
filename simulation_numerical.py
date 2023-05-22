@@ -911,9 +911,12 @@ def number_densities_mass_range(
 #     random.choices(string.ascii_uppercase + string.digits, k=4)
 # )
 # temp_dir = f'{args.directory}/temp_data_{rand_code}'
-parent = str(pathlib.Path(f'{args.directory}').parent)
-temp_dir = f'{parent}/final_halo_data'
-# os.makedirs(temp_dir) 
+# parent = str(pathlib.Path(f'{args.directory}').parent)
+# temp_dir = f'{parent}/final_halo_data'
+# temp_dir = f'{args.directory}/final_halo_data'
+temp_dir = f'{args.directory}/benchmark_halo_data'
+# temp_dir = f'{parent}/benchmark_halo_data'
+# os.makedirs(temp_dir)
 
 def M12_to_M12X(M12_val):
     return np.log(M12_val*10.**12)/np.log(10.)
@@ -970,15 +973,6 @@ def EOMs(s_val, y):
         )
         grad_tot = dPsi_grid[cell_idx,:]
 
-        # if z == 0.:
-        #     np.save(
-        #         f'{args.directory}/cell_len_init_{end_str}.npy', cell_len0
-        #     )
-        #     np.save(
-        #         f'{args.directory}/cell_cc_init_{end_str}.npy', cell_cc0
-        #     )
-
-
     # Neutrino outside cell grid.
     else:
 
@@ -1024,6 +1018,10 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
 
     # note: "Broken" halo, no DM position data at snapshot 0012.
     if halo_j == 19:
+        continue
+
+    #? Halo 1 suddenly gives segmentation error? But needed for NFW halo...
+    if halo_j == 0 and args.sim_type == 'all_sky':
         continue
 
     precalculations = False
@@ -1453,6 +1451,9 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
             y0_Nr = np.array([np.concatenate(
                 (init_xyz, ui_elem[k], [k+1])) for k in range(len(ui_elem))
             ])
+
+            # print(f'***HERE***')
+            # backtrack_1_neutrino(y0_Nr[0])
 
             # Run simulation on multiple cores.
             with ProcessPoolExecutor(CPUs_sim) as ex:
