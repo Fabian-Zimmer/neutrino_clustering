@@ -37,14 +37,14 @@ Coord. pair 1/768
 
 JOB STATISTICS
 ==============
-Job ID: 2781201
+Job ID: 2816961
 Cluster: snellius
 User/Group: zimmer/zimmer
 State: FAILED (exit code 1)
 Nodes: 1
 Cores per node: 128
-CPU Utilized: 00:02:06
-CPU Efficiency: 4.47% of 00:46:56 core-walltime
-Job Wall-clock time: 00:00:22
-Memory Utilized: 1.66 MB
+CPU Utilized: 00:02:18
+CPU Efficiency: 4.49% of 00:51:12 core-walltime
+Job Wall-clock time: 00:00:24
+Memory Utilized: 1.67 MB
 Memory Efficiency: 0.00% of 218.75 GB

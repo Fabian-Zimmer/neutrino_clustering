@@ -914,7 +914,8 @@ def number_densities_mass_range(
 # parent = str(pathlib.Path(f'{args.directory}').parent)
 # temp_dir = f'{parent}/final_halo_data'
 # temp_dir = f'{args.directory}/final_halo_data'
-temp_dir = f'{args.directory}/benchmark_halo_data'
+parent_dir = str(pathlib.Path(args.directory).parent)
+temp_dir = f'{parent_dir}/benchmark_halo_data'
 # temp_dir = f'{parent}/benchmark_halo_data'
 # os.makedirs(temp_dir)
 
@@ -1020,9 +1021,9 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
     if halo_j == 19:
         continue
 
-    #? Halo 1 suddenly gives segmentation error? But needed for NFW halo...
-    if halo_j == 0 and args.sim_type == 'all_sky':
-        continue
+    # #? Halo 1 suddenly gives segmentation error? But needed for NFW halo...
+    # if halo_j == 0 and args.sim_type == 'all_sky':
+    #     continue
 
     precalculations = False
 
@@ -1085,9 +1086,8 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
 
             elif 'benchmark' in args.sim_type:
 
-                benchmark_file_dir = str(pathlib.Path(args.directory).parent)
                 DM_raw = np.load(
-                    f'{benchmark_file_dir}/benchmark_halo_files/benchmark_halo_snap_{snap}.npy'
+                    f'{parent_dir}/benchmark_halo_files/benchmark_halo_snap_{snap}.npy'
                 )
                 DM_particles = len(DM_raw)
                 DM_com = np.sum(DM_raw, axis=0)/len(DM_raw)*kpc

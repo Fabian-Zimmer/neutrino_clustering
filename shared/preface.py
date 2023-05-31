@@ -52,6 +52,7 @@ import matplotlib.colors as colors
 import matplotlib.ticker as ticker
 import matplotlib.patches as mpatches
 from mpl_toolkits import mplot3d
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 import colorcet as cc
 from mycolorpy import colorlist as mcp
 import imageio

@@ -2,6 +2,7 @@ from shared.preface import *
 from shared.shared_functions import *
 from shared.plot_class import analyze_simulation_outputs
 import matplotlib.colors as mcolors
+import matplotlib as mpl
 from mpl_toolkits.mplot3d import Axes3D
 from mycolorpy import colorlist as mcp
 
@@ -30,6 +31,11 @@ class analyze_simulation_outputs_test(object):
         self.halo_glob_order = nums.argsort()
         self.final_halos = nums[self.halo_glob_order]
         self.halo_num = len(self.final_halos)
+
+        #! Limit halos manually (for simple testing)
+        # self.halo_glob_order = nums.argsort()
+        # self.final_halos = nums[self.halo_glob_order][:5]
+        # self.halo_num = len(self.final_halos)
         
         # Halo indices and parameters for the final halos.
         self.halo_indices = np.load(
@@ -286,7 +292,8 @@ class analyze_simulation_outputs_test(object):
         if halo == 0:
             end_str = f'benchmark_halo'
         else:
-            end_str = f'halo{halo}'
+            halo_label = self.final_halos[halo-1]
+            end_str = f'halo{halo_label}'
 
         # Get number densities and convert to clustering factors.
         nu_mass_idx = (np.abs(self.mrange-nu_mass_eV)).argmin()
@@ -530,6 +537,55 @@ class analyze_simulation_outputs_test(object):
         plt.close()
 
         return pearson_r
+    
+
+    def plot_all_spectra_1plot(self, halo_array, nu_mass_idx):
+
+        fig = plt.figure(figsize =(12, 4))
+        fig.tight_layout()
+
+        ax1 = fig.add_subplot(121)
+        ax2 = fig.add_subplot(122)
+
+        # Unit to compare to similar figures in literature.
+        micro_Kelvin_unit = 1e12
+
+        for halo in halo_array:
+
+            # Load synchronized maps.
+            healpix_map, DM_healpix_map, end_str = self.syncronize_all_sky_maps(
+                halo, nu_mass_idx
+            )
+
+            # Compute power spectrum of number density all-sky map.
+            cl = hp.sphtfunc.anafast(healpix_map)
+            ell = np.arange(len(cl))
+            power_spectrum = ell*(ell+1)*cl/(2*Pi)*micro_Kelvin_unit
+
+            # Compute cross-correlation spectrum of n_nu and DM maps.
+            cross = hp.sphtfunc.anafast(healpix_map, DM_healpix_map)
+            cross_power_spectrum = ell*(ell+1)*cross/(2*Pi)*micro_Kelvin_unit
+
+            # Pearsons correlation coefficient for total map information.
+            # pearson_r, _ = pearsonr(healpix_map, DM_healpix_map)
+
+            ax1.loglog(ell, power_spectrum)
+            ax2.plot(ell, cross_power_spectrum)
+        
+        ax1.set_xlabel("$\ell$")
+        ax1.set_xlim(1,)
+        ax1.set_ylabel("$\ell(\ell+1)C_{\ell}$")
+        ax1.grid()
+
+        ax2.set_xlabel("$\ell$")
+        ax2.set_ylabel("$\ell(\ell+1)C_{\ell}$")
+        ax2.grid()
+
+        plt.savefig(
+            f'{self.fig_dir}/all_power_spectra.pdf', 
+            bbox_inches='tight'
+        )
+        plt.close()
 
 
     def plot_pixel_correlation(self, halo, nu_mass_idx):
@@ -762,16 +818,17 @@ class analyze_simulation_outputs_test(object):
         # Closest mass (index) for chosen neutrino mass.
         nu_mass_idx = (np.abs(self.mrange-nu_mass_eV)).argmin()
 
-        # Get number densities and convert to clustering factors.
-        etas_nu = self.etas_numerical[...,nu_mass_idx]
-        
-        # Show relative change to median for each mass.
-        etas_0 = np.median(etas_nu, axis=0)
-        etas_nu = (etas_nu-etas_0)/etas_0
+        # Get clustering factors.
+        etas_nu = self.etas_numerical[...,nu_mass_idx].flatten()
 
-        fig = plt.figure(figsize=(10, 5))
-        cmap_plot = np.array(mcp.gen_color(cmap='bwr', n=len(etas_nu)))
-        size = 50
+        # Show relative change (choice of median, mean, etc.) for each mass.
+        # etas_0 = np.median(etas_nu, axis=0)
+        # etas_nu = (etas_nu-etas_0)/etas_0
+
+        fig = plt.figure(figsize=(11, 5))
+        # cmap_plot = np.array(mcp.gen_color(cmap='bwr', n=len(etas_nu)))
+        cmap_plot = np.array(mcp.gen_color(cmap='coolwarm', n=len(etas_nu)))
+        size = 30
 
         ax1 = fig.add_subplot(121)
         ax2 = fig.add_subplot(122, sharey=ax1)
@@ -781,20 +838,43 @@ class analyze_simulation_outputs_test(object):
         Mvir_plot = Mvir[plot_ind]
         conc_plot = conc[plot_ind]
         init_plot = init_dis_halos[plot_ind]
-        etas_plot = etas_nu[plot_ind]
+        # etas_plot = etas_nu[plot_ind]
         # cmap_plot = cmap_custom[plot_ind]
 
-        ax1.scatter(conc_plot, Mvir_plot, c=cmap_plot, s=size)
+        sct1 = ax1.scatter(conc_plot, Mvir_plot, c=cmap_plot, s=size)
         ax1.set_ylabel(r'$M_{vir}$')
         ax1.set_xlabel('concentration')
         
-        ax2.scatter(init_plot, Mvir_plot, c=cmap_plot, s=size)
-        ax2.set_xlabel('initial distance')
+        sct2 = ax2.scatter(init_plot, Mvir_plot, c=cmap_plot, s=size)
+        ax2.set_xlabel('initial distance (kpc)')
 
-        # plt.colorbar()
+        divider = make_axes_locatable(plt.gca())
+        cax = divider.append_axes("right", size="5%", pad=0.1)
+
+        # Create and remove the colorbar for the first subplot.
+        # cbar1 = fig.colorbar(sct1, cax = cax1)
+        # fig.delaxes(fig.axes[2])
+
+
+        # for col, ax in enumerate(axes):
+        # im = ax.pcolormesh(data, vmin=data.min(), vmax=data.max())
+        # if col > 0:
+        #     ax.yaxis.set_visible(False)
+
+
+
+        norm = mpl.colors.Normalize(vmin=np.min(etas_nu), vmax=np.max(etas_nu))
+        cmap = mpl.cm.coolwarm
+        cbar2 = fig.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=cmap),
+                    cax=cax,
+                    orientation='vertical', 
+                    label=r'$n_\nu / n_{\nu,0}$',
+                    # pad=0.05
+                )
+        
         ax1.grid()
         ax2.grid()
-        plt.savefig(f'{self.fig_dir}/2D_params.pdf', bbox_inches='tight')
+        plt.savefig(f'{self.fig_dir}/2D_params_box_halos.pdf', bbox_inches='tight')
 
 
 
@@ -803,7 +883,7 @@ class analyze_simulation_outputs_test(object):
 sim_dir = f'L025N752/DMONLY/SigmaConstant00/all_sky_final'
 
 objects = (
-    'NFW_halo', 
+    # 'NFW_halo', 
     'box_halos', 
     # 'analytical_halo'
 )
@@ -818,14 +898,20 @@ Analysis = analyze_simulation_outputs_test(
 #     pearson_r = Analysis.plot_all_sky_power_spectra(halo_j+1, 0.3)
 #     print(f'Pearons R = {pearson_r} for halo {halo_j+1}')
 
-Analysis.plot_all_sky_map('numerical', 5, 0.3)
+# The loop here goes over range(Analysis.halo_num)+1, such that halo==0 
+# triggers the benchmark_halo clauses. For the box halos, the +1 gets corrected 
+# inside the function(s).
+# Analysis.plot_all_sky_map('numerical', 5, 0.3)
+
+# Analysis.plot_all_spectra_1plot(np.arange(Analysis.halo_num)+1, 0.3)
+# Analysis.plot_all_spectra_1plot(np.array([1,2]), 0.3)
 # '''
 # ======================== #
 
 
 
 # ======================== #
-# '''
+'''
 sim_dir = f'L025N752/DMONLY/SigmaConstant00/single_halos'
 
 objects = (
@@ -839,7 +925,7 @@ Analysis = analyze_simulation_outputs_test(
     sim_type = 'single_halos',
 )
 
-Analysis.plot_eta_vs_halo_params()
-# Analysis.plot_2d_params(nu_mass_eV=0.3)
+# Analysis.plot_eta_vs_halo_params()
+Analysis.plot_2d_params(nu_mass_eV=0.3)
 # '''
 # ======================== #
