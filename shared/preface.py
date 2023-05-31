@@ -25,6 +25,7 @@ import numpy as np
 import re
 import h5py
 from funcy import chunks
+import pandas as pd
 
 # astrophysics
 from astropy import units as unit

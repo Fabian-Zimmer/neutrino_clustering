@@ -30,13 +30,13 @@ class analyze_simulation_outputs_test(object):
         ).flatten()
         self.halo_glob_order = nums.argsort()
         self.final_halos = nums[self.halo_glob_order]
+
+        # note: besides the broken halo 20, halos 24 & 25 are anomalies.
+        for ex in (24,25):
+            self.final_halos = np.delete(self.final_halos, self.final_halos==ex)
+
         self.halo_num = len(self.final_halos)
 
-        #! Limit halos manually (for simple testing)
-        # self.halo_glob_order = nums.argsort()
-        # self.final_halos = nums[self.halo_glob_order][:5]
-        # self.halo_num = len(self.final_halos)
-        
         # Halo indices and parameters for the final halos.
         self.halo_indices = np.load(
             glob.glob(f'{self.sim_dir}/halo_batch*indices.npy')[0]
@@ -248,13 +248,13 @@ class analyze_simulation_outputs_test(object):
         for pix in zero_pixels:
             theta_zero, phi_zero = hp.pix2ang(Nside, pix)
             interp_val = hp.get_interp_val(
-                healpix_map, theta_zero, phi_zero
+                rotated_map, theta_zero, phi_zero
             )
             rotated_map[pix] = interp_val
 
         # Smooth the rotated map using a Gaussian kernel.
         reso_1pix_deg = hp.nside2resol(Nside, arcmin=True) / 60
-        sigma_rad = np.deg2rad(reso_1pix_deg/2.)
+        sigma_rad = np.deg2rad(reso_1pix_deg)
         smooth_rot_map = hp.smoothing(rotated_map, sigma=sigma_rad)
 
         return smooth_rot_map
@@ -287,7 +287,7 @@ class analyze_simulation_outputs_test(object):
         return DM_healpix_map
 
 
-    def syncronize_all_sky_maps(self, halo, nu_mass_eV):
+    def syncronize_all_sky_maps(self, halo, nu_mass_eV, apply=True):
 
         if halo == 0:
             end_str = f'benchmark_halo'
@@ -299,12 +299,13 @@ class analyze_simulation_outputs_test(object):
         nu_mass_idx = (np.abs(self.mrange-nu_mass_eV)).argmin()
         dens_nu = self.number_densities_numerical_all_sky[...,nu_mass_idx]
         etas_nu = dens_nu/self.N0_pix
-        etas_halo = etas_nu[halo-1,...]  # select input halo
-        
-        # Rotate (depending on initial cell) and (gaussian) smooth the map.
-        init_xyz = np.load(f'{self.sim_dir}/init_xyz_{end_str}.npy')
-        healpix_map = self.rot_int_smooth_healpix_map(etas_halo, init_xyz)
 
+        etas_halo = etas_nu[halo-1,...]  # select input halo
+
+        eta_min, eta_max = np.min(etas_halo), np.max(etas_halo)
+        factor = np.round(eta_max/eta_min, 2)
+        print(f'Halo {halo_label} original values: min={eta_min}, max={eta_max}, factor={factor}')
+        
         # DM halo directory.
         parent = str(pathlib.Path(f'{self.sim_dir}').parent)
         DM_dir = f'{parent}/final_halo_data'
@@ -319,14 +320,24 @@ class analyze_simulation_outputs_test(object):
             pos_origin = np.load(
                 f'{DM_dir}/DM_pos_origID{haloID}_snap_0036.npy'
             )
+    
+        if apply:
 
-        # Rotate DM to bring CoP of halo to origin (middle) in plot.
-        DM_rot, obs_rot = self.rotate_DM(pos_origin, init_xyz)
+            # Rotate (depending on initial cell) and (gaussian) smooth the map.
+            init_xyz = np.load(f'{self.sim_dir}/init_xyz_{end_str}.npy')
+            healpix_map = self.rot_int_smooth_healpix_map(etas_halo, init_xyz)
 
-        # Get healpix map from cartesian DM coords.
-        DM_healpix_map = self.DM_pos_to_healpix(self.Nside, DM_rot, obs_rot)
+            # Rotate DM to bring CoP of halo to origin (middle) in plot.
+            DM_rot, obs_rot = self.rotate_DM(pos_origin, init_xyz)
 
-        return healpix_map, DM_healpix_map, end_str
+            # Get healpix map from cartesian DM coords.
+            DM_healpix_map = self.DM_pos_to_healpix(self.Nside, DM_rot, obs_rot)
+
+        else:
+            healpix_map = etas_halo
+            DM_healpix_map = self.DM_pos_to_healpix(self.Nside, pos_origin, 0)
+
+        return healpix_map, DM_healpix_map, end_str, eta_min, eta_max, factor
 
 
     def plot_all_sky_map(self, sim_method, halo, nu_mass_eV):
@@ -336,12 +347,12 @@ class analyze_simulation_outputs_test(object):
         if sim_method == 'analytical':
 
             dens_nu = self.number_densities_analytical_all_sky[...,nu_mass_idx]
-            etas_nu = dens_nu/N0_pix
+            etas_nu = dens_nu/self.N0_pix
 
             healpix_map = etas_nu
 
             # Create a grid of (theta, phi) coordinates for the map
-            theta, phi = hp.pix2ang(Nside, np.arange(len(healpix_map)))
+            theta, phi = hp.pix2ang(self.Nside, np.arange(len(healpix_map)))
 
             # Rotation for Virgo Cluster.
             # VCzAngle = np.rad2deg(
@@ -363,7 +374,7 @@ class analyze_simulation_outputs_test(object):
             theta_rot, phi_rot = rot(theta, phi)
 
             # Find the pixel indices of the rotated grid
-            pix_rot = hp.ang2pix(Nside, theta_rot, phi_rot)
+            pix_rot = hp.ang2pix(self.Nside, theta_rot, phi_rot)
 
             # Create a new map with rotated pixel values
             rotated_map = np.zeros_like(healpix_map)
@@ -372,7 +383,7 @@ class analyze_simulation_outputs_test(object):
             # Find zero-valued pixels and interpolate their values from 4 neighbors
             zero_pixels = np.where(rotated_map == 0)[0]
             for pix in zero_pixels:
-                theta_zero, phi_zero = hp.pix2ang(Nside, pix)
+                theta_zero, phi_zero = hp.pix2ang(self.Nside, pix)
                 interp_val = hp.get_interp_val(
                     healpix_map, theta_zero, phi_zero
                 )
@@ -381,7 +392,7 @@ class analyze_simulation_outputs_test(object):
             hp.newvisufunc.projview(
                 rotated_map,
                 coord=['G'],
-                title=f'Analytical (Npix={Npix})',
+                title=f'Analytical (Npix={self.Npix})',
                 unit=r'$n_{\nu, pix} / n_{\nu, pix, 0}$',
                 cmap=cc.cm.CET_D1A,
                 graticule=True,
@@ -413,7 +424,7 @@ class analyze_simulation_outputs_test(object):
         if sim_method == 'numerical':
 
             # Load synchronized maps.
-            healpix_map, DM_healpix_map, end_str = self.syncronize_all_sky_maps(
+            healpix_map, DM_healpix_map, end_str, *_ = self.syncronize_all_sky_maps(
                 halo, nu_mass_idx
             )
 
@@ -550,12 +561,21 @@ class analyze_simulation_outputs_test(object):
         # Unit to compare to similar figures in literature.
         micro_Kelvin_unit = 1e12
 
-        for halo in halo_array:
+        eta_mins = np.zeros(len(halo_array))
+        eta_maxs = np.zeros(len(halo_array))
+        factors = np.zeros(len(halo_array))
+        for i, halo in enumerate(halo_array):
 
             # Load synchronized maps.
-            healpix_map, DM_healpix_map, end_str = self.syncronize_all_sky_maps(
-                halo, nu_mass_idx
+            healpix_map, DM_healpix_map, _, eta_min, eta_max, factor = self.syncronize_all_sky_maps(
+                halo, nu_mass_idx, apply=False
             )
+            eta_mins[i] = eta_min
+            eta_maxs[i] = eta_max
+            factors[i] = factor
+
+            # Convert maps of neutrino densities to temperatures.
+            healpix_map = np.cbrt(healpix_map*2*Pi**2/3/zeta(3))
 
             # Compute power spectrum of number density all-sky map.
             cl = hp.sphtfunc.anafast(healpix_map)
@@ -569,12 +589,12 @@ class analyze_simulation_outputs_test(object):
             # Pearsons correlation coefficient for total map information.
             # pearson_r, _ = pearsonr(healpix_map, DM_healpix_map)
 
-            ax1.loglog(ell, power_spectrum)
+            ax1.semilogy(ell, power_spectrum)
             ax2.plot(ell, cross_power_spectrum)
         
         ax1.set_xlabel("$\ell$")
         ax1.set_xlim(1,)
-        ax1.set_ylabel("$\ell(\ell+1)C_{\ell}$")
+        ax1.set_ylabel("$\ell(\ell+1)C_{\ell} [\mu K^2]$")
         ax1.grid()
 
         ax2.set_xlabel("$\ell$")
@@ -586,6 +606,20 @@ class analyze_simulation_outputs_test(object):
             bbox_inches='tight'
         )
         plt.close()
+
+        # Save arrays.
+        def write_arrays_to_file(
+                arr1, arr2, arr3, head1, head2, head3, filename
+        ):
+            df = pd.DataFrame({head1: arr1, head2: arr2, head3: arr3})
+            df = df.round(2)
+            df.to_csv(filename, index=False)
+
+        write_arrays_to_file(
+            eta_mins, eta_maxs, factors, 
+            'Min', 'Max', 'Factor', 
+            f'{self.sim_dir}/all_sky_values_original.csv'
+        )
 
 
     def plot_pixel_correlation(self, halo, nu_mass_idx):
@@ -893,18 +927,16 @@ Analysis = analyze_simulation_outputs_test(
     sim_type = 'all_sky',
 )
 
-# for halo_j in range(len(Analysis.halo_params)):
-#     # Analysis.plot_pixel_correlation(halo_j+1, 0.3)
-#     pearson_r = Analysis.plot_all_sky_power_spectra(halo_j+1, 0.3)
-#     print(f'Pearons R = {pearson_r} for halo {halo_j+1}')
+print(Analysis.final_halos)
+print(Analysis.halo_num)
+halo_array = np.arange(Analysis.halo_num)+1
 
-# The loop here goes over range(Analysis.halo_num)+1, such that halo==0 
-# triggers the benchmark_halo clauses. For the box halos, the +1 gets corrected 
-# inside the function(s).
-# Analysis.plot_all_sky_map('numerical', 5, 0.3)
+# Generate power spectra plots.
+Analysis.plot_all_spectra_1plot(halo_array, 0.3)
 
-# Analysis.plot_all_spectra_1plot(np.arange(Analysis.halo_num)+1, 0.3)
-# Analysis.plot_all_spectra_1plot(np.array([1,2]), 0.3)
+# Generate all all-sky anisotropy maps.
+# for halo in halo_array:
+#     Analysis.plot_all_sky_map('numerical', halo, 0.3)
 # '''
 # ======================== #
 
