@@ -1,6 +1,6 @@
 from shared.preface import *
 from shared.shared_functions import *
-from shared.plot_class import analyze_simulation_outputs
+from shared.analysis_class import analyze_simulation_outputs
 import matplotlib.colors as mcolors
 from mpl_toolkits.mplot3d import Axes3D
 from mycolorpy import colorlist as mcp

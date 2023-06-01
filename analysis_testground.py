@@ -1,12 +1,11 @@
 from shared.preface import *
 from shared.shared_functions import *
-from shared.plot_class import analyze_simulation_outputs
 import matplotlib.colors as mcolors
 import matplotlib as mpl
 from mpl_toolkits.mplot3d import Axes3D
 from mycolorpy import colorlist as mcp
 
-class analyze_simulation_outputs_test(object):
+class analyze_simulation_outputs(object):
 
     def __init__(self, sim_dir, objects, sim_type):
 
@@ -24,17 +23,23 @@ class analyze_simulation_outputs_test(object):
         self.mpicks = np.array([0.01, 0.05, 0.1, 0.3])
 
         # Find all integers for halos in files (some are broken).
-        paths = glob.glob(f'{self.sim_dir}/init_xyz_halo*.npy')
-        nums = np.array(
-            [list(map(int, re.findall(r'\d+', path)))[-1] for path in paths]
+        paths_all = glob.glob(f'{self.sim_dir}/init_xyz_halo*.npy')
+        nums_all = np.array(
+            [list(map(int, re.findall(r'\d+', path)))[-1] for path in paths_all]
         ).flatten()
-        self.halo_glob_order = nums.argsort()
-        self.final_halos = nums[self.halo_glob_order]
 
         # note: besides the broken halo 20, halos 24 & 25 are anomalies.
-        for ex in (24,25):
-            self.final_halos = np.delete(self.final_halos, self.final_halos==ex)
+        # Remove anomalous halos from arrays.
+        anomalies = [24,25]
+        del_ids = np.array(
+            [i for i, x in enumerate(nums_all) if x in anomalies])
+        nums = np.array(
+            [x for i, x in enumerate(nums_all) if i not in del_ids])
+        paths = np.array(
+            [x for i, x in enumerate(paths_all) if i not in del_ids])
 
+        self.halo_glob_order = nums.argsort()
+        self.final_halos = nums[self.halo_glob_order][:3]
         self.halo_num = len(self.final_halos)
 
         # Halo indices and parameters for the final halos.
@@ -44,6 +49,10 @@ class analyze_simulation_outputs_test(object):
         self.halo_params = np.load(
             glob.glob(f'{self.sim_dir}/halo_batch*params.npy')[0]
         )[self.final_halos-1]
+
+        # Initial distances (of starting cell at z=0) for the final halos.
+        init_xyz = np.array([np.load(path) for path in paths])
+        self.init_dis = np.linalg.norm(init_xyz, axis=-1)[self.halo_glob_order]
 
 
         if self.sim_type == 'single_halos':
@@ -102,8 +111,26 @@ class analyze_simulation_outputs_test(object):
 
             if 'analytical_halo' in self.objects:
 
+                # Milky Way params as in Mertsch et al.
                 batch_paths = glob.glob(
                     f'{self.sim_dir}/neutrino_vectors_analytical_batch*.npy'
+                )
+                
+                self.vectors_analytical = []
+                for batch_path in batch_paths:
+                    self.vectors_analytical.append(np.load(batch_path))
+                self.vectors_analytical = np.squeeze(
+                    np.array(self.vectors_analytical)
+                )
+                self.vectors_analytical_Mertsch = np.array(self.vectors_analytical)
+
+                self.etas_analytical_Mertsch = np.load(
+                    f'{self.sim_dir}/number_densities_analytical_single_halos.npy'
+                )/N0
+
+                # Using median parameters of box halo sample. 
+                batch_paths = glob.glob(
+                    f'{self.sim_dir}/neutrino_vectors_analytical_median_batch*.npy'
                 )
                 
                 self.vectors_analytical = []
@@ -115,7 +142,7 @@ class analyze_simulation_outputs_test(object):
                 self.vectors_analytical = np.array(self.vectors_analytical)
 
                 self.etas_analytical = np.load(
-                    f'{self.sim_dir}/number_densities_analytical_single_halos.npy'
+                    f'{self.sim_dir}/number_densities_analytical_median_single_halos.npy'
                 )/N0
 
 
@@ -180,6 +207,89 @@ class analyze_simulation_outputs_test(object):
                 self.number_densities_analytical_all_sky = np.load(
                     f'{self.sim_dir}/number_densities_analytical_all_sky.npy'
                 )
+
+
+    def plot_overdensity_band(self, plot_ylims):
+
+        ### ------------- ###
+        ### Setup figure. ###
+        ### ------------- ###
+        fig, ax = plt.subplots(1,1)
+
+        ax.set_xscale('log')
+        ax.set_yscale('log')
+        # ax.set_title(f'Overdensity band')
+        ax.set_xlabel(r'$m_{\nu}$ [meV]')
+        ax.set_ylabel(r'$f \equiv n_{\nu} / n_{\nu, 0}$')
+
+        if plot_ylims is not None:
+            ax.set_ylim(plot_ylims[0], plot_ylims[1])
+        
+        plt.grid(True, which="both", ls="-")
+
+        savefig_args = dict(
+            bbox_inches='tight'
+        )
+
+
+        ### ------------- ###
+        ### Plot objects. ###
+        ### ------------- ###
+
+        if 'NFW_halo' in self.objects:
+
+            plt.plot(
+                self.mrange*1e3, self.etas_benchmark-1, 
+                color='green', label='(Benchmark) NFW Halo'
+            )
+
+        if 'box_halos' in self.objects:
+
+            etas_median = np.median(
+                self.etas_numerical, axis=0)
+            etas_perc2p5 = np.percentile(
+                self.etas_numerical, q=2.5, axis=0)
+            etas_perc97p5 = np.percentile(
+                self.etas_numerical, q=97.5, axis=0)
+            etas_perc16 = np.percentile(
+                self.etas_numerical, q=16, axis=0)
+            etas_perc84 = np.percentile(
+                self.etas_numerical, q=84, axis=0)
+            
+            ax.plot(
+                self.mrange*1e3, (etas_median-1), color='blue', 
+                label='Box Halos: medians'
+            )
+            ax.fill_between(
+                self.mrange*1e3, (etas_perc2p5-1), (etas_perc97p5-1), 
+                color='blue', alpha=0.2, label='Box Halos: 2.5-97.5 % C.L.'
+            )
+            ax.fill_between(
+                self.mrange*1e3, (etas_perc16-1), (etas_perc84-1), 
+                color='blue', alpha=0.3, label='Box Halos: 16-84 % C.L.'
+            )
+
+        if 'analytical_halo' in self.objects:
+
+            plt.plot(
+                self.mrange*1e3, self.etas_analytical-1, 
+                color='red', ls='solid', label='Analytical Halo'
+            )
+
+            # Plot endpoint values from Mertsch et al (2020).
+            # x_ends = [1e1, 3*1e2]
+            # y_ends = [3*1e-3, 4]
+            # ax.scatter(x_ends, y_ends, marker='x', s=15, color='orange')
+            
+            # Plot reproduction of Mertsch et al., using their MW params.
+            plt.plot(
+                self.mrange*1e3, self.etas_analytical_Mertsch-1, 
+                color='red', ls='dashed', label='Parameters as in Mertsch+(2020)'
+            )
+
+        plt.legend(loc='lower right')
+        ax.yaxis.set_major_formatter(ticker.FuncFormatter(y_fmt))
+        plt.savefig(f'{self.fig_dir}/overdensity_band.pdf', **savefig_args)
 
 
     def rotate_DM(self, DM_pos, obs_pos):
@@ -501,11 +611,11 @@ class analyze_simulation_outputs_test(object):
             plt.close()
 
 
-    def plot_all_sky_power_spectra(self, halo, nu_mass_idx):
+    def plot_all_sky_power_spectra(self, halo, nu_mass_eV):
 
         # Load synchronized maps.
         healpix_map, DM_healpix_map, end_str = self.syncronize_all_sky_maps(
-            halo, nu_mass_idx
+            halo, nu_mass_eV
         )
 
         # Unit to compare to similar figures in literature.
@@ -550,7 +660,7 @@ class analyze_simulation_outputs_test(object):
         return pearson_r
     
 
-    def plot_all_spectra_1plot(self, halo_array, nu_mass_idx):
+    def plot_all_spectra_1plot(self, halo_array, nu_mass_eV):
 
         fig = plt.figure(figsize =(12, 4))
         fig.tight_layout()
@@ -568,7 +678,7 @@ class analyze_simulation_outputs_test(object):
 
             # Load synchronized maps.
             healpix_map, DM_healpix_map, _, eta_min, eta_max, factor = self.syncronize_all_sky_maps(
-                halo, nu_mass_idx, apply=False
+                halo, nu_mass_eV, apply=False
             )
             eta_mins[i] = eta_min
             eta_maxs[i] = eta_max
@@ -736,7 +846,127 @@ class analyze_simulation_outputs_test(object):
         plt.ylabel('%')
         plt.title(r'% of $\nu$ inside $R_{vir}$')
         plt.legend()
-        plt.show()
+
+        plt.savefig(
+            f'{self.fig_dir}/neutrinos_inside_Rvir.pdf', bbox_inches='tight')
+        plt.close()
+
+
+    def plot_phase_space(self, mass_gauge, mass_range, most_likely:bool):
+
+        # Load necessary box and sim info.
+        with open(f'{self.sim_dir}/sim_parameters.yaml', 'r') as file:
+            sim_setup = yaml.safe_load(file)
+
+        p_num = sim_setup['momentum_num']
+        p_start = sim_setup['momentum_start']
+        p_stop = sim_setup['momentum_stop']
+        phis = sim_setup['phis']
+        thetas = sim_setup['thetas']
+
+        init_dis = sim_setup['initial_haloGC_distance']
+        xE = np.cos(np.deg2rad(Pi))*np.sin(np.deg2rad(Pi))*init_dis
+        yE = np.sin(np.deg2rad(Pi))*np.sin(np.deg2rad(Pi))*init_dis
+        zE = np.cos(np.deg2rad(Pi))*init_dis
+        init_xyz = np.array([xE, yE, zE])*kpc
+
+        with open(f'{self.sim_dir}/box_parameters.yaml', 'r') as file:
+            box_setup = yaml.safe_load(file)
+
+        # Box Cosmology.
+        box_H0 =  box_setup['Cosmology']['h']*100*km/s/Mpc
+        box_Omega_M = box_setup['Cosmology']['Omega_M']
+        box_Omega_L = box_setup['Cosmology']['Omega_L']
+
+        # Box halo sample arrays.
+        hname = f'1e+{mass_gauge}_pm{mass_range}Msun'
+        halo_batch_IDs = np.load(
+            f'{self.sim_dir}/halo_batch_{hname}_indices.npy'
+        )
+        halo_batch_params = np.load(
+            f'{self.sim_dir}/halo_batch_{hname}_params.npy'
+        )
+
+
+        ### ---------------- ###
+        ### Analytical halo. ###
+        ### ---------------- ###
+
+        if 'analytical_halo' in self.objects:
+
+            # Convert velocities to mementa.
+            vels_in = self.vectors_analytical[...,3:6]
+            p_arr, y_arr = velocity_to_momentum(vels_in, self.mpicks)
+            p0_arr, p1_arr, y0_arr = p_arr[...,0], p_arr[...,-1], y_arr[...,0]
+
+            # Sort.
+            ind = p0_arr.argsort(axis=-1)
+            p1_sort = np.take_along_axis(p1_arr, ind, axis=-1)
+            y0_sort = np.take_along_axis(y0_arr, ind, axis=-1)
+
+            if most_likely:
+                # Each velocity has a batch of neutrinos.
+                # (min. of each to represent most (likely) clustered ones)
+                m_len = (len(self.mpicks))
+                p1_blocks = p1_sort.reshape((m_len, p_num, phis*thetas))
+                p1_final = np.min(p1_blocks, axis=-1)
+                y0_blocks = y0_sort.reshape((m_len, p_num, phis*thetas))
+                y0_final = y0_blocks[...,0]
+            else:
+                p1_final = p1_sort
+                y0_final = y0_sort
+
+            # Fermi Dirac of the final momenta.
+            FDvals = Fermi_Dirac(p1_final)
+
+            fig, axs = plt.subplots(2,2, figsize=(12,12))
+            fig.suptitle(
+                'Phase-space distr. "today" compared to Fermi-Dirac' ,
+                fontsize=18
+            )
+
+            savefig_args = dict(
+                bbox_inches='tight'
+            )
+
+            for j, m_nu in enumerate(self.mpicks):
+
+                k = j
+                i = 0
+                if j in (2,3):
+                    i = 1
+                    j -= 2
+
+                # Simulation phase-space distr. of neutrinos today.
+                axs[i,j].loglog(
+                    y0_final[k], FDvals[k], label='PS today (from sim)', c='red', alpha=0.9
+                )
+
+                # Fermi-Dirac phase-space distr.
+                pOG = np.geomspace(
+                    p_start*T_CNB, p_stop*T_CNB, FDvals.shape[-1])
+                FDvalsOG = Fermi_Dirac(pOG)
+                yOG = pOG/T_CNB
+                axs[i,j].loglog(yOG, FDvalsOG, label='PS Fermi-Dirac', c='black', alpha=0.7)
+
+                # Escape momentum.
+                _, y_esc = escape_momentum_analytical(
+                    x_i=init_xyz, z=0., 
+                    R_vir=Rvir_MW, R_s=Rs_MW, rho_0=rho0_MW, m_nu_eV=m_nu
+                )
+                axs[i,j].axvline(y_esc, c='k', ls='-.', label='y_esc')
+
+                # Plot styling.
+                axs[i,j].set_title(f'{m_nu} eV')
+                axs[i,j].set_ylabel('FD(p)')
+                axs[i,j].set_xlabel(r'$y = p / T_{\nu,0}$')
+                axs[i,j].legend(loc='lower left')
+                axs[i,j].set_ylim(1e-5, 1e0)
+                axs[i,j].set_xlim(p_start, 1e2)
+
+            plt.savefig(
+                f'{self.fig_dir}/phase_space_analytical.pdf', **savefig_args)
+            plt.close()
 
 
     def get_halo_params(self):
@@ -746,11 +976,8 @@ class analyze_simulation_outputs_test(object):
         Mvir = 10**self.halo_params[:,1]
         conc = self.halo_params[:,2]
 
-        # Get initial distances (of cells at z=0).
-        init_xyz_paths = glob.glob(f'{self.sim_dir}/init_xyz_halo*.npy')
-        init_xyz_halos = np.array([np.load(path) for path in init_xyz_paths])
-        init_dis_halos = np.linalg.norm(init_xyz_halos, axis=-1)
-        init_dis_halos = init_dis_halos[self.halo_glob_order]
+        # Get initial distances (of starting cells at z=0).
+        init_dis_halos = self.init_dis
 
         return Rvir, Mvir, conc, init_dis_halos
 
@@ -766,66 +993,57 @@ class analyze_simulation_outputs_test(object):
         etas_0 = np.median(etas_nu, axis=0)
         etas_nu = (etas_nu-etas_0)/etas_0
 
-        fig = plt.figure(figsize=(4, 6))
-        cmap = np.flip(np.array(mcp.gen_color(cmap='RdYlBu', n=etas_nu.shape[-1])))
+        fig = plt.figure(figsize=(15, 5))
+        cmap = np.flip(
+            np.array(mcp.gen_color(cmap='RdYlBu', n=etas_nu.shape[-1])))
         size = 5
 
         # Virial mass.
-        ax1 = fig.add_subplot(111)
+        ax1 = fig.add_subplot(131)
         for etas, color in zip(etas_nu[Mvir.argsort()].T, cmap):
-            ax2.scatter(
+            ax1.scatter(
                 Mvir[Mvir.argsort()], 
                 etas, c=color, s=size)
-        ax2.set_xlabel(r'$R_{vir}$')
-        ax2.set_yscale('symlog', linthresh=0.00001)
+        ax1.set_xlabel(r'$M_{vir}$')
+        ax1.set_ylabel(r'$(f-\bar{f})/\bar{f}$')
+        # ax1.set_yscale('symlog', linthresh=0.0001)
 
-        # ax1 = fig.add_subplot(211)
-        # for etas, color in zip(etas_nu[Mvir.argsort()].T, cmap):
-        #     pos_cond = np.argwhere(etas > 0)
-        #     ax1.scatter(
-        #         Mvir[Mvir.argsort()][pos_cond], 
-        #         etas[pos_cond], c=color, s=size)
-        # ax1.set_ylabel(r'$(f-\bar{f})/\bar{f}$')
-        # ax1.set_xlabel(r'$M_{vir}$')
-        # ax1.set_yscale('log')
-
-        # ax2 = fig.add_subplot(212, sharey=ax1)
-        # for etas, color in zip(etas_nu[Mvir.argsort()].T, cmap):
-        #     neg_cond = np.argwhere(etas < 0)
-        #     ax2.scatter(
-        #         Mvir[Mvir.argsort()][neg_cond], 
-        #         np.abs(etas[neg_cond]), c=color, s=size)
-        # ax2.set_xlabel(r'$R_{vir}$')
-        # ax2.set_yscale('log')
-        # ax2.invert_yaxis()
-
-
-        # Virial radius.
-        # ax2 = fig.add_subplot(142, sharey=ax1)
-        # for etas, color in zip(etas_nu[Rvir.argsort()].T, cmap):
-        #     ax2.scatter(
-        #         # np.arange(len(conc)), 
-        #         Rvir[Rvir.argsort()], 
-        #         etas, c=color, s=size)
-        # ax2.set_xlabel(r'$R_{vir}$')
+        # Add abscissa y-axis to show virial radius (without data).
+        ax1b = ax1.twiny()
+        ax1b.scatter(
+            Rvir[Rvir.argsort()], 
+            etas, 
+            alpha=0)  # Set transparency to 100% (i.e., invisible)
+        ax1b.set_xlabel(r'$R_{vir}$')
 
         # Concentration.
-        # ax3 = fig.add_subplot(132, sharey=ax1)
-        # for etas, color in zip(etas_nu[conc.argsort()].T, cmap):
-        #     ax3.scatter(
-        #         # np.arange(len(conc)), 
-        #         conc[conc.argsort()],
-        #         etas, c=color, s=size)
-        # ax3.set_xlabel('concentration')
+        ax2 = fig.add_subplot(132, sharey=ax1)
+        for etas, color in zip(etas_nu[conc.argsort()].T, cmap):
+            ax2.scatter(
+                conc[conc.argsort()],
+                etas, c=color, s=size)
+        ax2.set_xlabel('concentration')
 
         # Initial distance.
-        # ax4 = fig.add_subplot(133, sharey=ax1)
-        # for etas, color in zip(etas_nu[init_dis_halos.argsort()].T, cmap):
-        #     ax4.scatter(
-        #         # np.arange(len(conc)), 
-        #         init_dis_halos[init_dis_halos.argsort()],
-        #         etas, c=color, s=size)
-        # ax4.set_xlabel('initial distance')
+        ax3 = fig.add_subplot(133, sharey=ax1)
+        for etas, color in zip(etas_nu[init_dis_halos.argsort()].T, cmap):
+            ax3.scatter(
+                init_dis_halos[init_dis_halos.argsort()],
+                etas, c=color, s=size)
+        ax3.set_xlabel('initial distance')
+
+        # Customized colorbar.
+        divider = make_axes_locatable(plt.gca())
+        cax = divider.append_axes("right", size="5%", pad=0.1)
+        norm = mpl.colors.Normalize(vmin=0.01, vmax=0.3)
+        cmap = mpl.cm.RdYlBu
+        fig.colorbar(
+            mpl.cm.ScalarMappable(norm=norm, cmap=cmap),
+            cax=cax,
+            orientation='vertical', 
+            label='$m_\nu$ [eV]',
+            # pad=0.05
+        )
 
         # ax1.set_ylim(-0.3, 0.5)
         # ax2.set_ylim(-0.3, 0.5)
@@ -842,11 +1060,7 @@ class analyze_simulation_outputs_test(object):
 
     def plot_2d_params(self, nu_mass_eV):
         
-        # Make scatterplot with Mvir vs. conc. (for example).
-        # Coloring is then from lowest to highest (f-\bar{f})/\bar{f},
-        # i.e. the relative clustering factor.
-        # (choose different colorscheme than blue to red to not confuse with other plot idea)
-
+        # Get halo parameters.
         Rvir, Mvir, conc, init_dis_halos = self.get_halo_params()
 
         # Closest mass (index) for chosen neutrino mass.
@@ -855,12 +1069,7 @@ class analyze_simulation_outputs_test(object):
         # Get clustering factors.
         etas_nu = self.etas_numerical[...,nu_mass_idx].flatten()
 
-        # Show relative change (choice of median, mean, etc.) for each mass.
-        # etas_0 = np.median(etas_nu, axis=0)
-        # etas_nu = (etas_nu-etas_0)/etas_0
-
         fig = plt.figure(figsize=(11, 5))
-        # cmap_plot = np.array(mcp.gen_color(cmap='bwr', n=len(etas_nu)))
         cmap_plot = np.array(mcp.gen_color(cmap='coolwarm', n=len(etas_nu)))
         size = 30
 
@@ -872,44 +1081,69 @@ class analyze_simulation_outputs_test(object):
         Mvir_plot = Mvir[plot_ind]
         conc_plot = conc[plot_ind]
         init_plot = init_dis_halos[plot_ind]
-        # etas_plot = etas_nu[plot_ind]
-        # cmap_plot = cmap_custom[plot_ind]
 
-        sct1 = ax1.scatter(conc_plot, Mvir_plot, c=cmap_plot, s=size)
+        ax1.scatter(conc_plot, Mvir_plot, c=cmap_plot, s=size)
         ax1.set_ylabel(r'$M_{vir}$')
         ax1.set_xlabel('concentration')
+        ax1.grid()
         
-        sct2 = ax2.scatter(init_plot, Mvir_plot, c=cmap_plot, s=size)
+        ax2.scatter(init_plot, Mvir_plot, c=cmap_plot, s=size)
         ax2.set_xlabel('initial distance (kpc)')
+        ax2.grid()
 
+        # Customized colorbar.
         divider = make_axes_locatable(plt.gca())
         cax = divider.append_axes("right", size="5%", pad=0.1)
-
-        # Create and remove the colorbar for the first subplot.
-        # cbar1 = fig.colorbar(sct1, cax = cax1)
-        # fig.delaxes(fig.axes[2])
-
-
-        # for col, ax in enumerate(axes):
-        # im = ax.pcolormesh(data, vmin=data.min(), vmax=data.max())
-        # if col > 0:
-        #     ax.yaxis.set_visible(False)
-
-
-
         norm = mpl.colors.Normalize(vmin=np.min(etas_nu), vmax=np.max(etas_nu))
         cmap = mpl.cm.coolwarm
-        cbar2 = fig.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=cmap),
-                    cax=cax,
-                    orientation='vertical', 
-                    label=r'$n_\nu / n_{\nu,0}$',
-                    # pad=0.05
-                )
+        fig.colorbar(
+            mpl.cm.ScalarMappable(norm=norm, cmap=cmap),
+            cax=cax,
+            orientation='vertical', 
+            label=r'$n_\nu / n_{\nu,0}$',
+            # pad=0.05
+        )
+    
+        plt.savefig(
+            f'{self.fig_dir}/2D_params_box_halos.pdf', bbox_inches='tight')
+
+
+    # note: nothing interesting
+    def plot_factor_vs_halo_params(self):
+
+        # Load halo parameters.
+        Rvir, Mvir, conc, init_dis_halos = self.get_halo_params()
+
+        # Load factors.
+        def read_column_from_file(filename, column_name):
+            df = pd.read_csv(filename)
+            return df[column_name].tolist()
+
+        factors = np.array(read_column_from_file(
+            f'{self.sim_dir}/all_sky_values_original.csv', 'Factor'))
+        # factors = np.delete(factors, factors>=300)
+
+        fig = plt.figure(figsize=(10, 5))
+        ax1 = fig.add_subplot(121)
+        ax2 = fig.add_subplot(122)
+        size = 30
+
+        sct1 = ax1.scatter(factors, Mvir, s=size)
+        ax1.set_ylabel(r'$M_{vir}$')
+        ax1.set_xlabel('factor')
         
+        sct2 = ax2.scatter(factors, conc, s=size)
+        ax2.set_ylabel('concentration')
+        ax2.set_xlabel('factor')
+
+        ax1.set_xlim(0, 100)
+        ax2.set_xlim(0, 100)
+
         ax1.grid()
         ax2.grid()
-        plt.savefig(f'{self.fig_dir}/2D_params_box_halos.pdf', bbox_inches='tight')
-
+        plt.savefig(
+            f'{self.fig_dir}/factor_vs_halo_params.pdf', 
+            bbox_inches='tight')
 
 
 # ======================== #
@@ -921,7 +1155,7 @@ objects = (
     'box_halos', 
     # 'analytical_halo'
 )
-Analysis = analyze_simulation_outputs_test(
+Analysis = analyze_simulation_outputs(
     sim_dir = sim_dir, 
     objects = objects,
     sim_type = 'all_sky',
@@ -932,32 +1166,40 @@ print(Analysis.halo_num)
 halo_array = np.arange(Analysis.halo_num)+1
 
 # Generate power spectra plots.
-Analysis.plot_all_spectra_1plot(halo_array, 0.3)
+# Analysis.plot_all_spectra_1plot(halo_array, 0.3)
 
 # Generate all all-sky anisotropy maps.
 # for halo in halo_array:
 #     Analysis.plot_all_sky_map('numerical', halo, 0.3)
+
+# Generate correlation plots.
+# Analysis.plot_factor_vs_halo_params()
 # '''
 # ======================== #
 
 
 
 # ======================== #
-'''
+# '''
 sim_dir = f'L025N752/DMONLY/SigmaConstant00/single_halos'
 
 objects = (
-    # 'NFW_halo', 
+    'NFW_halo', 
     'box_halos', 
-    # 'analytical_halo'
+    'analytical_halo'
 )
-Analysis = analyze_simulation_outputs_test(
+Analysis = analyze_simulation_outputs(
     sim_dir = sim_dir, 
     objects = objects,
     sim_type = 'single_halos',
 )
 
+# Generate correlation plots.
+# Analysis.plot_2d_params(nu_mass_eV=0.3)
 # Analysis.plot_eta_vs_halo_params()
-Analysis.plot_2d_params(nu_mass_eV=0.3)
+
+# Analysis.plot_overdensity_band(plot_ylims=None)
+
+Analysis.plot_phase_space(mass_gauge=12.0, mass_range=0.6, most_likely=True)
 # '''
 # ======================== #

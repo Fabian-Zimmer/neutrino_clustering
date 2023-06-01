@@ -1,17 +1,25 @@
 #!/bin/bash
-#SBATCH --job-name=Analysis
+#SBATCH --job-name=SimPlots
 #SBATCH -p thin
 #SBATCH -t 00:05:00
 #SBATCH -N 1
 #SBATCH --tasks-per-node=1
 #SBATCH --cpus-per-task=32
 #SBATCH --mem=56000
-#SBATCH -o jobs/analysis.out
-#SBATCH -e jobs/analysis.err
+#SBATCH -o jobs/SimPlots.out
+#SBATCH -e jobs/SimPlots.err
 #SBATCH -v
 
 module purge
 
 source $HOME/.conda/envs/neutrino_clustering/bin/activate
 
-python $HOME/neutrino_clustering_V2/analysis_testground.py
+sim_boxtype=L025N752/DMONLY/SigmaConstant00
+sim_fullname=single_halos
+
+python $HOME/neutrino_clustering_V2/analysis.py \
+--sim_directory $HOME/neutrino_clustering_V2/$sim_boxtype/$sim_fullname \
+--sim_type 'single_halos' \
+--NFW_halo \
+--box_halos \
+--analytical_halo \

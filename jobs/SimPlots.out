@@ -1,75 +1,20 @@
 [ 1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 21 22 23 26 27
  28 29 30]
 27
-Halo 1 original values: min=0.896882060504804, max=3.91860360268732, factor=4.37
-Halo 2 original values: min=0.8777412666555601, max=1.9762579174534436, factor=2.25
-Halo 3 original values: min=0.6240238972160798, max=15.743127375994138, factor=25.23
-Halo 4 original values: min=0.4831223527263738, max=4.827077708792497, factor=9.99
-Halo 5 original values: min=0.2230963284258584, max=3.445251063018266, factor=15.44
-Halo 6 original values: min=0.38656921762621155, max=4.19845331359934, factor=10.86
-Halo 7 original values: min=0.4352886835694113, max=6.824167010201436, factor=15.68
-Halo 8 original values: min=0.28778059469721484, max=8.47313613078588, factor=29.44
-Halo 9 original values: min=0.509644287511093, max=4.335765751084195, factor=8.51
-Halo 10 original values: min=0.4786435066669051, max=8.239115539692097, factor=17.21
-Halo 11 original values: min=0.08400868596468068, max=6.036456488251128, factor=71.86
-Halo 12 original values: min=0.5660290890195171, max=3.485652706398112, factor=6.16
-Halo 13 original values: min=0.4636430000007514, max=6.853330056534979, factor=14.78
-Halo 14 original values: min=0.36762110496766937, max=8.76248519630839, factor=23.84
-Halo 15 original values: min=0.4451217394084596, max=6.2241456416890815, factor=13.98
-Halo 16 original values: min=0.4202077192622543, max=9.235674622327718, factor=21.98
-Halo 17 original values: min=0.41552867161786766, max=6.521176558448913, factor=15.69
-Halo 18 original values: min=0.2670848082098865, max=7.954833365236761, factor=29.78
-Halo 19 original values: min=0.3106733055102825, max=11.492244865929267, factor=36.99
-Halo 21 original values: min=0.04584727037083719, max=14.701820428048244, factor=320.67
-Halo 22 original values: min=0.18404879548461936, max=3.341064210828307, factor=18.15
-Halo 23 original values: min=0.6330257904853395, max=8.869134335744365, factor=14.01
-Halo 26 original values: min=0.41725631500355853, max=10.861687539028761, factor=26.03
-Halo 27 original values: min=0.4595990898739494, max=6.9652116219571365, factor=15.15
-Halo 28 original values: min=0.2876641487112788, max=17.175986516638147, factor=59.71
-Halo 29 original values: min=0.34308361887360705, max=6.73059482605261, factor=19.62
-Halo 30 original values: min=0.45702610001294913, max=7.345207056941958, factor=16.07
 [ 1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 21 22 23 26 27
  28 29 30]
 27
-Halo 1 original values: min=0.896882060504804, max=3.91860360268732, factor=4.37
-Halo 2 original values: min=0.8777412666555601, max=1.9762579174534436, factor=2.25
-Halo 3 original values: min=0.6240238972160798, max=15.743127375994138, factor=25.23
-Halo 4 original values: min=0.4831223527263738, max=4.827077708792497, factor=9.99
-Halo 5 original values: min=0.2230963284258584, max=3.445251063018266, factor=15.44
-Halo 6 original values: min=0.38656921762621155, max=4.19845331359934, factor=10.86
-Halo 7 original values: min=0.4352886835694113, max=6.824167010201436, factor=15.68
-Halo 8 original values: min=0.28778059469721484, max=8.47313613078588, factor=29.44
-Halo 9 original values: min=0.509644287511093, max=4.335765751084195, factor=8.51
-Halo 10 original values: min=0.4786435066669051, max=8.239115539692097, factor=17.21
-Halo 11 original values: min=0.08400868596468068, max=6.036456488251128, factor=71.86
-Halo 12 original values: min=0.5660290890195171, max=3.485652706398112, factor=6.16
-Halo 13 original values: min=0.4636430000007514, max=6.853330056534979, factor=14.78
-Halo 14 original values: min=0.36762110496766937, max=8.76248519630839, factor=23.84
-Halo 15 original values: min=0.4451217394084596, max=6.2241456416890815, factor=13.98
-Halo 16 original values: min=0.4202077192622543, max=9.235674622327718, factor=21.98
-Halo 17 original values: min=0.41552867161786766, max=6.521176558448913, factor=15.69
-Halo 18 original values: min=0.2670848082098865, max=7.954833365236761, factor=29.78
-Halo 19 original values: min=0.3106733055102825, max=11.492244865929267, factor=36.99
-Halo 21 original values: min=0.04584727037083719, max=14.701820428048244, factor=320.67
-Halo 22 original values: min=0.18404879548461936, max=3.341064210828307, factor=18.15
-Halo 23 original values: min=0.6330257904853395, max=8.869134335744365, factor=14.01
-Halo 26 original values: min=0.41725631500355853, max=10.861687539028761, factor=26.03
-Halo 27 original values: min=0.4595990898739494, max=6.9652116219571365, factor=15.15
-Halo 28 original values: min=0.2876641487112788, max=17.175986516638147, factor=59.71
-Halo 29 original values: min=0.34308361887360705, max=6.73059482605261, factor=19.62
-Halo 30 original values: min=0.45702610001294913, max=7.345207056941958, factor=16.07
 
 JOB STATISTICS
 ==============
-Job ID: 2823710
+Job ID: 2830165
 Cluster: snellius
 User/Group: zimmer/zimmer
-State: RUNNING
+State: COMPLETED (exit code 0)
 Nodes: 1
 Cores per node: 32
-CPU Utilized: 00:00:00
-CPU Efficiency: 0.00% of 00:15:28 core-walltime
-Job Wall-clock time: 00:00:29
-Memory Utilized: 0.00 MB (estimated maximum)
-Memory Efficiency: 0.00% of 54.69 GB (54.69 GB/node)
-WARNING: Efficiency statistics may be misleading for RUNNING jobs.
+CPU Utilized: 00:00:23
+CPU Efficiency: 1.84% of 00:20:48 core-walltime
+Job Wall-clock time: 00:00:39
+Memory Utilized: 1.37 MB
+Memory Efficiency: 0.00% of 54.69 GB
