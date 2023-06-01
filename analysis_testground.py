@@ -51,8 +51,9 @@ class analyze_simulation_outputs(object):
         )[self.final_halos-1]
 
         # Initial distances (of starting cell at z=0) for the final halos.
-        init_xyz = np.array([np.load(path) for path in paths])
-        self.init_dis = np.linalg.norm(init_xyz, axis=-1)[self.halo_glob_order]
+        init_xyz_pre = np.array([np.load(path) for path in paths])
+        self.init_xyz = init_xyz_pre[self.halo_glob_order][:3]
+        self.init_dis = np.linalg.norm(self.init_xyz, axis=-1)[:3]
 
 
         if self.sim_type == 'single_halos':
@@ -208,6 +209,16 @@ class analyze_simulation_outputs(object):
                     f'{self.sim_dir}/number_densities_analytical_all_sky.npy'
                 )
 
+
+    def get_halo_params(self):
+
+        # Get halo parameters.
+        Rvir = self.halo_params[:,0]
+        Mvir = 10**self.halo_params[:,1]
+        conc = self.halo_params[:,2]
+
+        return Rvir, Mvir, conc
+    
 
     def plot_overdensity_band(self, plot_ylims):
 
@@ -852,7 +863,7 @@ class analyze_simulation_outputs(object):
         plt.close()
 
 
-    def plot_phase_space(self, mass_gauge, mass_range, most_likely:bool):
+    def plot_phase_space(self, most_likely:bool):
 
         # Load necessary box and sim info.
         with open(f'{self.sim_dir}/sim_parameters.yaml', 'r') as file:
@@ -864,12 +875,6 @@ class analyze_simulation_outputs(object):
         phis = sim_setup['phis']
         thetas = sim_setup['thetas']
 
-        init_dis = sim_setup['initial_haloGC_distance']
-        xE = np.cos(np.deg2rad(Pi))*np.sin(np.deg2rad(Pi))*init_dis
-        yE = np.sin(np.deg2rad(Pi))*np.sin(np.deg2rad(Pi))*init_dis
-        zE = np.cos(np.deg2rad(Pi))*init_dis
-        init_xyz = np.array([xE, yE, zE])*kpc
-
         with open(f'{self.sim_dir}/box_parameters.yaml', 'r') as file:
             box_setup = yaml.safe_load(file)
 
@@ -877,15 +882,6 @@ class analyze_simulation_outputs(object):
         box_H0 =  box_setup['Cosmology']['h']*100*km/s/Mpc
         box_Omega_M = box_setup['Cosmology']['Omega_M']
         box_Omega_L = box_setup['Cosmology']['Omega_L']
-
-        # Box halo sample arrays.
-        hname = f'1e+{mass_gauge}_pm{mass_range}Msun'
-        halo_batch_IDs = np.load(
-            f'{self.sim_dir}/halo_batch_{hname}_indices.npy'
-        )
-        halo_batch_params = np.load(
-            f'{self.sim_dir}/halo_batch_{hname}_params.npy'
-        )
 
 
         ### ---------------- ###
@@ -950,7 +946,7 @@ class analyze_simulation_outputs(object):
                 axs[i,j].loglog(yOG, FDvalsOG, label='PS Fermi-Dirac', c='black', alpha=0.7)
 
                 # Escape momentum.
-                _, y_esc = escape_momentum_analytical(
+                _, y_esc = escape_momentum(
                     x_i=init_xyz, z=0., 
                     R_vir=Rvir_MW, R_s=Rs_MW, rho_0=rho0_MW, m_nu_eV=m_nu
                 )
@@ -969,22 +965,201 @@ class analyze_simulation_outputs(object):
             plt.close()
 
 
-    def get_halo_params(self):
+        ### ---------------------- ###
+        ### Box (numerical) halos. ###
+        ### ---------------------- ###
 
-        # Get halo parameters.
-        Rvir = self.halo_params[:,0]
-        Mvir = 10**self.halo_params[:,1]
-        conc = self.halo_params[:,2]
+        if 'box_halos' in self.objects:
 
-        # Get initial distances (of starting cells at z=0).
-        init_dis_halos = self.init_dis
+            box_halos_p1_final = []
+            box_halos_y0_final = []
+            for halo_j in range(self.halo_num):
 
-        return Rvir, Mvir, conc, init_dis_halos
+                vels_batches = self.vectors_numerical[halo_j,...,3:6]
+                vels_in = vels_batches.reshape(-1, 100, 3)
+
+                # Convert velocities to momenta.
+                p_arr, y_arr = velocity_to_momentum(vels_in, self.mpicks)
+                p0_arr = p_arr[...,0]
+                p1_arr = p_arr[...,-1]
+                y0_arr = y_arr[...,0]
+
+                # Sort.
+                ind = p0_arr.argsort(axis=-1)
+                p1_sort = np.take_along_axis(p1_arr, ind, axis=-1)
+                y0_sort = np.take_along_axis(y0_arr, ind, axis=-1)
+
+                if most_likely:
+                    # Each velocity has a batch of neutrinos.
+                    # (min. of each to represent most (likely) clustered ones)
+                    m_len = (len(self.mpicks))
+                    p1_blocks = p1_sort.reshape((m_len, p_num, phis*thetas))
+                    p1_final = np.min(p1_blocks, axis=-1)
+                    y0_blocks = y0_sort.reshape((m_len, p_num, phis*thetas))
+                    y0_final = y0_blocks[...,0]
+                else:
+                    p1_final = p1_sort
+                    y0_final = y0_sort
+
+                box_halos_p1_final.append(p1_final)
+                box_halos_y0_final.append(y0_final)
+
+            box_halos_p1_final = np.array(box_halos_p1_final)
+            box_halos_y0_final = np.array(box_halos_y0_final)
+
+            p1_median = np.median(box_halos_p1_final, axis=0)
+            p1_perc2p5 = np.percentile(box_halos_p1_final, q=2.5, axis=0)
+            p1_perc97p5 = np.percentile(box_halos_p1_final, q=97.5, axis=0)
+            p1_perc16 = np.percentile(box_halos_p1_final, q=16, axis=0)
+            p1_perc84 = np.percentile(box_halos_p1_final, q=84, axis=0)
+
+            y0_median = np.median(box_halos_y0_final, axis=0)
+            y0_perc2p5 = np.percentile(box_halos_y0_final, q=2.5, axis=0)
+            y0_perc97p5 = np.percentile(box_halos_y0_final, q=97.5, axis=0)
+            y0_perc16 = np.percentile(box_halos_y0_final, q=16, axis=0)
+            y0_perc84 = np.percentile(box_halos_y0_final, q=84, axis=0)
+
+            # Fermi Dirac of the final momenta.
+            FDvals_median = Fermi_Dirac(p1_median)
+            FDvals_perc2p5 = Fermi_Dirac(p1_perc2p5)
+            FDvals_perc97p5 = Fermi_Dirac(p1_perc97p5)
+            FDvals_perc16 = Fermi_Dirac(p1_perc16)
+            FDvals_perc84 = Fermi_Dirac(p1_perc84)
+
+            fig, axs = plt.subplots(2,2, figsize=(12,12))
+            # fig.suptitle(
+            #     'Phase-space distr. "today" compared to Fermi-Dirac\n Box (numerical) halos',
+            #     fontsize=18
+            # )
+
+            percentages = np.zeros(len(self.mpicks))
+            for j, m_nu in enumerate(self.mpicks):
+
+                k = j  # k selects the element(s) for the current neutrino mass
+
+                # Indices for axes of 2x2 subplots.
+                i = 0
+                if j in (2,3):
+                    i = 1
+                    j -= 2
+
+                # Simulation phase-space distr. of neutrinos today.
+                axs[i,j].plot(
+                    y0_median[k], FDvals_median[k], label='PS today (from sim)', c='blue', alpha=0.9)
+                
+                axs[i,j].fill_between(
+                    y0_median[k], FDvals_perc2p5[k], FDvals_perc97p5[k],
+                    color='blue', alpha=0.2, 
+                    label='Box Halos: 2.5-97.5 % C.L.')
+                
+                axs[i,j].fill_between(
+                    y0_median[k], FDvals_perc16[k], FDvals_perc84[k],
+                    color='blue', alpha=0.3, 
+                    label='Box Halos: 16-84 % C.L.')
+                
+                # Fermi-Dirac phase-space distr.
+                pOG = np.geomspace(
+                    p_start*T_CNB, p_stop*T_CNB, FDvals_median.shape[-1])
+                FDvalsOG = Fermi_Dirac(pOG)
+                yOG = pOG/T_CNB
+                axs[i,j].plot(
+                    yOG, FDvalsOG, 
+                    label='PS Fermi-Dirac', c='black', alpha=0.7)
+
+                # Escape momentum for each box halo.
+                Rvir, Mvir, conc = self.get_halo_params()
+                Rs = Rvir/conc
+                rho0 = scale_density_NFW(
+                    c=conc, z=0.,
+                    H0=box_H0, Omega_M=box_Omega_M, Omega_L=box_Omega_L)
+
+                _, y_esc = escape_momentum(
+                    x_i=self.init_xyz*kpc, 
+                    R_vir=Rvir*kpc, R_s=Rs*kpc, rho_0=rho0, 
+                    m_nu_eV=m_nu)
+
+                y_esc_med = np.median(y_esc, axis=0)
+                y_esc_perc2p5 = np.percentile(y_esc, q=2.5, axis=0)
+                y_esc_perc97p5 = np.percentile(y_esc, q=97.5, axis=0)
+                y_esc_perc16 = np.percentile(y_esc, q=16, axis=0)
+                y_esc_perc84 = np.percentile(y_esc, q=84, axis=0)
+
+                axs[i,j].axvline(
+                    y_esc_med, c='black', ls='-.', label='y_esc median')
+                
+                y_min, y_max = axs[i, j].get_ylim()
+
+                axs[i, j].fill_betweenx(
+                    [y_min, y_max], x1=y_esc_perc2p5, x2=y_esc_perc97p5, 
+                    color='black', alpha=0.2, 
+                    label='y_esc: 2.5-97.5 % C.L.')
+                
+                axs[i, j].fill_betweenx(
+                    [y_min, y_max], x1=y_esc_perc16, x2=y_esc_perc84, 
+                    color='black', alpha=0.3, 
+                    label='y_esc: 16-84 % C.L.')
+
+                # Plot styling.
+                axs[i,j].set_title(f'{m_nu} eV')
+                axs[i,j].set_ylabel('FD(p)')
+                axs[i,j].set_xlabel(r'$y = p / T_{\nu,0}$')
+
+                log_scale = False
+
+                if log_scale:
+                    axs[i,j].set_ylim(1e-5, 1e0)
+                    axs[i,j].set_xlim(p_start, 1e2)
+                    axs[i,j].set_xscale('log')
+                    axs[i,j].set_yscale('log')
+                else:
+                    axs[i,j].set_xlim(p_start, np.log(100))
+
+                if m_nu == self.mpicks[-1]:
+                    axs[i,j].legend(
+                        loc='lower left', borderpad=0.25, labelspacing=0.25, 
+                        fontsize='small')
+
+
+                ### --------------------------------------- ###
+                ### Excourse: Percentages of distributions. ###
+                ### --------------------------------------- ###
+
+                ### Normal Fermi-Dirac distribution.
+
+                # Total area (for normalization).
+                # FD_norm = np.trapz(FDvalsOG, x=yOG)
+                FD1_norm = quad(Fermi_Dirac, 0, np.inf)
+                
+                # Percentage covered withing momentum interval.
+                p_interval = np.geomspace(0.01*T_CNB, 10*T_CNB, 10_000)
+                FD_interval = Fermi_Dirac(p_interval)
+                perc_interval, _ = np.trapz(FD_interval, p_interval)/FD1_norm
+                # ic(np.round(perc_interval*100, 2))
+
+
+                ### "Distorted" Fermi-Dirac distribution due to clustering.
+                
+                # Total area (for normalization).
+                FD2_norm = np.trapz(FDvals_median[k], y0_median[k])
+
+                # Percentage covered up to escape momentum.
+                below_esc = (y0_median[k] <= y_esc_med)
+                x_interval = y0_median[k][below_esc]
+                y_interval = FDvals_median[k][below_esc]
+                perc_esc = np.trapz(y_interval, x_interval)/FD2_norm
+                percentages[k] = np.round(perc_esc*100, 2)
+
+            np.savetxt(f'clustered_neutrinos_percentages.txt', percentages)
+
+            plt.savefig(
+                f'{self.fig_dir}/phase_space_numerical.pdf', 
+                bbox_inches='tight')
+            plt.close()
 
 
     def plot_eta_vs_halo_params(self):
         
-        Rvir, Mvir, conc, init_dis_halos = self.get_halo_params()
+        Rvir, Mvir, conc = self.get_halo_params()
 
         # Get number densities and convert to clustering factors.
         etas_nu = np.flip(self.etas_numerical, axis=-1)
@@ -1026,9 +1201,9 @@ class analyze_simulation_outputs(object):
 
         # Initial distance.
         ax3 = fig.add_subplot(133, sharey=ax1)
-        for etas, color in zip(etas_nu[init_dis_halos.argsort()].T, cmap):
+        for etas, color in zip(etas_nu[self.init_dis.argsort()].T, cmap):
             ax3.scatter(
-                init_dis_halos[init_dis_halos.argsort()],
+                self.init_dis[self.init_dis.argsort()],
                 etas, c=color, s=size)
         ax3.set_xlabel('initial distance')
 
@@ -1061,7 +1236,7 @@ class analyze_simulation_outputs(object):
     def plot_2d_params(self, nu_mass_eV):
         
         # Get halo parameters.
-        Rvir, Mvir, conc, init_dis_halos = self.get_halo_params()
+        Rvir, Mvir, conc = self.get_halo_params()
 
         # Closest mass (index) for chosen neutrino mass.
         nu_mass_idx = (np.abs(self.mrange-nu_mass_eV)).argmin()
@@ -1080,7 +1255,7 @@ class analyze_simulation_outputs(object):
         plot_ind = etas_nu.argsort()
         Mvir_plot = Mvir[plot_ind]
         conc_plot = conc[plot_ind]
-        init_plot = init_dis_halos[plot_ind]
+        init_plot = self.init_dis[plot_ind]
 
         ax1.scatter(conc_plot, Mvir_plot, c=cmap_plot, s=size)
         ax1.set_ylabel(r'$M_{vir}$')
@@ -1112,7 +1287,7 @@ class analyze_simulation_outputs(object):
     def plot_factor_vs_halo_params(self):
 
         # Load halo parameters.
-        Rvir, Mvir, conc, init_dis_halos = self.get_halo_params()
+        Rvir, Mvir, conc = self.get_halo_params()
 
         # Load factors.
         def read_column_from_file(filename, column_name):
@@ -1184,9 +1359,9 @@ halo_array = np.arange(Analysis.halo_num)+1
 sim_dir = f'L025N752/DMONLY/SigmaConstant00/single_halos'
 
 objects = (
-    'NFW_halo', 
+    # 'NFW_halo', 
     'box_halos', 
-    'analytical_halo'
+    # 'analytical_halo'
 )
 Analysis = analyze_simulation_outputs(
     sim_dir = sim_dir, 
@@ -1200,6 +1375,6 @@ Analysis = analyze_simulation_outputs(
 
 # Analysis.plot_overdensity_band(plot_ylims=None)
 
-Analysis.plot_phase_space(mass_gauge=12.0, mass_range=0.6, most_likely=True)
+Analysis.plot_phase_space(most_likely=True)
 # '''
 # ======================== #

@@ -270,10 +270,10 @@ def velocity_to_momentum(sim_vels, m_arr):
     return p_dim, y
 
 
-def escape_momentum_analytical(x_i, R_vir, R_s, rho_0, m_nu_eV):
+def escape_momentum(x_i, R_vir, R_s, rho_0, m_nu_eV):
     
     # Calculate gravitational potential at coords. x_i.
-    r = np.sqrt(np.sum(x_i**2))
+    r = np.linalg.norm(x_i, axis=-1)
     m = np.minimum(r, R_vir)
     M = np.maximum(r, R_vir)
     prefactor = -4.*Pi*G*rho_0*R_s**2
