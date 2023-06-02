@@ -298,7 +298,7 @@ class analyze_simulation_outputs(object):
         plt.close()
 
 
-    def plot_overdensity_evolution(self, plot_ylims:tuple):
+    def OLD_plot_overdensity_evolution(self, plot_ylims:tuple):
 
         ### ============= ###
         ### Setup figure. ###

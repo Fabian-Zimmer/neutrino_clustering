@@ -504,7 +504,7 @@ if key_str == 'all_sky':
 
 
 # Remove temporary folder with all individual neutrino files.
-shutil.rmtree(temp_dir)   
+shutil.rmtree(temp_dir)
 
 sim_time = time.perf_counter()-sim_start
 print(f'Sim time: {sim_time/60.} min, {sim_time/(60**2)} h.')

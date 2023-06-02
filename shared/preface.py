@@ -192,3 +192,10 @@ T_CNB = np.power(4/11, 1/3)*T_CMB
 # Neutrino + antineutrino number density of 1 flavor in [1/cm**3],
 # using the analytical expression for Fermions.
 N0 = 2*zeta(3.)/Pi**2 *T_CNB**3 *(3./4.) /(1/cm**3)
+
+# PMNS matrix elements for electron flavor.
+U_ei_AbsSq = np.array([0.681, 0.297, 0.0222])  # |U_e1|^2, |U_e2|^2, |U_e3|^2
+
+# Mass squared differences.
+Del_m21_Sq = (8.6*meV)**2
+Del_m3l_Sq = (50*meV)**2

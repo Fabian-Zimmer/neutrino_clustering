@@ -238,7 +238,7 @@ class analyze_simulation_outputs(object):
         ax.set_yscale('log')
         # ax.set_title(f'Overdensity band')
         ax.set_xlabel(r'$m_{\nu}$ [meV]')
-        ax.set_ylabel(r'$f \equiv n_{\nu} / n_{\nu, 0}$')
+        ax.set_ylabel(r'$n_{\nu} / n_{\nu, 0}$')
 
         if plot_ylims is not None:
             ax.set_ylim(plot_ylims[0], plot_ylims[1])
@@ -313,11 +313,6 @@ class analyze_simulation_outputs(object):
     def plot_overdensity_evolution(self, plot_ylims:tuple):
 
         fig, ax = plt.subplots(1,1, figsize=(8,12))
-        # ax.set_title('Overdensities (redshift) evolution')
-        ax.set_xlabel('z')
-        ax.set_ylabel(r'$f \equiv n_{\nu} / n_{\nu, 0}$')
-        ax.set_yscale('log')
-        ax.set_ylim(plot_ylims[0], plot_ylims[1])
 
         z_int_steps = np.load(f'{self.sim_dir}/z_int_steps.npy')
         colors = ['blue', 'orange', 'green', 'red']
@@ -327,66 +322,81 @@ class analyze_simulation_outputs(object):
         ### Analytical halo. ###
         ### ---------------- ###
 
-        # Convert velocities to momenta.
-        p_ana, _ = velocity_to_momentum(
-            self.vectors_analytical[...,3:6], self.mpicks)
+        if 'analytical_halo' in self.objects:
 
-        # Overdensities for each redshift as if it was the last in the sim.
-        inds = np.arange(p_ana.shape[-1])
-        ns_ana_zeds = np.array(
-            [number_density(p_ana[...,0], p_ana[...,z]) for z in inds]).T
-        etas_ana_zeds = ns_ana_zeds/N0
+            # Convert velocities to momenta.
+            p_ana, _ = velocity_to_momentum(
+                self.vectors_analytical[...,3:6], self.mpicks)
 
-        for j, m in enumerate(self.mpicks):
-            ax.plot(
-                z_int_steps, etas_ana_zeds[j]-1, 
-                c=colors[j], ls='dashed', 
-                label=f'Analytical Halo: {m:.3f} eV')
+            # Overdensities for each redshift as if it was the last in the sim.
+            inds = np.arange(p_ana.shape[-1])
+            ns_ana_zeds = np.array(
+                [number_density(p_ana[...,0], p_ana[...,z]) for z in inds]).T
+            etas_ana_zeds = ns_ana_zeds/N0
+
+            for j, m in enumerate(self.mpicks):
+                ax.plot(
+                    z_int_steps, etas_ana_zeds[j]-1, 
+                    c=colors[j], ls='dashed', 
+                    label=f'Analytical Halo: {m:.3f} eV')
 
 
         ### ---------------------- ###
         ### Box (numerical) halos. ###
         ### ---------------------- ###
 
-        ns_num_zeds = []
-        halo_num = len(self.vectors_numerical)
-        for halo_j in range(halo_num):
+        if 'box_halos' in self.objects:
 
-            p_num, _ = velocity_to_momentum(
-                self.vectors_numerical[halo_j,...,3:6], self.mpicks
-            )
+            ns_num_zeds = []
+            halo_num = len(self.vectors_numerical)
+            for halo_j in range(halo_num):
 
-            inds = np.arange(p_num.shape[-1])
-            ns_num_zeds.append(
-                np.array(
-                [number_density(p_num[...,0], p_num[...,z]) for z in inds]).T)
-        
-        etas_num_zeds = np.array(ns_num_zeds)/N0
+                # Load and combine velocity vectors (batches).
+                vels_batches = self.vectors_numerical[halo_j,...,3:6]
+                vels_in = vels_batches.reshape(-1, 100, 3)
 
-        etas_median = np.median(etas_num_zeds, axis=0)
-        etas_perc2p5 = np.percentile(etas_num_zeds, q=2.5, axis=0)
-        etas_perc97p5 = np.percentile(etas_num_zeds, q=97.5, axis=0)
-        etas_perc16 = np.percentile(etas_num_zeds, q=16, axis=0)
-        etas_perc84 = np.percentile(etas_num_zeds, q=84, axis=0)
+                # Convert velocities to momenta.
+                p_num, _ = velocity_to_momentum(vels_in, self.mpicks)
 
-        for j, m in enumerate(self.mpicks):
-            ax.plot(
-                z_int_steps, etas_median[j]-1, 
-                color=colors[j], 
-                label=f'{m:.3f} eV')
-            ax.fill_between(
-                z_int_steps, (etas_perc2p5[j]-1), (etas_perc97p5[j]-1),
-                color=colors[j], alpha=0.2, 
-                label='Box Halos: 2.5-97.5 % C.L.')
-            ax.fill_between(
-                z_int_steps, (etas_perc16[j]-1), (etas_perc84[j]-1),
-                color=colors[j], alpha=0.3, 
-                label='Box Halos: 16-84 % C.L.')
+                inds = np.arange(p_num.shape[-1])
+                ns_num_zeds.append(
+                    np.array(
+                    [number_density(p_num[...,0], p_num[...,z]) for z in inds]).T)
+            
+            etas_num_zeds = np.array(ns_num_zeds)/N0
+
+            etas_median = np.median(etas_num_zeds, axis=0)
+            etas_perc2p5 = np.percentile(etas_num_zeds, q=2.5, axis=0)
+            etas_perc97p5 = np.percentile(etas_num_zeds, q=97.5, axis=0)
+            etas_perc16 = np.percentile(etas_num_zeds, q=16, axis=0)
+            etas_perc84 = np.percentile(etas_num_zeds, q=84, axis=0)
+
+            for j, m in enumerate(self.mpicks):
+                ax.plot(
+                    1+z_int_steps, etas_median[j]-1, 
+                    color=colors[j], 
+                    label=f'{m:.3f} eV')
+                ax.fill_between(
+                    1+z_int_steps, (etas_perc2p5[j]-1), (etas_perc97p5[j]-1),
+                    color=colors[j], alpha=0.2, 
+                    label='Box Halos: 2.5-97.5 % C.L.')
+                ax.fill_between(
+                    1+z_int_steps, (etas_perc16[j]-1), (etas_perc84[j]-1),
+                    color=colors[j], alpha=0.3, 
+                    label='Box Halos: 16-84 % C.L.')
+
 
         # Invert ordering of items in legend (looks better since the curves 
         # of higher masses are higher up in the plot).
         handles, labels = ax.get_legend_handles_labels()
         ax.legend(handles[::-1], labels[::-1], loc='lower right')
+
+        # ax.set_title('Overdensities (redshift) evolution')
+        ax.set_xlabel('z')
+        ax.set_ylabel(r'$n_{\nu} / n_{\nu, 0}$')
+        ax.set_xscale('log')
+        ax.set_yscale('log')
+        ax.set_ylim(plot_ylims[0], plot_ylims[1])
 
         ax.yaxis.set_major_formatter(ticker.FuncFormatter(y_fmt))
         plt.savefig(
@@ -552,15 +562,14 @@ class analyze_simulation_outputs(object):
         return healpix_map, DM_healpix_map, end_str, eta_min, eta_max, factor
 
 
-    def plot_all_sky_map(self, sim_method, halo, nu_mass_eV):
+    def syncronize_all_sky_maps_analytical(self):
 
-        nu_mass_idx = (np.abs(self.mrange-nu_mass_eV)).argmin()
+        synced_maps = []
+        for nu_mass_eV in (0.01, 0.3):
 
-        if sim_method == 'analytical':
-
+            nu_mass_idx = (np.abs(self.mrange-nu_mass_eV)).argmin()
             dens_nu = self.number_densities_analytical_all_sky[...,nu_mass_idx]
             etas_nu = dens_nu/self.N0_pix
-
             healpix_map = etas_nu
 
             # Create a grid of (theta, phi) coordinates for the map
@@ -597,18 +606,31 @@ class analyze_simulation_outputs(object):
             for pix in zero_pixels:
                 theta_zero, phi_zero = hp.pix2ang(self.Nside, pix)
                 interp_val = hp.get_interp_val(
-                    healpix_map, theta_zero, phi_zero
+                    rotated_map, theta_zero, phi_zero
                 )
                 rotated_map[pix] = interp_val
 
+            synced_maps.append(rotated_map)
 
+        return np.array(synced_maps)
+
+
+    def plot_all_sky_map(self, sim_method, halo, nu_mass_eV):
+
+        #? test after all_sky_analytical.out run has finished
+        if sim_method == 'analytical':
+
+            # Get maps for lighest and heaviest neutrino masses.
+            synced_maps = self.syncronize_all_sky_maps_analytical()
+            heavy_healpix_map = synced_maps[1]
+            light_healpix_map = synced_maps[0]
+
+            ### ------------------------------------ ###
+            ### Plot clustering factor all_sky maps. ###
+            ### ------------------------------------ ###
 
             fig = plt.figure(figsize =(12, 4.4))
             fig.tight_layout()
-
-            ### ----------------------------------- ###
-            ### Plot clustering factor all_sky map. ###
-            ### ----------------------------------- ###
             
             ax1 = fig.add_subplot(121)
             ax2 = fig.add_subplot(122)
@@ -627,10 +649,12 @@ class analyze_simulation_outputs(object):
             ax2.get_xaxis().set_ticks([])
             ax2.get_yaxis().set_ticks([])
 
+
+            # Plot the heaviest mass.
             hp.newvisufunc.projview(
-                rotated_map,
+                heavy_healpix_map,
                 unit=r'$n_{\nu, pix} / n_{\nu, pix, 0}$',
-                cmap=cc.cm.CET_D1A,
+                cmap='Reds',
                 override_plot_properties={
                     "cbar_pad": 0.1,
                     # "cbar_label_pad": 15,
@@ -639,8 +663,21 @@ class analyze_simulation_outputs(object):
                 **self.healpy_dict
             )
 
+            # Plot the lighest mass.
+            hp.newvisufunc.projview(
+                light_healpix_map,
+                unit=r'$n_{\nu, pix} / n_{\nu, pix, 0}$',
+                cmap='Reds',
+                override_plot_properties={
+                    "cbar_pad": 0.1,
+                    # "cbar_label_pad": 15,
+                },
+                sub=122
+                **self.healpy_dict
+            )
+
             plt.savefig(
-                f'{self.fig_dir}/All_sky_map_analytical_{nu_mass_eV}eV.pdf', 
+                f'{self.fig_dir}/All_sky_maps_analytical.pdf', 
                 bbox_inches='tight'
             )
             plt.show()
@@ -651,6 +688,7 @@ class analyze_simulation_outputs(object):
         if sim_method == 'numerical':
 
             # Load synchronized maps.
+            nu_mass_idx = (np.abs(self.mrange-nu_mass_eV)).argmin()
             healpix_map, DM_healpix_map, end_str, *_ = self.syncronize_all_sky_maps(
                 halo, nu_mass_idx
             )
@@ -1434,14 +1472,57 @@ class analyze_simulation_outputs(object):
             bbox_inches='tight')
 
 
+    def electron_flavor_number_densities(self, m_lightest, ordering):
+
+
+        def nu_masses(m_lightest, ordering):
+            """Returns the 3 neutrino masses with given ordering and lightest mass."""
+            if ordering == 'NO':
+                m1 = m_lightest
+                m2 = np.sqrt(m1**2 + Del_m21_Sq)
+                m3 = np.sqrt(m1**2 + Del_m3l_Sq)
+                return np.array([m1, m2, m3])
+            if ordering == 'IO':
+                m3 = m_lightest
+                m2 = np.sqrt(m3**2 + Del_m3l_Sq)
+                m1 = np.sqrt(m2**2 - Del_m21_Sq)
+                return np.array([m3, m1, m2])
+
+        
+        # 1. Pick m_lightest and ordering -> establish m_nu1, m_nu2, m_nu3.
+        masses_eV = nu_masses(m_lightest, ordering)
+        m_min, m_med, m_max = masses_eV[0], masses_eV[1], masses_eV[2]
+
+        # 2. Read the numberdensities for these masses -> n_nu1, n_nu2, n_nu3.
+        ns_nu_masses = np.zeros(3)
+        for i, m_nu_eV in enumerate(masses_eV):
+            
+            # Get mass index.
+            nu_mass_idx = (np.abs(self.mrange-m_nu_eV)).argmin()
+
+            # Get number densities (median).
+            ns_nu_masses[i] = np.median(
+                self.etas_numerical[...,nu_mass_idx].flatten()*N0)
+
+
+        # 3. Convert to n_nu_e.
+        if ordering == 'NO':
+            n_nu_e_flavor = np.sum(U_ei_AbsSq*ns_nu_masses/2)
+        if ordering == 'IO':
+            n_nu_e_flavor = np.sum(np.roll(U_ei_AbsSq, 1)*ns_nu_masses/2)
+
+        ic(n_nu_e_flavor)
+        ic(n_nu_e_flavor/(N0/2))
+
+
 # ======================== #
-# '''
+'''
 sim_dir = f'L025N752/DMONLY/SigmaConstant00/all_sky_final'
 
 objects = (
     # 'NFW_halo', 
-    'box_halos', 
-    # 'analytical_halo'
+    # 'box_halos', 
+    'analytical_halo'
 )
 Analysis = analyze_simulation_outputs(
     sim_dir = sim_dir, 
@@ -1453,14 +1534,19 @@ print(Analysis.final_halos)
 print(Analysis.halo_num)
 halo_array = np.arange(Analysis.halo_num)+1
 
-# Generate power spectra plots.
+### Generate power spectra plots.
 # Analysis.plot_all_spectra_1plot(halo_array, 0.3)
 
-# Generate all all-sky anisotropy maps.
+### Generate all all-sky anisotropy maps.
+
+# For numerical:
 # for halo in halo_array:
 #     Analysis.plot_all_sky_map('numerical', halo, 0.3)
 
-# Generate correlation plots.
+# For analytical:
+Analysis.plot_all_sky_map('analytical', 0, 0)
+
+### Generate correlation plots.
 # Analysis.plot_factor_vs_halo_params()
 # '''
 # ======================== #
@@ -1482,7 +1568,7 @@ Analysis = analyze_simulation_outputs(
     sim_type = 'single_halos',
 )
 
-# Generate correlation plots.
+### Generate correlation plots.
 # Analysis.plot_2d_params(nu_mass_eV=0.3)
 # Analysis.plot_eta_vs_halo_params()
 
@@ -1490,6 +1576,10 @@ Analysis = analyze_simulation_outputs(
 
 # Analysis.plot_phase_space(most_likely=True)
 
-Analysis.plot_overdensity_evolution(plot_ylims=(1e-4,1e1))
+# Analysis.plot_overdensity_evolution(plot_ylims=(1e-4,1e1))
+
+Analysis.electron_flavor_number_densities(m_lightest=0.1*eV, ordering='IO')
+# Analysis.electron_flavor_number_densities(m_lightest=0.05*eV, ordering='NO')
+# Analysis.electron_flavor_number_densities(m_lightest=0.1*eV, ordering='NO')
 # '''
 # ======================== #
