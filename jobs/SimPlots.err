@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "/home/zimmer/neutrino_clustering_V2/analysis.py", line 55, in <module>
+    Analysis.plot_phase_space(most_likely=True)
+  File "/gpfs/home4/zimmer/neutrino_clustering_V2/analysis_testground.py", line 895, in plot_phase_space
+    p_arr, y_arr = velocity_to_momentum(vels_in, self.mpicks)
+  File "/gpfs/home4/zimmer/neutrino_clustering_V2/shared/shared_functions.py", line 265, in velocity_to_momentum
+    p_dim = mags_dim*(kpc/s) * m_dim
+ValueError: operands could not be broadcast together with shapes (4,8,10000,100) (4,8,1) 

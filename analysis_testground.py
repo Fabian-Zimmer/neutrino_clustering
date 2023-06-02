@@ -38,9 +38,16 @@ class analyze_simulation_outputs(object):
         paths = np.array(
             [x for i, x in enumerate(paths_all) if i not in del_ids])
 
+        limit_halos = True
+
+        if limit_halos:
+            until = 3
+        else:
+            until = -1
+
         self.halo_glob_order = nums.argsort()
-        self.final_halos = nums[self.halo_glob_order][:3]
-        self.halo_num = len(self.final_halos)
+        self.final_halos = nums[self.halo_glob_order][:until]
+        self.halo_num= len(self.final_halos)
 
         # Halo indices and parameters for the final halos.
         self.halo_indices = np.load(
@@ -52,8 +59,8 @@ class analyze_simulation_outputs(object):
 
         # Initial distances (of starting cell at z=0) for the final halos.
         init_xyz_pre = np.array([np.load(path) for path in paths])
-        self.init_xyz = init_xyz_pre[self.halo_glob_order][:3]
-        self.init_dis = np.linalg.norm(self.init_xyz, axis=-1)[:3]
+        self.init_xyz = init_xyz_pre[self.halo_glob_order][:until]
+        self.init_dis = np.linalg.norm(self.init_xyz, axis=-1)[:until]
 
 
         if self.sim_type == 'single_halos':
@@ -303,6 +310,90 @@ class analyze_simulation_outputs(object):
         plt.savefig(f'{self.fig_dir}/overdensity_band.pdf', **savefig_args)
 
 
+    def plot_overdensity_evolution(self, plot_ylims:tuple):
+
+        fig, ax = plt.subplots(1,1, figsize=(8,12))
+        # ax.set_title('Overdensities (redshift) evolution')
+        ax.set_xlabel('z')
+        ax.set_ylabel(r'$f \equiv n_{\nu} / n_{\nu, 0}$')
+        ax.set_yscale('log')
+        ax.set_ylim(plot_ylims[0], plot_ylims[1])
+
+        z_int_steps = np.load(f'{self.sim_dir}/z_int_steps.npy')
+        colors = ['blue', 'orange', 'green', 'red']
+
+
+        ### ---------------- ###
+        ### Analytical halo. ###
+        ### ---------------- ###
+
+        # Convert velocities to momenta.
+        p_ana, _ = velocity_to_momentum(
+            self.vectors_analytical[...,3:6], self.mpicks)
+
+        # Overdensities for each redshift as if it was the last in the sim.
+        inds = np.arange(p_ana.shape[-1])
+        ns_ana_zeds = np.array(
+            [number_density(p_ana[...,0], p_ana[...,z]) for z in inds]).T
+        etas_ana_zeds = ns_ana_zeds/N0
+
+        for j, m in enumerate(self.mpicks):
+            ax.plot(
+                z_int_steps, etas_ana_zeds[j]-1, 
+                c=colors[j], ls='dashed', 
+                label=f'Analytical Halo: {m:.3f} eV')
+
+
+        ### ---------------------- ###
+        ### Box (numerical) halos. ###
+        ### ---------------------- ###
+
+        ns_num_zeds = []
+        halo_num = len(self.vectors_numerical)
+        for halo_j in range(halo_num):
+
+            p_num, _ = velocity_to_momentum(
+                self.vectors_numerical[halo_j,...,3:6], self.mpicks
+            )
+
+            inds = np.arange(p_num.shape[-1])
+            ns_num_zeds.append(
+                np.array(
+                [number_density(p_num[...,0], p_num[...,z]) for z in inds]).T)
+        
+        etas_num_zeds = np.array(ns_num_zeds)/N0
+
+        etas_median = np.median(etas_num_zeds, axis=0)
+        etas_perc2p5 = np.percentile(etas_num_zeds, q=2.5, axis=0)
+        etas_perc97p5 = np.percentile(etas_num_zeds, q=97.5, axis=0)
+        etas_perc16 = np.percentile(etas_num_zeds, q=16, axis=0)
+        etas_perc84 = np.percentile(etas_num_zeds, q=84, axis=0)
+
+        for j, m in enumerate(self.mpicks):
+            ax.plot(
+                z_int_steps, etas_median[j]-1, 
+                color=colors[j], 
+                label=f'{m:.3f} eV')
+            ax.fill_between(
+                z_int_steps, (etas_perc2p5[j]-1), (etas_perc97p5[j]-1),
+                color=colors[j], alpha=0.2, 
+                label='Box Halos: 2.5-97.5 % C.L.')
+            ax.fill_between(
+                z_int_steps, (etas_perc16[j]-1), (etas_perc84[j]-1),
+                color=colors[j], alpha=0.3, 
+                label='Box Halos: 16-84 % C.L.')
+
+        # Invert ordering of items in legend (looks better since the curves 
+        # of higher masses are higher up in the plot).
+        handles, labels = ax.get_legend_handles_labels()
+        ax.legend(handles[::-1], labels[::-1], loc='lower right')
+
+        ax.yaxis.set_major_formatter(ticker.FuncFormatter(y_fmt))
+        plt.savefig(
+            f'{self.fig_dir}/overdensity_evolution.pdf', bbox_inches='tight')
+        plt.close()
+
+
     def rotate_DM(self, DM_pos, obs_pos):
 
         # Calculate the Euler angles, to match frame of Earth. This will be the 
@@ -510,27 +601,42 @@ class analyze_simulation_outputs(object):
                 )
                 rotated_map[pix] = interp_val
 
+
+
+            fig = plt.figure(figsize =(12, 4.4))
+            fig.tight_layout()
+
+            ### ----------------------------------- ###
+            ### Plot clustering factor all_sky map. ###
+            ### ----------------------------------- ###
+            
+            ax1 = fig.add_subplot(121)
+            ax2 = fig.add_subplot(122)
+
+            # Remove all ticks, labels and frames, to only show mollview plot.
+            ax1.spines['top'].set_visible(False)
+            ax1.spines['right'].set_visible(False)
+            ax1.spines['bottom'].set_visible(False)
+            ax1.spines['left'].set_visible(False)
+            ax1.get_xaxis().set_ticks([])
+            ax1.get_yaxis().set_ticks([])
+            ax2.spines['top'].set_visible(False)
+            ax2.spines['right'].set_visible(False)
+            ax2.spines['bottom'].set_visible(False)
+            ax2.spines['left'].set_visible(False)
+            ax2.get_xaxis().set_ticks([])
+            ax2.get_yaxis().set_ticks([])
+
             hp.newvisufunc.projview(
                 rotated_map,
-                coord=['G'],
-                title=f'Analytical (Npix={self.Npix})',
                 unit=r'$n_{\nu, pix} / n_{\nu, pix, 0}$',
                 cmap=cc.cm.CET_D1A,
-                graticule=True,
-                graticule_labels=True,
-                xlabel="longitude",
-                ylabel="latitude",
-                cb_orientation="horizontal",
-                projection_type="mollweide",
-                flip='astro',
-                # cbar_ticks=[],
-                show_tickmarkers=True,
-                latitude_grid_spacing=45,
-                longitude_grid_spacing=45,
-                alpha=1,
-                phi_convention='counterclockwise',
-                # min=0.7,
-                # max=5.5
+                override_plot_properties={
+                    "cbar_pad": 0.1,
+                    # "cbar_label_pad": 15,
+                },
+                sub=121
+                **self.healpy_dict
             )
 
             plt.savefig(
@@ -585,9 +691,9 @@ class analyze_simulation_outputs(object):
             )
 
 
-            ### ----------------------------------- ###
-            ### Plot clustering factor all_sky map. ###
-            ### ----------------------------------- ###
+            ### ---------------------------------- ###
+            ### Plot DM line-of-sight all_sky map. ###
+            ### ---------------------------------- ###
 
             # Plot DM line-of-sight content as healpix map.
             ax2 = fig.add_subplot(122)
@@ -1047,15 +1153,22 @@ class analyze_simulation_outputs(object):
                 axs[i,j].plot(
                     y0_median[k], FDvals_median[k], label='PS today (from sim)', c='blue', alpha=0.9)
                 
-                axs[i,j].fill_between(
-                    y0_median[k], FDvals_perc2p5[k], FDvals_perc97p5[k],
-                    color='blue', alpha=0.2, 
-                    label='Box Halos: 2.5-97.5 % C.L.')
+                for xs, ys in zip(box_halos_y0_final, box_halos_p1_final):
+                    FDs = Fermi_Dirac(ys)
+
+                    axs[i,j].plot(
+                        xs[k], FDs[k], c='dodgerblue', alpha=0.8
+                    )
+
+                # axs[i,j].fill_between(
+                #     y0_median[k], FDvals_perc2p5[k], FDvals_perc97p5[k],
+                #     color='blue', alpha=0.2, 
+                #     label='Box Halos: 2.5-97.5 % C.L.')
                 
-                axs[i,j].fill_between(
-                    y0_median[k], FDvals_perc16[k], FDvals_perc84[k],
-                    color='blue', alpha=0.3, 
-                    label='Box Halos: 16-84 % C.L.')
+                # axs[i,j].fill_between(
+                #     y0_median[k], FDvals_perc16[k], FDvals_perc84[k],
+                #     color='blue', alpha=0.3, 
+                #     label='Box Halos: 16-84 % C.L.')
                 
                 # Fermi-Dirac phase-space distr.
                 pOG = np.geomspace(
@@ -1104,7 +1217,7 @@ class analyze_simulation_outputs(object):
                 axs[i,j].set_ylabel('FD(p)')
                 axs[i,j].set_xlabel(r'$y = p / T_{\nu,0}$')
 
-                log_scale = False
+                log_scale = True
 
                 if log_scale:
                     axs[i,j].set_ylim(1e-5, 1e0)
@@ -1152,7 +1265,7 @@ class analyze_simulation_outputs(object):
             np.savetxt(f'clustered_neutrinos_percentages.txt', percentages)
 
             plt.savefig(
-                f'{self.fig_dir}/phase_space_numerical.pdf', 
+                f'{self.fig_dir}/phase_space_numerical_individual_log.pdf', 
                 bbox_inches='tight')
             plt.close()
 
@@ -1375,6 +1488,8 @@ Analysis = analyze_simulation_outputs(
 
 # Analysis.plot_overdensity_band(plot_ylims=None)
 
-Analysis.plot_phase_space(most_likely=True)
+# Analysis.plot_phase_space(most_likely=True)
+
+Analysis.plot_overdensity_evolution(plot_ylims=(1e-4,1e1))
 # '''
 # ======================== #
