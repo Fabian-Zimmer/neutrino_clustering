@@ -617,7 +617,6 @@ class analyze_simulation_outputs(object):
 
     def plot_all_sky_map(self, sim_method, halo, nu_mass_eV):
 
-        #? test after all_sky_analytical.out run has finished
         if sim_method == 'analytical':
 
             # Get maps for lighest and heaviest neutrino masses.
@@ -649,30 +648,55 @@ class analyze_simulation_outputs(object):
             ax2.get_xaxis().set_ticks([])
             ax2.get_yaxis().set_ticks([])
 
+            # Create original colormap
+            cmap = plt.get_cmap('coolwarm')
+            colors = cmap(np.linspace(0, 1, cmap.N))
 
-            # Plot the heaviest mass.
-            hp.newvisufunc.projview(
-                heavy_healpix_map,
-                unit=r'$n_{\nu, pix} / n_{\nu, pix, 0}$',
-                cmap='Reds',
-                override_plot_properties={
-                    "cbar_pad": 0.1,
-                    # "cbar_label_pad": 15,
-                },
-                sub=121
-                **self.healpy_dict
-            )
+            # Create a TwoSlopeNorm instance for each map
+            norm1 = mcolors.TwoSlopeNorm(vmin=1, vcenter=5, vmax=10)
+            norm2 = mcolors.TwoSlopeNorm(vmin=1, vcenter=5, vmax=10)
+
+            # Split colormap
+            mid_point = int(0.5 * cmap.N)
+            three_quarter_point = int(0.75 * cmap.N)
+            cmap_left = mcolors.LinearSegmentedColormap.from_list(
+                'cmap_left', colors[mid_point:three_quarter_point], N=256)
+            cmap_right = mcolors.LinearSegmentedColormap.from_list(
+                'cmap_right', colors[three_quarter_point:], N=256)
+
 
             # Plot the lighest mass.
             hp.newvisufunc.projview(
                 light_healpix_map,
                 unit=r'$n_{\nu, pix} / n_{\nu, pix, 0}$',
-                cmap='Reds',
+                # cmap='Reds',
+                cmap=cmap_left,
                 override_plot_properties={
                     "cbar_pad": 0.1,
                     # "cbar_label_pad": 15,
                 },
-                sub=122
+                sub=121,
+                # norm=norm1,
+                # norm='log',
+                **self.healpy_dict
+            )
+
+            diff = np.max(heavy_healpix_map) - np.min(heavy_healpix_map)
+            mid = np.min(heavy_healpix_map)
+            divnorm = mcolors.TwoSlopeNorm(vcenter=mid)
+
+            # Plot the heaviest mass.
+            hp.newvisufunc.projview(
+                heavy_healpix_map,
+                unit=r'$n_{\nu, pix} / n_{\nu, pix, 0}$',
+                cmap=cmap_right,
+                override_plot_properties={
+                    "cbar_pad": 0.1,
+                    # "cbar_label_pad": 15,
+                },
+                sub=122,
+                # norm=norm2,
+                # norm='log',
                 **self.healpy_dict
             )
 
@@ -683,7 +707,6 @@ class analyze_simulation_outputs(object):
             plt.show()
             plt.close()
 
-            return healpix_map
 
         if sim_method == 'numerical':
 
@@ -718,7 +741,8 @@ class analyze_simulation_outputs(object):
             # All-sky map in mollview projection.
             hp.newvisufunc.projview(
                 healpix_map, unit=r'$n_{\nu, pix} / n_{\nu, pix, 0}$',
-                cmap=cc.cm.CET_D1,
+                # cmap=cc.cm.CET_D1,
+                cmap='coolwarm',
                 override_plot_properties={
                     "cbar_pad": 0.1,
                     # "cbar_label_pad": 15,
@@ -908,6 +932,7 @@ class analyze_simulation_outputs(object):
         plt.close()
 
 
+    #? use for alt determination of clustered neutrinos?
     def plot_neutrinos_inside_Rvir(self):
         
         # All positions and velocities across redshifts.
@@ -1258,7 +1283,7 @@ class analyze_simulation_outputs(object):
                 log_scale = True
 
                 if log_scale:
-                    axs[i,j].set_ylim(1e-5, 1e0)
+                    axs[i,j].set_ylim(1e-3, 1e0)
                     axs[i,j].set_xlim(p_start, 1e2)
                     axs[i,j].set_xscale('log')
                     axs[i,j].set_yscale('log')
@@ -1521,7 +1546,7 @@ sim_dir = f'L025N752/DMONLY/SigmaConstant00/all_sky_final'
 
 objects = (
     # 'NFW_halo', 
-    # 'box_halos', 
+    'box_halos', 
     'analytical_halo'
 )
 Analysis = analyze_simulation_outputs(
@@ -1542,6 +1567,7 @@ halo_array = np.arange(Analysis.halo_num)+1
 # For numerical:
 # for halo in halo_array:
 #     Analysis.plot_all_sky_map('numerical', halo, 0.3)
+# Analysis.plot_all_sky_map('numerical', halo_array[0], 0.3)
 
 # For analytical:
 Analysis.plot_all_sky_map('analytical', 0, 0)
@@ -1574,11 +1600,11 @@ Analysis = analyze_simulation_outputs(
 
 # Analysis.plot_overdensity_band(plot_ylims=None)
 
-# Analysis.plot_phase_space(most_likely=True)
+Analysis.plot_phase_space(most_likely=False)
 
 # Analysis.plot_overdensity_evolution(plot_ylims=(1e-4,1e1))
 
-Analysis.electron_flavor_number_densities(m_lightest=0.1*eV, ordering='IO')
+# Analysis.electron_flavor_number_densities(m_lightest=0.1*eV, ordering='IO')
 # Analysis.electron_flavor_number_densities(m_lightest=0.05*eV, ordering='NO')
 # Analysis.electron_flavor_number_densities(m_lightest=0.1*eV, ordering='NO')
 # '''

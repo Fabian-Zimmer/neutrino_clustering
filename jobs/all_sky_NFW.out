@@ -31,20 +31,49 @@ Halo batch params (Rvir,Mvir,cNFW):
  [233.28108187  12.13201605   6.40366504]
  [196.2775635   11.90698947   6.00463057]]
 ***********************************
-***Running simulation: mode = benchmark_all_sky***
-halo=1/30, CPUs=128
-Coord. pair 1/768
+halo 1/30 (ID=53); snapshot 0012
+DM Particles = 105076, cells = 400
+halo 1/30 (ID=53); snapshot 0013
+DM Particles = 138860, cells = 568
+halo 1/30 (ID=53); snapshot 0014
+DM Particles = 177908, cells = 568
+halo 1/30 (ID=53); snapshot 0015
+DM Particles = 221051, cells = 834
+halo 1/30 (ID=53); snapshot 0016
+DM Particles = 268379, cells = 960
+halo 1/30 (ID=53); snapshot 0017
+DM Particles = 318475, cells = 960
+halo 1/30 (ID=53); snapshot 0018
+DM Particles = 372108, cells = 1268
+halo 1/30 (ID=53); snapshot 0019
+DM Particles = 428157, cells = 1352
+halo 1/30 (ID=53); snapshot 0020
+DM Particles = 485249, cells = 1716
+halo 1/30 (ID=53); snapshot 0021
+DM Particles = 545545, cells = 2192
+halo 1/30 (ID=53); snapshot 0022
+DM Particles = 604332, cells = 2304
+halo 1/30 (ID=53); snapshot 0023
+DM Particles = 668737, cells = 2346
+halo 1/30 (ID=53); snapshot 0024
+DM Particles = 729365, cells = 2724
+halo 1/30 (ID=53); snapshot 0025
+DM Particles = 789473, cells = 2962
+halo 1/30 (ID=53); snapshot 0026
+DM Particles = 848176, cells = 2976
+halo 1/30 (ID=53); snapshot 0027
+DM Particles = 910390, cells = 3074
 
 JOB STATISTICS
 ==============
-Job ID: 2816961
+Job ID: 2850171
 Cluster: snellius
 User/Group: zimmer/zimmer
-State: FAILED (exit code 1)
+State: CANCELLED (exit code 0)
 Nodes: 1
 Cores per node: 128
-CPU Utilized: 00:02:18
-CPU Efficiency: 4.49% of 00:51:12 core-walltime
-Job Wall-clock time: 00:00:24
-Memory Utilized: 1.67 MB
-Memory Efficiency: 0.00% of 218.75 GB
+CPU Utilized: 00:00:00
+CPU Efficiency: 0.00% of 2-19:33:20 core-walltime
+Job Wall-clock time: 00:31:40
+Memory Utilized: 56.57 GB
+Memory Efficiency: 25.86% of 218.75 GB

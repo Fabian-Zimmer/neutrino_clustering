@@ -905,19 +905,19 @@ def number_densities_mass_range(
         np.save(f'{out_file}', num_densities)
 
 
-
 # Make temporary folder to store files, s.t. parallel runs don't clash.
 # rand_code = ''.join(
 #     random.choices(string.ascii_uppercase + string.digits, k=4)
 # )
 # temp_dir = f'{args.directory}/temp_data_{rand_code}'
-# parent = str(pathlib.Path(f'{args.directory}').parent)
-# temp_dir = f'{parent}/final_halo_data'
-# temp_dir = f'{args.directory}/final_halo_data'
-parent_dir = str(pathlib.Path(args.directory).parent)
-temp_dir = f'{parent_dir}/benchmark_halo_data'
-# temp_dir = f'{parent}/benchmark_halo_data'
 # os.makedirs(temp_dir)
+
+# Specify existing directory.
+parent_dir = str(pathlib.Path(args.directory).parent)
+# temp_dir = f'{parent_dir}/benchmark_halo_data'
+# temp_dir = f'{parent_dir}/final_halo_data'
+temp_dir = f'{args.directory}/benchmark_test'
+
 
 def M12_to_M12X(M12_val):
     return np.log(M12_val*10.**12)/np.log(10.)
@@ -1013,7 +1013,6 @@ def backtrack_1_neutrino(y0_Nr):
     np.save(f'{temp_dir}/nu_{int(Nr)}.npy', np.array(sol.y.T))
 
 
-
 for halo_j, halo_ID in enumerate(halo_batch_IDs):
     grav_time = time.perf_counter()
 
@@ -1021,11 +1020,7 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
     if halo_j == 19:
         continue
 
-    # #? Halo 1 suddenly gives segmentation error? But needed for NFW halo...
-    # if halo_j == 0 and args.sim_type == 'all_sky':
-    #     continue
-
-    precalculations = False
+    precalculations = True
 
     if precalculations:
 
@@ -1055,7 +1050,7 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
         ):
 
             save_progID[j] = int(prog_ID)
-            print(f'halo {halo_j+1}/{halo_num} ; snapshot {snap}')
+            print(f'halo {halo_j+1}/{halo_num} (ID={halo_ID}); snapshot {snap}')
 
             # --------------------------- #
             # Read and load DM positions. #
@@ -1295,28 +1290,22 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
 
         np.save(
             f'{args.directory}/snaps_GRID_L_{end_str}.npy', 
-            np.array(save_GRID_L)
-        )
+            np.array(save_GRID_L))
         np.save(
             f'{args.directory}/snaps_DM_num_{end_str}.npy', 
-            np.array(save_DM_num)
-        )
+            np.array(save_DM_num))
         np.save(
             f'{args.directory}/snaps_CC_num_{end_str}.npy', 
-            np.array(save_CC_num)
-        )
+            np.array(save_CC_num))
         np.save(
             f'{args.directory}/snaps_progID_{end_str}.npy', 
-            np.array(save_progID)
-        )
+            np.array(save_progID))
         np.save(
             f'{args.directory}/snaps_DM_com_{end_str}.npy', 
-            np.array(save_DM_com)
-        )
+            np.array(save_DM_com))
         np.save(
             f'{args.directory}/snaps_QJ_abs_{end_str}.npy', 
-            np.array(save_QJ_abs)
-        )
+            np.array(save_QJ_abs))
         
 
     # ========================================= #
@@ -1369,7 +1358,6 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
 
     # Create an instance of the PreloadedData class
     preloaded_data = PreloadedData(halo_ID, nums_snaps, temp_dir)
-
 
     # Find a cell fitting initial distance criterium, then get (x,y,z) of that 
     # cell for starting position.
@@ -1451,9 +1439,6 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
             y0_Nr = np.array([np.concatenate(
                 (init_xyz, ui_elem[k], [k+1])) for k in range(len(ui_elem))
             ])
-
-            # print(f'***HERE***')
-            # backtrack_1_neutrino(y0_Nr[0])
 
             # Run simulation on multiple cores.
             with ProcessPoolExecutor(CPUs_sim) as ex:

@@ -1,12 +1,1 @@
-Traceback (most recent call last):
-  File "/home/zimmer/neutrino_clustering_V2/simulation_numerical.py", line 1460, in <module>
-    ex.map(backtrack_1_neutrino, y0_Nr)
-  File "/home/zimmer/.conda/envs/neutrino_clustering/lib/python3.9/concurrent/futures/process.py", line 726, in map
-    results = super().map(partial(_process_chunk, fn),
-  File "/home/zimmer/.conda/envs/neutrino_clustering/lib/python3.9/concurrent/futures/_base.py", line 597, in map
-    fs = [self.submit(fn, *args) for args in zip(*iterables)]
-  File "/home/zimmer/.conda/envs/neutrino_clustering/lib/python3.9/concurrent/futures/_base.py", line 597, in <listcomp>
-    fs = [self.submit(fn, *args) for args in zip(*iterables)]
-  File "/home/zimmer/.conda/envs/neutrino_clustering/lib/python3.9/concurrent/futures/process.py", line 681, in submit
-    raise BrokenProcessPool(self._broken)
-concurrent.futures.process.BrokenProcessPool: A child process terminated abruptly, the process pool is not usable anymore
+slurmstepd: error: *** JOB 2850171 ON tcn7 CANCELLED AT 2023-06-05T11:11:32 ***

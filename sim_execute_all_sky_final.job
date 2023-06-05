@@ -1,13 +1,13 @@
 #!/bin/bash
-#SBATCH --job-name=AS_ANA
+#SBATCH --job-name=AllNFW
 #SBATCH -p thin
-#SBATCH -t 04:00:00
+#SBATCH -t 03:00:00
 #SBATCH -N 1
 #SBATCH --tasks-per-node=1
 #SBATCH --cpus-per-task=128
 #SBATCH --mem=224000
-#SBATCH -o jobs/all_sky_analytical.out
-#SBATCH -e jobs/all_sky_analytical.err
+#SBATCH -o jobs/all_sky_NFW.out
+#SBATCH -e jobs/all_sky_NFW.err
 #SBATCH -v
 #SBATCH --exclusive
 
@@ -27,18 +27,18 @@ sim_fullname=all_sky_final
 # --halo_num 30 \
 # --no-upto_Rvir
 
-# python $HOME/neutrino_clustering_V2/simulation_numerical.py \
-# --directory $HOME/neutrino_clustering_V2/$sim_boxtype/$sim_fullname \
-# --sim_type benchmark_all_sky \
-# --mass_gauge 12.0 \
-# --mass_lower 0.6 \
-# --mass_upper 2.0 \
-# --halo_num 30 \
-# --no-upto_Rvir
+python $HOME/neutrino_clustering_V2/simulation_numerical.py \
+--directory $HOME/neutrino_clustering_V2/$sim_boxtype/$sim_fullname \
+--sim_type benchmark_all_sky \
+--mass_gauge 12.0 \
+--mass_lower 0.6 \
+--mass_upper 2.0 \
+--halo_num 30 \
+--no-upto_Rvir
 
-python $HOME/neutrino_clustering_V2/simulation_analytical.py \
--d $HOME/neutrino_clustering_V2/$sim_boxtype/$sim_fullname \
--st all_sky \
---MW_halo \
---no-VC_halo \
---no-AG_halo
+# python $HOME/neutrino_clustering_V2/simulation_analytical.py \
+# -d $HOME/neutrino_clustering_V2/$sim_boxtype/$sim_fullname \
+# -st all_sky \
+# --MW_halo \
+# --no-VC_halo \
+# --no-AG_halo
