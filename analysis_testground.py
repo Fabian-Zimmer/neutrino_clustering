@@ -38,10 +38,10 @@ class analyze_simulation_outputs(object):
         paths = np.array(
             [x for i, x in enumerate(paths_all) if i not in del_ids])
 
-        limit_halos = True
+        limit_halos = False
 
         if limit_halos:
-            until = 3
+            until = 5
         else:
             until = -1
 
@@ -853,6 +853,8 @@ class analyze_simulation_outputs(object):
         eta_mins = np.zeros(len(halo_array))
         eta_maxs = np.zeros(len(halo_array))
         factors = np.zeros(len(halo_array))
+        power_spectra = []
+        cross_spectra = []
         for i, halo in enumerate(halo_array):
 
             # Load synchronized maps.
@@ -864,34 +866,84 @@ class analyze_simulation_outputs(object):
             factors[i] = factor
 
             # Convert maps of neutrino densities to temperatures.
-            healpix_map = np.cbrt(healpix_map*2*Pi**2/3/zeta(3))
+            temperature_map = np.cbrt((healpix_map*2*Pi**2)/(3*zeta(3)))
 
             # Compute power spectrum of number density all-sky map.
-            cl = hp.sphtfunc.anafast(healpix_map)
+            cl = hp.sphtfunc.anafast(temperature_map)
             ell = np.arange(len(cl))
             power_spectrum = ell*(ell+1)*cl/(2*Pi)*micro_Kelvin_unit
+            power_spectra.append(power_spectrum)
 
             # Compute cross-correlation spectrum of n_nu and DM maps.
-            cross = hp.sphtfunc.anafast(healpix_map, DM_healpix_map)
-            cross_power_spectrum = ell*(ell+1)*cross/(2*Pi)*micro_Kelvin_unit
+            cross = hp.sphtfunc.anafast(temperature_map, DM_healpix_map)
+            cross_spectrum = ell*(ell+1)*cross/(2*Pi)*micro_Kelvin_unit
+            cross_spectra.append(cross_spectrum)
 
             # Pearsons correlation coefficient for total map information.
             # pearson_r, _ = pearsonr(healpix_map, DM_healpix_map)
 
-            ax1.semilogy(ell, power_spectrum)
-            ax2.plot(ell, cross_power_spectrum)
+            # ax1.semilogy(ell, power_spectrum)
+            # ax2.plot(ell, cross_spectrum)
+
+        # '''
+        power_spectra = np.array(power_spectra)
+        power_median = np.median(power_spectra, axis=0)
+        power_perc2p5 = np.percentile(power_spectra, q=2.5, axis=0)
+        power_perc97p5 = np.percentile(power_spectra, q=97.5, axis=0)
+        power_perc16 = np.percentile(power_spectra, q=16, axis=0)
+        power_perc84 = np.percentile(power_spectra, q=84, axis=0)
+
+        cross_spectra = np.array(cross_spectra)
+        cross_median = np.median(cross_spectra, axis=0)
+        cross_perc2p5 = np.percentile(cross_spectra, q=2.5, axis=0)
+        cross_perc97p5 = np.percentile(cross_spectra, q=97.5, axis=0)
+        cross_perc16 = np.percentile(cross_spectra, q=16, axis=0)
+        cross_perc84 = np.percentile(cross_spectra, q=84, axis=0)
+
+        ax1.semilogy(
+            ell, power_median, color='blue', 
+            label='Power spectra median')
+        ax1.fill_between(
+            ell, power_perc2p5, power_perc97p5, 
+            color='blue', alpha=0.2, label='2.5-97.5 % C.L.')
+        ax1.fill_between(
+            ell, power_perc16, power_perc84, 
+            color='blue', alpha=0.3, label='16-84 % C.L.')
         
+        ax2.plot(
+            ell, cross_median, color='blue', 
+            label='Cross spectra median')
+        ax2.fill_between(
+            ell, cross_perc2p5, cross_perc97p5, 
+            color='blue', alpha=0.2, label='2.5-97.5 % C.L.')
+        ax2.fill_between(
+            ell, cross_perc16, cross_perc84, 
+            color='blue', alpha=0.3, label='16-84 % C.L.')      
+        # '''
+
+        Tully_x_axis = read_column_from_file(
+            f'{self.sim_dir}/all_sky_power_spectra_Tully.csv', 'x_axis')
+        Tully_y_axis = read_column_from_file(
+            f'{self.sim_dir}/all_sky_power_spectra_Tully.csv', 'y_axis')
+
+        ax1.semilogy(
+            Tully_x_axis, Tully_y_axis, color='magenta', label='Tully+(2021)')
+
         ax1.set_xlabel("$\ell$")
-        ax1.set_xlim(1,)
-        ax1.set_ylabel("$\ell(\ell+1)C_{\ell} [\mu K^2]$")
+        ax1.set_xlim(1,np.max(ell))
+        # ax1.set_ylabel("$\ell(\ell+1)C_{\ell} [\mu K^2]$")
         ax1.grid()
 
         ax2.set_xlabel("$\ell$")
-        ax2.set_ylabel("$\ell(\ell+1)C_{\ell}$")
+        # ax2.set_ylabel("$\ell(\ell+1)C_{\ell} [\mu K^2]$")
         ax2.grid()
 
+        fig.text(
+            0.04, 0.5, "$\ell(\ell+1)C_{\ell} [\mu K^2]$", 
+            va='center', rotation='vertical')
+
         plt.savefig(
-            f'{self.fig_dir}/all_power_spectra.pdf', 
+            f'{self.fig_dir}/all_power_spectra_{nu_mass_eV}eV.pdf', 
             bbox_inches='tight'
         )
         plt.close()
@@ -1116,7 +1168,7 @@ class analyze_simulation_outputs(object):
 
                 # Escape momentum.
                 _, y_esc = escape_momentum(
-                    x_i=init_xyz, z=0., 
+                    x_i=self.init_xyz, z=0., 
                     R_vir=Rvir_MW, R_s=Rs_MW, rho_0=rho0_MW, m_nu_eV=m_nu
                 )
                 axs[i,j].axvline(y_esc, c='k', ls='-.', label='y_esc')
@@ -1303,27 +1355,37 @@ class analyze_simulation_outputs(object):
                 ### Normal Fermi-Dirac distribution.
 
                 # Total area (for normalization).
-                # FD_norm = np.trapz(FDvalsOG, x=yOG)
-                FD1_norm = quad(Fermi_Dirac, 0, np.inf)
+                orig_mom = np.geomspace(0.001*T_CNB, 1000*T_CNB, 100_000)
+                FD_orig = Fermi_Dirac(orig_mom)
+                FD1_norm = np.trapz(
+                    orig_mom**3*FD_orig, x=np.log(orig_mom))
                 
                 # Percentage covered withing momentum interval.
-                p_interval = np.geomspace(0.01*T_CNB, 10*T_CNB, 10_000)
+                p_interval = np.geomspace(0.01*T_CNB, y_esc_med*T_CNB, 10_000)
                 FD_interval = Fermi_Dirac(p_interval)
-                perc_interval, _ = np.trapz(FD_interval, p_interval)/FD1_norm
-                # ic(np.round(perc_interval*100, 2))
+                perc_interval = np.trapz(
+                    p_interval**3*FD_interval, x=np.log(p_interval))/FD1_norm
+                ic(np.round(perc_interval*100, 2))
 
 
                 ### "Distorted" Fermi-Dirac distribution due to clustering.
                 
                 # Total area (for normalization).
-                FD2_norm = np.trapz(FDvals_median[k], y0_median[k])
+                all_mom = y0_median[k]*T_CNB
+                FD2_norm = np.trapz(
+                    all_mom**3*FDvals_median[k], x=np.log(all_mom))
 
                 # Percentage covered up to escape momentum.
-                below_esc = (y0_median[k] <= y_esc_med)
-                x_interval = y0_median[k][below_esc]
+                #? for now using visual "breakpoint", since y_esc too low?
+                esc_cond_visual = np.array([0.1, 0.8, 1.3, 3.9])
+                below_esc = (y0_median[k] <= esc_cond_visual[k])
+                # below_esc = (y0_median[k] <= y_esc_med)
+                x_interval = y0_median[k][below_esc]*T_CNB
                 y_interval = FDvals_median[k][below_esc]
-                perc_esc = np.trapz(y_interval, x_interval)/FD2_norm
+                perc_esc = np.trapz(
+                    x_interval**3*y_interval, x=np.log(x_interval))/FD2_norm
                 percentages[k] = np.round(perc_esc*100, 2)
+                ic(np.round(perc_esc*100, 2))
 
             np.savetxt(f'clustered_neutrinos_percentages.txt', percentages)
 
@@ -1459,6 +1521,131 @@ class analyze_simulation_outputs(object):
             f'{self.fig_dir}/2D_params_box_halos.pdf', bbox_inches='tight')
 
 
+    def plot_density_profiles(self, NFW_orig=False):
+
+        ### ============= ###
+        ### Setup figure. ###
+        ### ============= ###
+
+        fig, ax = plt.subplots(1,1)
+        # ax.set_title('Density Profiles')
+        ax.set_xlabel('radius from halo center [kpc]')
+        ax.set_ylabel('density in [Msun/kpc^3]')
+        ax.set_xscale('log')
+        ax.set_yscale('log')
+        ax.set_xlim(1e0, 1e3)
+        ax.set_ylim(1e1, 1e9)
+
+
+        ### ============= ###
+        ### Plot objects. ###
+        ### ============= ###
+
+        # Box and sim parameters.
+        with open(f'{self.sim_dir}/box_parameters.yaml', 'r') as file:
+            box_setup = yaml.safe_load(file)
+
+        DM_mass = box_setup['Content']['DM Mass [Msun]']*Msun
+        nums_snaps = np.load(f'{self.sim_dir}/nums_snaps.npy')
+
+        # File Paths.
+        box_file_dir = box_setup['File Paths']['Box File Directory']
+        sim_parent = str(pathlib.Path(self.sim_dir).parent)
+        benchmark_file_dir = f'{sim_parent}/benchmark_halo_files'
+
+        # Box Cosmology.
+        box_H0 =  box_setup['Cosmology']['h']*100*km/s/Mpc
+        box_Omega_M = box_setup['Cosmology']['Omega_M']
+        box_Omega_L = box_setup['Cosmology']['Omega_L']
+
+        # Bin centers in kpc for plot.
+        radial_bins = 10**np.arange(0, 5, 0.1)
+        centers = bin_centers(radial_bins)
+
+        if 'NFW_halo' in self.objects:
+
+            NFW_halo_coords = np.load(
+                f'{benchmark_file_dir}/benchmark_halo_snap_{nums_snaps[-1]}.npy'
+            )
+
+            # Calculate density for each bin center.
+            NFW_halo_densities = analyse_halo(DM_mass/Msun, NFW_halo_coords)
+            
+            ax.plot(
+                centers, NFW_halo_densities, 
+                    c='green', label=f'NFW Halo'
+            )
+
+        if 'box_halos' in self.objects:
+
+            densities = []
+            for halo_ID in self.halo_indices:
+
+                # Read the DM positions of all halos at redshift z=0.
+                DM_coords = np.load(glob.glob(
+                    f'{sim_parent}/final_halo_data/DM_pos_origID{halo_ID}_snap_0036.npy')[0]
+                )
+
+                # Calculate density for each bin center.
+                densities.append(analyse_halo(DM_mass/Msun, DM_coords))
+
+            densities = np.array(densities)
+            densities_median = np.median(densities, axis=0)
+            densities_perc2p5 = np.percentile(densities, q=2.5, axis=0)
+            densities_perc97p5 = np.percentile(densities, q=97.5, axis=0)
+            densities_perc16 = np.percentile(densities, q=16, axis=0)
+            densities_perc84 = np.percentile(densities, q=84, axis=0)
+
+            ax.plot(
+                centers, densities_median, 
+                c='blue', label=f'Box Halos Median'
+            )
+            ax.fill_between(
+                centers, densities_perc2p5, densities_perc97p5,
+                color='blue', alpha=0.2, 
+                label='Box Halos: 2.5-97.5 % C.L.'
+            )
+            ax.fill_between(
+                centers, densities_perc16, densities_perc84,
+                color='blue', alpha=0.3, 
+                label='Box Halos: 16-84 % C.L.'
+            )
+
+
+        if 'analytical_halo' in self.objects:
+
+            NFW = NFW_profile(
+                centers*kpc, rho0_MW, Rs_MW
+            )
+            ax.plot(
+                centers, NFW/(Msun/kpc**3), 
+                c='red', ls='-.', label='Analytical halo NFW'
+            )
+
+
+        if NFW_orig:
+
+            Rvir, Mvir, conc = self.get_halo_params()
+            Rvir_med = np.median(Rvir)
+            Mvir_med = np.median(Mvir)
+            conc_med = np.median(conc)
+
+            # NFW density profile with parameters of sampled halo.
+            Rs_med = Rvir_med/conc_med
+            rho_NFW = scale_density_NFW(
+                c=conc_med, z=0.,
+                 H0=box_H0, Omega_M=box_Omega_M, Omega_L=box_Omega_L)
+            NFW = NFW_profile(
+                centers*kpc, rho_NFW, Rs_med*kpc)
+            ax.plot(
+                centers, NFW/(Msun/kpc**3), 
+                c='black', ls='-.', label='Box halos median NFW')
+
+        plt.legend(loc='lower left')
+        plt.savefig(f'{self.fig_dir}/density_profiles.pdf', bbox_inches='tight')
+        plt.close()
+
+
     # note: nothing interesting
     def plot_factor_vs_halo_params(self):
 
@@ -1466,10 +1653,6 @@ class analyze_simulation_outputs(object):
         Rvir, Mvir, conc = self.get_halo_params()
 
         # Load factors.
-        def read_column_from_file(filename, column_name):
-            df = pd.read_csv(filename)
-            return df[column_name].tolist()
-
         factors = np.array(read_column_from_file(
             f'{self.sim_dir}/all_sky_values_original.csv', 'Factor'))
         # factors = np.delete(factors, factors>=300)
@@ -1580,13 +1763,13 @@ Analysis.plot_all_sky_map('analytical', 0, 0)
 
 
 # ======================== #
-# '''
+'''
 sim_dir = f'L025N752/DMONLY/SigmaConstant00/single_halos'
 
 objects = (
-    # 'NFW_halo', 
+    'NFW_halo', 
     'box_halos', 
-    # 'analytical_halo'
+    'analytical_halo'
 )
 Analysis = analyze_simulation_outputs(
     sim_dir = sim_dir, 
@@ -1600,7 +1783,9 @@ Analysis = analyze_simulation_outputs(
 
 # Analysis.plot_overdensity_band(plot_ylims=None)
 
-Analysis.plot_phase_space(most_likely=False)
+# Analysis.plot_phase_space(most_likely=False)
+
+Analysis.plot_density_profiles(NFW_orig=True)
 
 # Analysis.plot_overdensity_evolution(plot_ylims=(1e-4,1e1))
 

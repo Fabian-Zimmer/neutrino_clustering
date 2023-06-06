@@ -1,6 +1,11 @@
 from shared.preface import *
 
 
+def read_column_from_file(filename, column_name):
+    df = pd.read_csv(filename)
+    return df[column_name].tolist()
+
+
 def rotation_matrix(theta1, theta2, theta3, order='xyz'):
     """
     input

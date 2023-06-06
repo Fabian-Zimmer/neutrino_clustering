@@ -1020,7 +1020,7 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
     if halo_j == 19:
         continue
 
-    precalculations = True
+    precalculations = False
 
     if precalculations:
 
@@ -1312,17 +1312,17 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
     # Run simulation for current halo in batch. #
     # ========================================= #
 
-    #! Important:
-    # The loop ran from the earliest snapshot (z~4 for us) to the latest (z=0).
-    # So these arrays are in this order. Even though our simulation runs 
-    # backwards in time, we can leave them like this, since the correct element 
-    # gets picked with the idx routine in the EOMs function above.
 
     if 'benchmark' in args.sim_type:
         end_str = 'benchmark_halo'
     else:
         end_str = f'halo{halo_j+1}'
     
+    #! Important:
+    # The loop ran from the earliest snapshot (z~4 for us) to the latest (z=0).
+    # So the below arrays are in this order. Even though our simulation runs 
+    # backwards in time, we can leave them like this, since the correct element 
+    # gets picked with the idx routine in the EOMs function above.
     snaps_GRID_L = np.load(f'{args.directory}/snaps_GRID_L_{end_str}.npy')
     snaps_DM_num = np.load(f'{args.directory}/snaps_DM_num_{end_str}.npy')
     snaps_CC_num = np.load(f'{args.directory}/snaps_CC_num_{end_str}.npy')

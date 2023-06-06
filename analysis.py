@@ -42,7 +42,8 @@ print(Analysis.halo_num)
 halo_array = np.arange(Analysis.halo_num)+1
 
 # Generate power spectra plots.
-# Analysis.plot_all_spectra_1plot(halo_array, 0.3)
+# Analysis.plot_all_spectra_1plot(halo_array, 0.1)
+
 
 # Generate all all-sky anisotropy maps.
 # for halo in halo_array:
