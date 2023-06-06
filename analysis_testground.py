@@ -38,10 +38,10 @@ class analyze_simulation_outputs(object):
         paths = np.array(
             [x for i, x in enumerate(paths_all) if i not in del_ids])
 
-        limit_halos = True
+        limit_halos = False
 
         if limit_halos:
-            until = 3
+            until = 5
         else:
             until = -1
 
@@ -665,11 +665,12 @@ class analyze_simulation_outputs(object):
 
             # Split colormap
             mid_point = int(0.5 * cmap.N)
-            three_quarter_point = int(0.75 * cmap.N)
+            left_end = int(0.8*cmap.N)
             cmap_left = mcolors.LinearSegmentedColormap.from_list(
-                'cmap_left', colors[mid_point:three_quarter_point], N=256)
+                'cmap_left', colors[mid_point:left_end], N=256)
+            right_start = int(0.6 * cmap.N)
             cmap_right = mcolors.LinearSegmentedColormap.from_list(
-                'cmap_right', colors[three_quarter_point:], N=256)
+                'cmap_right', colors[right_start:], N=256)
 
 
             # Plot the lighest mass.
@@ -738,24 +739,45 @@ class analyze_simulation_outputs(object):
             ax1.get_xaxis().set_ticks([])
             ax1.get_yaxis().set_ticks([])
 
-            # Make center value to be 1 (no overdensity).
-            mid = 1.
-            divnorm = mcolors.TwoSlopeNorm(vcenter=mid)
+            if halo == 0:
+                # Create original colormap
+                cmap = plt.get_cmap('coolwarm')
+                colors = cmap(np.linspace(0, 1, cmap.N))
 
-            # All-sky map in mollview projection.
-            cmap = plt.get_cmap('coolwarm')
-            hp.newvisufunc.projview(
-                healpix_map, unit=r'$n_{\nu, pix} / n_{\nu, pix, 0}$',
-                # cmap=cc.cm.CET_D1,
-                cmap='bwr',
-                override_plot_properties={
-                    "cbar_pad": 0.1,
-                    # "cbar_label_pad": 15,
-                },
-                cbar_ticks=[np.min(healpix_map), mid, np.max(healpix_map)],
-                sub=121, norm=divnorm,
-                **self.healpy_dict
-            )
+                # Split colormap
+                three_quarter_point = int(0.6 * cmap.N)
+                cmap_right = mcolors.LinearSegmentedColormap.from_list(
+                    'cmap_right', colors[three_quarter_point:], N=256)
+
+                # All-sky map in mollview projection.
+                hp.newvisufunc.projview(
+                    healpix_map, unit=r'$n_{\nu, pix} / n_{\nu, pix, 0}$',
+                    # cmap=cc.cm.CET_D1,
+                    cmap=cmap_right,
+                    override_plot_properties={
+                        "cbar_pad": 0.1,
+                        # "cbar_label_pad": 15,
+                    },
+                    sub=121, 
+                    # norm=divnorm,
+                    **self.healpy_dict)
+                
+            else:
+                # Make center value to be 1 (no overdensity).
+                mid = 1.
+                divnorm = mcolors.TwoSlopeNorm(vcenter=mid)
+
+                # All-sky map in mollview projection.
+                hp.newvisufunc.projview(
+                    healpix_map, unit=r'$n_{\nu, pix} / n_{\nu, pix, 0}$',
+                    cmap='coolwarm',
+                    override_plot_properties={
+                        "cbar_pad": 0.1},
+                    cbar_ticks=[
+                        np.min(healpix_map), mid, np.max(healpix_map)],
+                    sub=121, 
+                    norm=divnorm,
+                    **self.healpy_dict)
 
 
             ### ---------------------------------- ###
@@ -1258,7 +1280,8 @@ class analyze_simulation_outputs(object):
             #     fontsize=18
             # )
 
-            percentages = np.zeros(len(self.mpicks))
+            percentages_med = np.zeros(len(self.mpicks))
+            percentages_max = np.zeros(len(self.mpicks))
             for j, m_nu in enumerate(self.mpicks):
 
                 k = j  # k selects the element(s) for the current neutrino mass
@@ -1269,26 +1292,30 @@ class analyze_simulation_outputs(object):
                     i = 1
                     j -= 2
 
-                # Simulation phase-space distr. of neutrinos today.
-                axs[i,j].plot(
-                    y0_median[k], FDvals_median[k], label='PS today (from sim)', c='blue', alpha=0.9)
-                
-                for xs, ys in zip(box_halos_y0_final, box_halos_p1_final):
-                    FDs = Fermi_Dirac(ys)
+                individual = False
 
+                if individual:
+                    for xs, ys in zip(box_halos_y0_final, box_halos_p1_final):
+                        FDs = Fermi_Dirac(ys)
+
+                        axs[i,j].plot(
+                            xs[k], FDs[k], c='dodgerblue', alpha=0.8
+                        )
+
+                else:
+                    # Simulation phase-space distr. of neutrinos today.
                     axs[i,j].plot(
-                        xs[k], FDs[k], c='dodgerblue', alpha=0.8
-                    )
+                        y0_median[k], FDvals_median[k], label='PS today (from sim)', c='blue', alpha=0.9)
 
-                # axs[i,j].fill_between(
-                #     y0_median[k], FDvals_perc2p5[k], FDvals_perc97p5[k],
-                #     color='blue', alpha=0.2, 
-                #     label='Box Halos: 2.5-97.5 % C.L.')
-                
-                # axs[i,j].fill_between(
-                #     y0_median[k], FDvals_perc16[k], FDvals_perc84[k],
-                #     color='blue', alpha=0.3, 
-                #     label='Box Halos: 16-84 % C.L.')
+                    axs[i,j].fill_between(
+                        y0_median[k], FDvals_perc2p5[k], FDvals_perc97p5[k],
+                        color='blue', alpha=0.2, 
+                        label='Box Halos: 2.5-97.5 % C.L.')
+                    
+                    axs[i,j].fill_between(
+                        y0_median[k], FDvals_perc16[k], FDvals_perc84[k],
+                        color='blue', alpha=0.3, 
+                        label='Box Halos: 16-84 % C.L.')
                 
                 # Fermi-Dirac phase-space distr.
                 pOG = np.geomspace(
@@ -1340,18 +1367,16 @@ class analyze_simulation_outputs(object):
                 log_scale = True
 
                 if log_scale:
+                    lin_or_log = 'log'
                     axs[i,j].set_ylim(1e-3, 1e0)
                     axs[i,j].set_xlim(p_start, 1e2)
                     axs[i,j].set_xscale('log')
                     axs[i,j].set_yscale('log')
                 else:
-                    axs[i,j].set_xlim(p_start, np.log(100))
-
-                if m_nu == self.mpicks[-1]:
-                    axs[i,j].legend(
-                        loc='lower left', borderpad=0.25, labelspacing=0.25, 
-                        fontsize='small')
-
+                    lin_or_log = 'linear'
+                    x_max_lims = [0.5, 1.5, 2.5, 7]
+                    axs[i,j].set_xlim(np.min(y0_median[k]), x_max_lims[k])
+                    
 
                 ### --------------------------------------- ###
                 ### Excourse: Percentages of distributions. ###
@@ -1380,22 +1405,51 @@ class analyze_simulation_outputs(object):
                 FD2_norm = np.trapz(
                     all_mom**3*FDvals_median[k], x=np.log(all_mom))
 
-                # Percentage covered up to escape momentum.
-                #? for now using visual "breakpoint", since y_esc too low?
-                esc_cond_visual = np.array([0.1, 0.8, 1.3, 3.9])
-                below_esc = (y0_median[k] <= esc_cond_visual[k])
+                #! (visually) find momentum threshold of median curve.
+                esc_cond_med = np.array([0.15, 0.7, 1.45, 3.92])
+                axs[i,j].axvline(
+                    esc_cond_med[k], 
+                    c='green', ls='-.', label='esc_p median')
+                
+                #! (visually) find momentum threshold of max curve.
+                esc_cond_max = np.array([0.2, 1, 2, 5])
+                axs[i,j].axvline(
+                    esc_cond_max[k], 
+                    c='red', ls='-.', label='esc_p max')
+
+                # Clustered neutrino percentage using median curve.
+                below_esc_med = (y0_median[k] <= esc_cond_med[k])
                 # below_esc = (y0_median[k] <= y_esc_med)
-                x_interval = y0_median[k][below_esc]*T_CNB
-                y_interval = FDvals_median[k][below_esc]
+                x_interval = y0_median[k][below_esc_med]*T_CNB
+                y_interval = FDvals_median[k][below_esc_med]
                 perc_esc = np.trapz(
                     x_interval**3*y_interval, x=np.log(x_interval))/FD2_norm
-                percentages[k] = np.round(perc_esc*100, 2)
+                percentages_med[k] = np.round(perc_esc*100, 2)
+                percentages_med[k] = np.round(perc_esc*100, 2)
                 ic(np.round(perc_esc*100, 2))
 
-            np.savetxt(f'clustered_neutrinos_percentages.txt', percentages)
+                # Clustered neutrino percentage using max curve.
+                below_esc_max = (y0_median[k] <= esc_cond_max[k])
+                # below_esc = (y0_median[k] <= y_esc_med)
+                x_interval = y0_median[k][below_esc_max]*T_CNB
+                y_interval = FDvals_median[k][below_esc_max]
+                perc_esc = np.trapz(
+                    x_interval**3*y_interval, x=np.log(x_interval))/FD2_norm
+                percentages_max[k] = np.round(perc_esc*100, 2)
+                ic(np.round(perc_esc*100, 2))
+
+                if m_nu == self.mpicks[-1]:
+                    axs[i,j].legend(
+                        loc='lower left', borderpad=0.25, labelspacing=0.25, 
+                        fontsize='small')
+
+            np.savetxt(
+                f'clustered_neutrinos_percentages_med.txt', percentages_med)
+            np.savetxt(
+                f'clustered_neutrinos_percentages_max.txt', percentages_max)
 
             plt.savefig(
-                f'{self.fig_dir}/phase_space_numerical_individual_log.pdf', 
+                f'{self.fig_dir}/phase_space_numerical_{lin_or_log}.pdf', 
                 bbox_inches='tight')
             plt.close()
 
@@ -1729,13 +1783,13 @@ class analyze_simulation_outputs(object):
 
 
 # ======================== #
-# '''
+'''
 sim_dir = f'L025N752/DMONLY/SigmaConstant00/all_sky_final'
 
 objects = (
     'NFW_halo', 
     'box_halos', 
-    # 'analytical_halo'
+    'analytical_halo'
 )
 Analysis = analyze_simulation_outputs(
     sim_dir = sim_dir, 
@@ -1753,14 +1807,14 @@ halo_array = np.arange(Analysis.halo_num)+1
 ### Generate all all-sky anisotropy maps.
 
 # For numerical:
-# for halo in halo_array:
-#     Analysis.plot_all_sky_map('numerical', halo, 0.3)
+for halo in halo_array:
+    Analysis.plot_all_sky_map('numerical', halo, 0.3)
 
 # For analytical:
 # Analysis.plot_all_sky_map('analytical', 0, 0)
 
 # For benchmark NFW:
-Analysis.plot_all_sky_map('numerical', 0, 0.3)
+# Analysis.plot_all_sky_map('numerical', 0, 0.3)
 
 ### Generate correlation plots.
 # Analysis.plot_factor_vs_halo_params()
@@ -1770,13 +1824,13 @@ Analysis.plot_all_sky_map('numerical', 0, 0.3)
 
 
 # ======================== #
-'''
+# '''
 sim_dir = f'L025N752/DMONLY/SigmaConstant00/single_halos'
 
 objects = (
-    'NFW_halo', 
+    # 'NFW_halo', 
     'box_halos', 
-    'analytical_halo'
+    # 'analytical_halo'
 )
 Analysis = analyze_simulation_outputs(
     sim_dir = sim_dir, 
@@ -1790,9 +1844,9 @@ Analysis = analyze_simulation_outputs(
 
 # Analysis.plot_overdensity_band(plot_ylims=None)
 
-# Analysis.plot_phase_space(most_likely=False)
+Analysis.plot_phase_space(most_likely=True)
 
-Analysis.plot_density_profiles(NFW_orig=True)
+# Analysis.plot_density_profiles(NFW_orig=True)
 
 # Analysis.plot_overdensity_evolution(plot_ylims=(1e-4,1e1))
 
