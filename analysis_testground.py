@@ -38,10 +38,10 @@ class analyze_simulation_outputs(object):
         paths = np.array(
             [x for i, x in enumerate(paths_all) if i not in del_ids])
 
-        limit_halos = False
+        limit_halos = True
 
         if limit_halos:
-            until = 5
+            until = 3
         else:
             until = -1
 
@@ -205,7 +205,7 @@ class analyze_simulation_outputs(object):
 
             if 'NFW_halo' in self.objects:
 
-                self.number_densities_numerical_all_sky = np.load(
+                self.number_densities_all_sky_benchmark = np.load(
                     f'{self.sim_dir}/number_densities_numerical_benchmark_halo_all_sky.npy'
                 )[np.newaxis,...]
 
@@ -511,33 +511,40 @@ class analyze_simulation_outputs(object):
 
     def syncronize_all_sky_maps(self, halo, nu_mass_eV, apply=True):
 
+        # Shared between NFW and box halos.
+        parent = str(pathlib.Path(f'{self.sim_dir}').parent)
+        nu_mass_idx = (np.abs(self.mrange-nu_mass_eV)).argmin()
+
         if halo == 0:
             end_str = f'benchmark_halo'
+
+            # Load benchmark NFW halo positions.
+            NFW_dir = f'{parent}/benchmark_halo_files'
+            pos_origin = np.load(f'{NFW_dir}/benchmark_halo_snap_0036.npy')
+
+            # Get number densities and convert to clustering factors.
+            dens_nu = self.number_densities_all_sky_benchmark[...,nu_mass_idx]
+            etas_halo = dens_nu[0]/self.N0_pix
+
+            eta_min, eta_max = np.min(etas_halo), np.max(etas_halo)
+            factor = np.round(eta_max/eta_min, 2)
+
         else:
             halo_label = self.final_halos[halo-1]
             end_str = f'halo{halo_label}'
 
-        # Get number densities and convert to clustering factors.
-        nu_mass_idx = (np.abs(self.mrange-nu_mass_eV)).argmin()
-        dens_nu = self.number_densities_numerical_all_sky[...,nu_mass_idx]
-        etas_nu = dens_nu/self.N0_pix
+            # Get number densities and convert to clustering factors.
+            dens_nu = self.number_densities_numerical_all_sky[...,nu_mass_idx]
+            etas_nu = dens_nu/self.N0_pix
 
-        etas_halo = etas_nu[halo-1,...]  # select input halo
+            etas_halo = etas_nu[halo-1,...]  # select input halo
 
-        eta_min, eta_max = np.min(etas_halo), np.max(etas_halo)
-        factor = np.round(eta_max/eta_min, 2)
-        print(f'Halo {halo_label} original values: min={eta_min}, max={eta_max}, factor={factor}')
+            eta_min, eta_max = np.min(etas_halo), np.max(etas_halo)
+            factor = np.round(eta_max/eta_min, 2)
+            print(f'Halo {halo_label} original values: min={eta_min}, max={eta_max}, factor={factor}')
         
-        # DM halo directory.
-        parent = str(pathlib.Path(f'{self.sim_dir}').parent)
-        DM_dir = f'{parent}/final_halo_data'
-        NFW_dir = f'{parent}/benchmark_halo_files'
-
-        if halo == 0:
-            # Load benchmark NFW halo positions.
-            pos_origin = np.load(f'{NFW_dir}/benchmark_halo_snap_0036.npy')
-        else:
             # Load Halo DM positions.
+            DM_dir = f'{parent}/final_halo_data'
             haloID = self.halo_indices[halo-1]
             pos_origin = np.load(
                 f'{DM_dir}/DM_pos_origID{haloID}_snap_0036.npy'
@@ -711,10 +718,7 @@ class analyze_simulation_outputs(object):
         if sim_method == 'numerical':
 
             # Load synchronized maps.
-            nu_mass_idx = (np.abs(self.mrange-nu_mass_eV)).argmin()
-            healpix_map, DM_healpix_map, end_str, *_ = self.syncronize_all_sky_maps(
-                halo, nu_mass_idx
-            )
+            healpix_map, DM_healpix_map, end_str, *_ = self.syncronize_all_sky_maps(halo, nu_mass_eV)
 
             fig = plt.figure(figsize =(12, 4.4))
             fig.tight_layout()
@@ -739,10 +743,11 @@ class analyze_simulation_outputs(object):
             divnorm = mcolors.TwoSlopeNorm(vcenter=mid)
 
             # All-sky map in mollview projection.
+            cmap = plt.get_cmap('coolwarm')
             hp.newvisufunc.projview(
                 healpix_map, unit=r'$n_{\nu, pix} / n_{\nu, pix, 0}$',
                 # cmap=cc.cm.CET_D1,
-                cmap='coolwarm',
+                cmap='bwr',
                 override_plot_properties={
                     "cbar_pad": 0.1,
                     # "cbar_label_pad": 15,
@@ -1724,13 +1729,13 @@ class analyze_simulation_outputs(object):
 
 
 # ======================== #
-'''
+# '''
 sim_dir = f'L025N752/DMONLY/SigmaConstant00/all_sky_final'
 
 objects = (
-    # 'NFW_halo', 
+    'NFW_halo', 
     'box_halos', 
-    'analytical_halo'
+    # 'analytical_halo'
 )
 Analysis = analyze_simulation_outputs(
     sim_dir = sim_dir, 
@@ -1750,10 +1755,12 @@ halo_array = np.arange(Analysis.halo_num)+1
 # For numerical:
 # for halo in halo_array:
 #     Analysis.plot_all_sky_map('numerical', halo, 0.3)
-# Analysis.plot_all_sky_map('numerical', halo_array[0], 0.3)
 
 # For analytical:
-Analysis.plot_all_sky_map('analytical', 0, 0)
+# Analysis.plot_all_sky_map('analytical', 0, 0)
+
+# For benchmark NFW:
+Analysis.plot_all_sky_map('numerical', 0, 0.3)
 
 ### Generate correlation plots.
 # Analysis.plot_factor_vs_halo_params()
