@@ -20,6 +20,6 @@ sim_fullname=single_halos
 python $HOME/neutrino_clustering_V2/analysis.py \
 --sim_directory $HOME/neutrino_clustering_V2/$sim_boxtype/$sim_fullname \
 --sim_type 'single_halos' \
---no-NFW_halo \
+--NFW_halo \
 --box_halos \
---no-analytical_halo \
+--analytical_halo \

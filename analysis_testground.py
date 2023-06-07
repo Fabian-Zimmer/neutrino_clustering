@@ -38,10 +38,10 @@ class analyze_simulation_outputs(object):
         paths = np.array(
             [x for i, x in enumerate(paths_all) if i not in del_ids])
 
-        limit_halos = False
+        limit_halos = True
 
         if limit_halos:
-            until = 5
+            until = 3
         else:
             until = -1
 
@@ -468,18 +468,23 @@ class analyze_simulation_outputs(object):
         # Interpolate zero pixels with values from 4 neighbours.
         zero_pixels = np.where(rotated_map == 0)[0]
         for pix in zero_pixels:
-            theta_zero, phi_zero = hp.pix2ang(Nside, pix)
-            interp_val = hp.get_interp_val(
-                rotated_map, theta_zero, phi_zero
-            )
+            # theta_zero, phi_zero = hp.pix2ang(Nside, pix)
+            # interp_val = hp.get_interp_val(
+            #     rotated_map, theta_zero, phi_zero
+            # )
+
+            neighbours_pix = hp.get_all_neighbours(Nside, pix)
+            interp_val = np.mean(rotated_map[neighbours_pix])
+
             rotated_map[pix] = interp_val
 
         # Smooth the rotated map using a Gaussian kernel.
         reso_1pix_deg = hp.nside2resol(Nside, arcmin=True) / 60
-        sigma_rad = np.deg2rad(reso_1pix_deg)
+        sigma_rad = np.deg2rad(reso_1pix_deg)/2
         smooth_rot_map = hp.smoothing(rotated_map, sigma=sigma_rad)
 
-        return smooth_rot_map
+        # return smooth_rot_map
+        return rotated_map
 
 
     def DM_pos_to_healpix(self, Nside_map, DM_pos_in, obs_pos_in):
@@ -668,7 +673,7 @@ class analyze_simulation_outputs(object):
             left_end = int(0.8*cmap.N)
             cmap_left = mcolors.LinearSegmentedColormap.from_list(
                 'cmap_left', colors[mid_point:left_end], N=256)
-            right_start = int(0.6 * cmap.N)
+            right_start = int(0.7 * cmap.N)
             cmap_right = mcolors.LinearSegmentedColormap.from_list(
                 'cmap_right', colors[right_start:], N=256)
 
@@ -719,7 +724,7 @@ class analyze_simulation_outputs(object):
         if sim_method == 'numerical':
 
             # Load synchronized maps.
-            healpix_map, DM_healpix_map, end_str, *_ = self.syncronize_all_sky_maps(halo, nu_mass_eV)
+            healpix_map, DM_healpix_map, end_str, *_ = self.syncronize_all_sky_maps(halo, nu_mass_eV, apply=True)
 
             fig = plt.figure(figsize =(12, 4.4))
             fig.tight_layout()
@@ -745,15 +750,15 @@ class analyze_simulation_outputs(object):
                 colors = cmap(np.linspace(0, 1, cmap.N))
 
                 # Split colormap
-                three_quarter_point = int(0.6 * cmap.N)
+                three_quarter_point = int(0.5 * cmap.N)
                 cmap_right = mcolors.LinearSegmentedColormap.from_list(
                     'cmap_right', colors[three_quarter_point:], N=256)
 
                 # All-sky map in mollview projection.
                 hp.newvisufunc.projview(
                     healpix_map, unit=r'$n_{\nu, pix} / n_{\nu, pix, 0}$',
-                    # cmap=cc.cm.CET_D1,
-                    cmap=cmap_right,
+                    cmap='coolwarm',
+                    # cmap=cmap_right,
                     override_plot_properties={
                         "cbar_pad": 0.1,
                         # "cbar_label_pad": 15,
@@ -1582,19 +1587,7 @@ class analyze_simulation_outputs(object):
 
     def plot_density_profiles(self, NFW_orig=False):
 
-        ### ============= ###
-        ### Setup figure. ###
-        ### ============= ###
-
         fig, ax = plt.subplots(1,1)
-        # ax.set_title('Density Profiles')
-        ax.set_xlabel('radius from halo center [kpc]')
-        ax.set_ylabel('density in [Msun/kpc^3]')
-        ax.set_xscale('log')
-        ax.set_yscale('log')
-        ax.set_xlim(1e0, 1e3)
-        ax.set_ylim(1e1, 1e9)
-
 
         ### ============= ###
         ### Plot objects. ###
@@ -1700,6 +1693,14 @@ class analyze_simulation_outputs(object):
                 centers, NFW/(Msun/kpc**3), 
                 c='black', ls='-.', label='Box halos median NFW')
 
+        # ax.set_title('Density Profiles')
+        ax.set_xlabel('r [kpc]')
+        ax.set_ylabel(r'$\rho$ [$M_{\odot}/\mathrm{kpc}^3$]')
+        ax.set_xscale('log')
+        ax.set_yscale('log')
+        ax.set_xlim(1e0, 1e3)
+        ax.set_ylim(5*1e2, 5*1e8)
+
         plt.legend(loc='lower left')
         plt.savefig(f'{self.fig_dir}/density_profiles.pdf', bbox_inches='tight')
         plt.close()
@@ -1783,13 +1784,13 @@ class analyze_simulation_outputs(object):
 
 
 # ======================== #
-'''
+# '''
 sim_dir = f'L025N752/DMONLY/SigmaConstant00/all_sky_final'
 
 objects = (
     'NFW_halo', 
-    'box_halos', 
-    'analytical_halo'
+    # 'box_halos', 
+    # 'analytical_halo'
 )
 Analysis = analyze_simulation_outputs(
     sim_dir = sim_dir, 
@@ -1807,14 +1808,14 @@ halo_array = np.arange(Analysis.halo_num)+1
 ### Generate all all-sky anisotropy maps.
 
 # For numerical:
-for halo in halo_array:
-    Analysis.plot_all_sky_map('numerical', halo, 0.3)
+# for halo in halo_array:
+#     Analysis.plot_all_sky_map('numerical', halo, 0.3)
 
 # For analytical:
 # Analysis.plot_all_sky_map('analytical', 0, 0)
 
 # For benchmark NFW:
-# Analysis.plot_all_sky_map('numerical', 0, 0.3)
+Analysis.plot_all_sky_map('numerical', 0, 0.3)
 
 ### Generate correlation plots.
 # Analysis.plot_factor_vs_halo_params()
@@ -1824,13 +1825,13 @@ for halo in halo_array:
 
 
 # ======================== #
-# '''
+'''
 sim_dir = f'L025N752/DMONLY/SigmaConstant00/single_halos'
 
 objects = (
-    # 'NFW_halo', 
+    'NFW_halo', 
     'box_halos', 
-    # 'analytical_halo'
+    'analytical_halo'
 )
 Analysis = analyze_simulation_outputs(
     sim_dir = sim_dir, 
@@ -1844,9 +1845,9 @@ Analysis = analyze_simulation_outputs(
 
 # Analysis.plot_overdensity_band(plot_ylims=None)
 
-Analysis.plot_phase_space(most_likely=True)
+# Analysis.plot_phase_space(most_likely=True)
 
-# Analysis.plot_density_profiles(NFW_orig=True)
+Analysis.plot_density_profiles(NFW_orig=True)
 
 # Analysis.plot_overdensity_evolution(plot_ylims=(1e-4,1e1))
 
