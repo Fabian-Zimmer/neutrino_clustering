@@ -38,16 +38,9 @@ class analyze_simulation_outputs(object):
         paths = np.array(
             [x for i, x in enumerate(paths_all) if i not in del_ids])
 
-        limit_halos = True
-
-        if limit_halos:
-            until = 3
-        else:
-            until = -1
-
         self.halo_glob_order = nums.argsort()
-        self.final_halos = nums[self.halo_glob_order][:until]
-        self.halo_num= len(self.final_halos)
+        self.final_halos = nums[self.halo_glob_order]
+        self.halo_num = len(self.final_halos)
 
         # Halo indices and parameters for the final halos.
         self.halo_indices = np.load(
@@ -59,8 +52,8 @@ class analyze_simulation_outputs(object):
 
         # Initial distances (of starting cell at z=0) for the final halos.
         init_xyz_pre = np.array([np.load(path) for path in paths])
-        self.init_xyz = init_xyz_pre[self.halo_glob_order][:until]
-        self.init_dis = np.linalg.norm(self.init_xyz, axis=-1)[:until]
+        self.init_xyz = init_xyz_pre[self.halo_glob_order]
+        self.init_dis = np.linalg.norm(self.init_xyz, axis=-1)
 
 
         if self.sim_type == 'single_halos':
@@ -441,7 +434,7 @@ class analyze_simulation_outputs(object):
 
 
     def rot_int_smooth_healpix_map(self, healpix_map, cell0):
-        
+
         # Angles to compensate for location of starting cell (cell0).
         zAngle = np.rad2deg(np.arctan2(cell0[1], -cell0[0]))
         yAngle = np.rad2deg(np.arctan2(-cell0[2], np.linalg.norm(cell0[:2])))
@@ -451,41 +444,51 @@ class analyze_simulation_outputs(object):
             rot=[-zAngle, yAngle, 0], deg=True, eulertype='ZYX', inv=False
         )
 
-        # Create a grid of (theta, phi) coordinates for the map.
-        Nside = hp.npix2nside(len(healpix_map))
-        theta, phi = hp.pix2ang(Nside, np.arange(len(healpix_map)))
+        # Routine works also for galactic coordinates with lonlat=True.
+        lonlat = True
 
-        # Apply rotation to the grid.
-        theta_rot, phi_rot = rot(theta, phi)
+        if lonlat:
+            
+            # Create a grid of (theta, phi) coordinates for the map.
+            phi, theta = hp.pix2ang(
+                self.Nside, np.arange(len(healpix_map)), lonlat=True)
+            
+            # Apply rotation to the grid.
+            phi_rot, theta_rot = rot(phi, theta, lonlat=True)
+            
+            # Find the pixel indices of the rotated grid.
+            pix_rot = hp.ang2pix(self.Nside, phi_rot, theta_rot, lonlat=True)
+        else:
+            
+            # Create a grid of (theta, phi) coordinates for the map.
+            theta, phi = hp.pix2ang(self.Nside, np.arange(len(healpix_map)))
 
-        # Find the pixel indices of the rotated grid.
-        pix_rot = hp.ang2pix(Nside, theta_rot, phi_rot)
+            # Apply rotation to the grid.
+            theta_rot, phi_rot = rot(theta, phi)
+
+            # Find the pixel indices of the rotated grid.
+            pix_rot = hp.ang2pix(self.Nside, theta_rot, phi_rot,)
 
         # Create a new map with rotated pixel values.
         rotated_map = np.zeros_like(healpix_map)
         rotated_map[pix_rot] = healpix_map
+        #? pix_rot contains duplicates, and duplicated pixel will get the last healpix_map value...change to mean of all the healpix_map values, which fall onto the new pixel in rotated_map?
 
-        # Interpolate zero pixels with values from 4 neighbours.
+        # Interpolate zero pixels with values from neighbours.
         zero_pixels = np.where(rotated_map == 0)[0]
         for pix in zero_pixels:
-            # theta_zero, phi_zero = hp.pix2ang(Nside, pix)
-            # interp_val = hp.get_interp_val(
-            #     rotated_map, theta_zero, phi_zero
-            # )
-
-            neighbours_pix = hp.get_all_neighbours(Nside, pix)
+            neighbours_pix = hp.get_all_neighbours(self.Nside, pix)
             interp_val = np.mean(rotated_map[neighbours_pix])
-
             rotated_map[pix] = interp_val
-
-        # Smooth the rotated map using a Gaussian kernel.
-        reso_1pix_deg = hp.nside2resol(Nside, arcmin=True) / 60
-        sigma_rad = np.deg2rad(reso_1pix_deg)/2
-        smooth_rot_map = hp.smoothing(rotated_map, sigma=sigma_rad)
-
-        # return smooth_rot_map
+        
         return rotated_map
 
+        # Smooth the rotated map using a Gaussian kernel.
+        # reso_1pix_deg = hp.nside2resol(self.Nside, arcmin=True) / 60
+        # sigma_rad = np.deg2rad(reso_1pix_deg)/4
+        # smooth_rot_map = hp.smoothing(rotated_map, sigma=sigma_rad)
+        # return smooth_rot_map
+        
 
     def DM_pos_to_healpix(self, Nside_map, DM_pos_in, obs_pos_in):
 
@@ -613,13 +616,11 @@ class analyze_simulation_outputs(object):
             rotated_map = np.zeros_like(healpix_map)
             rotated_map[pix_rot] = healpix_map
 
-            # Find zero-valued pixels and interpolate their values from 4 neighbors
+            # Interpolate zero pixels with values from neighbours.
             zero_pixels = np.where(rotated_map == 0)[0]
             for pix in zero_pixels:
-                theta_zero, phi_zero = hp.pix2ang(self.Nside, pix)
-                interp_val = hp.get_interp_val(
-                    rotated_map, theta_zero, phi_zero
-                )
+                neighbours_pix = hp.get_all_neighbours(self.Nside, pix)
+                interp_val = np.mean(rotated_map[neighbours_pix])
                 rotated_map[pix] = interp_val
 
             synced_maps.append(rotated_map)
@@ -804,7 +805,7 @@ class analyze_simulation_outputs(object):
             hp.newvisufunc.projview(
                 DM_healpix_map,
                 cmap='Purples', alpha=1, norm='log',
-                unit='DM particles in line-of-sight', cbar=True, 
+                unit='dark matter particles', cbar=True, 
                 override_plot_properties={
                     "cbar_pad": 0.1,
                     "cbar_label_pad": 1,
@@ -1127,6 +1128,7 @@ class analyze_simulation_outputs(object):
         p_stop = sim_setup['momentum_stop']
         phis = sim_setup['phis']
         thetas = sim_setup['thetas']
+        init_dis_analytical = sim_setup['initial_haloGC_distance']
 
         with open(f'{self.sim_dir}/box_parameters.yaml', 'r') as file:
             box_setup = yaml.safe_load(file)
@@ -1144,7 +1146,9 @@ class analyze_simulation_outputs(object):
         if 'analytical_halo' in self.objects:
 
             # Convert velocities to mementa.
-            vels_in = self.vectors_analytical[...,3:6]
+            vels_batches = self.vectors_analytical[...,3:6]
+            vels_in = vels_batches.reshape(-1, 100, 3)
+
             p_arr, y_arr = velocity_to_momentum(vels_in, self.mpicks)
             p0_arr, p1_arr, y0_arr = p_arr[...,0], p_arr[...,-1], y_arr[...,0]
 
@@ -1200,9 +1204,8 @@ class analyze_simulation_outputs(object):
 
                 # Escape momentum.
                 _, y_esc = escape_momentum(
-                    x_i=self.init_xyz, z=0., 
-                    R_vir=Rvir_MW, R_s=Rs_MW, rho_0=rho0_MW, m_nu_eV=m_nu
-                )
+                    x_i=np.array([init_dis_analytical,0,0])*kpc, 
+                    R_vir=Rvir_MW, R_s=Rs_MW, rho_0=rho0_MW, m_nu_eV=m_nu)
                 axs[i,j].axvline(y_esc, c='k', ls='-.', label='y_esc')
 
                 # Plot styling.
@@ -1210,8 +1213,8 @@ class analyze_simulation_outputs(object):
                 axs[i,j].set_ylabel('FD(p)')
                 axs[i,j].set_xlabel(r'$y = p / T_{\nu,0}$')
                 axs[i,j].legend(loc='lower left')
-                axs[i,j].set_ylim(1e-5, 1e0)
-                axs[i,j].set_xlim(p_start, 1e2)
+                axs[i,j].set_ylim(1e-2, 1e0)
+                axs[i,j].set_xlim(p_start, 1e1)
 
             plt.savefig(
                 f'{self.fig_dir}/phase_space_analytical.pdf', **savefig_args)
@@ -1310,17 +1313,17 @@ class analyze_simulation_outputs(object):
                 else:
                     # Simulation phase-space distr. of neutrinos today.
                     axs[i,j].plot(
-                        y0_median[k], FDvals_median[k], label='PS today (from sim)', c='blue', alpha=0.9)
+                        y0_median[k], FDvals_median[k], label='box halos (median)', c='blue', alpha=0.9)
 
                     axs[i,j].fill_between(
                         y0_median[k], FDvals_perc2p5[k], FDvals_perc97p5[k],
                         color='blue', alpha=0.2, 
-                        label='Box Halos: 2.5-97.5 % C.L.')
+                        label='2.5-97.5 % C.L.')
                     
                     axs[i,j].fill_between(
                         y0_median[k], FDvals_perc16[k], FDvals_perc84[k],
                         color='blue', alpha=0.3, 
-                        label='Box Halos: 16-84 % C.L.')
+                        label='16-84 % C.L.')
                 
                 # Fermi-Dirac phase-space distr.
                 pOG = np.geomspace(
@@ -1329,7 +1332,7 @@ class analyze_simulation_outputs(object):
                 yOG = pOG/T_CNB
                 axs[i,j].plot(
                     yOG, FDvalsOG, 
-                    label='PS Fermi-Dirac', c='black', alpha=0.7)
+                    label='Fermi-Dirac', c='magenta', ls=':', alpha=0.85)
 
                 # Escape momentum for each box halo.
                 Rvir, Mvir, conc = self.get_halo_params()
@@ -1350,31 +1353,34 @@ class analyze_simulation_outputs(object):
                 y_esc_perc84 = np.percentile(y_esc, q=84, axis=0)
 
                 axs[i,j].axvline(
-                    y_esc_med, c='black', ls='-.', label='y_esc median')
+                    y_esc_med, c='black', ls='-.', label='escape momentum')
                 
                 y_min, y_max = axs[i, j].get_ylim()
 
                 axs[i, j].fill_betweenx(
                     [y_min, y_max], x1=y_esc_perc2p5, x2=y_esc_perc97p5, 
                     color='black', alpha=0.2, 
-                    label='y_esc: 2.5-97.5 % C.L.')
+                    # label='y_esc: 2.5-97.5 % C.L.'
+                    )
                 
                 axs[i, j].fill_betweenx(
                     [y_min, y_max], x1=y_esc_perc16, x2=y_esc_perc84, 
                     color='black', alpha=0.3, 
-                    label='y_esc: 16-84 % C.L.')
+                    # label='y_esc: 16-84 % C.L.'
+                    )
 
                 # Plot styling.
+                #? set common x and y axis label for all 4 plots.
                 axs[i,j].set_title(f'{m_nu} eV')
-                axs[i,j].set_ylabel('FD(p)')
-                axs[i,j].set_xlabel(r'$y = p / T_{\nu,0}$')
+                # axs[i,j].set_ylabel('FD(p)')
+                # axs[i,j].set_xlabel(r'$y = p / T_{\nu,0}$')
 
                 log_scale = True
 
                 if log_scale:
                     lin_or_log = 'log'
-                    axs[i,j].set_ylim(1e-3, 1e0)
-                    axs[i,j].set_xlim(p_start, 1e2)
+                    axs[i,j].set_ylim(1e-2, 1e0)
+                    axs[i,j].set_xlim(p_start, 1e1)
                     axs[i,j].set_xscale('log')
                     axs[i,j].set_yscale('log')
                 else:
@@ -1414,13 +1420,13 @@ class analyze_simulation_outputs(object):
                 esc_cond_med = np.array([0.15, 0.7, 1.45, 3.92])
                 axs[i,j].axvline(
                     esc_cond_med[k], 
-                    c='green', ls='-.', label='esc_p median')
+                    c='green', ls='-.')
                 
                 #! (visually) find momentum threshold of max curve.
                 esc_cond_max = np.array([0.2, 1, 2, 5])
                 axs[i,j].axvline(
                     esc_cond_max[k], 
-                    c='red', ls='-.', label='esc_p max')
+                    c='red', ls='-.')
 
                 # Clustered neutrino percentage using median curve.
                 below_esc_med = (y0_median[k] <= esc_cond_med[k])
@@ -1445,8 +1451,18 @@ class analyze_simulation_outputs(object):
 
                 if m_nu == self.mpicks[-1]:
                     axs[i,j].legend(
-                        loc='lower left', borderpad=0.25, labelspacing=0.25, 
-                        fontsize='small')
+                        loc='lower left', borderpad=0.5, labelspacing=0.5, 
+                        fontsize='medium')
+
+            # Common x-axis label.
+            fig.text(
+                0.5, 0.05, r'$p/T_{\nu,0}$', 
+                va='center', rotation='horizontal', fontsize='x-large')
+
+            # Common y-axis label.
+            fig.text(
+                0.04, 0.5, r'$f_\mathrm{today}$', 
+                va='center', rotation='vertical', fontsize='x-large')
 
             np.savetxt(
                 f'clustered_neutrinos_percentages_med.txt', percentages_med)
@@ -1548,24 +1564,25 @@ class analyze_simulation_outputs(object):
 
         fig = plt.figure(figsize=(11, 5))
         cmap_plot = np.array(mcp.gen_color(cmap='coolwarm', n=len(etas_nu)))
-        size = 30
+        size = 40
+        alp = 0.8
 
         ax1 = fig.add_subplot(121)
         ax2 = fig.add_subplot(122, sharey=ax1)
 
-        # Sort arrays by (relative) clustering factors.
+        # Sort arrays by clustering factors.
         plot_ind = etas_nu.argsort()
         Mvir_plot = Mvir[plot_ind]
         conc_plot = conc[plot_ind]
         init_plot = self.init_dis[plot_ind]
 
-        ax1.scatter(conc_plot, Mvir_plot, c=cmap_plot, s=size)
-        ax1.set_ylabel(r'$M_{vir}$')
+        ax1.scatter(conc_plot, Mvir_plot, c=cmap_plot, s=size, alpha=alp)
+        ax1.set_ylabel(r'$M_\mathrm{vir}$ [$M_\odot$]')
         ax1.set_xlabel('concentration')
         ax1.grid()
         
-        ax2.scatter(init_plot, Mvir_plot, c=cmap_plot, s=size)
-        ax2.set_xlabel('initial distance (kpc)')
+        ax2.scatter(init_plot, Mvir_plot, c=cmap_plot, s=size, alpha=alp)
+        ax2.set_xlabel('initial distance [kpc]')
         ax2.grid()
 
         # Customized colorbar.
@@ -1582,7 +1599,8 @@ class analyze_simulation_outputs(object):
         )
     
         plt.savefig(
-            f'{self.fig_dir}/2D_params_box_halos.pdf', bbox_inches='tight')
+            f'{self.fig_dir}/2D_params_box_halos_{nu_mass_eV}eV.pdf', 
+            bbox_inches='tight')
 
 
     def plot_density_profiles(self, NFW_orig=False):
@@ -1784,13 +1802,13 @@ class analyze_simulation_outputs(object):
 
 
 # ======================== #
-# '''
+'''
 sim_dir = f'L025N752/DMONLY/SigmaConstant00/all_sky_final'
 
 objects = (
     'NFW_halo', 
     # 'box_halos', 
-    # 'analytical_halo'
+    'analytical_halo'
 )
 Analysis = analyze_simulation_outputs(
     sim_dir = sim_dir, 
@@ -1812,7 +1830,7 @@ halo_array = np.arange(Analysis.halo_num)+1
 #     Analysis.plot_all_sky_map('numerical', halo, 0.3)
 
 # For analytical:
-# Analysis.plot_all_sky_map('analytical', 0, 0)
+Analysis.plot_all_sky_map('analytical', 0, 0)
 
 # For benchmark NFW:
 Analysis.plot_all_sky_map('numerical', 0, 0.3)
@@ -1825,12 +1843,12 @@ Analysis.plot_all_sky_map('numerical', 0, 0.3)
 
 
 # ======================== #
-'''
+# '''
 sim_dir = f'L025N752/DMONLY/SigmaConstant00/single_halos'
 
 objects = (
-    'NFW_halo', 
-    'box_halos', 
+    # 'NFW_halo', 
+    # 'box_halos', 
     'analytical_halo'
 )
 Analysis = analyze_simulation_outputs(
@@ -1845,9 +1863,9 @@ Analysis = analyze_simulation_outputs(
 
 # Analysis.plot_overdensity_band(plot_ylims=None)
 
-# Analysis.plot_phase_space(most_likely=True)
+Analysis.plot_phase_space(most_likely=True)
 
-Analysis.plot_density_profiles(NFW_orig=True)
+# Analysis.plot_density_profiles(NFW_orig=True)
 
 # Analysis.plot_overdensity_evolution(plot_ylims=(1e-4,1e1))
 

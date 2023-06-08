@@ -159,7 +159,7 @@ GLON_VC = 283.81                                   # Galactic longitude
 DIST_VC = 16.5e3*kpc                               # Distance
 
 # Translated to cartesian coordinates [kpc] in our setup (from fct.halo_pos).
-X_VC     = np.array([-4289.63477282, 1056.51861602, 15895.27621304])
+X_VC    = np.array([-4289.63477282, 1056.51861602, 15895.27621304])
 
 '''
 # NFW parameters for Andromeda.

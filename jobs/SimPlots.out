@@ -1,17 +1,15 @@
-[ 1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 21 22 23 26 27
- 28 29]
-26
 
 JOB STATISTICS
 ==============
-Job ID: 2865510
+Job ID: 2872917
 Cluster: snellius
 User/Group: zimmer/zimmer
-State: COMPLETED (exit code 0)
+State: RUNNING
 Nodes: 1
 Cores per node: 32
-CPU Utilized: 00:00:23
-CPU Efficiency: 1.67% of 00:22:56 core-walltime
-Job Wall-clock time: 00:00:43
-Memory Utilized: 264.27 MB
-Memory Efficiency: 0.47% of 54.69 GB
+CPU Utilized: 00:00:00
+CPU Efficiency: 0.00% of 00:33:04 core-walltime
+Job Wall-clock time: 00:01:02
+Memory Utilized: 0.00 MB (estimated maximum)
+Memory Efficiency: 0.00% of 54.69 GB (54.69 GB/node)
+WARNING: Efficiency statistics may be misleading for RUNNING jobs.
