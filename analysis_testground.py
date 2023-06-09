@@ -55,6 +55,7 @@ class analyze_simulation_outputs(object):
         self.init_xyz = init_xyz_pre[self.halo_glob_order]
         self.init_dis = np.linalg.norm(self.init_xyz, axis=-1)
 
+        # print(f'Min/Max init_dis: {np.min(self.init_dis)}/{np.max(self.init_dis)}')
 
         if self.sim_type == 'single_halos':
 
@@ -216,6 +217,10 @@ class analyze_simulation_outputs(object):
         Rvir = self.halo_params[:,0]
         Mvir = 10**self.halo_params[:,1]
         conc = self.halo_params[:,2]
+
+        # print(f'Min/Max Rvir: {np.min(Rvir)}/{np.max(Rvir)}')
+        # print(f'Min/Max Mvir: {np.min(Mvir)}/{np.max(Mvir)}')
+        # print(f'Min/Max conc: {np.min(conc)}/{np.max(conc)}')
 
         return Rvir, Mvir, conc
     
@@ -1288,6 +1293,7 @@ class analyze_simulation_outputs(object):
             #     fontsize=18
             # )
 
+            percentages_esc = np.zeros(len(self.mpicks))
             percentages_med = np.zeros(len(self.mpicks))
             percentages_max = np.zeros(len(self.mpicks))
             for j, m_nu in enumerate(self.mpicks):
@@ -1370,10 +1376,7 @@ class analyze_simulation_outputs(object):
                     )
 
                 # Plot styling.
-                #? set common x and y axis label for all 4 plots.
                 axs[i,j].set_title(f'{m_nu} eV')
-                # axs[i,j].set_ylabel('FD(p)')
-                # axs[i,j].set_xlabel(r'$y = p / T_{\nu,0}$')
 
                 log_scale = True
 
@@ -1427,27 +1430,33 @@ class analyze_simulation_outputs(object):
                 axs[i,j].axvline(
                     esc_cond_max[k], 
                     c='red', ls='-.')
+                
+                # Clustered neutrino percentage using escape formula value.
+                below_esc = (y0_median[k] <= y_esc_med)
+                x_interval = y0_median[k][below_esc]*T_CNB
+                y_interval = FDvals_median[k][below_esc]
+                perc_esc = np.trapz(
+                    x_interval**3*y_interval, x=np.log(x_interval))/FD2_norm
+                percentages_esc[k] = np.round(perc_esc*100, 2)
+                ic(np.round(perc_esc*100, 2))
 
                 # Clustered neutrino percentage using median curve.
                 below_esc_med = (y0_median[k] <= esc_cond_med[k])
-                # below_esc = (y0_median[k] <= y_esc_med)
                 x_interval = y0_median[k][below_esc_med]*T_CNB
                 y_interval = FDvals_median[k][below_esc_med]
-                perc_esc = np.trapz(
+                perc_esc_med = np.trapz(
                     x_interval**3*y_interval, x=np.log(x_interval))/FD2_norm
-                percentages_med[k] = np.round(perc_esc*100, 2)
-                percentages_med[k] = np.round(perc_esc*100, 2)
-                ic(np.round(perc_esc*100, 2))
+                percentages_med[k] = np.round(perc_esc_med*100, 2)
+                ic(np.round(perc_esc_med*100, 2))
 
                 # Clustered neutrino percentage using max curve.
                 below_esc_max = (y0_median[k] <= esc_cond_max[k])
-                # below_esc = (y0_median[k] <= y_esc_med)
                 x_interval = y0_median[k][below_esc_max]*T_CNB
                 y_interval = FDvals_median[k][below_esc_max]
-                perc_esc = np.trapz(
+                perc_esc_max = np.trapz(
                     x_interval**3*y_interval, x=np.log(x_interval))/FD2_norm
-                percentages_max[k] = np.round(perc_esc*100, 2)
-                ic(np.round(perc_esc*100, 2))
+                percentages_max[k] = np.round(perc_esc_max*100, 2)
+                ic(np.round(perc_esc_max*100, 2))
 
                 if m_nu == self.mpicks[-1]:
                     axs[i,j].legend(
@@ -1464,6 +1473,8 @@ class analyze_simulation_outputs(object):
                 0.04, 0.5, r'$f_\mathrm{today}$', 
                 va='center', rotation='vertical', fontsize='x-large')
 
+            np.savetxt(
+                f'clustered_neutrinos_percentages_esc.txt', percentages_esc)
             np.savetxt(
                 f'clustered_neutrinos_percentages_med.txt', percentages_med)
             np.savetxt(

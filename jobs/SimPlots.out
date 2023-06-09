@@ -1,15 +1,17 @@
+Min/Max init_dis: 7.203294466553133/9.126444663038285
+Min/Max init_dis: 7.203294466553133/9.126444663038285
 
 JOB STATISTICS
 ==============
-Job ID: 2872917
+Job ID: 2881744
 Cluster: snellius
 User/Group: zimmer/zimmer
 State: RUNNING
 Nodes: 1
 Cores per node: 32
-CPU Utilized: 00:00:00
-CPU Efficiency: 0.00% of 00:33:04 core-walltime
-Job Wall-clock time: 00:01:02
-Memory Utilized: 0.00 MB (estimated maximum)
-Memory Efficiency: 0.00% of 54.69 GB (54.69 GB/node)
+CPU Utilized: 00:00:30
+CPU Efficiency: 2.29% of 00:21:52 core-walltime
+Job Wall-clock time: 00:00:41
+Memory Utilized: 11.19 GB
+Memory Efficiency: 20.46% of 54.69 GB
 WARNING: Efficiency statistics may be misleading for RUNNING jobs.
