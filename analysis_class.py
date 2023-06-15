@@ -296,6 +296,7 @@ class analyze_simulation_outputs(object):
         ax.set_yscale('log')
         ax.set_xlabel(r'$m_{\nu}$ [eV]', fontsize=16)
         ax.set_ylabel(r'$n_{\nu} / n_{\nu, 0}$', fontsize=16)
+        ax.tick_params(axis='both', labelsize=12)
         plt.grid(True, which="both", ls="-")
 
         # legend = ax.legend(
@@ -307,7 +308,7 @@ class analyze_simulation_outputs(object):
             # ],
             # handler_map={tuple: HandlerTuple(ndivide=None)})
 
-        ax.legend(loc='lower right')
+        ax.legend(loc='lower right', prop={'size':14})
         ax.yaxis.set_major_formatter(ticker.FuncFormatter(y_fmt))
         plt.savefig(f'{self.fig_dir}/overdensity_band.pdf', bbox_inches='tight')
 
