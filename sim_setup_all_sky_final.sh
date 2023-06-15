@@ -25,7 +25,7 @@ python make_simulation_parameters.py \
 --init_x_dis 8.178 \
 --z_int_shift 0.1 \
 --z_int_stop 4 \
---z_int_num 100 \
+--z_int_num 200 \
 --int_solver RK23 \
 --CPUs_precalculations 128 \
 --CPUs_simulations 128 \

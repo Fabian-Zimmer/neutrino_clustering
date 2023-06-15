@@ -1,5 +1,5 @@
 from shared.preface import *
-from analysis_testground import analyze_simulation_outputs
+from analysis_class import analyze_simulation_outputs
 
 # Argparse inputs.
 parser = argparse.ArgumentParser()
@@ -30,18 +30,18 @@ Analysis = analyze_simulation_outputs(
     sim_type = args.sim_type,
 )
 
-# Analysis.plot_overdensity_band(plot_ylims=None)
+Analysis.plot_overdensity_band(plot_ylims=None)
 
 # Analysis.plot_overdensity_evolution(plot_ylims=(1e-4,1e1))
 
-# Analysis.plot_2d_params(nu_mass_eV=0.3)
+Analysis.plot_2d_params(nu_mass_eV=0.3)
 
 # print(Analysis.final_halos)
 # print(Analysis.halo_num)
-halo_array = np.arange(Analysis.halo_num)+1
+# halo_array = np.arange(Analysis.halo_num)+1
 
 # Generate power spectra plots.
-Analysis.plot_all_spectra_1plot(halo_array, 0.1)
+# Analysis.plot_all_spectra_1plot(halo_array, 0.1)
 
 
 # Generate all all-sky anisotropy maps.

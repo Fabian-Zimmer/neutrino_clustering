@@ -237,7 +237,7 @@ class analyze_simulation_outputs(object):
         if 'NFW_halo' in self.objects:
 
             p1 = ax.plot(
-                self.mrange*1e3, self.etas_benchmark-1, 
+                self.mrange, self.etas_benchmark-1, 
                 color='green', 
                 label='benchmark halo'
             )
@@ -256,16 +256,16 @@ class analyze_simulation_outputs(object):
                 self.etas_numerical, q=84, axis=0)
             
             p2 = ax.plot(
-                self.mrange*1e3, (etas_median-1), color='blue', 
+                self.mrange, (etas_median-1), color='blue', 
                 label='box halos (medians)'
             )
             p3 = ax.fill_between(
-                self.mrange*1e3, (etas_perc2p5-1), (etas_perc97p5-1), 
+                self.mrange, (etas_perc2p5-1), (etas_perc97p5-1), 
                 color='blue', alpha=0.2, 
                 label='2.5-97.5 % C.L.'
             )
             p4 = ax.fill_between(
-                self.mrange*1e3, (etas_perc16-1), (etas_perc84-1), 
+                self.mrange, (etas_perc16-1), (etas_perc84-1), 
                 color='blue', alpha=0.3, 
                 label='16-84 % C.L.'
             )
@@ -273,7 +273,7 @@ class analyze_simulation_outputs(object):
         if 'analytical_halo' in self.objects:
 
             p5 = plt.plot(
-                self.mrange*1e3, self.etas_analytical-1, 
+                self.mrange, self.etas_analytical-1, 
                 color='red', ls='solid', 
                 label='analytical halo'
             )
@@ -285,7 +285,7 @@ class analyze_simulation_outputs(object):
             
             # Plot reproduction of Mertsch et al., using their MW params.
             p6 = plt.plot(
-                self.mrange*1e3, self.etas_analytical_Mertsch-1, 
+                self.mrange, self.etas_analytical_Mertsch-1, 
                 color='red', ls='dashed')
 
         # Plot syiling.
@@ -294,8 +294,8 @@ class analyze_simulation_outputs(object):
 
         ax.set_xscale('log')
         ax.set_yscale('log')
-        ax.set_xlabel(r'$m_{\nu}$ [meV]')
-        ax.set_ylabel(r'$n_{\nu} / n_{\nu, 0}$')
+        ax.set_xlabel(r'$m_{\nu}$ [eV]', fontsize=16)
+        ax.set_ylabel(r'$n_{\nu} / n_{\nu, 0}$', fontsize=16)
         plt.grid(True, which="both", ls="-")
 
         # legend = ax.legend(
@@ -826,7 +826,7 @@ class analyze_simulation_outputs(object):
             # Adjust and save figure.
             plt.subplots_adjust(wspace=0.15)
             plt.savefig(
-                f'{self.fig_dir}/All_sky_maps_{end_str}.pdf', 
+                f'{self.fig_dir}/All_sky_maps_{end_str}_RK45.pdf', 
                 bbox_inches='tight'
             )
             plt.close()
@@ -921,11 +921,6 @@ class analyze_simulation_outputs(object):
             cross_spectrum = ell*(ell+1)*cross/(2*Pi)*micro_Kelvin_unit
             cross_spectra.append(cross_spectrum)
 
-            # Pearsons correlation coefficient for total map information.
-            # pearson_r, _ = pearsonr(healpix_map, DM_healpix_map)
-
-            # ax1.semilogy(ell, power_spectrum)
-            # ax2.plot(ell, cross_spectrum)
 
         # '''
         power_spectra = np.array(power_spectra)
@@ -944,7 +939,7 @@ class analyze_simulation_outputs(object):
 
         ax1.semilogy(
             ell, power_median, color='blue', 
-            label='Power spectra median')
+            label='box halos (median)')
         ax1.fill_between(
             ell, power_perc2p5, power_perc97p5, 
             color='blue', alpha=0.2, label='2.5-97.5 % C.L.')
@@ -954,13 +949,18 @@ class analyze_simulation_outputs(object):
         
         ax2.plot(
             ell, cross_median, color='blue', 
-            label='Cross spectra median')
+            # label='Cross spectra median'
+            )
         ax2.fill_between(
             ell, cross_perc2p5, cross_perc97p5, 
-            color='blue', alpha=0.2, label='2.5-97.5 % C.L.')
+            color='blue', alpha=0.2, 
+            # label='2.5-97.5 % C.L.'
+            )
         ax2.fill_between(
             ell, cross_perc16, cross_perc84, 
-            color='blue', alpha=0.3, label='16-84 % C.L.')      
+            color='blue', alpha=0.3, 
+            # label='16-84 % C.L.'
+            )
         # '''
 
         Tully_x_axis = read_column_from_file(
@@ -973,16 +973,18 @@ class analyze_simulation_outputs(object):
 
         ax1.set_xlabel("$\ell$")
         ax1.set_xlim(1,np.max(ell))
-        # ax1.set_ylabel("$\ell(\ell+1)C_{\ell} [\mu K^2]$")
+        ax1.set_ylabel("$\ell(\ell+1)C_{\ell} [\mu K^2]$")
         ax1.grid()
+        ax1.legend(loc='lower left')
 
         ax2.set_xlabel("$\ell$")
-        # ax2.set_ylabel("$\ell(\ell+1)C_{\ell} [\mu K^2]$")
+        ax2.set_ylabel('[a.u.]')
         ax2.grid()
 
-        fig.text(
-            0.04, 0.5, "$\ell(\ell+1)C_{\ell} [\mu K^2]$", 
-            va='center', rotation='vertical')
+        # fig.text(
+        #     0.04, 0.5, "$\ell(\ell+1)C_{\ell} [\mu K^2]$", 
+        #     va='center', rotation='vertical')
+
 
         plt.savefig(
             f'{self.fig_dir}/all_power_spectra_{nu_mass_eV}eV.pdf', 
@@ -1628,12 +1630,12 @@ class analyze_simulation_outputs(object):
         init_plot = self.init_dis[plot_ind]
 
         ax1.scatter(conc_plot, Mvir_plot, c=cmap_plot, s=size, alpha=alp)
-        ax1.set_ylabel(r'$M_\mathrm{vir}$ [$M_\odot$]')
-        ax1.set_xlabel('concentration')
+        ax1.set_ylabel(r'$M_{200}$ [$M_\odot$]')
+        ax1.set_xlabel(r'$c_{200}$')
         ax1.grid()
         
         ax2.scatter(init_plot, Mvir_plot, c=cmap_plot, s=size, alpha=alp)
-        ax2.set_xlabel('initial distance [kpc]')
+        ax2.set_xlabel(r'$d_\mathrm{init}$ [kpc]')
         ax2.grid()
 
         # Customized colorbar.
@@ -1853,13 +1855,13 @@ class analyze_simulation_outputs(object):
 
 
 # ======================== #
-'''
+# '''
 sim_dir = f'L025N752/DMONLY/SigmaConstant00/all_sky_final'
 
 objects = (
     'NFW_halo', 
     # 'box_halos', 
-    'analytical_halo'
+    # 'analytical_halo'
 )
 Analysis = analyze_simulation_outputs(
     sim_dir = sim_dir, 
@@ -1881,7 +1883,7 @@ halo_array = np.arange(Analysis.halo_num)+1
 #     Analysis.plot_all_sky_map('numerical', halo, 0.3)
 
 # For analytical:
-Analysis.plot_all_sky_map('analytical', 0, 0)
+# Analysis.plot_all_sky_map('analytical', 0, 0)
 
 # For benchmark NFW:
 Analysis.plot_all_sky_map('numerical', 0, 0.3)
@@ -1894,7 +1896,7 @@ Analysis.plot_all_sky_map('numerical', 0, 0.3)
 
 
 # ======================== #
-# '''
+'''
 sim_dir = f'L025N752/DMONLY/SigmaConstant00/single_halos'
 
 objects = (

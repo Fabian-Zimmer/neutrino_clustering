@@ -5,7 +5,7 @@ Npix: 768
 Nside: 8
 cosmo_neutrino_density [cm^-3]: 112.0137477613158
 initial_haloGC_distance: 8.178
-integration_solver: RK45
+integration_solver: RK23
 memory_limit_GB: 224
 momentum_num: 10000
 momentum_start: 0.01
@@ -20,6 +20,6 @@ phis: 768
 pix_sr: 0.016362461737446838
 simulation type: all_sky
 thetas: 768
-z_inegration_num: 100
+z_inegration_num: 200
 z_inegration_start: 0
 z_inegration_stop: 4.0
