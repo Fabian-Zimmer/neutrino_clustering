@@ -3,6 +3,7 @@ from shared.shared_functions import *
 import matplotlib.colors as mcolors
 import matplotlib as mpl
 from mpl_toolkits.mplot3d import Axes3D
+from matplotlib.legend_handler import HandlerTuple
 from mycolorpy import colorlist as mcp
 
 class analyze_simulation_outputs(object):
@@ -227,26 +228,7 @@ class analyze_simulation_outputs(object):
 
     def plot_overdensity_band(self, plot_ylims):
 
-        ### ------------- ###
-        ### Setup figure. ###
-        ### ------------- ###
         fig, ax = plt.subplots(1,1)
-
-        ax.set_xscale('log')
-        ax.set_yscale('log')
-        # ax.set_title(f'Overdensity band')
-        ax.set_xlabel(r'$m_{\nu}$ [meV]')
-        ax.set_ylabel(r'$n_{\nu} / n_{\nu, 0}$')
-
-        if plot_ylims is not None:
-            ax.set_ylim(plot_ylims[0], plot_ylims[1])
-        
-        plt.grid(True, which="both", ls="-")
-
-        savefig_args = dict(
-            bbox_inches='tight'
-        )
-
 
         ### ------------- ###
         ### Plot objects. ###
@@ -254,9 +236,10 @@ class analyze_simulation_outputs(object):
 
         if 'NFW_halo' in self.objects:
 
-            plt.plot(
+            p1 = ax.plot(
                 self.mrange*1e3, self.etas_benchmark-1, 
-                color='green', label='(Benchmark) NFW Halo'
+                color='green', 
+                label='benchmark halo'
             )
 
         if 'box_halos' in self.objects:
@@ -272,24 +255,27 @@ class analyze_simulation_outputs(object):
             etas_perc84 = np.percentile(
                 self.etas_numerical, q=84, axis=0)
             
-            ax.plot(
+            p2 = ax.plot(
                 self.mrange*1e3, (etas_median-1), color='blue', 
-                label='Box Halos: medians'
+                label='box halos (medians)'
             )
-            ax.fill_between(
+            p3 = ax.fill_between(
                 self.mrange*1e3, (etas_perc2p5-1), (etas_perc97p5-1), 
-                color='blue', alpha=0.2, label='Box Halos: 2.5-97.5 % C.L.'
+                color='blue', alpha=0.2, 
+                label='2.5-97.5 % C.L.'
             )
-            ax.fill_between(
+            p4 = ax.fill_between(
                 self.mrange*1e3, (etas_perc16-1), (etas_perc84-1), 
-                color='blue', alpha=0.3, label='Box Halos: 16-84 % C.L.'
+                color='blue', alpha=0.3, 
+                label='16-84 % C.L.'
             )
 
         if 'analytical_halo' in self.objects:
 
-            plt.plot(
+            p5 = plt.plot(
                 self.mrange*1e3, self.etas_analytical-1, 
-                color='red', ls='solid', label='Analytical Halo'
+                color='red', ls='solid', 
+                label='analytical halo'
             )
 
             # Plot endpoint values from Mertsch et al (2020).
@@ -298,14 +284,32 @@ class analyze_simulation_outputs(object):
             # ax.scatter(x_ends, y_ends, marker='x', s=15, color='orange')
             
             # Plot reproduction of Mertsch et al., using their MW params.
-            plt.plot(
+            p6 = plt.plot(
                 self.mrange*1e3, self.etas_analytical_Mertsch-1, 
-                color='red', ls='dashed', label='Parameters as in Mertsch+(2020)'
-            )
+                color='red', ls='dashed')
 
-        plt.legend(loc='lower right')
+        # Plot syiling.
+        if plot_ylims is not None:
+            ax.set_ylim(plot_ylims[0], plot_ylims[1])
+
+        ax.set_xscale('log')
+        ax.set_yscale('log')
+        ax.set_xlabel(r'$m_{\nu}$ [meV]')
+        ax.set_ylabel(r'$n_{\nu} / n_{\nu, 0}$')
+        plt.grid(True, which="both", ls="-")
+
+        # legend = ax.legend(
+            # [p1, p2, p3, p4, (p5, p6)], 
+            # [
+            #     'benchmark halo', 
+            #     'box halos (medians)', '2.5-97.5 % C.L.', '16-84 % C.L.'
+            #     'analytical halo',
+            # ],
+            # handler_map={tuple: HandlerTuple(ndivide=None)})
+
+        ax.legend(loc='lower right')
         ax.yaxis.set_major_formatter(ticker.FuncFormatter(y_fmt))
-        plt.savefig(f'{self.fig_dir}/overdensity_band.pdf', **savefig_args)
+        plt.savefig(f'{self.fig_dir}/overdensity_band.pdf', bbox_inches='tight')
 
 
     def plot_overdensity_evolution(self, plot_ylims:tuple):
@@ -1122,7 +1126,7 @@ class analyze_simulation_outputs(object):
         plt.close()
 
 
-    def plot_phase_space(self, most_likely:bool):
+    def plot_phase_space(self, most_likely:bool, Mertsch=False):
 
         # Load necessary box and sim info.
         with open(f'{self.sim_dir}/sim_parameters.yaml', 'r') as file:
@@ -1143,6 +1147,15 @@ class analyze_simulation_outputs(object):
         box_Omega_M = box_setup['Cosmology']['Omega_M']
         box_Omega_L = box_setup['Cosmology']['Omega_L']
 
+        Rvir, Mvir, conc = self.get_halo_params()
+        Rvir_med = np.median(Rvir)
+        Mvir_med = np.median(Mvir)
+        conc_med = np.median(conc)
+        Rs_med = Rvir_med / conc_med
+        rho0_med = scale_density_NFW(
+            c=conc_med, z=0.,
+            H0=box_H0, Omega_M=box_Omega_M, Omega_L=box_Omega_L)
+        
 
         ### ---------------- ###
         ### Analytical halo. ###
@@ -1151,7 +1164,12 @@ class analyze_simulation_outputs(object):
         if 'analytical_halo' in self.objects:
 
             # Convert velocities to mementa.
-            vels_batches = self.vectors_analytical[...,3:6]
+
+            if Mertsch:
+                vels_batches = self.vectors_analytical_Mertsch[...,3:6]
+            else:
+                vels_batches = self.vectors_analytical[...,3:6]
+
             vels_in = vels_batches.reshape(-1, 100, 3)
 
             p_arr, y_arr = velocity_to_momentum(vels_in, self.mpicks)
@@ -1178,10 +1196,10 @@ class analyze_simulation_outputs(object):
             FDvals = Fermi_Dirac(p1_final)
 
             fig, axs = plt.subplots(2,2, figsize=(12,12))
-            fig.suptitle(
-                'Phase-space distr. "today" compared to Fermi-Dirac' ,
-                fontsize=18
-            )
+            # fig.suptitle(
+            #     'Phase-space distr. "today" compared to Fermi-Dirac' ,
+            #     fontsize=18
+            # )
 
             savefig_args = dict(
                 bbox_inches='tight'
@@ -1197,7 +1215,7 @@ class analyze_simulation_outputs(object):
 
                 # Simulation phase-space distr. of neutrinos today.
                 axs[i,j].loglog(
-                    y0_final[k], FDvals[k], label='PS today (from sim)', c='red', alpha=0.9
+                    y0_final[k], FDvals[k], label='Analytical halo as in Mertsch+(2020)', c='red', ls='solid', alpha=0.9
                 )
 
                 # Fermi-Dirac phase-space distr.
@@ -1205,21 +1223,44 @@ class analyze_simulation_outputs(object):
                     p_start*T_CNB, p_stop*T_CNB, FDvals.shape[-1])
                 FDvalsOG = Fermi_Dirac(pOG)
                 yOG = pOG/T_CNB
-                axs[i,j].loglog(yOG, FDvalsOG, label='PS Fermi-Dirac', c='black', alpha=0.7)
+                axs[i,j].loglog(yOG, FDvalsOG, label='Fermi-Dirac', c='magenta', ls=':', alpha=0.7)
 
-                # Escape momentum.
-                _, y_esc = escape_momentum(
-                    x_i=np.array([init_dis_analytical,0,0])*kpc, 
-                    R_vir=Rvir_MW, R_s=Rs_MW, rho_0=rho0_MW, m_nu_eV=m_nu)
-                axs[i,j].axvline(y_esc, c='k', ls='-.', label='y_esc')
+                if Mertsch:
+                    # Escape momentum.
+                    _, y_esc = escape_momentum(
+                        x_i=np.array([init_dis_analytical,0,0])*kpc, 
+                        R_vir=Rvir_MW, R_s=Rs_MW, rho_0=rho0_MW, m_nu_eV=m_nu)
+                    axs[i,j].axvline(
+                        y_esc, c='k', ls='-.', label='escape momentum')
+                
+                else:
+                    # Escape momentum.
+                    _, y_esc = escape_momentum(
+                        x_i=np.array([init_dis_analytical,0,0])*kpc, 
+                        R_vir=Rvir_med*kpc, R_s=Rs_med*kpc, rho_0=rho0_med, m_nu_eV=m_nu)
+                    axs[i,j].axvline(
+                        y_esc, c='k', ls='-.', label='escape momentum')
 
                 # Plot styling.
                 axs[i,j].set_title(f'{m_nu} eV')
-                axs[i,j].set_ylabel('FD(p)')
-                axs[i,j].set_xlabel(r'$y = p / T_{\nu,0}$')
-                axs[i,j].legend(loc='lower left')
                 axs[i,j].set_ylim(1e-2, 1e0)
                 axs[i,j].set_xlim(p_start, 1e1)
+
+                if m_nu == self.mpicks[-1]:
+                    axs[i,j].legend(
+                        loc='lower left', borderpad=0.5, labelspacing=0.5, 
+                        fontsize='medium')
+
+            # Common x-axis label.
+            fig.text(
+                0.5, 0.05, r'$p/T_{\nu,0}$', 
+                va='center', rotation='horizontal', fontsize='x-large')
+
+            # Common y-axis label.
+            fig.text(
+                0.04, 0.5, r'$f_\mathrm{today}$', 
+                va='center', rotation='vertical', fontsize='x-large')
+
 
             plt.savefig(
                 f'{self.fig_dir}/phase_space_analytical.pdf', **savefig_args)
@@ -1341,7 +1382,6 @@ class analyze_simulation_outputs(object):
                     label='Fermi-Dirac', c='magenta', ls=':', alpha=0.85)
 
                 # Escape momentum for each box halo.
-                Rvir, Mvir, conc = self.get_halo_params()
                 Rs = Rvir/conc
                 rho0 = scale_density_NFW(
                     c=conc, z=0.,
@@ -1858,7 +1898,7 @@ Analysis.plot_all_sky_map('numerical', 0, 0.3)
 sim_dir = f'L025N752/DMONLY/SigmaConstant00/single_halos'
 
 objects = (
-    # 'NFW_halo', 
+    'NFW_halo', 
     # 'box_halos', 
     'analytical_halo'
 )
@@ -1872,9 +1912,9 @@ Analysis = analyze_simulation_outputs(
 # Analysis.plot_2d_params(nu_mass_eV=0.3)
 # Analysis.plot_eta_vs_halo_params()
 
-# Analysis.plot_overdensity_band(plot_ylims=None)
+Analysis.plot_overdensity_band(plot_ylims=None)
 
-Analysis.plot_phase_space(most_likely=True)
+# Analysis.plot_phase_space(most_likely=True, Mertsch=True)
 
 # Analysis.plot_density_profiles(NFW_orig=True)
 

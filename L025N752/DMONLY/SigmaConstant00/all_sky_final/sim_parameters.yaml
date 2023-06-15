@@ -5,7 +5,7 @@ Npix: 768
 Nside: 8
 cosmo_neutrino_density [cm^-3]: 112.0137477613158
 initial_haloGC_distance: 8.178
-integration_solver: RK23
+integration_solver: RK45
 memory_limit_GB: 224
 momentum_num: 10000
 momentum_start: 0.01

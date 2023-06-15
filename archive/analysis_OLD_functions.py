@@ -139,7 +139,7 @@ class analyze_simulation_outputs_test(object):
                 )
 
 
-    def rotate_DM(self, DM_pos, obs_pos):
+    def OLD_rotate_DM(self, DM_pos, obs_pos):
 
         # Calculate the Euler angles, to match frame of Earth. This will be the 
         # new frame in which DM particles get projected to an all sky map.
@@ -175,7 +175,7 @@ class analyze_simulation_outputs_test(object):
         return DM_orig_in_rot_frame, obs_orig_in_rot_frame
 
 
-    def rot_int_smooth_healpix_map(self, healpix_map, cell0):
+    def OLD_rot_int_smooth_healpix_map(self, healpix_map, cell0):
         
         # Angles to compensate for location of starting cell (cell0).
         zAngle = np.rad2deg(np.arctan2(cell0[1], -cell0[0]))
@@ -271,7 +271,7 @@ class analyze_simulation_outputs_test(object):
         return num_pixels
 
 
-    def plot_all_sky_map(
+    def OLD_plot_all_sky_map(
             self, nu_mass_eV, sim_method, halo=None, two_plots=False
         ):
 
@@ -591,7 +591,7 @@ class analyze_simulation_outputs_test(object):
             return healpix_map, cl, cross, pearson_r, local_corr_map
 
 
-    def plot_neutrinos_inside_Rvir(self):
+    def OLD_plot_neutrinos_inside_Rvir(self):
         
         # All positions and velocities across redshifts.
         pos = self.vectors_numerical[...,0:3]
@@ -687,7 +687,7 @@ class analyze_simulation_outputs_test(object):
         plt.show()
 
 
-    def plot_anafast(self, nu_mass_eV, halo):
+    def OLD_plot_anafast(self, nu_mass_eV, halo):
 
         with open(f'{self.sim_dir}/sim_parameters.yaml', 'r') as file:
             sim_setup = yaml.safe_load(file)
@@ -713,7 +713,7 @@ class analyze_simulation_outputs_test(object):
         return cl
 
 
-    def plot_eta_vs_halo_params(self):
+    def OLD_plot_eta_vs_halo_params(self):
         
         # Get halo parameters.
         until = 19
@@ -782,7 +782,7 @@ class analyze_simulation_outputs_test(object):
         plt.show(); plt.close()
 
 
-    def plot_2d_params(self, nu_mass_eV):
+    def OLD_plot_2d_params(self, nu_mass_eV):
         
         # Make scatterplot with Mvir vs. conc. (for example).
         # Coloring is then from lowest to highest (f-\bar{f})/\bar{f},
@@ -838,7 +838,7 @@ class analyze_simulation_outputs_test(object):
         plt.savefig(f'{self.fig_dir}/2D_params.pdf', bbox_inches='tight')
 
 
-    def plot_eta_vs_init_dis(self, nu_mass_eV, halo):
+    def OLD_plot_eta_vs_init_dis(self, nu_mass_eV, halo):
 
         # Closest mass (index) for chosen neutrino mass.
         nu_mass_idx = (np.abs(self.mrange-nu_mass_eV)).argmin()

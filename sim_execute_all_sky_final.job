@@ -1,13 +1,13 @@
 #!/bin/bash
-#SBATCH --job-name=AllNFW
+#SBATCH --job-name=AllNFW45
 #SBATCH -p thin
-#SBATCH -t 04:00:00
+#SBATCH -t 05:00:00
 #SBATCH -N 1
 #SBATCH --tasks-per-node=1
 #SBATCH --cpus-per-task=128
 #SBATCH --mem=224000
-#SBATCH -o jobs/all_sky_NFW.out
-#SBATCH -e jobs/all_sky_NFW.err
+#SBATCH -o jobs/all_sky_NFW45.out
+#SBATCH -e jobs/all_sky_NFW45.err
 #SBATCH -v
 #SBATCH --exclusive
 
