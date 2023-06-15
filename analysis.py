@@ -38,10 +38,10 @@ Analysis = analyze_simulation_outputs(
 
 # print(Analysis.final_halos)
 # print(Analysis.halo_num)
-halo_array = np.arange(Analysis.halo_num)+1
+# halo_array = np.arange(Analysis.halo_num)+1
 
 # Generate power spectra plots.
-Analysis.plot_all_spectra_1plot(halo_array, 0.1)
+# Analysis.plot_all_spectra_1plot(halo_array, 0.1)
 
 
 # Generate all all-sky anisotropy maps.
@@ -54,6 +54,6 @@ Analysis.plot_all_spectra_1plot(halo_array, 0.1)
 # Generate correlation plots.
 # Analysis.plot_eta_vs_halo_params()
 
-# Analysis.plot_phase_space(most_likely=True)
+Analysis.plot_phase_space(most_likely=True)
 
-# Analysis.plot_density_profiles(NFW_orig=True)
+Analysis.plot_density_profiles(NFW_orig=True)

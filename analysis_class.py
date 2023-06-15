@@ -1338,8 +1338,8 @@ class analyze_simulation_outputs(object):
             # )
 
             percentages_esc = np.zeros(len(self.mpicks))
-            percentages_med = np.zeros(len(self.mpicks))
-            percentages_max = np.zeros(len(self.mpicks))
+            # percentages_med = np.zeros(len(self.mpicks))
+            # percentages_max = np.zeros(len(self.mpicks))
             for j, m_nu in enumerate(self.mpicks):
 
                 k = j  # k selects the element(s) for the current neutrino mass
@@ -1385,6 +1385,24 @@ class analyze_simulation_outputs(object):
                     label='Fermi-Dirac', c='magenta', ls=':', alpha=0.85)
 
                 # Escape momentum for each box halo.
+
+                #? correct escape momentum determination:
+                #1. Get total mass of halo by summation of DM particles
+                #2. Determine Rvir (not R200) via formula with Delta(z=0)
+                #3. This time Rs = Rvir/c_200
+                #4. Check if better approximation
+
+                # Read total DM mass by summing particles.
+                sim_parent = str(pathlib.Path(self.sim_dir).parent)
+                
+                DM_num_paths = glob.glob(f'{sim_parent}/DM_count*snap_0036.npy')
+                M_tot_l = np.zeros(len(DM_num_paths))
+                for i, DM_num_path in enumerate(DM_num_paths):
+                    DM_num = np.load(f'{sim_parent}/{DM_num_path}').flatten()
+                    M_tot_l[i] = np.sum(DM_num)
+
+                
+
                 Rs = Rvir/conc
                 rho0 = scale_density_NFW(
                     c=conc, z=0.,
@@ -1462,17 +1480,17 @@ class analyze_simulation_outputs(object):
                 FD2_norm = np.trapz(
                     all_mom**3*FDvals_median[k], x=np.log(all_mom))
 
-                #! (visually) find momentum threshold of median curve.
-                esc_cond_med = np.array([0.15, 0.7, 1.45, 3.92])
-                axs[i,j].axvline(
-                    esc_cond_med[k], 
-                    c='green', ls='-.')
+                # #! (visually) find momentum threshold of median curve.
+                # esc_cond_med = np.array([0.15, 0.7, 1.45, 3.92])
+                # axs[i,j].axvline(
+                #     esc_cond_med[k], 
+                #     c='green', ls='-.')
                 
-                #! (visually) find momentum threshold of max curve.
-                esc_cond_max = np.array([0.2, 1, 2, 5])
-                axs[i,j].axvline(
-                    esc_cond_max[k], 
-                    c='red', ls='-.')
+                # #! (visually) find momentum threshold of max curve.
+                # esc_cond_max = np.array([0.2, 1, 2, 5])
+                # axs[i,j].axvline(
+                #     esc_cond_max[k], 
+                #     c='red', ls='-.')
                 
                 # Clustered neutrino percentage using escape formula value.
                 below_esc = (y0_median[k] <= y_esc_med)
@@ -1484,22 +1502,22 @@ class analyze_simulation_outputs(object):
                 ic(np.round(perc_esc*100, 2))
 
                 # Clustered neutrino percentage using median curve.
-                below_esc_med = (y0_median[k] <= esc_cond_med[k])
-                x_interval = y0_median[k][below_esc_med]*T_CNB
-                y_interval = FDvals_median[k][below_esc_med]
-                perc_esc_med = np.trapz(
-                    x_interval**3*y_interval, x=np.log(x_interval))/FD2_norm
-                percentages_med[k] = np.round(perc_esc_med*100, 2)
-                ic(np.round(perc_esc_med*100, 2))
+                # below_esc_med = (y0_median[k] <= esc_cond_med[k])
+                # x_interval = y0_median[k][below_esc_med]*T_CNB
+                # y_interval = FDvals_median[k][below_esc_med]
+                # perc_esc_med = np.trapz(
+                #     x_interval**3*y_interval, x=np.log(x_interval))/FD2_norm
+                # percentages_med[k] = np.round(perc_esc_med*100, 2)
+                # ic(np.round(perc_esc_med*100, 2))
 
                 # Clustered neutrino percentage using max curve.
-                below_esc_max = (y0_median[k] <= esc_cond_max[k])
-                x_interval = y0_median[k][below_esc_max]*T_CNB
-                y_interval = FDvals_median[k][below_esc_max]
-                perc_esc_max = np.trapz(
-                    x_interval**3*y_interval, x=np.log(x_interval))/FD2_norm
-                percentages_max[k] = np.round(perc_esc_max*100, 2)
-                ic(np.round(perc_esc_max*100, 2))
+                # below_esc_max = (y0_median[k] <= esc_cond_max[k])
+                # x_interval = y0_median[k][below_esc_max]*T_CNB
+                # y_interval = FDvals_median[k][below_esc_max]
+                # perc_esc_max = np.trapz(
+                #     x_interval**3*y_interval, x=np.log(x_interval))/FD2_norm
+                # percentages_max[k] = np.round(perc_esc_max*100, 2)
+                # ic(np.round(perc_esc_max*100, 2))
 
                 if m_nu == self.mpicks[-1]:
                     axs[i,j].legend(
@@ -1518,10 +1536,10 @@ class analyze_simulation_outputs(object):
 
             np.savetxt(
                 f'clustered_neutrinos_percentages_esc.txt', percentages_esc)
-            np.savetxt(
-                f'clustered_neutrinos_percentages_med.txt', percentages_med)
-            np.savetxt(
-                f'clustered_neutrinos_percentages_max.txt', percentages_max)
+            # np.savetxt(
+            #     f'clustered_neutrinos_percentages_med.txt', percentages_med)
+            # np.savetxt(
+            #     f'clustered_neutrinos_percentages_max.txt', percentages_max)
 
             plt.savefig(
                 f'{self.fig_dir}/phase_space_numerical_{lin_or_log}.pdf', 
