@@ -1727,7 +1727,7 @@ class analyze_simulation_outputs(object):
             )
             ax.plot(
                 centers, NFW/(Msun/kpc**3), 
-                c='red', ls='-.', label='NFW: Mertsch+(2019)'
+                c='red', ls='-.', label='NFW: Mertsch+(2020)'
             )
 
 

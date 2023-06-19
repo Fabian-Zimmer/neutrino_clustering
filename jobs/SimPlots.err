@@ -15,11 +15,3 @@ ic| np.round(perc_interval*100, 2): 4.58
 ic| np.round(perc_esc*100, 2): 3.88
 ic| np.round(perc_interval*100, 2): 46.64
 ic| np.round(perc_esc*100, 2): 16.88
-ic| np.round(perc_interval*100, 2): 0.01
-ic| np.round(perc_esc*100, 2): 0.01
-ic| np.round(perc_interval*100, 2): 0.71
-ic| np.round(perc_esc*100, 2): 0.71
-ic| np.round(perc_interval*100, 2): 4.58
-ic| np.round(perc_esc*100, 2): 3.88
-ic| np.round(perc_interval*100, 2): 46.64
-ic| np.round(perc_esc*100, 2): 16.88

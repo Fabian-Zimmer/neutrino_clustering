@@ -30,7 +30,7 @@ Analysis = analyze_simulation_outputs(
     sim_type = args.sim_type,
 )
 
-Analysis.plot_overdensity_band(plot_ylims=None)
+# Analysis.plot_overdensity_band(plot_ylims=None)
 
 # Analysis.plot_overdensity_evolution(plot_ylims=(1e-4,1e1))
 
@@ -54,6 +54,6 @@ Analysis.plot_overdensity_band(plot_ylims=None)
 # Generate correlation plots.
 # Analysis.plot_eta_vs_halo_params()
 
-Analysis.plot_phase_space(most_likely=True, Mertsch=True)
+# Analysis.plot_phase_space(most_likely=True, Mertsch=True)
 
 Analysis.plot_density_profiles(NFW_orig=True)
