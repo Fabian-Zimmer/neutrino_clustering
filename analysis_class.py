@@ -1276,6 +1276,10 @@ class analyze_simulation_outputs(object):
 
         if 'box_halos' in self.objects:
 
+            with open(f'{self.sim_dir}/box_parameters.yaml', 'r') as file:
+                box_setup = yaml.safe_load(file)
+            DM_mass = box_setup['Content']['DM Mass [Msun]']*Msun
+
             box_halos_p1_final = []
             box_halos_y0_final = []
             for halo_j in range(self.halo_num):
@@ -1332,14 +1336,8 @@ class analyze_simulation_outputs(object):
             FDvals_perc84 = Fermi_Dirac(p1_perc84)
 
             fig, axs = plt.subplots(2,2, figsize=(12,12))
-            # fig.suptitle(
-            #     'Phase-space distr. "today" compared to Fermi-Dirac\n Box (numerical) halos',
-            #     fontsize=18
-            # )
 
             percentages_esc = np.zeros(len(self.mpicks))
-            # percentages_med = np.zeros(len(self.mpicks))
-            # percentages_max = np.zeros(len(self.mpicks))
             for j, m_nu in enumerate(self.mpicks):
 
                 k = j  # k selects the element(s) for the current neutrino mass
@@ -1386,23 +1384,29 @@ class analyze_simulation_outputs(object):
 
                 # Escape momentum for each box halo.
 
-                #? correct escape momentum determination:
-                #1. Get total mass of halo by summation of DM particles
-                #2. Determine Rvir (not R200) via formula with Delta(z=0)
-                #3. This time Rs = Rvir/c_200
-                #4. Check if better approximation
-
                 # Read total DM mass by summing particles.
-                sim_parent = str(pathlib.Path(self.sim_dir).parent)
+                # sim_parent = str(pathlib.Path(self.sim_dir).parent)
+                # DM_counts = np.zeros(len(self.halo_indices))
+                # for ii, ID in enumerate(self.halo_indices):
+                #     DM_count = np.load(
+                #         f'{sim_parent}/final_halo_data/DM_count_origID{ID}_snap_0036.npy')
+                #     DM_counts[ii] = np.sum(DM_count)
                 
-                DM_num_paths = glob.glob(f'{sim_parent}/DM_count*snap_0036.npy')
-                M_tot_l = np.zeros(len(DM_num_paths))
-                for i, DM_num_path in enumerate(DM_num_paths):
-                    DM_num = np.load(f'{sim_parent}/{DM_num_path}').flatten()
-                    M_tot_l[i] = np.sum(DM_num)
+                # M_tot = DM_counts*DM_mass
+                # rho_crit = fct_rho_crit(0, box_H0, box_Omega_M, box_Omega_L)
+                # Rvir = np.cbrt(3*M_tot/(4*Pi*100*rho_crit))
+                # Rs = Rvir/conc
 
-                
+                # rho0 = scale_density_NFW(
+                #     c=conc, z=0.,
+                #     H0=box_H0, Omega_M=box_Omega_M, Omega_L=box_Omega_L)
 
+                # _, y_esc = escape_momentum(
+                #     x_i=self.init_xyz*kpc, 
+                #     R_vir=Rvir, R_s=Rs, rho_0=rho0, 
+                #     m_nu_eV=m_nu)
+
+                # Using get_halo_params function, so x_200 values.
                 Rs = Rvir/conc
                 rho0 = scale_density_NFW(
                     c=conc, z=0.,
@@ -1480,17 +1484,6 @@ class analyze_simulation_outputs(object):
                 FD2_norm = np.trapz(
                     all_mom**3*FDvals_median[k], x=np.log(all_mom))
 
-                # #! (visually) find momentum threshold of median curve.
-                # esc_cond_med = np.array([0.15, 0.7, 1.45, 3.92])
-                # axs[i,j].axvline(
-                #     esc_cond_med[k], 
-                #     c='green', ls='-.')
-                
-                # #! (visually) find momentum threshold of max curve.
-                # esc_cond_max = np.array([0.2, 1, 2, 5])
-                # axs[i,j].axvline(
-                #     esc_cond_max[k], 
-                #     c='red', ls='-.')
                 
                 # Clustered neutrino percentage using escape formula value.
                 below_esc = (y0_median[k] <= y_esc_med)
@@ -1500,24 +1493,7 @@ class analyze_simulation_outputs(object):
                     x_interval**3*y_interval, x=np.log(x_interval))/FD2_norm
                 percentages_esc[k] = np.round(perc_esc*100, 2)
                 ic(np.round(perc_esc*100, 2))
-
-                # Clustered neutrino percentage using median curve.
-                # below_esc_med = (y0_median[k] <= esc_cond_med[k])
-                # x_interval = y0_median[k][below_esc_med]*T_CNB
-                # y_interval = FDvals_median[k][below_esc_med]
-                # perc_esc_med = np.trapz(
-                #     x_interval**3*y_interval, x=np.log(x_interval))/FD2_norm
-                # percentages_med[k] = np.round(perc_esc_med*100, 2)
-                # ic(np.round(perc_esc_med*100, 2))
-
-                # Clustered neutrino percentage using max curve.
-                # below_esc_max = (y0_median[k] <= esc_cond_max[k])
-                # x_interval = y0_median[k][below_esc_max]*T_CNB
-                # y_interval = FDvals_median[k][below_esc_max]
-                # perc_esc_max = np.trapz(
-                #     x_interval**3*y_interval, x=np.log(x_interval))/FD2_norm
-                # percentages_max[k] = np.round(perc_esc_max*100, 2)
-                # ic(np.round(perc_esc_max*100, 2))
+                
 
                 if m_nu == self.mpicks[-1]:
                     axs[i,j].legend(
@@ -1536,10 +1512,6 @@ class analyze_simulation_outputs(object):
 
             np.savetxt(
                 f'clustered_neutrinos_percentages_esc.txt', percentages_esc)
-            # np.savetxt(
-            #     f'clustered_neutrinos_percentages_med.txt', percentages_med)
-            # np.savetxt(
-            #     f'clustered_neutrinos_percentages_max.txt', percentages_max)
 
             plt.savefig(
                 f'{self.fig_dir}/phase_space_numerical_{lin_or_log}.pdf', 
@@ -1715,7 +1687,7 @@ class analyze_simulation_outputs(object):
             
             ax.plot(
                 centers, NFW_halo_densities, 
-                    c='green', label=f'NFW Halo'
+                    c='green', label=f'benchmark halo'
             )
 
         if 'box_halos' in self.objects:
@@ -1737,20 +1709,21 @@ class analyze_simulation_outputs(object):
             densities_perc97p5 = np.percentile(densities, q=97.5, axis=0)
             densities_perc16 = np.percentile(densities, q=16, axis=0)
             densities_perc84 = np.percentile(densities, q=84, axis=0)
+            np.save(f'density_profiles_box_halos.npy', densities)
 
             ax.plot(
                 centers, densities_median, 
-                c='blue', label=f'Box Halos Median'
+                c='blue', label=f'box halos (medians)'
             )
             ax.fill_between(
                 centers, densities_perc2p5, densities_perc97p5,
                 color='blue', alpha=0.2, 
-                label='Box Halos: 2.5-97.5 % C.L.'
+                label='2.5-97.5 % C.L.'
             )
             ax.fill_between(
                 centers, densities_perc16, densities_perc84,
                 color='blue', alpha=0.3, 
-                label='Box Halos: 16-84 % C.L.'
+                label='16-84 % C.L.'
             )
 
 
@@ -1761,7 +1734,7 @@ class analyze_simulation_outputs(object):
             )
             ax.plot(
                 centers, NFW/(Msun/kpc**3), 
-                c='red', ls='-.', label='Analytical halo NFW'
+                c='red', ls='-.', label='NFW: Mertsch+(2019)'
             )
 
 
@@ -1781,7 +1754,7 @@ class analyze_simulation_outputs(object):
                 centers*kpc, rho_NFW, Rs_med*kpc)
             ax.plot(
                 centers, NFW/(Msun/kpc**3), 
-                c='black', ls='-.', label='Box halos median NFW')
+                c='black', ls='-.', label='NFW: box halo medians')
 
         # ax.set_title('Density Profiles')
         ax.set_xlabel('r [kpc]')
@@ -1791,7 +1764,7 @@ class analyze_simulation_outputs(object):
         ax.set_xlim(1e0, 1e3)
         ax.set_ylim(5*1e2, 5*1e8)
 
-        plt.legend(loc='lower left')
+        plt.legend(loc='lower left', prop={'size':14})
         plt.savefig(f'{self.fig_dir}/density_profiles.pdf', bbox_inches='tight')
         plt.close()
 
@@ -1915,12 +1888,12 @@ Analysis.plot_all_sky_map('numerical', 0, 0.3)
 
 
 # ======================== #
-'''
+# '''
 sim_dir = f'L025N752/DMONLY/SigmaConstant00/single_halos'
 
 objects = (
     'NFW_halo', 
-    # 'box_halos', 
+    'box_halos', 
     'analytical_halo'
 )
 Analysis = analyze_simulation_outputs(
@@ -1933,11 +1906,11 @@ Analysis = analyze_simulation_outputs(
 # Analysis.plot_2d_params(nu_mass_eV=0.3)
 # Analysis.plot_eta_vs_halo_params()
 
-Analysis.plot_overdensity_band(plot_ylims=None)
+# Analysis.plot_overdensity_band(plot_ylims=None)
 
-# Analysis.plot_phase_space(most_likely=True, Mertsch=True)
+Analysis.plot_phase_space(most_likely=True, Mertsch=True)
 
-# Analysis.plot_density_profiles(NFW_orig=True)
+Analysis.plot_density_profiles(NFW_orig=True)
 
 # Analysis.plot_overdensity_evolution(plot_ylims=(1e-4,1e1))
 

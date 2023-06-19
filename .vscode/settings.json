@@ -11,23 +11,11 @@
     "editor.showUnused": true,
     "javascript.validate.enable": true,
     "editor.stickyScroll.enabled": true,
-    "jupyter.kernels.filter": [
-        {
-            "path": "/bin/python2",
-            "type": "pythonEnvironment"
-        },
-        {
-            "path": "/usr/bin/python2",
-            "type": "pythonEnvironment"
-        },
-        {
-            "path": "/bin/python3",
-            "type": "pythonEnvironment"
-        },
-        {
-            "path": "/usr/bin/python3",
-            "type": "pythonEnvironment"
-        }
-    ],
     "python.analysis.typeCheckingMode": "off",
+    "jupyter.kernels.excludePythonEnvironments": [
+        "/bin/python2",
+        "/usr/bin/python2",
+        "/bin/python3",
+        "/usr/bin/python3"
+    ],
 }

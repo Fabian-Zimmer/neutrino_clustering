@@ -56,4 +56,4 @@ Analysis = analyze_simulation_outputs(
 
 Analysis.plot_phase_space(most_likely=True)
 
-Analysis.plot_density_profiles(NFW_orig=True)
+# Analysis.plot_density_profiles(NFW_orig=True)

@@ -7,3 +7,19 @@
 /home/zimmer/.conda/envs/neutrino_clustering/lib/python3.9/site-packages/healpy/newvisufunc.py:401: UserWarning: 
  *** New plot properies: {'cbar_shrink': 0.6, 'cbar_pad': 0.1, 'cbar_label_pad': 1, 'cbar_tick_direction': 'out', 'vertical_tick_rotation': 90, 'figure_width': 8.5, 'figure_size_ratio': 0.63} ***
   warnings.warn("\n *** New plot properies: " + str(plot_properties) + " ***")
+ic| np.round(perc_interval*100, 2): 0.01
+ic| np.round(perc_esc*100, 2): 0.01
+ic| np.round(perc_interval*100, 2): 0.9
+ic| np.round(perc_esc*100, 2): 0.83
+ic| np.round(perc_interval*100, 2): 5.71
+ic| np.round(perc_esc*100, 2): 4.55
+ic| np.round(perc_interval*100, 2): 52.69
+ic| np.round(perc_esc*100, 2): 19.74
+ic| np.round(perc_interval*100, 2): 0.01
+ic| np.round(perc_esc*100, 2): 0.01
+ic| np.round(perc_interval*100, 2): 0.9
+ic| np.round(perc_esc*100, 2): 0.83
+ic| np.round(perc_interval*100, 2): 5.71
+ic| np.round(perc_esc*100, 2): 4.55
+ic| np.round(perc_interval*100, 2): 52.69
+ic| np.round(perc_esc*100, 2): 19.74
