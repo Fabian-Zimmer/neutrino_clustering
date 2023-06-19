@@ -257,7 +257,7 @@ class analyze_simulation_outputs(object):
             
             p2 = ax.plot(
                 self.mrange, (etas_median-1), color='blue', 
-                label='box halos (medians)'
+                label='box halos (median)'
             )
             p3 = ax.fill_between(
                 self.mrange, (etas_perc2p5-1), (etas_perc97p5-1), 
@@ -1199,14 +1199,6 @@ class analyze_simulation_outputs(object):
             FDvals = Fermi_Dirac(p1_final)
 
             fig, axs = plt.subplots(2,2, figsize=(12,12))
-            # fig.suptitle(
-            #     'Phase-space distr. "today" compared to Fermi-Dirac' ,
-            #     fontsize=18
-            # )
-
-            savefig_args = dict(
-                bbox_inches='tight'
-            )
 
             for j, m_nu in enumerate(self.mpicks):
 
@@ -1218,7 +1210,7 @@ class analyze_simulation_outputs(object):
 
                 # Simulation phase-space distr. of neutrinos today.
                 axs[i,j].loglog(
-                    y0_final[k], FDvals[k], label='Analytical halo as in Mertsch+(2020)', c='red', ls='solid', alpha=0.9
+                    y0_final[k], FDvals[k], label='analytical halo of Mertsch+(2020)', c='red', ls='solid', alpha=0.9
                 )
 
                 # Fermi-Dirac phase-space distr.
@@ -1266,7 +1258,8 @@ class analyze_simulation_outputs(object):
 
 
             plt.savefig(
-                f'{self.fig_dir}/phase_space_analytical.pdf', **savefig_args)
+                f'{self.fig_dir}/phase_space_analytical.pdf', 
+                bbox_inches='tight')
             plt.close()
 
 
@@ -1493,7 +1486,7 @@ class analyze_simulation_outputs(object):
                     x_interval**3*y_interval, x=np.log(x_interval))/FD2_norm
                 percentages_esc[k] = np.round(perc_esc*100, 2)
                 ic(np.round(perc_esc*100, 2))
-                
+
 
                 if m_nu == self.mpicks[-1]:
                     axs[i,j].legend(
