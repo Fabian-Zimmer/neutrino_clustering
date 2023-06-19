@@ -1706,7 +1706,7 @@ class analyze_simulation_outputs(object):
 
             ax.plot(
                 centers, densities_median, 
-                c='blue', label=f'box halos (medians)'
+                c='blue', label=f'box halos (median)'
             )
             ax.fill_between(
                 centers, densities_perc2p5, densities_perc97p5,
@@ -1747,7 +1747,7 @@ class analyze_simulation_outputs(object):
                 centers*kpc, rho_NFW, Rs_med*kpc)
             ax.plot(
                 centers, NFW/(Msun/kpc**3), 
-                c='black', ls='-.', label='NFW: box halo medians')
+                c='black', ls='-.', label='NFW: box halos (median)')
 
         # ax.set_title('Density Profiles')
         ax.set_xlabel('r [kpc]')
