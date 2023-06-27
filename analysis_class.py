@@ -1840,7 +1840,7 @@ class analyze_simulation_outputs(object):
 
 
 # ======================== #
-# '''
+'''
 sim_dir = f'L025N752/DMONLY/SigmaConstant00/all_sky_final'
 
 objects = (
@@ -1881,7 +1881,7 @@ Analysis.plot_all_sky_map('numerical', 0, 0.3)
 
 
 # ======================== #
-# '''
+'''
 sim_dir = f'L025N752/DMONLY/SigmaConstant00/single_halos'
 
 objects = (

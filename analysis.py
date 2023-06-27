@@ -36,17 +36,17 @@ Analysis = analyze_simulation_outputs(
 
 # Analysis.plot_2d_params(nu_mass_eV=0.3)
 
-# print(Analysis.final_halos)
-# print(Analysis.halo_num)
-# halo_array = np.arange(Analysis.halo_num)+1
+print(Analysis.final_halos)
+print(Analysis.halo_num)
+halo_array = np.arange(Analysis.halo_num)+1
 
 # Generate power spectra plots.
 # Analysis.plot_all_spectra_1plot(halo_array, 0.1)
 
 
 # Generate all all-sky anisotropy maps.
-# for halo in halo_array:
-    # Analysis.plot_all_sky_map('numerical', halo, 0.3)
+for halo in halo_array:
+    Analysis.plot_all_sky_map('numerical', halo, 0.3)
 
 # For benchmark NFW:
 # Analysis.plot_all_sky_map('numerical', 0, 0.3)
@@ -56,4 +56,4 @@ Analysis = analyze_simulation_outputs(
 
 # Analysis.plot_phase_space(most_likely=True, Mertsch=True)
 
-Analysis.plot_density_profiles(NFW_orig=True)
+# Analysis.plot_density_profiles(NFW_orig=True)
