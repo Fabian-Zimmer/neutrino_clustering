@@ -31,15 +31,15 @@ Halo 30 original values: min=0.45702610001294913, max=7.345207056941958, factor=
 
 JOB STATISTICS
 ==============
-Job ID: 2975794
+Job ID: 2975883
 Cluster: snellius
 User/Group: zimmer/zimmer
 State: RUNNING
 Nodes: 1
-Cores per node: 128
+Cores per node: 96
 CPU Utilized: 00:00:00
-CPU Efficiency: 0.00% of 04:50:08 core-walltime
-Job Wall-clock time: 00:02:16
+CPU Efficiency: 0.00% of 03:32:48 core-walltime
+Job Wall-clock time: 00:02:13
 Memory Utilized: 0.00 MB (estimated maximum)
 Memory Efficiency: 0.00% of 54.69 GB (54.69 GB/node)
 WARNING: Efficiency statistics may be misleading for RUNNING jobs.

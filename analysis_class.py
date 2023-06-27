@@ -827,7 +827,7 @@ class analyze_simulation_outputs(object):
             # Adjust and save figure.
             plt.subplots_adjust(wspace=0.15)
             plt.savefig(
-                f'{self.fig_dir}/All_sky_maps_{end_str}_RK45.pdf', 
+                f'{self.fig_dir}/All_sky_maps_{end_str}.pdf', 
                 bbox_inches='tight'
             )
             plt.close()
