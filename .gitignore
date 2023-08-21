@@ -11,3 +11,7 @@ archive/
 sim_data/
 sim_execute*
 sim_setup*
+jobs/
+.ipynb_checkpoints/
+.vscode/
+__pycache__/
