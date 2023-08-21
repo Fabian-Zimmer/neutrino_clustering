@@ -1,4 +1,4 @@
-# N-1-Body Simulation code for the CNB.
+# N-1-Body CNB Simulation code.
 
 **Authors:** Fabian Zimmer, Camila Correa, Shin'ichiro Ando
 

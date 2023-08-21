@@ -8,3 +8,6 @@ L025N752/**/benchmark_halo**
 L025N752/**/benchmark_test**
 testground_**.ipynb
 archive/
+sim_data/
+sim_execute*
+sim_setup*
