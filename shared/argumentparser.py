@@ -241,3 +241,4 @@ class ArgumentWithInputFiles(object):
         print(f"Output directory: {self.output_directory}")
         print(f"Input file: {self.input_file_list}")
         print("")
+
