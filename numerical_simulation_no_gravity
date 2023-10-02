@@ -169,19 +169,11 @@ def number_densities_mass_range(
 
 
 # Make temporary folder to store files, s.t. parallel runs don't clash.
-# rand_code = ''.join(
-#     random.choices(string.ascii_uppercase + string.digits, k=4)
-# )
-# data_dir = f'{args.directory}/temp_data_{rand_code}'
-# os.makedirs(data_dir)
-
-# Parent directory of current sim folder
-parent_dir = str(pathlib.Path(args.directory).parent)
-
-# All precalculations are stored here
-data_dir = f'{parent_dir}/data_precalculations'
-if not os.path.exists(data_dir):
-    os.makedirs(data_dir)
+rand_code = ''.join(
+    random.choices(string.ascii_uppercase + string.digits, k=4)
+)
+temp_dir = f'{args.directory}/temp_data_{rand_code}'
+os.makedirs(temp_dir)
 
 
 def M12_to_M12X(M12_val):
@@ -206,56 +198,15 @@ print('Halo batch params (Rvir,Mvir,cNFW):')
 print(halo_batch_params)
 print('***********************************')
 
-def EOMs(s_val, y):
+
+def EOMs_noGravity(s_val, y):
 
     # Initialize vector.
-    x_i, u_i = np.reshape(y, (2,3))
-
-    # Switch to "numerical reality" here.
-    x_i *= kpc
-    u_i *= (kpc/s)
-
-    # Find z corresponding to s via interpolation.
-    z = np.interp(s_val, s_int_steps, z_int_steps)
-
-    # Snapshot specific parameters.
-    idx = np.abs(zeds_snaps - z).argmin()
-    snap = nums_snaps[idx]
-    snap_GRID_L = snaps_GRID_L[idx]
-
-    # Neutrino inside cell grid.
-    if np.all(np.abs(x_i) < snap_GRID_L):
-
-        # Load files for current z, to find in which cell neutrino is. Then 
-        # load gravity for that cell.
-        snap_data = preloaded_data.get_data_for_snap(snap)
-        dPsi_grid = snap_data['dPsi_grid']
-        cell_grid = snap_data['cell_grid']
-        cell_gens = snap_data['cell_gens']
-        
-        cell_idx, cell_len0, cell_cc0 = nu_in_which_cell(
-            x_i, cell_grid, cell_gens, snap_GRID_L
-        )
-        grad_tot = dPsi_grid[cell_idx,:]
-
-    # Neutrino outside cell grid.
-    else:
-
-        DM_com = snaps_DM_com[idx]
-        DM_num = snaps_DM_num[idx]
-        QJ_abs = snaps_QJ_abs[idx]
-        grad_tot = outside_gravity_quadrupole(
-            x_i, DM_com, DM_mass, DM_num, QJ_abs
-        )
-
-    # Switch to "physical reality" here.
-    grad_tot /= (kpc/s**2)
-    x_i /= kpc
-    u_i /= (kpc/s)
+    _, u_i = np.reshape(y, (2,3))
 
     # Hamilton eqns. for integration (global minus, s.t. we go back in time).
     dyds = -np.array([
-        u_i, 1./(1.+z)**2 * grad_tot
+        u_i, 0.
     ])
 
     return dyds
@@ -269,12 +220,13 @@ def backtrack_1_neutrino(y0_Nr):
 
     # Solve all 6 EOMs.
     sol = solve_ivp(
-        fun=EOMs, t_span=[s_int_steps[0], s_int_steps[-1]], t_eval=s_int_steps,
+        fun=EOMs_noGravity, 
+        t_span=[s_int_steps[0], s_int_steps[-1]], t_eval=s_int_steps,
         y0=y0, method=integration_solver, vectorized=True,
         args=()
-        )
+    )
     
-    np.save(f'{data_dir}/nu_{int(Nr)}.npy', np.array(sol.y.T))
+    np.save(f'{temp_dir}/nu_{int(Nr)}.npy', np.array(sol.y.T))
 
 
 for halo_j, halo_ID in enumerate(halo_batch_IDs):
@@ -289,58 +241,10 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
     else:
         end_str = f'halo{halo_j+1}'
     
-    #! Important:
-    # The loop ran from the earliest snapshot (z~4 for us) to the latest (z=0).
-    # So the below arrays are in this order. Even though our simulation runs 
-    # backwards in time, we can leave them like this, since the correct element 
-    # gets picked with the idx routine in the EOMs function above.
-    snaps_GRID_L = np.load(f'{data_dir}/snaps_GRID_L_{end_str}.npy')
-    snaps_DM_num = np.load(f'{data_dir}/snaps_DM_num_{end_str}.npy')
-    snaps_CC_num = np.load(f'{data_dir}/snaps_CC_num_{end_str}.npy')
-    snaps_progID = np.load(f'{data_dir}/snaps_progID_{end_str}.npy')
-    snaps_DM_com = np.load(f'{data_dir}/snaps_DM_com_{end_str}.npy')
-    snaps_QJ_abs = np.load(f'{data_dir}/snaps_QJ_abs_{end_str}.npy')
-
-
-    class PreloadedData:
-        def __init__(self, halo_ID, nums_snaps, data_dir):
-            self.halo_ID = halo_ID
-            self.nums_snaps = nums_snaps
-            self.data_dir = data_dir
-            self.data_files = {}
-
-            # Preload data
-            for snap in self.nums_snaps:
-                fname = f'origID{self.halo_ID}_snap_{snap}'
-                self.data_files[fname] = {
-                    'dPsi_grid': np.load(f'{self.data_dir}/dPsi_grid_{fname}.npy'),
-                    'cell_grid': np.load(f'{self.data_dir}/fin_grid_{fname}.npy'),
-                    'cell_gens': np.load(f'{self.data_dir}/cell_gen_{fname}.npy'),
-                }
-
-        def get_data_for_snap(self, snap):
-            fname = f'origID{self.halo_ID}_snap_{snap}'
-            data = self.data_files[fname]
-            return {
-                'dPsi_grid': data['dPsi_grid'].copy(),
-                'cell_grid': data['cell_grid'].copy(),
-                'cell_gens': data['cell_gens'].copy(),
-            }
-
-    # Create an instance of the PreloadedData class
-    preloaded_data = PreloadedData(halo_ID, nums_snaps, data_dir)
-
-    # Find a cell fitting initial distance criterium, then get (x,y,z) of that 
-    # cell for starting position.
-
-    # Load grid data and compute radial distances from center of cell centers.
-    cell_ccs = np.squeeze(preloaded_data.get_data_for_snap('0036')['cell_grid'])
-    cell_ccs_kpc = cell_ccs/kpc
-    cell_dis = np.linalg.norm(cell_ccs_kpc, axis=-1)
-
-    # Take first cell, which is in Earth-like position (there can be multiple).
+ 
+    # Initial position (Earth).
     # Needs to be without kpc units (thus doing /kpc) for simulation start.
-    init_xyz = cell_ccs[np.abs(cell_dis - init_dis).argsort()][0]/kpc.flatten()
+    init_xyz = np.array([8.5, 0., 0.])
     np.save(f'{args.directory}/init_xyz_{end_str}.npy', init_xyz)
 
     # Display parameters for simulation.
@@ -349,12 +253,8 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
 
     sim_start = time.perf_counter()
 
-    if args.sim_type in ('single_halos', 'spheres', 'benchmark'):
+    if args.sim_type in ('single_halos', 'benchmark'):
         
-        # Special case for spheres, such that files get named appropriately.
-        if args.sim_type == 'spheres':
-            end_str = f'{end_str}_{args.shells}shells'
-
         # Load initial velocities.
         ui = np.load(f'{args.directory}/initial_velocities.npy')
 
@@ -369,7 +269,7 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
 
         # Compactify all neutrino vectors into 1 file.
         neutrino_vectors = np.array(
-            [np.load(f'{data_dir}/nu_{i+1}.npy') for i in range(neutrinos)]
+            [np.load(f'{temp_dir}/nu_{i+1}.npy') for i in range(neutrinos)]
         )
 
         # For these modes (i.e. not all_sky), save all neutrino vectors.
@@ -396,9 +296,8 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
 
         pix_sr_sim = sim_setup['pix_sr']
 
-        # Load initial velocities for all_sky mode. Note that this array is 
-        # (mostly, if Nside is larger than 2**1) not github compatible, and 
-        # will be deleted afterwards.
+        # Load initial velocities for all_sky mode.
+        # Deleted later due to size, unless simulation is manually downscaled.
         ui = np.load(f'{args.directory}/initial_velocities.npy')
 
         # Empty list to append number densitites of each angle coord. pair.
@@ -427,7 +326,7 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
             # Compactify all neutrino vectors into 1 file.
             neutrino_vectors = np.array(
                 [
-                    np.load(f'{data_dir}/nu_{i+1}.npy') 
+                    np.load(f'{temp_dir}/nu_{i+1}.npy') 
                     for i in range(len(ui_elem))
                 ]
             )
@@ -456,10 +355,13 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
                 end_idx = start_idx+1_000
                 nu_vectors[start_idx:end_idx,:,:] = combined
 
-                # Save all sky neutrino vectors for current halo
-                # For nside=8 has shape (1_000*768, 2, 6) and is ~70 MB
-                vname = f'neutrino_vectors_numerical_{end_str}_all_sky'
-                np.save(f'{args.directory}/{vname}.npy', np.array(nu_vectors))
+
+        if all_sky_small:
+
+            # Save all sky neutrino vectors for current halo
+            # For nside=8 has shape (1_000*768, 2, 6) and is ~70 MB
+            vname = f'neutrino_vectors_numerical_{end_str}_all_sky'
+            np.save(f'{args.directory}/{vname}.npy', np.array(nu_vectors))
 
 
         # Save number densities for current halo
@@ -473,6 +375,9 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
     if 'benchmark' in args.sim_type:
         break
 
+
+# Remove temporary folder.
+shutil.rmtree(temp_dir)
 
 total_time = time.perf_counter()-total_start
 print(f'Total time: {total_time/60.} min, {total_time/(60**2)} h.')
