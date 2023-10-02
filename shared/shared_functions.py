@@ -1,6 +1,80 @@
 from shared.preface import *
 
 
+def halo_batch_indices(
+    snap, mass_gauge, mass_lower, mass_upper, 
+    halo_type, halo_limit, fname, sim_dir, out_dir
+):
+
+    # ---------------------------------- #
+    # Read in parameters of halo in sim. #
+    # ---------------------------------- #
+
+    props = h5py.File(f'{sim_dir}/subhalo_{snap}.properties')
+
+    cNFW = props['cNFW_200crit'][:]  # NFW concentration.
+    rvir = props['R_200crit'][:]*1e3 # Virial radius (to kpc with *1e3)
+    m200c = props['Mass_200crit'][:] *1e10  # Crit. M_200 (to Msun with *1e10)
+    m200c[m200c <= 0] = 1
+    m200c = np.log10(m200c)  
+
+
+    # -------------------------------------------------- #
+    # Select a halo sample based on mass and mass range. #
+    # -------------------------------------------------- #
+
+    select_halos = np.where(
+        (m200c >= mass_gauge-mass_lower) & (m200c <= mass_gauge+mass_upper)
+    )[0]
+
+    # Selecting subhalos or (host/main) halos.
+    subtype = props["Structuretype"][:]
+    if halo_type == 'subhalos':
+        select = np.where(subtype[select_halos] > 10)[0]
+        select_halos = select_halos[select]
+    else:
+        select = np.where(subtype[select_halos] == 10)[0]
+        select_halos = select_halos[select]
+
+    # Limit amount of halos to given size.
+    halo_number = len(select_halos)
+    # if halo_number >= halo_limit:
+
+    #     # Fix pseudo-random choice of halos.
+    #     # np.random.seed(1)
+    #     random.seed(1)
+        
+    #     # Select non-repeating indices for halos.
+    #     # rand_IDs = np.random.randint(0, halo_number-1, size=(halo_limit))
+    #     rand_IDs = random.sample(list(np.arange(halo_number)), halo_limit)
+    #     select_halos = select_halos[rand_IDs]
+
+
+    # Save cNFW, rvir and Mvir of halos in batch.
+    halo_params = np.zeros((len(select_halos), 3))
+    for j, halo_idx in enumerate(select_halos):
+        halo_params[j, 0] = rvir[halo_idx]
+        halo_params[j, 1] = m200c[halo_idx]
+        halo_params[j, 2] = cNFW[halo_idx]
+
+    # Sort arrays by concentration (in descending order)
+    order = halo_params[:,2].argsort()[::-1]
+    select_halos_sorted = select_halos[order]
+    halo_params_sorted = halo_params[order]
+
+    # Delete entries with 0. concentration (erroneous halos)
+    not0c = ~np.any(halo_params_sorted==0, axis=1)
+    select_halos_trimmed = select_halos_sorted[not0c]
+    halo_params_trimmed = halo_params_sorted[not0c]
+
+    if halo_number >= halo_limit:
+        select_halos_lim = select_halos_trimmed[:halo_limit]
+        halo_params_lim = halo_params_trimmed[:halo_limit]
+
+    np.save(f'{out_dir}/halo_batch_{fname}_indices.npy', select_halos_lim)
+    np.save(f'{out_dir}/halo_batch_{fname}_params.npy', halo_params_lim)
+
+
 def read_column_from_file(filename, column_name):
     df = pd.read_csv(filename)
     return df[column_name].tolist()
