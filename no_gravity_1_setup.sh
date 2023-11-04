@@ -27,7 +27,7 @@ python make_simulation_parameters.py \
 --z_int_stop 4 \
 --z_int_num 100 \
 --int_solver RK23 \
---CPUs_precalculations 128 \
---CPUs_simulations 128 \
---memory_limit_GB 224 \
+--CPUs_precalculations 16 \
+--CPUs_simulations 16 \
+--memory_limit_GB 16 \
 --DM_in_cell_limit 1_000

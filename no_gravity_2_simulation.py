@@ -19,6 +19,9 @@ parser.add_argument('-sh', '--shells', required=False)
 parser.add_argument(
     '--upto_Rvir', required=True, action=argparse.BooleanOptionalAction
 )
+parser.add_argument(
+    '--gravity', required=True, action=argparse.BooleanOptionalAction
+)
 args = parser.parse_args()
 
 
@@ -51,9 +54,6 @@ init_dis = sim_setup['initial_haloGC_distance']
 
 
 # Load arrays.
-nums_snaps = np.load(f'{args.directory}/nums_snaps.npy')
-zeds_snaps = np.load(f'{args.directory}/zeds_snaps.npy')
-
 z_int_steps = np.load(f'{args.directory}/z_int_steps.npy')
 s_int_steps = np.load(f'{args.directory}/s_int_steps.npy')
 neutrino_massrange = np.load(f'{args.directory}/neutrino_massrange_eV.npy')*eV
@@ -62,8 +62,6 @@ shell_multipliers = np.load(f'{args.directory}/shell_multipliers.npy')
 
 
 # Load constants and arrays, which some functions below need.
-FCT_DM_shell_edges = np.copy(DM_shell_edges)
-FCT_shell_multipliers = np.copy(shell_multipliers)
 FCT_zeds = np.copy(z_int_steps)
 
 
@@ -71,79 +69,6 @@ FCT_zeds = np.copy(z_int_steps)
 ### Define all necessary functions here. ###
 ### ==================================== ###
 # Defined in order of usage.
-
-
-@nb.njit
-def nu_in_which_cell(x_i, cell_coords, cell_gens, init_GRID_S):
-
-    # Number of cells.
-    num_cells = cell_coords.shape[0]
-
-    # "Center" the neutrino coordinates on the cell coordinates.
-    x_cent = x_i - cell_coords.reshape(num_cells, 3)
-
-    # All cell lengths. Limit for the largest cell is GRID_S/2, not just 
-    # GRID_S, therefore the cell_gen+1 !
-    cell_lens = init_GRID_S/(2**(cell_gens+1))
-
-    # Find index of cell in which neutrino is enclosed.
-    in_cell = np.asarray(
-        (np.abs(x_cent[...,0]) < cell_lens) & 
-        (np.abs(x_cent[...,1]) < cell_lens) & 
-        (np.abs(x_cent[...,2]) < cell_lens)
-    )
-    cell_idx = np.argwhere(in_cell).flatten()[0]
-    cell_len = cell_lens[cell_idx]
-    cell_ccs = cell_coords[cell_idx, :]
-
-    return cell_idx, cell_len, cell_ccs
-
-
-@nb.njit
-def outside_gravity_quadrupole(x_i, com_halo, DM_sim_mass, DM_num, QJ_abs):
-
-    ### ----------- ###
-    ### Quadrupole. ###
-    ### ----------- ###
-
-    # Center neutrino on c.o.m. of halo and get distance.
-    x_i -= com_halo
-    r_i = np.sqrt(np.sum(x_i**2))
-
-    # Permute order of coords by one, i.e. (x,y,z) -> (z,x,y).
-    x_i_roll = np.empty_like(x_i)
-    x_i_roll[0] = x_i[2]
-    x_i_roll[1] = x_i[0]
-    x_i_roll[2] = x_i[1]
-
-    # Terms appearing in the quadrupole term.
-    QJ_aa = QJ_abs[0]
-    QJ_ab = QJ_abs[1]
-
-    # Factors of 2 are for the symmetry of QJ_ab elements.
-    term1_aa = np.sum(QJ_aa*x_i, axis=0)
-    term1_ab = np.sum(2*QJ_ab*x_i_roll, axis=0)
-    term1 = (term1_aa+term1_ab)/r_i**5
-
-    term2_pre = 5*x_i/(2*r_i**7)
-    term2_aa = np.sum(QJ_aa*x_i**2, axis=0)
-    term2_ab = np.sum(2*QJ_ab*x_i*x_i_roll, axis=0)
-    term2 = term2_pre*(term2_aa+term2_ab)
-
-    dPsi_multipole_cells = G*DM_sim_mass*(-term1+term2)
-
-    ### --------- ###
-    ### Monopole. ###
-    ### --------- ###
-
-    dPsi_monopole_cells = G*DM_num*DM_sim_mass*x_i/r_i**3
-
-    # Total outside gravity gradient.
-    gradient_out = dPsi_multipole_cells+dPsi_monopole_cells
-
-    # Acceleration is negative value of (grav. pot.) gradient.
-    return -gradient_out
-
 
 def number_densities_mass_range(
     sim_vels, nu_masses, out_file=None, pix_sr=4*Pi,
@@ -169,33 +94,19 @@ def number_densities_mass_range(
 
 
 # Make temporary folder to store files, s.t. parallel runs don't clash.
-rand_code = ''.join(
-    random.choices(string.ascii_uppercase + string.digits, k=4)
-)
-temp_dir = f'{args.directory}/temp_data_{rand_code}'
-os.makedirs(temp_dir)
+# rand_code = ''.join(
+#     random.choices(string.ascii_uppercase + string.digits, k=4)
+# )
+# temp_dir = f'{args.directory}/temp_data_{rand_code}'
+# os.makedirs(temp_dir)
 
+temp_dir = f'{args.directory}/temp_data'
+if not os.path.exists(temp_dir):
+    os.makedirs(temp_dir)
 
-def M12_to_M12X(M12_val):
-    return np.log(M12_val*10.**12)/np.log(10.)
-
-# hname = f'1e+{args.mass_gauge}_pm{args.mass_range}Msun'
-hname = f'{args.mass_lower}-{args.mass_upper}x1e+{args.mass_gauge}_Msun'
-mass_neg = np.abs(float(args.mass_gauge) - M12_to_M12X(float(args.mass_lower)))
-mass_pos = np.abs(float(args.mass_gauge) - M12_to_M12X(float(args.mass_upper)))
-halo_batch_indices(
-    z0_snap_4cif, 
-    float(args.mass_gauge), mass_neg, mass_pos,
-    'halos', int(args.halo_num), 
-    hname, box_file_dir, args.directory
-)
-halo_batch_IDs = np.load(f'{args.directory}/halo_batch_{hname}_indices.npy')
-halo_batch_params = np.load(f'{args.directory}/halo_batch_{hname}_params.npy')
-halo_num = len(halo_batch_params)
 
 print(f'********Numerical Simulation: Mode={args.sim_type}********')
-print('Halo batch params (Rvir,Mvir,cNFW):')
-print(halo_batch_params)
+print(f'NO GRAVITY')
 print('***********************************')
 
 
@@ -206,7 +117,7 @@ def EOMs_noGravity(s_val, y):
 
     # Hamilton eqns. for integration (global minus, s.t. we go back in time).
     dyds = -np.array([
-        u_i, 0.
+        u_i, np.zeros(3)
     ])
 
     return dyds
@@ -226,10 +137,12 @@ def backtrack_1_neutrino(y0_Nr):
         args=()
     )
     
-    np.save(f'{temp_dir}/nu_{int(Nr)}.npy', np.array(sol.y.T))
+    # np.save(f'{temp_dir}/nu_{int(Nr)}.npy', np.array(sol.y.T))
+    return np.array(sol.y.T)
 
 
-for halo_j, halo_ID in enumerate(halo_batch_IDs):
+halo_num = int(args.halo_num)
+for halo_j in range(halo_num):
     grav_time = time.perf_counter()
 
     # ========================================= #
@@ -238,13 +151,15 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
 
     if 'benchmark' in args.sim_type:
         end_str = 'benchmark_halo'
+    elif args.gravity is False:
+        end_str = f'no_gravity'
     else:
         end_str = f'halo{halo_j+1}'
     
  
     # Initial position (Earth).
     # Needs to be without kpc units (thus doing /kpc) for simulation start.
-    init_xyz = np.array([8.5, 0., 0.])
+    init_xyz = np.array([float(init_dis), 0., 0.])
     np.save(f'{args.directory}/init_xyz_{end_str}.npy', init_xyz)
 
     # Display parameters for simulation.
@@ -306,60 +221,112 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
         # Empty list to append first and last vectors for all coord. pairs
         if all_sky_small:
             # Pre-allocate array
-            final_shape = (1_000*768, 2, 6)
+            nus_per_pix = int(sim_setup['momentum_num'])
+            Npix = int(sim_setup['Npix'])
+            final_shape = (nus_per_pix*Npix, 2, 6)
             nu_vectors = np.empty(final_shape)
 
+        if args.gravity:
 
-        for cp, ui_elem in enumerate(ui):
+            for cp, ui_elem in enumerate(ui):
 
-            print(f'Coord. pair {cp+1}/{len(ui)}')
+                print(f'Coord. pair {cp+1}/{len(ui)}')
 
-            # Combine vectors and append neutrino particle number.
-            y0_Nr = np.array([np.concatenate(
-                (init_xyz, ui_elem[k], [k+1])) for k in range(len(ui_elem))
-            ])
+                # Combine vectors and append neutrino particle number.
+                y0_Nr = np.array([np.concatenate(
+                    (init_xyz, ui_elem[k], [k+1])) for k in range(len(ui_elem))
+                ])
 
-            # Run simulation on multiple cores.
-            with ProcessPoolExecutor(CPUs_sim) as ex:
-                ex.map(backtrack_1_neutrino, y0_Nr)
+                # Run simulation on multiple cores.
+                with ProcessPoolExecutor(CPUs_sim) as ex:
+                    ex.map(backtrack_1_neutrino, y0_Nr)
 
-            # Compactify all neutrino vectors into 1 file.
-            neutrino_vectors = np.array(
-                [
-                    np.load(f'{temp_dir}/nu_{i+1}.npy') 
-                    for i in range(len(ui_elem))
-                ]
-            )
-
-            # Compute the number densities.
-            nu_densities.append(
-                number_densities_mass_range(
-                    neutrino_vectors[...,3:6], 
-                    neutrino_massrange, 
-                    sim_type=args.sim_type,
-                    pix_sr=pix_sr_sim
-
+                # Compactify all neutrino vectors into 1 file.
+                neutrino_vectors = np.array(
+                    [
+                        np.load(f'{temp_dir}/nu_{i+1}.npy') 
+                        for i in range(len(ui_elem))
+                    ]
                 )
-            )
 
-            # Save first and last vector elements for all_sky_small version
+                # Compute the number densities.
+                nu_densities.append(
+                    number_densities_mass_range(
+                        neutrino_vectors[...,3:6], 
+                        neutrino_massrange, 
+                        sim_type=args.sim_type,
+                        pix_sr=pix_sr_sim
+
+                    )
+                )
+
+                # Save first and last vector elements for all_sky_small version
+                if all_sky_small:
+                    
+                    # Select and combine first and last sim vectors
+                    z0_elems = neutrino_vectors[:,0,:].reshape(-1,1,6)
+                    z4_elems = neutrino_vectors[:,-1,:].reshape(-1,1,6)
+                    combined = np.concatenate((z0_elems, z4_elems), axis=1)
+
+                    # Fill elements of pre-allocated neutrino vectors array
+                    start_idx = cp * nus_per_pix
+                    end_idx = start_idx + nus_per_pix
+                    nu_vectors[start_idx:end_idx,:,:] = combined
+
+
+        else:
+
+            def process_cp(cp_ui_tuple, all_sky_small=False):
+                cp, ui_elem = cp_ui_tuple
+                y0_Nr = np.array(
+                    [np.concatenate((init_xyz, ui_elem[k], [k+1])) for k in range(len(ui_elem))]
+                )
+                # Single core simulation for all neutrinos for this cp.
+                results = list(map(backtrack_1_neutrino, y0_Nr))
+
+                # Compactify results
+                neutrino_vectors = np.array(results)
+
+                # Compute number densities
+                nu_density = number_densities_mass_range(
+                    neutrino_vectors[..., 3:6],
+                    neutrino_massrange,
+                    sim_type=args.sim_type,
+                    pix_sr=pix_sr_sim,
+                )
+
+                if all_sky_small:
+                    z0_elems = neutrino_vectors[:, 0, :].reshape(-1, 1, 6)
+                    z4_elems = neutrino_vectors[:, -1, :].reshape(-1, 1, 6)
+                    combined = np.concatenate((z0_elems, z4_elems), axis=1)
+                    return cp, nu_density, combined
+
+                return cp, nu_density, None
+            
+            
+            with ProcessPoolExecutor(CPUs_sim) as ex:
+                if all_sky_small:
+                    ordered_results = list(ex.map(partial(process_cp, all_sky_small=all_sky_small), enumerate(ui)))
+                else:
+                    ordered_results = list(ex.map(process_cp, enumerate(ui)))
+
+
+            # Sort results based on cp and extract nu_densities and combined vectors
+            ordered_results.sort(key=lambda x: x[0])
+            nu_densities = [res[1] for res in ordered_results]
+
+
             if all_sky_small:
-                
-                # Select and combine first and last sim vectors
-                z0_elems = neutrino_vectors[:,0,:].reshape(-1,1,6)
-                z4_elems = neutrino_vectors[:,-1,:].reshape(-1,1,6)
-                combined = np.concatenate((z0_elems, z4_elems), axis=1)
-
-                # Fill elements of pre-allocated neutrino vectors array
-                start_idx = cp*1_000
-                end_idx = start_idx+1_000
-                nu_vectors[start_idx:end_idx,:,:] = combined
+                for cp, res in enumerate(ordered_results):
+                    start_idx = cp * nus_per_pix
+                    end_idx = start_idx + nus_per_pix
+                    nu_vectors[start_idx:end_idx, :, :] = res[2]
 
 
         if all_sky_small:
 
             # Save all sky neutrino vectors for current halo
-            # For nside=8 has shape (1_000*768, 2, 6) and is ~70 MB
+            # note: Max. possible is nside=8, shape (1_000*768, 2, 6), ~70 MB
             vname = f'neutrino_vectors_numerical_{end_str}_all_sky'
             np.save(f'{args.directory}/{vname}.npy', np.array(nu_vectors))
 
