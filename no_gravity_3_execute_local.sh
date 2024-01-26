@@ -2,9 +2,9 @@
 
 sim_boxtype=L025N752/DMONLY/SigmaConstant00
 sim_fullname=no_gravity
-local_folder=neutrino_clustering
+local_folder=Projects/neutrino_clustering
 
-python $HOME/$local_folder/no_gravity_2_simulation.py \
+python $HOME/$local_folder/no_gravity_2_simulation_jax.py \
 --directory $HOME/$local_folder/$sim_boxtype/$sim_fullname \
 --sim_type all_sky \
 --mass_gauge 12.0 \

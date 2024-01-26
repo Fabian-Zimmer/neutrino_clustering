@@ -22,6 +22,9 @@ from pynverse import inversefunc
 
 # arrays and data packages
 import numpy as np
+import jax
+import jax.numpy as jnp
+import diffrax
 import re
 import h5py
 from funcy import chunks
