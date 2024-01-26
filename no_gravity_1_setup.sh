@@ -3,7 +3,7 @@
 sim_fullname=no_gravity
 
 python make_box_parameters_and_merger_tree.py \
---box_directory /projects/0/einf180/Tango_sims \
+--box_directory /projects/0/prjs0781/Tango_sims \
 --box_name L025N752 \
 --box_version DMONLY/SigmaConstant00 \
 --sim_fullname $sim_fullname \
@@ -27,7 +27,7 @@ python make_simulation_parameters.py \
 --z_int_stop 4 \
 --z_int_num 100 \
 --int_solver RK23 \
---CPUs_precalculations 128 \
---CPUs_simulations 128 \
---memory_limit_GB 224 \
+--CPUs_precalculations 16 \
+--CPUs_simulations 16 \
+--memory_limit_GB 16 \
 --DM_in_cell_limit 1_000

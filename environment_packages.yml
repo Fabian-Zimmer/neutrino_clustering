@@ -233,5 +233,5 @@ dependencies:
     - sympy==1.10.1
     - unyt==2.9.2
     - velociraptor==0.15.6
-prefix: /home/zimmer/.conda/envs/neutrino_clustering
+prefix: /home/fzimmer/.conda/envs/neutrino_clustering
 
