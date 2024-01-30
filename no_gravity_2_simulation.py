@@ -214,6 +214,7 @@ for halo_j in range(halo_num):
         # Load initial velocities for all_sky mode.
         # Deleted later due to size, unless simulation is manually downscaled.
         ui = np.load(f'{args.directory}/initial_velocities.npy')
+        ui = ui[::10,...]
 
         # Empty list to append number densitites of each angle coord. pair.
         nu_densities = []

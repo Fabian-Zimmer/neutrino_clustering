@@ -109,7 +109,7 @@ print(f'********Numerical Simulation: Mode={args.sim_type}********')
 print(f'NO GRAVITY')
 print('***********************************')
 
-
+@jax.jit
 def EOMs_noGravity(s_val, y, args):
 
     # Initialize vector.
@@ -123,20 +123,22 @@ def EOMs_noGravity(s_val, y, args):
     return dyds
 
 
+# ODE solver setup
+term = diffrax.ODETerm(EOMs_noGravity)
+# solver = diffrax.Tsit5()
+solver = diffrax.Dopri5()
+t0 = s_int_steps[0]
+t1 = s_int_steps[-1]
+dt0 = (s_int_steps[0] + s_int_steps[1])/2
+saveat = diffrax.SaveAt(ts=jnp.array(s_int_steps))
+stepsize_controller = diffrax.PIDController(rtol=1e-3, atol=1e-1)
+
+@jax.jit
 def backtrack_1_neutrino(y0_Nr):
     """Simulate trajectory of 1 neutrino."""
 
     # Initial vector
     y0 = jnp.array([y0_Nr[0:3], y0_Nr[3:6]])
-
-    # ODE solver setup
-    term = diffrax.ODETerm(EOMs_noGravity)
-    solver = diffrax.Tsit5()
-    t0 = s_int_steps[0]
-    t1 = s_int_steps[-1]
-    dt0 = (s_int_steps[0] + s_int_steps[1])/2
-    saveat = diffrax.SaveAt(ts=jnp.array(s_int_steps))
-    stepsize_controller = diffrax.PIDController(rtol=1e-3, atol=1e-1)
 
     # Solutions to coupled EOMs
     sol = diffrax.diffeqsolve(
@@ -225,7 +227,7 @@ for halo_j in range(halo_num):
         # Load initial velocities for all_sky mode.
         # Deleted later due to size, unless simulation is manually downscaled.
         ui = np.load(f'{args.directory}/initial_velocities.npy')
-        ui = ui[::10,...]
+        # ui = ui[::10,...]
 
         # Empty list to append number densitites of each angle coord. pair.
         nu_densities = []
