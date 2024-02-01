@@ -134,6 +134,7 @@ dt0 = (s_int_steps[0] + s_int_steps[1])/2
 saveat = diffrax.SaveAt(ts=jnp.array(s_int_steps))
 stepsize_controller = diffrax.PIDController(rtol=1e-3, atol=1e-1)
 
+
 @jax.jit
 def backtrack_1_neutrino(y0_Nr):
     """Simulate trajectory of 1 neutrino."""
@@ -149,10 +150,9 @@ def backtrack_1_neutrino(y0_Nr):
         args=None
     )
     
-    sol_vector = sol.ys.reshape(100,6)
+    trajectory = sol.ys.reshape(100,6)
 
-    # np.save(f'{temp_dir}/nu_{int(Nr)}.npy', np.array(sol.y.T))
-    return jnp.array(sol_vector)
+    return jnp.stack([trajectory[0], trajectory[-1]])
 
 
 halo_num = int(args.halo_num)
