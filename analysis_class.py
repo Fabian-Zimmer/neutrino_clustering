@@ -562,7 +562,7 @@ class analyze_simulation_outputs(object):
             print(f'Halo {halo_label} original values: min={eta_min}, max={eta_max}, factor={factor}')
         
             # Load Halo DM positions.
-            DM_dir = f'{parent}/final_halo_data'
+            DM_dir = f'{parent}/data_precalculations'
             haloID = self.halo_indices[halo-1]
             pos_origin = np.load(
                 f'{DM_dir}/DM_pos_origID{haloID}_snap_0036.npy'
@@ -1382,7 +1382,7 @@ class analyze_simulation_outputs(object):
                 # DM_counts = np.zeros(len(self.halo_indices))
                 # for ii, ID in enumerate(self.halo_indices):
                 #     DM_count = np.load(
-                #         f'{sim_parent}/final_halo_data/DM_count_origID{ID}_snap_0036.npy')
+                #         f'{sim_parent}/data_precalculations/DM_count_origID{ID}_snap_0036.npy')
                 #     DM_counts[ii] = np.sum(DM_count)
                 
                 # M_tot = DM_counts*DM_mass
@@ -1690,7 +1690,7 @@ class analyze_simulation_outputs(object):
 
                 # Read the DM positions of all halos at redshift z=0.
                 DM_coords = np.load(glob.glob(
-                    f'{sim_parent}/final_halo_data/DM_pos_origID{halo_ID}_snap_0036.npy')[0]
+                    f'{sim_parent}/data_precalculations/DM_pos_origID{halo_ID}_snap_0036.npy')[0]
                 )
 
                 # Calculate density for each bin center.

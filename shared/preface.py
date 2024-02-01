@@ -19,6 +19,7 @@ from icecream import ic
 import traceback
 import math
 from pynverse import inversefunc
+from functools import partial
 
 # arrays and data packages
 import numpy as np

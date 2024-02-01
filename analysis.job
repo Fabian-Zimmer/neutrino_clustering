@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=SimPlots
-#SBATCH -p thin
+#SBATCH -p rome
 #SBATCH -t 00:15:00
 #SBATCH -N 1
 #SBATCH --tasks-per-node=1
@@ -10,15 +10,23 @@
 #SBATCH -e jobs/SimPlots.err
 #SBATCH -v
 
+# rome  node- full: 128/224 ; half: 64/112 ; quarter: 32/56 ; CPUs/GB.
+# genoa node- full: 192/336 ; half: 96/168 ; quarter: 48/84 ; CPUs/GB.
+
 module purge
 
-source $HOME/.conda/envs/neutrino_clustering/bin/activate
+# Load .bashrc if it exists
+if [ -f "$HOME/.bashrc" ]; then
+    source $HOME/.bashrc
+fi
+
+conda activate neutrino_clustering
 
 sim_boxtype=L025N752/DMONLY/SigmaConstant00
-sim_fullname=all_sky_final
+sim_fullname=all_sky_small
 
-python $HOME/neutrino_clustering_V2/analysis.py \
---sim_directory $HOME/neutrino_clustering_V2/$sim_boxtype/$sim_fullname \
+python $HOME/neutrino_clustering/analysis.py \
+--sim_directory $HOME/neutrino_clustering/$sim_boxtype/$sim_fullname \
 --sim_type 'all_sky' \
 --no-NFW_halo \
 --box_halos \
