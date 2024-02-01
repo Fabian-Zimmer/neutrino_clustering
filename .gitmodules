@@ -1,0 +1,3 @@
+[submodule "Shared"]
+	path = Shared
+	url = https://github.com/Fabian-Zimmer/Shared.git
