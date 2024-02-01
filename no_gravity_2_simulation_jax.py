@@ -129,6 +129,7 @@ term = diffrax.ODETerm(EOMs_noGravity)
 solver = diffrax.Dopri5()
 t0 = s_int_steps[0]
 t1 = s_int_steps[-1]
+
 dt0 = (s_int_steps[0] + s_int_steps[1])/2
 saveat = diffrax.SaveAt(ts=jnp.array(s_int_steps))
 stepsize_controller = diffrax.PIDController(rtol=1e-3, atol=1e-1)
