@@ -11,7 +11,6 @@ parser.add_argument('-mg', '--mass_gauge', required=True)
 parser.add_argument('-ml', '--mass_lower', required=True)
 parser.add_argument('-mu', '--mass_upper', required=True)
 parser.add_argument('-hn', '--halo_num', required=True)
-parser.add_argument('-sh', '--shells', required=False)
 parser.add_argument(
     '--upto_Rvir', required=True, action=argparse.BooleanOptionalAction
 )
@@ -54,17 +53,36 @@ neutrino_massrange = jnp.load(f'{pars.directory}/neutrino_massrange_eV.npy')*Par
 FCT_zeds = jnp.copy(z_int_steps)
 
 
-# @jax.jit(static_argnums=(3,))
-def number_densities_for_mass_range(v_arr, m_arr, pix_sr, sim_type, fname, args):
+def compute_number_densities_all_sky(v_arr, m_arr, Npix, pix_sr, out_path, args):
+
+    nu_per_pix = v_arr.shape[0] / Npix
+    time_steps = v_arr.shape[1]
+
     # Convert velocities to momenta.
-    p_arr, _ = Physics.velocities_to_momenta(v_arr, m_arr, Params)
+    p_arr, _ = Physics.velocities_to_momenta(v_arr, m_arr, args)
+    # (masses, total particles, time_steps)
+
+    #? or is it reshape to nu_per_pix, Npix ? 
+    #? how are the results from the multiprocessing routine stacked?
+    p_swap = jnp.swapaxes(
+        p_arr.reshape(len(m_arr), Npix, int(nu_per_pix), -1), 0, 1)
+
+    nu_dens = []
+    for p_elem in p_swap:
+        nu_dens_pix = Physics.number_density(
+            p_elem[..., 0], p_elem[..., -1], pix_sr, args)
+        nu_dens.append(nu_dens_pix)
+
+    jnp.save(f"{out_path}", jnp.array(nu_dens))
+
+
+def number_densities_for_mass_range(v_arr, m_arr, pix_sr, out_path, args):
+    # Convert velocities to momenta.
+    p_arr, _ = Physics.velocities_to_momenta(v_arr, m_arr, args)
 
     nu_dens = Physics.number_density(p_arr[...,0], p_arr[...,-1], pix_sr, args)
 
-    if sim_type == 'all_sky':
-        return nu_dens
-    else:
-        jnp.save(f"{fname}", nu_dens)
+    jnp.save(f"{out_path}", nu_dens)
 
 
 def number_densities_mass_range(
@@ -126,10 +144,15 @@ print('***********************************')
 
 @jax.jit
 def jax_interpolate(x_target, x_points, y_points):
+
     # Find indices where x_target is between x_points
     idx = jnp.argmax(x_points > x_target) - 1
-    idx = jnp.where(idx < 0, 0, idx)  # Handle edge case where x_target is less than all x_points
-    idx = jnp.where(idx >= len(x_points) - 1, len(x_points) - 2, idx)  # Handle edge case for upper bound
+
+    # Handle edge case where x_target is less than all x_points
+    idx = jnp.where(idx < 0, 0, idx)  
+
+    # Handle edge case for upper bound
+    idx = jnp.where(idx >= len(x_points) - 1, len(x_points) - 2, idx)  
 
     # Compute the slope (dy/dx) for the interval
     dy_dx = (y_points[idx + 1] - y_points[idx]) / (x_points[idx + 1] - x_points[idx])
@@ -141,27 +164,29 @@ def jax_interpolate(x_target, x_points, y_points):
 
 
 @jax.jit
-def EOMs(s_val, y, dPsi_grid_data, cell_grid_data, cell_gens_data):
+def EOMs(s_val, y, args):
+
+    # Unpack the simulation grid data
+    s_int_steps, z_int_steps, zeds_snaps, snaps_GRID_L, snaps_DM_com, snaps_DM_num, snaps_QJ_abs, dPsi_grid_data, cell_grid_data, cell_gens_data, DM_mass, kpc, s = args
 
     # Initialize vector.
-    x_i, u_i = jnp.reshape(y, (2,3))
+    x_i, u_i = y
 
     # Switch to "numerical reality" here.
-    x_i *= Params.kpc
-    u_i *= (Params.kpc/Params.s)
+    x_i *= kpc
+    u_i *= (kpc/s)
 
     # Find z corresponding to s via interpolation.
     z = jax_interpolate(s_val, s_int_steps, z_int_steps)
 
     # Snapshot specific parameters.
     idx = jnp.abs(zeds_snaps - z).argmin()
-    snap = nums_snaps[idx]
     snap_GRID_L = snaps_GRID_L[idx]
 
     def inside_cell(_):
 
-        # Load files for current z, to find in which cell neutrino is. Then 
-        # load gravity for that cell.
+        # Load files for current z, to find in which cell neutrino is. 
+        # Then load gravity for that cell.
         dPsi_grid = dPsi_grid_data[idx]
         cell_grid = cell_grid_data[idx]
         cell_gens = cell_gens_data[idx]
@@ -174,6 +199,7 @@ def EOMs(s_val, y, dPsi_grid_data, cell_grid_data, cell_gens_data):
 
     def outside_cell(_):
 
+        # Apply long range force (incl. quadrupole) of whole grid content.
         DM_com = snaps_DM_com[idx]
         DM_num = snaps_DM_num[idx]
         QJ_abs = snaps_QJ_abs[idx]
@@ -189,9 +215,9 @@ def EOMs(s_val, y, dPsi_grid_data, cell_grid_data, cell_gens_data):
         None)  # Operand, not used here
 
     # Switch to "physical reality" here.
-    grad_tot /= (Params.kpc/Params.s**2)
-    x_i /= Params.kpc
-    u_i /= (Params.kpc/Params.s)
+    grad_tot /= (kpc/s**2)
+    x_i /= kpc
+    u_i /= (kpc/s)
 
     # Hamilton eqns. for integration (global minus, s.t. we go back in time).
     dyds = -jnp.array([
@@ -212,7 +238,9 @@ stepsize_controller = diffrax.PIDController(rtol=1e-3, atol=1e-1)
 
 
 @jax.jit
-def backtrack_1_neutrino(y0_Nr, dPsi_grid_data, cell_grid_data, cell_gens_data):
+def backtrack_1_neutrino(
+    y0_Nr, 
+    s_int_steps, z_int_steps, zeds_snaps, snaps_GRID_L, snaps_DM_com, snaps_DM_num, snaps_QJ_abs, dPsi_grid_data, cell_grid_data, cell_gens_data, DM_mass, kpc, s):
     """Simulate trajectory of 1 neutrino."""
 
     # Initial vector
@@ -223,13 +251,13 @@ def backtrack_1_neutrino(y0_Nr, dPsi_grid_data, cell_grid_data, cell_gens_data):
         term, solver, 
         t0=t0, t1=t1, dt0=dt0, y0=y0, max_steps=10000,
         saveat=saveat, stepsize_controller=stepsize_controller,
-        args=(dPsi_grid_data, cell_grid_data, cell_gens_data)
+        args=( 
+            s_int_steps, z_int_steps, zeds_snaps, snaps_GRID_L, snaps_DM_com, snaps_DM_num, snaps_QJ_abs, dPsi_grid_data, cell_grid_data, cell_gens_data, DM_mass, kpc, s)
     )
     
-    sol_vector = sol.ys.reshape(100,6)
-    
-    # np.save(f'{data_dir}/nu_{int(Nr)}.npy', np.array(sol.y.T))
-    return jnp.array(sol_vector)
+    trajectory = sol.ys.reshape(100,6)
+
+    return jnp.stack([trajectory[0], trajectory[-1]])
 
 
 for halo_j, halo_ID in enumerate(halo_batch_IDs):
@@ -261,7 +289,34 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
     snaps_QJ_abs = jnp.load(f'{data_dir}/snaps_QJ_abs_{end_str}.npy')
 
 
+    def fill_1d_arrays_with_zeros_jax(array_list):
+        # Find the maximum N among all arrays
+        max_N = max(arr.shape[0] for arr in array_list)
+        
+        # Use list comprehension to pad arrays for the (N,) case
+        filled_arrays = [jnp.pad(arr, (0, max_N - arr.shape[0]), 
+                                mode='constant', constant_values=0)
+                        for arr in array_list]
+        
+        # Stack the padded arrays into a single JAX array
+        return jnp.stack(filled_arrays)
+
+
+    def fill_2d_arrays_with_zeros_jax(array_list):
+
+        # Find the maximum N among all arrays
+        max_N = max(arr.shape[0] for arr in array_list)
+        
+        # Use list comprehension to pad arrays
+        filled_arrays = [jnp.pad(arr, ((0, max_N - arr.shape[0]), (0, 0)), 
+                        mode='constant', constant_values=0)
+                        for arr in array_list]
+        
+        return jnp.array(filled_arrays)
+
+
     def load_snap_data(origID, data_dir, start_snap=12, end_snap=36):
+        
         # Initialize lists to store the data
         dPsi_grid_list = []
         cell_grid_list = []
@@ -269,21 +324,23 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
 
         # Loop over the snapshot numbers
         for snap_num in range(start_snap, end_snap + 1):
-            snap_str = str(snap_num).zfill(4)  # Format the number as a 4-digit string
+            snap = str(snap_num).zfill(4)  # Format the number as a 4-digit string
 
             # Load the data files
-            dPsi_grid_file = f'{data_dir}/dPsi_grid_origID{origID}_snap_{snap_str}.npy'
-            cell_grid_file = f'{data_dir}/fin_grid_origID{origID}_snap_{snap_str}.npy'
-            cell_gens_file = f'{data_dir}/cell_gen_origID{origID}_snap_{snap_str}.npy'
+            dPsi_grid_f = f'{data_dir}/dPsi_grid_origID{origID}_snap_{snap}.npy'
+            cell_grid_f = f'{data_dir}/fin_grid_origID{origID}_snap_{snap}.npy'
+            cell_gens_f = f'{data_dir}/cell_gen_origID{origID}_snap_{snap}.npy'
+            # Above 3 arrays have shapes (N,3), (N,1,3) and (N,), respectively
 
-            dPsi_grid_list.append(jnp.load(dPsi_grid_file))
-            cell_grid_list.append(jnp.load(cell_grid_file))
-            cell_gens_list.append(jnp.load(cell_gens_file))
+            # Append arrays to list, squeezing (N,1,3) cell_grid to (N,3) shape
+            dPsi_grid_list.append(jnp.load(dPsi_grid_f))
+            cell_grid_list.append(jnp.squeeze(jnp.load(cell_grid_f)))
+            cell_gens_list.append(jnp.load(cell_gens_f))
 
-        # Convert lists to numpy arrays
-        dPsi_grid = jnp.array(dPsi_grid_list)
-        cell_grid = jnp.array(cell_grid_list)
-        cell_gens = jnp.array(cell_gens_list)
+        # Pad with zeros and convert lists to jnp arrays
+        dPsi_grid = fill_2d_arrays_with_zeros_jax(dPsi_grid_list)
+        cell_grid = fill_2d_arrays_with_zeros_jax(cell_grid_list)
+        cell_gens = fill_1d_arrays_with_zeros_jax(cell_gens_list)
 
         return dPsi_grid, cell_grid, cell_gens
 
@@ -310,6 +367,7 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
 
     sim_start = time.perf_counter()
 
+    #! to overhaul...
     if pars.sim_type in ('single_halos', 'benchmark'):
 
         # Load initial velocities.
@@ -348,138 +406,70 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
         )
 
     else:
-        # note: change manually if you want to save vectors
-        all_sky_small = True
 
+        # Size (in sr) of all-sky healpixels
         pix_sr_sim = sim_setup['pix_sr']
 
-        # Load initial velocities for all_sky mode. Note that this array is 
-        # (mostly, if Nside is larger than 2**1) not github compatible, and 
-        # will be deleted afterwards.
-        ui = np.load(f'{pars.directory}/initial_velocities.npy')
+        # Number of healpixels 
+        Npix = sim_setup["Npix"]
 
-        # Empty list to append number densitites of each angle coord. pair.
-        nu_densities = []
-
-        # Empty list to append first and last vectors for all coord. pairs
-        if all_sky_small:
-            # Pre-allocate array
-            nus_per_pix = int(sim_setup['momentum_num'])
-            Npix = int(sim_setup['Npix'])
-            final_shape = (nus_per_pix*Npix, 2, 6)
-            nu_vectors = np.empty(final_shape)
+        init_vels = np.load(f'{pars.directory}/initial_velocities.npy')  
+        # shape = (Npix, neutrinos_per_pix, 3)
 
 
-        def process_cp(cp_ui_tuple, dPsi_grid_data, cell_grid_data, cell_gens_data, all_sky_small=False):
-            
-            cp, ui_elem = cp_ui_tuple
-            y0_Nr = np.array(
-                [np.concatenate((init_xyz, ui_elem[k], [k+1])) for k in range(len(ui_elem))]
-            )
-            # Single core simulation for all neutrinos for this cp.
-            results = [backtrack_1_neutrino(y, dPsi_grid_data, cell_grid_data, cell_gens_data) for y in y0_Nr]
+        def simulate_neutrinos_1_pix(init_xyz, init_vels, common_args):
 
-            # Compactify results
-            neutrino_vectors = np.array(results)
+            # Neutrinos per pixel
+            nus = init_vels.shape[0]
 
-            # Compute number densities
-            nu_density = number_densities_for_mass_range(
-                neutrino_vectors[..., 3:6],
-                neutrino_massrange,
-                sim_type=pars.sim_type,
-                pix_sr=pix_sr_sim,
+            init_vectors = jnp.array(
+                [jnp.concatenate((init_xyz, init_vels[k])) for k in range(nus)]
             )
 
-            if all_sky_small:
-                z0_elems = neutrino_vectors[:, 0, :].reshape(-1, 1, 6)
-                z4_elems = neutrino_vectors[:, -1, :].reshape(-1, 1, 6)
-                combined = np.concatenate((z0_elems, z4_elems), axis=1)
-                return cp, nu_density, combined
-
-            return cp, nu_density, None
-
-
-        with ProcessPoolExecutor(CPUs_sim) as ex:
-            process_cp_bound = partial(
-                process_cp, 
-                dPsi_grid_data=dPsi_grid_snaps, 
-                cell_grid_data=cell_grid_snaps, 
-                cell_gens_data=cell_gens_snaps,
-                all_sky_small=all_sky_small
-            )
-
-            if all_sky_small:
-                ordered_results = list(ex.map(process_cp_bound, enumerate(ui)))
-            else:
-                ordered_results = list(ex.map(process_cp_bound, enumerate(ui)))
-
-
-        # Sort results based on cp and extract nu_densities and combined vectors
-        ordered_results.sort(key=lambda x: x[0])
-        nu_densities = [res[1] for res in ordered_results]
-
-
-        if all_sky_small:
-            for cp, res in enumerate(ordered_results):
-                start_idx = cp * nus_per_pix
-                end_idx = start_idx + nus_per_pix
-                nu_vectors[start_idx:end_idx, :, :] = res[2]
-
-            # Save all sky neutrino vectors for current halo
-            # note: Max. possible is nside=8, shape (1_000*768, 2, 6), ~70 MB
-            vname = f'neutrino_vectors_numerical_{end_str}_all_sky'
-            np.save(f'{pars.directory}/{vname}.npy', np.array(nu_vectors))
-
-        '''
-        for cp, ui_elem in enumerate(ui):
-
-            print(f'Coord. pair {cp+1}/{len(ui)}')
-
-            # Combine vectors and append neutrino particle number.
-            y0_Nr = np.array([np.concatenate(
-                (init_xyz, ui_elem[k], [k+1])) for k in range(len(ui_elem))
+            trajectories = jnp.array([
+                backtrack_1_neutrino(vec, *common_args) for vec in init_vectors
             ])
+            
+            return trajectories  # shape = (nus, 2, 3)
+        
 
-            # Run simulation on multiple cores.
-            with ProcessPoolExecutor(CPUs_sim) as ex:
-                ex.map(backtrack_1_neutrino, y0_Nr)
+        # Common arguments for simulation
+        common_args = (
+            s_int_steps, z_int_steps, zeds_snaps, snaps_GRID_L, snaps_DM_com, snaps_DM_num, snaps_QJ_abs, dPsi_grid_snaps, cell_grid_snaps, cell_gens_snaps, DM_mass, Params.kpc, Params.s)
 
-            # Compactify all neutrino vectors into 1 file.
-            neutrino_vectors = np.array(
-                [
-                    np.load(f'{data_dir}/nu_{i+1}.npy') 
-                    for i in range(len(ui_elem))
-                ]
-            )
+        # Use ProcessPoolExecutor to distribute the simulations across processes
+        with ProcessPoolExecutor(CPUs_sim) as executor:
+            futures = [
+                executor.submit(
+                    simulate_neutrinos_1_pix, init_xyz, init_vels[pixel], common_args) for pixel in range(Npix)
+            ]
+            
+            # Wait for all futures to complete and collect results in order
+            results = [future.result() for future in futures]
+            
+        # Combine results into final array
+        nu_vectors = jnp.vstack(results)
 
-            # Compute the number densities.
-            nu_densities.append(
-                number_densities_for_mass_range(
-                    neutrino_vectors[...,3:6], 
-                    neutrino_massrange, 
-                    sim_type=pars.sim_type,
-                    pix_sr=pix_sr_sim
+        # Save all sky neutrino vectors for current halo
+        # note: Max. GitHub possible is nside=8, shape=(1_000*768,2,6), ~75 MB
+        vname = f'neutrino_vectors_numerical_{end_str}_all_sky'
+        jnp.save(f'{pars.directory}/{vname}.npy', nu_vectors)
+        
 
-                )
-            )
+        ################################
+        ### Compute number densities ###
+        ################################
 
-            # Save first and last vector elements for all_sky_small version
-            if all_sky_small:
-                
-                # Select and combine first and last sim vectors
-                z0_elems = neutrino_vectors[:,0,:].reshape(-1,1,6)
-                z4_elems = neutrino_vectors[:,-1,:].reshape(-1,1,6)
-                combined = np.concatenate((z0_elems, z4_elems), axis=1)
-
-                # Fill elements of pre-allocated neutrino vectors array
-                start_idx = cp*1_000
-                end_idx = start_idx+1_000
-                nu_vectors[start_idx:end_idx,:,:] = combined
-        '''
-
-        # Save number densities for current halo
         dname = f'number_densities_numerical_{end_str}_all_sky'
-        np.save(f'{pars.directory}/{dname}.npy', np.array(nu_densities))
+        out_path = f'{pars.directory}/{dname}.npy'
+
+        nu_density = compute_number_densities_all_sky(
+            v_arr=nu_vectors[..., 3:6],
+            m_arr=neutrino_massrange,
+            Npix=Npix,
+            pix_sr=pix_sr_sim,
+            out_path=out_path,
+            args=Params())
 
 
     sim_time = time.perf_counter()-sim_start
