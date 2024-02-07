@@ -1,0 +1,36 @@
+#!/bin/bash
+#SBATCH --job-name=benchmark
+#SBATCH -p rome
+#SBATCH -t 00:20:00
+#SBATCH -N 1
+#SBATCH --tasks-per-node=1
+#SBATCH --cpus-per-task=32
+#SBATCH --mem=56000
+#SBATCH -o jobs/benchmark.out
+#SBATCH -e jobs/benchmark.err
+#SBATCH -v
+
+
+# rome  node- full: 128/224 ; half: 64/112 ; quarter: 32/56 ; CPUs/GB.
+# genoa node- full: 192/336 ; half: 96/168 ; quarter: 48/84 ; CPUs/GB.
+
+module purge
+
+# Load .bashrc if it exists
+if [ -f "$HOME/.bashrc" ]; then
+    source $HOME/.bashrc
+fi
+
+conda activate neutrino_clustering
+
+sim_boxtype=L025N752/DMONLY/SigmaConstant00
+sim_fullname=benchmark
+
+python $HOME/neutrino_clustering/simulation_exec.py \
+--directory $HOME/neutrino_clustering/$sim_boxtype/$sim_fullname \
+--sim_type benchmark \
+--mass_gauge 12.0 \
+--mass_lower 0.6 \
+--mass_upper 2.0 \
+--halo_num 1 \
+--no-upto_Rvir

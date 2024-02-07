@@ -1,7 +1,7 @@
 # Save how much memory is used by OS and not available for script.
-import psutil
+# import psutil
 MB_UNIT: float = 1024**2
-OS_MEM = (psutil.virtual_memory().used)
+# OS_MEM = (psutil.virtual_memory().used)
 
 from shared.preface import *
 from shared.shared_functions import *
