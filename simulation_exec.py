@@ -30,7 +30,7 @@ DM_mass, CPUs_sim, neutrinos, init_dis, zeds_snaps, z_int_steps, s_int_steps, nu
 def EOMs(s_val, y, args):
 
     """
-    Calculates the Equations of Motion (EOM) for a particle within a cosmological simulation space. This involves determining the particle's position and velocity in relation to the simulation grid and applying the appropriate gravitational forces based on its location. It supports dynamic adaptation to different epochs by interpolating across snapshots of the universe at various redshifts, and employs conditional logic to distinguish between gravitational influences inside and outside the simulation's voxel cells. The function outputs the rate of change in position and velocity for the particle, used for the backwards in time integration method we use.
+    Solves the Equations of Motion (EOMs) for a particle within a cosmological simulation space. This involves determining the particle's position and velocity in relation to the simulation grid and applying the appropriate gravitational forces based on its location. It supports dynamic adaptation to different epochs by interpolating across snapshots of the universe at various redshifts, and employs conditional logic to distinguish between gravitational influences inside and outside the simulation's voxel cells. The function outputs the rate of change in position and velocity for the particle, used for the backwards in time integration method we use.
     """
 
     # Unpack the simulation grid data
@@ -58,7 +58,7 @@ def EOMs(s_val, y, args):
         cell_grid = cell_grid_data[idx]
         cell_gens = cell_gens_data[idx]
         
-        cell_idx, cell_len0, cell_cc0 = SimExec.nu_in_which_cell(
+        cell_idx, *_ = SimExec.nu_in_which_cell(
             x_i, cell_grid, cell_gens, snap_GRID_L)
         grad_tot = dPsi_grid[cell_idx, :]
 
@@ -110,7 +110,8 @@ def backtrack_1_neutrino(
     t0 = s_int_steps[0]
     t1 = s_int_steps[-1]
     dt0 = (s_int_steps[0] + s_int_steps[1]) / 2
-    stepsize_controller = diffrax.PIDController(rtol=1e-3, atol=1e-1)
+    # stepsize_controller = diffrax.PIDController(rtol=1e-3, atol=1e-1) # before
+    stepsize_controller = diffrax.PIDController(rtol=1e-7, atol=1e-9)
 
     # Specify timesteps where solutions should be saved
     saveat = diffrax.SaveAt(ts=jnp.array(s_int_steps))
@@ -118,7 +119,7 @@ def backtrack_1_neutrino(
     # Solve the coupled ODEs, i.e. the EOMs of the neutrino
     sol = diffrax.diffeqsolve(
         term, solver, 
-        t0=t0, t1=t1, dt0=dt0, y0=y0, max_steps=10000,
+        t0=t0, t1=t1, dt0=dt0, y0=y0, #max_steps=10000,
         saveat=saveat, stepsize_controller=stepsize_controller,
         args=( 
             s_int_steps, z_int_steps, zeds_snaps, snaps_GRID_L, snaps_DM_com, snaps_DM_num, snaps_QJ_abs, dPsi_grid_data, cell_grid_data, cell_gens_data, DM_mass, kpc, s)
@@ -164,6 +165,8 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
     ### Finding starting cell ###
     ### --------------------- ###
 
+    # def find_starting_cell():
+
     # Load grid data and compute radial distances from center of cell centers.
     cell_ccs = cell_grids[-1]
     cell_ccs_kpc = cell_ccs/Params.kpc
@@ -176,7 +179,9 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
     # Needs to be without kpc units (thus doing /kpc) for simulation start.
     #? is this broken because I filled cell_grid_snaps with zeros?
     #! yes, something is not right now, different initial starting cells...
-    init_xyz = cell_ccs[jnp.abs(cell_dis - init_dis).argsort()][0]/Params.kpc.flatten()
+    # init_xyz = cell_ccs[jnp.abs(cell_dis - init_dis).argsort()][0]/Params.kpc.flatten()
+    init_xyz = jnp.load(f'{pars.directory}/init_xyz_{end_str}.npy')
+
     # jnp.save(f'{pars.directory}/init_xyz_{end_str}.npy', init_xyz)
 
     # Display parameters for simulation.
