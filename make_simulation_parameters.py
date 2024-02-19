@@ -7,8 +7,7 @@ def make_sim_parameters(
         p_start, p_stop, p_num,
         phis, thetas,
         init_x_dis,
-        z_int_shift, z_int_stop, z_int_num, 
-        int_solver,
+        z_int_shift, z_int_stop, z_int_num,
         CPUs_precalculations, CPUs_simulations, memory_limit_GB,
         DM_in_cell_limit, 
         Nside=None, Npix=None, pix_sr=None
@@ -119,7 +118,6 @@ def make_sim_parameters(
         "z_inegration_start": 0,
         "z_inegration_stop": z_int_stop,
         "z_inegration_num": z_int_num,
-        "integration_solver": int_solver,
         "CPUs_precalculations": CPUs_precalculations,
         "CPUs_simulations": CPUs_simulations,
         "memory_limit_GB": memory_limit_GB,
@@ -210,7 +208,6 @@ parser.add_argument('-xi', '--init_x_dis', required=True)
 parser.add_argument('-zi', '--z_int_shift', required=True)
 parser.add_argument('-zf', '--z_int_stop', required=True)
 parser.add_argument('-zn', '--z_int_num', required=True)
-parser.add_argument('-is', '--int_solver', required=True)
 parser.add_argument('-cp', '--CPUs_precalculations', required=True)
 parser.add_argument('-cs', '--CPUs_simulations', required=True)
 parser.add_argument('-mem', '--memory_limit_GB', required=True)
@@ -255,7 +252,6 @@ make_sim_parameters(
     z_int_shift=float(args.z_int_shift),
     z_int_stop=float(args.z_int_stop),
     z_int_num=int(args.z_int_num),
-    int_solver=args.int_solver,
     CPUs_precalculations=int(args.CPUs_precalculations),
     CPUs_simulations=int(args.CPUs_simulations),
     memory_limit_GB=int(args.memory_limit_GB),

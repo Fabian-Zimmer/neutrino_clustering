@@ -29,7 +29,7 @@ class analyze_simulation_outputs(object):
             [list(map(int, re.findall(r'\d+', path)))[-1] for path in paths_all]
         ).flatten()
 
-        # note: besides the broken halo 20, halos 24 & 25 are anomalies.
+        # note: besides broken halo 20 (idx 19), halos 24 & 25 are anomalies.
         # Remove anomalous halos from arrays.
         anomalies = [24,25]
         del_ids = np.array(

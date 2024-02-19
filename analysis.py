@@ -38,16 +38,16 @@ Analysis = analyze_simulation_outputs(
 
 # print(Analysis.final_halos)
 # print(Analysis.halo_num)
-# halo_array = np.arange(Analysis.halo_num)+1
+halo_array = np.arange(Analysis.halo_num)+1
 
 # Generate power spectra plots.
 # Analysis.plot_all_spectra_1plot(halo_array, 0.1)
 
 
 # Generate all all-sky anisotropy maps.
-# for halo in halo_array:
-#     Analysis.plot_all_sky_map('numerical', halo, 0.3)
-Analysis.plot_all_sky_map('numerical', 1, 0.3)
+for halo in halo_array:
+    Analysis.plot_all_sky_map('numerical', halo, 0.3)
+# Analysis.plot_all_sky_map('numerical', 1, 0.3)
 
 # For benchmark NFW:
 # Analysis.plot_all_sky_map('numerical', 0, 0.3)

@@ -1,14 +1,15 @@
 #!/bin/bash
 #SBATCH --job-name=all_sky
 #SBATCH -p rome
-#SBATCH -t 00:10:00
+#SBATCH -t 01:00:00
 #SBATCH -N 1
 #SBATCH --tasks-per-node=1
-#SBATCH --cpus-per-task=64
-#SBATCH --mem=112000
-#SBATCH -o jobs/all_sky.out
-#SBATCH -e jobs/all_sky.err
+#SBATCH --cpus-per-task=128
+#SBATCH --mem=224000
+#SBATCH -o jobs/all_sky_halo_batch.out
+#SBATCH -e jobs/all_sky_halo_batch.err
 #SBATCH -v
+#SBATCH --exclusive
 
 
 # rome  node- full: 128/224 ; half: 64/112 ; quarter: 32/56 ; CPUs/GB.
@@ -32,5 +33,5 @@ python $HOME/neutrino_clustering/simulation_exec.py \
 --mass_gauge 12.0 \
 --mass_lower 0.6 \
 --mass_upper 2.0 \
---halo_num 1 \
+--halo_num 30 \
 --no-upto_Rvir

@@ -106,12 +106,24 @@ def backtrack_1_neutrino(
 
     # ODE solver setup
     term = diffrax.ODETerm(EOMs)
-    solver = diffrax.Dopri5()
     t0 = s_int_steps[0]
     t1 = s_int_steps[-1]
     dt0 = (s_int_steps[0] + s_int_steps[1]) / 2
-    # stepsize_controller = diffrax.PIDController(rtol=1e-3, atol=1e-1) # before
-    stepsize_controller = diffrax.PIDController(rtol=1e-7, atol=1e-9)
+    
+
+    ### ------------- ###
+    ### Dopri5 Solver ###
+    ### ------------- ###
+    solver = diffrax.Dopri5()
+    stepsize_controller = diffrax.PIDController(rtol=1e-3, atol=1e-6)
+    
+
+    ### ------------- ###
+    ### Dopri8 Solver ###
+    ### ------------- ###
+    # solver = diffrax.Dopri8()
+    # stepsize_controller = diffrax.PIDController(rtol=1e-7, atol=1e-9)
+
 
     # Specify timesteps where solutions should be saved
     saveat = diffrax.SaveAt(ts=jnp.array(s_int_steps))
@@ -119,7 +131,7 @@ def backtrack_1_neutrino(
     # Solve the coupled ODEs, i.e. the EOMs of the neutrino
     sol = diffrax.diffeqsolve(
         term, solver, 
-        t0=t0, t1=t1, dt0=dt0, y0=y0, #max_steps=10000,
+        t0=t0, t1=t1, dt0=dt0, y0=y0, max_steps=10000,
         saveat=saveat, stepsize_controller=stepsize_controller,
         args=( 
             s_int_steps, z_int_steps, zeds_snaps, snaps_GRID_L, snaps_DM_com, snaps_DM_num, snaps_QJ_abs, dPsi_grid_data, cell_grid_data, cell_gens_data, DM_mass, kpc, s)
@@ -128,6 +140,22 @@ def backtrack_1_neutrino(
     trajectory = sol.ys.reshape(100,6)
 
     return jnp.stack([trajectory[0], trajectory[-1]])
+
+
+def simulate_neutrinos_1_pix(init_xyz, init_vels, common_args):
+
+    # Neutrinos per pixel
+    nus = init_vels.shape[0]
+
+    init_vectors = jnp.array(
+        [jnp.concatenate((init_xyz, init_vels[k])) for k in range(nus)]
+    )
+
+    trajectories = jnp.array([
+        backtrack_1_neutrino(vec, *common_args) for vec in init_vectors
+    ])
+    
+    return trajectories  # shape = (nus, 2, 3)
 
 
 for halo_j, halo_ID in enumerate(halo_batch_IDs):
@@ -172,17 +200,14 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
     cell_ccs_kpc = cell_ccs/Params.kpc
     cell_dis = jnp.linalg.norm(cell_ccs_kpc, axis=-1)
 
-    # Get rid of zeros, since we appended some in a previous routine
+    # Get rid of zeros we appended when loading data (see in SimGrid.grid_data)
     cell_dis = cell_dis[cell_dis != 0.]
 
     # Take first cell, which is in Earth-like position (there can be multiple).
     # Needs to be without kpc units (thus doing /kpc) for simulation start.
-    #? is this broken because I filled cell_grid_snaps with zeros?
-    #! yes, something is not right now, different initial starting cells...
-    # init_xyz = cell_ccs[jnp.abs(cell_dis - init_dis).argsort()][0]/Params.kpc.flatten()
-    init_xyz = jnp.load(f'{pars.directory}/init_xyz_{end_str}.npy')
-
-    # jnp.save(f'{pars.directory}/init_xyz_{end_str}.npy', init_xyz)
+    init_xyz = cell_ccs[jnp.abs(cell_dis - init_dis).argsort()][0]/Params.kpc.flatten()
+    jnp.save(f'{pars.directory}/init_xyz_{end_str}.npy', init_xyz)
+    # note: for some reason this routine chooses a different cell to those in the paper, ergo the all-sky maps look different for the same halos
 
     # Display parameters for simulation.
     print(f'***Running simulation: mode = {pars.sim_type}***')
@@ -241,22 +266,6 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
 
         init_vels = np.load(f'{pars.directory}/initial_velocities.npy')  
         # shape = (Npix, neutrinos_per_pix, 3)
-
-
-        def simulate_neutrinos_1_pix(init_xyz, init_vels, common_args):
-
-            # Neutrinos per pixel
-            nus = init_vels.shape[0]
-
-            init_vectors = jnp.array(
-                [jnp.concatenate((init_xyz, init_vels[k])) for k in range(nus)]
-            )
-
-            trajectories = jnp.array([
-                backtrack_1_neutrino(vec, *common_args) for vec in init_vectors
-            ])
-            
-            return trajectories  # shape = (nus, 2, 3)
         
 
         # Common arguments for simulation
@@ -301,20 +310,10 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
     sim_time = time.perf_counter()-sim_start
     print(f'Sim time: {sim_time/60.} min, {sim_time/(60**2)} h.')
     
+    # Benchmark (NFW-like) halo is considered halo_0, so break off loop here
     if 'benchmark' in pars.sim_type:
         break
 
-    # '''
-
-# Remove nu_* files, s.t. when testing it will show me if not produced.
-# delete_temp_data(f'{temp_dir}/nu_*.npy')
-
-# if pars.sim_type == 'all_sky':
-    # Delete arrays not compatible with github file limit size.
-    # delete_temp_data(f'{pars.directory}/initial_velocities.npy')
-
-# Remove temporary folder.
-# shutil.rmtree(temp_dir)
 
 total_time = time.perf_counter()-total_start
 print(f'Total time: {total_time/60.} min, {total_time/(60**2)} h.')

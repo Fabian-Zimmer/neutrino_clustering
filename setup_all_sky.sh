@@ -20,12 +20,11 @@ python make_simulation_parameters.py \
 --nu_sim_mass 0.3 \
 --p_start 0.01 \
 --p_stop 400 \
---p_num 1_000 \
+--p_num 2_000 \
 --init_x_dis 8.178 \
 --z_int_shift 0.1 \
 --z_int_stop 4 \
 --z_int_num 100 \
---int_solver RK23 \
 --CPUs_precalculations 128 \
 --CPUs_simulations 128 \
 --memory_limit_GB 224 \
