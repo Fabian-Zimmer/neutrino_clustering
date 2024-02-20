@@ -1,13 +1,13 @@
 #!/bin/bash
-#SBATCH --job-name=SimPlots
+#SBATCH --job-name=Analysis
 #SBATCH -p rome
 #SBATCH -t 00:15:00
 #SBATCH -N 1
 #SBATCH --tasks-per-node=1
 #SBATCH --cpus-per-task=32
 #SBATCH --mem=56000
-#SBATCH -o jobs/SimPlots.out
-#SBATCH -e jobs/SimPlots.err
+#SBATCH -o jobs/Analysis.out
+#SBATCH -e jobs/Analysis.err
 #SBATCH -v
 
 # rome  node- full: 128/224 ; half: 64/112 ; quarter: 32/56 ; CPUs/GB.
@@ -22,12 +22,10 @@ fi
 
 conda activate neutrino_clustering
 
-sim_boxtype=L025N752/DMONLY/SigmaConstant00
-sim_fullname=all_sky
+sim_fullname=Dopri5_2k_per_pix
 
-python $HOME/neutrino_clustering/analysis.py \
---sim_directory $HOME/neutrino_clustering/$sim_boxtype/$sim_fullname \
---sim_type 'all_sky' \
+python $HOME/neutrino_clustering/sim_script3_analyze.py \
+--sim_directory $HOME/neutrino_clustering/sim_output/$sim_fullname \
 --no-NFW_halo \
 --box_halos \
 --no-analytical_halo \

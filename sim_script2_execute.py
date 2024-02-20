@@ -6,14 +6,12 @@ total_start = time.perf_counter()
 # Argparse inputs.
 parser = argparse.ArgumentParser()
 parser.add_argument('-d', '--directory', required=True)
-parser.add_argument('-st', '--sim_type', required=True)
 parser.add_argument('-mg', '--mass_gauge', required=True)
 parser.add_argument('-ml', '--mass_lower', required=True)
 parser.add_argument('-mu', '--mass_upper', required=True)
 parser.add_argument('-hn', '--halo_num', required=True)
 parser.add_argument(
-    '--upto_Rvir', required=True, action=argparse.BooleanOptionalAction
-)
+    '--benchmark', required=True, action=argparse.BooleanOptionalAction)
 pars = parser.parse_args()
 
 # Create halo batch, files and other simulation setup parameters and arrays
@@ -22,8 +20,7 @@ DM_mass, CPUs_sim, neutrinos, init_dis, zeds_snaps, z_int_steps, s_int_steps, nu
     m_lower=pars.mass_lower,
     m_upper=pars.mass_upper,
     m_gauge=pars.mass_gauge,
-    halo_num_req=pars.halo_num,
-    sim_type=pars.sim_type)
+    halo_num_req=pars.halo_num)
 
 
 @jax.jit
@@ -164,12 +161,13 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
     if halo_j == 19:
         continue
 
-    # ========================================= #
-    # Run simulation for current halo in batch. #
-    # ========================================= #
 
-    if 'benchmark' in pars.sim_type:
-        end_str = 'benchmark_halo'
+    ### ======================== ###
+    ### Load files and grid data ###
+    ### ======================== ###
+
+    if pars.benchmark:
+        end_str = f'halo{halo_j}'
     else:
         end_str = f'halo{halo_j+1}'
     
@@ -189,11 +187,9 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
     dPsi_grids, cell_grids, cell_gens = SimGrid.grid_data(halo_ID, data_dir)
 
 
-    ### --------------------- ###
+    ### ===================== ###
     ### Finding starting cell ###
-    ### --------------------- ###
-
-    # def find_starting_cell():
+    ### ===================== ###
 
     # Load grid data and compute radial distances from center of cell centers.
     cell_ccs = cell_grids[-1]
@@ -210,110 +206,81 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
     # note: for some reason this routine chooses a different cell to those in the paper, ergo the all-sky maps look different for the same halos
 
     # Display parameters for simulation.
-    print(f'***Running simulation: mode = {pars.sim_type}***')
-    print(f'halo={halo_j+1}/{halo_num}, CPUs={CPUs_sim}')
+    print(f"*** Simulation for halo={halo_j+1}/{halo_num} ***")
+
+    ### ============== ###
+    ### Run Simulation ###
+    ### ============== ###
 
     sim_start = time.perf_counter()
 
-    #! to overhaul...
-    if pars.sim_type in ('single_halos', 'benchmark'):
+    with open(f'{pars.directory}/sim_parameters.yaml', 'r') as file:
+        sim_setup = yaml.safe_load(file)
 
-        # Load initial velocities.
-        ui = np.load(f'{pars.directory}/initial_velocities.npy')
+    # Size (in sr) of all-sky healpixels
+    pix_sr_sim = sim_setup['pix_sr']
 
-        # Combine vectors and append neutrino particle number.
-        y0_Nr = np.array(
-            [np.concatenate((init_xyz, ui[i], [i+1])) for i in range(neutrinos)]
-            )
+    # Number of healpixels 
+    Npix = sim_setup["Npix"]
 
-        # Run simulation on multiple cores.
-        with ProcessPoolExecutor(CPUs_sim) as ex:
-            ex.map(backtrack_1_neutrino, y0_Nr)
-
-        # Compactify all neutrino vectors into 1 file.
-        neutrino_vectors = np.array(
-            [np.load(f'{data_dir}/nu_{i+1}.npy') for i in range(neutrinos)]
-        )
-
-        # For these modes (i.e. not all_sky), save all neutrino vectors.
-        # Split velocities and positions into 10k neutrino batches.
-        # For reference: ndarray with shape (10_000, 100, 6) is  48 MB.
-        batches = math.ceil(neutrinos/10_000)
-        split = np.array_split(neutrino_vectors, batches, axis=0)
-        vname = f'neutrino_vectors_numerical_{end_str}'
-        for i, elem in enumerate(split):
-            np.save(
-                f'{pars.directory}/{vname}_batch{i+1}.npy', elem
-            )
-
-        # Compute the number densities.
-        dname = f'number_densities_numerical_{end_str}'
-        out_file = f'{pars.directory}/{dname}.npy'
-        Physics.number_densities_mass_range(
-            neutrino_vectors[...,3:6], nu_massrange, out_file
-        )
-
-    else:
-
-        with open(f'{pars.directory}/sim_parameters.yaml', 'r') as file:
-            sim_setup = yaml.safe_load(file)
-
-        # Size (in sr) of all-sky healpixels
-        pix_sr_sim = sim_setup['pix_sr']
-
-        # Number of healpixels 
-        Npix = sim_setup["Npix"]
-
-        init_vels = np.load(f'{pars.directory}/initial_velocities.npy')  
-        # shape = (Npix, neutrinos_per_pix, 3)
-        
-
-        # Common arguments for simulation
-        common_args = (
-            s_int_steps, z_int_steps, zeds_snaps, snaps_GRID_L, snaps_DM_com, snaps_DM_num, snaps_QJ_abs, dPsi_grids, cell_grids, cell_gens, DM_mass, Params.kpc, Params.s)
-
-        # Use ProcessPoolExecutor to distribute the simulations across processes
-        with ProcessPoolExecutor(CPUs_sim) as executor:
-            futures = [
-                executor.submit(
-                    simulate_neutrinos_1_pix, init_xyz, init_vels[pixel], common_args) for pixel in range(Npix)
-            ]
-            
-            # Wait for all futures to complete and collect results in order
-            results = [future.result() for future in futures]
-            
-        # Combine results into final array
-        nu_vectors = jnp.vstack(results)
-
-        # Save all sky neutrino vectors for current halo
-        # note: Max. GitHub possible is nside=8, shape=(1_000*768,2,6), ~75 MB
-        vname = f'neutrino_vectors_numerical_{end_str}_all_sky'
-        jnp.save(f'{pars.directory}/{vname}.npy', nu_vectors)
-        
-
-        ################################
-        ### Compute number densities ###
-        ################################
-
-        dname = f'number_densities_numerical_{end_str}_all_sky'
-        out_path = f'{pars.directory}/{dname}.npy'
-
-        nu_density = Physics.number_densities_all_sky(
-            v_arr=nu_vectors[..., 3:6],
-            m_arr=nu_massrange,
-            Npix=Npix,
-            pix_sr=pix_sr_sim,
-            out_path=out_path,
-            args=Params())
-
-
-    sim_time = time.perf_counter()-sim_start
-    print(f'Sim time: {sim_time/60.} min, {sim_time/(60**2)} h.')
+    init_vels = np.load(f'{pars.directory}/initial_velocities.npy')  
+    # shape = (Npix, neutrinos_per_pix, 3)
     
-    # Benchmark (NFW-like) halo is considered halo_0, so break off loop here
-    if 'benchmark' in pars.sim_type:
+    # Common arguments for simulation
+    common_args = (
+        s_int_steps, z_int_steps, zeds_snaps, snaps_GRID_L, snaps_DM_com, snaps_DM_num, snaps_QJ_abs, dPsi_grids, cell_grids, cell_gens, DM_mass, Params.kpc, Params.s)
+
+    # Use ProcessPoolExecutor to distribute the simulations across processes
+    with ProcessPoolExecutor(CPUs_sim) as executor:
+        futures = [
+            executor.submit(
+                simulate_neutrinos_1_pix, init_xyz, init_vels[pixel], common_args) for pixel in range(Npix)
+        ]
+        
+        # Wait for all futures to complete and collect results in order
+        results = [future.result() for future in futures]
+        
+    # Combine results into final array
+    nu_vectors = jnp.vstack(results)
+
+    # Save all sky neutrino vectors for current halo
+    jnp.save(f'{pars.directory}/vectors_{end_str}.npy', nu_vectors)
+    
+    sim_time = time.perf_counter()-sim_start
+    print(f"Simulation time: {sim_time/60.:.2f} min, {sim_time/(60**2):.2f} h")
+
+    ### ======================== ###
+    ### Compute number densities ###
+    ### ======================== ###
+
+    ana_start = time.perf_counter()
+
+    # Compute individual number densities for each healpixel
+    out_path_pix_dens = f'{pars.directory}/pixel_densities_{end_str}.npy'
+    nu_density = Physics.number_densities_all_sky(
+        v_arr=nu_vectors[..., 3:],
+        m_arr=nu_massrange,
+        Npix=Npix,
+        pix_sr=pix_sr_sim,
+        out_path=out_path_pix_dens,
+        args=Params())
+    
+    # Compute total number density, by using all neutrino vectors for integral
+    out_path_tot_dens = f'{pars.directory}/total_densities_{end_str}.npy'
+    Physics.number_densities_mass_range(
+        v_arr=nu_vectors[...,3:], 
+        m_arr=nu_massrange, 
+        pix_sr=4*Params.Pi,
+        out_path=out_path_tot_dens, 
+        args=Params())
+
+    ana_time = time.perf_counter() - ana_start
+    print(f"Analysis time: {ana_time/60.:.2f} min, {ana_time/(60**2):.2f} h\n")
+    
+    # Benchmark (NFW-like) halo is considered halo 0, so break off loop here
+    if pars.benchmark:
         break
 
 
-total_time = time.perf_counter()-total_start
-print(f'Total time: {total_time/60.} min, {total_time/(60**2)} h.')
+tot_time = time.perf_counter() - total_start
+print(f"Total time: {tot_time/60.:.2f} min, {tot_time/(60**2):.2f} h")

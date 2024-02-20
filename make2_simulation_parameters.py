@@ -1,8 +1,8 @@
 from shared.preface import *
 
 
-def make_sim_parameters(
-        sim_dir, sim_type,
+def make2_simulation_parameters(
+        sim_dir,
         nu_mass_start, nu_mass_stop, nu_mass_num, nu_sim_mass,
         p_start, p_stop, p_num,
         phis, thetas,
@@ -69,10 +69,6 @@ def make_sim_parameters(
     # Neutrino momentum range.
     neutrino_momenta = np.geomspace(p_start*T_CNB, p_stop*T_CNB, p_num)
 
-    # Neutrino + antineutrino number density of 1 flavor in [1/cm**3],
-    # using the analytical expression for Fermions.
-    n0 = 2*zeta(3.)/Pi**2 *T_CNB**3 *(3./4.) /(1/cm**3)
-
     # Logarithmic redshift spacing, and conversion to integration variable s.
     z_int_steps = np.geomspace(z_int_shift, z_int_stop+z_int_shift, z_int_num)
     z_int_steps -= z_int_shift
@@ -91,15 +87,10 @@ def make_sim_parameters(
     ### ============================================ ###
 
     # Only save nr. of angles, in all_sky simulation type.
-    if sim_type == 'all_sky':
-        phis_nr = len(phis)
-        thetas_nr = len(thetas)
-    else:
-        phis_nr = phis
-        thetas_nr = thetas
+    phis_nr = len(phis)
+    thetas_nr = len(thetas)
 
     sim_parameters = {
-        "simulation type": sim_type,
         "neutrinos": neutrinos,
         "initial_haloGC_distance": init_x_dis,
         "neutrino_mass_start": nu_mass_start,
@@ -121,8 +112,7 @@ def make_sim_parameters(
         "CPUs_precalculations": CPUs_precalculations,
         "CPUs_simulations": CPUs_simulations,
         "memory_limit_GB": memory_limit_GB,
-        "DM_in_cell_limit": DM_in_cell_limit,
-        "cosmo_neutrino_density [cm^-3]": float(n0)
+        "DM_in_cell_limit": DM_in_cell_limit
     }
 
     with open(f'{sim_dir}/sim_parameters.yaml', 'w') as file:
@@ -144,53 +134,53 @@ def make_sim_parameters(
     # Convert momenta to initial velocity magnitudes, in units of [kpc/s].
     u_i = neutrino_momenta/nu_mass_eV / (kpc/s)
 
-    if sim_type == 'all_sky':
+    # Each coord. pair gets whole momentum, i.e. velocity range.
+    glat = np.deg2rad(thetas)
+    glon = np.deg2rad(phis)
+    uxs = np.array([u_i*np.cos(b)*np.cos(l) for b, l in zip(glat, glon)])
+    uys = np.array([u_i*np.cos(b)*np.sin(l) for b, l in zip(glat, glon)])
+    uzs = np.array([u_i*np.sin(b) for b in glat])
+    u_i_array = np.stack((uxs, uys, uzs), axis=2)
 
-        # Each coord. pair gets whole momentum, i.e. velocity range.
-        glat = np.deg2rad(thetas)
-        glon = np.deg2rad(phis)
-        uxs = np.array([u_i*np.cos(b)*np.cos(l) for b, l in zip(glat, glon)])
-        uys = np.array([u_i*np.cos(b)*np.sin(l) for b, l in zip(glat, glon)])
-        uzs = np.array([u_i*np.sin(b) for b in glat])
-        u_i_array = np.stack((uxs, uys, uzs), axis=2)
-
-        # Save the theta and phi angles as numpy arrays.
-        np.save(f'{sim_dir}/all_sky_angles.npy', np.transpose((thetas, phis)))
-
-    else:
-
-        # Split up this magnitude into velocity components, by using spher. 
-        # coords. trafos, which act as "weights" for each direction.
-        cts = np.linspace(-1, 1, thetas)  # cos(thetas)
-        ps = np.linspace(0, 2*Pi, phis)   # normal phi angles
-
-        # Minus signs due to choice of coord. system setup (see notes/drawings).
-        #                              (<-- outer loops, --> inner loops)
-        uxs = [
-            u*np.cos(p)*np.sqrt(1-ct**2) for ct in cts for p in ps for u in u_i
-        ]
-        uys = [
-            u*np.sin(p)*np.sqrt(1-ct**2) for ct in cts for p in ps for u in u_i
-        ]
-        uzs = [
-            u*ct for ct in cts for _ in ps for u in u_i
-        ]
-
-        u_i_array = np.array(
-            [[ux, uy, uz] for ux,uy,uz in zip(uxs,uys,uzs)]
-        )
+    # Save the theta and phi angles as numpy arrays.
+    np.save(f'{sim_dir}/all_sky_angles.npy', np.transpose((thetas, phis)))
 
     # note: sim goes backwards in time, hence minus sign (see GoodNotes)'
     np.save(f'{sim_dir}/initial_velocities.npy', -u_i_array)
 
 
+    # note: Old way of computing directions, not using healpy
+    """
+    # Split up this magnitude into velocity components, by using spher. 
+    # coords. trafos, which act as "weights" for each direction.
+    cts = np.linspace(-1, 1, thetas)  # cos(thetas)
+    ps = np.linspace(0, 2*Pi, phis)   # normal phi angles
+
+    # Minus signs due to choice of coord. system setup (see notes/drawings).
+    #                              (<-- outer loops, --> inner loops)
+    uxs = [
+        u*np.cos(p)*np.sqrt(1-ct**2) for ct in cts for p in ps for u in u_i
+    ]
+    uys = [
+        u*np.sin(p)*np.sqrt(1-ct**2) for ct in cts for p in ps for u in u_i
+    ]
+    uzs = [
+        u*ct for ct in cts for _ in ps for u in u_i
+    ]
+
+    u_i_array = np.array(
+        [[ux, uy, uz] for ux,uy,uz in zip(uxs,uys,uzs)]
+    )
+    """
+
+
+
 # Argparse inputs.
 parser = argparse.ArgumentParser()
 parser.add_argument('-sd', '--sim_dir', required=True)
-parser.add_argument('-st', '--sim_type', required=True)
 
-# If sim_type is all_sky, phi and theta angles are determined by Nside.
-parser.add_argument('-hn', '--healpix_nside', required=False)
+# Phi and theta angles are determined by Nside.
+parser.add_argument('-hn', '--healpix_nside', required=True)
 
 parser.add_argument('-ni', '--nu_mass_start', required=True)
 parser.add_argument('-nf', '--nu_mass_stop', required=True)
@@ -199,10 +189,6 @@ parser.add_argument('-nm', '--nu_sim_mass', required=True)
 parser.add_argument('-pi', '--p_start', required=True)
 parser.add_argument('-pf', '--p_stop', required=True)
 parser.add_argument('-pn', '--p_num', required=True)
-
-# Only required for modes other than all_sky.
-parser.add_argument('-ph', '--phis', required=False)
-parser.add_argument('-th', '--thetas', required=False)
 
 parser.add_argument('-xi', '--init_x_dis', required=True)
 parser.add_argument('-zi', '--z_int_shift', required=True)
@@ -215,30 +201,18 @@ parser.add_argument('-dl', '--DM_in_cell_limit', required=True)
 args = parser.parse_args()
 
 
-# Adjust phi and theta angles for different modes.
-if args.sim_type == 'all_sky':
-    
-    Nside = int(args.healpix_nside)  # Specified nside parameter, power of 2
-    Npix = 12 * Nside**2  # Number of pixels
-    pix_sr = (4*np.pi)/Npix  # Pixel size  [sr]
+# Determine phi and theta angles with healpy.
+Nside = int(args.healpix_nside)  # Specified nside parameter, power of 2
+Npix = 12 * Nside**2  # Number of pixels
+pix_sr = (4*np.pi)/Npix  # Pixel size  [sr]
 
-    # Galactic coordinates.
-    phi_angles, theta_angles = np.array(
-        hp.pixelfunc.pix2ang(Nside, np.arange(Npix), lonlat=True)
-    )
-else:
-
-    phi_angles = int(args.phis)
-    theta_angles = int(args.thetas)
-
-    Nside = None
-    Npix = None
-    pix_sr = None
+# Galactic coordinates.
+phi_angles, theta_angles = np.array(
+    hp.pixelfunc.pix2ang(Nside, np.arange(Npix), lonlat=True))
 
 
-make_sim_parameters(
+make2_simulation_parameters(
     sim_dir=args.sim_dir,
-    sim_type=args.sim_type,
     nu_mass_start=float(args.nu_mass_start),
     nu_mass_stop=float(args.nu_mass_stop),
     nu_mass_num=int(args.nu_mass_num),
@@ -258,6 +232,4 @@ make_sim_parameters(
     DM_in_cell_limit=int(args.DM_in_cell_limit),
     Nside=Nside,
     Npix=Npix,
-    pix_sr=pix_sr
-
-)
+    pix_sr=pix_sr)

@@ -1,18 +1,15 @@
 #!/bin/bash
 
-sim_fullname=benchmark
+sim_fullname=Dopri5_2k_per_pix
 
-python make_box_parameters_and_merger_tree.py \
---box_directory /projects/0/prjs0781/Tango_sims \
---box_name L025N752 \
---box_version DMONLY/SigmaConstant00 \
+python make1_simulation_box.py \
+--box_directory /projects/0/prjs0781/simulation_data/Tango_sims \
 --sim_fullname $sim_fullname \
 --initial_snap_z0 36 \
 --final_snap_z4 12
 
-python make_simulation_parameters.py \
---sim_dir L025N752/DMONLY/SigmaConstant00/$sim_fullname \
---sim_type all_sky \
+python make2_simulation_parameters.py \
+--sim_dir sim_output/$sim_fullname \
 --healpix_nside 8 \
 --nu_mass_start 0.01 \
 --nu_mass_stop 0.3 \
@@ -20,7 +17,7 @@ python make_simulation_parameters.py \
 --nu_sim_mass 0.3 \
 --p_start 0.01 \
 --p_stop 400 \
---p_num 1_000 \
+--p_num 2_000 \
 --init_x_dis 8.178 \
 --z_int_shift 0.1 \
 --z_int_stop 4 \

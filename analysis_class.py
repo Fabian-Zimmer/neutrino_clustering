@@ -198,6 +198,9 @@ class analyze_simulation_outputs(object):
                 )
 
 
+
+
+
             if 'NFW_halo' in self.objects:
 
                 self.number_densities_all_sky_benchmark = np.load(
@@ -288,7 +291,7 @@ class analyze_simulation_outputs(object):
                 self.mrange, self.etas_analytical_Mertsch-1, 
                 color='red', ls='dashed')
 
-        # Plot syiling.
+        # Plot styling.
         if plot_ylims is not None:
             ax.set_ylim(plot_ylims[0], plot_ylims[1])
 
@@ -529,15 +532,20 @@ class analyze_simulation_outputs(object):
 
     def syncronize_all_sky_maps(self, halo, nu_mass_eV, apply=True):
 
-        # Shared between NFW and box halos.
-        parent = str(pathlib.Path(f'{self.sim_dir}').parent)
+        # Parent and root directory of current sim folder
+        parent_dir = str(pathlib.Path(f"{self.sim_dir}").parent)
+        root_dir = str(pathlib.Path(parent_dir).parent)
+
+        # All precalculations are stored here
+        data_dir = f"{root_dir}/Data/halo_grids"
+
         nu_mass_idx = (np.abs(self.mrange-nu_mass_eV)).argmin()
 
         if halo == 0:
             end_str = f'benchmark_halo'
 
             # Load benchmark NFW halo positions.
-            NFW_dir = f'{parent}/benchmark_halo_files'
+            NFW_dir = f'{data_dir}/benchmark_halo_files'
             pos_origin = np.load(f'{NFW_dir}/benchmark_halo_snap_0036.npy')
 
             # Get number densities and convert to clustering factors.
@@ -562,10 +570,9 @@ class analyze_simulation_outputs(object):
             print(f'Halo {halo_label} original values: min={eta_min}, max={eta_max}, factor={factor}')
         
             # Load Halo DM positions.
-            DM_dir = f'{parent}/data_precalculations'
             haloID = self.halo_indices[halo-1]
             pos_origin = np.load(
-                f'{DM_dir}/DM_pos_origID{haloID}_snap_0036.npy'
+                f'{data_dir}/DM_pos_origID{haloID}_snap_0036.npy'
             )
     
         if apply:

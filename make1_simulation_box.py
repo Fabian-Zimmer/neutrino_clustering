@@ -149,7 +149,7 @@ def main(config: ArgumentParser):
         make_tree_data(sim_info)
 
 
-def make_box_parameters_and_merger_tree(
+def make1_simulation_box(
     box_dir, sim_fullname, z0_snap, z4_snap
 ):
     """
@@ -262,7 +262,7 @@ parser.add_argument('-z4', '--final_snap_z4', required=True)
 args = parser.parse_args()
 
 
-make_box_parameters_and_merger_tree(
+make1_simulation_box(
     box_dir=args.box_directory,
     sim_fullname=args.sim_fullname,
     z0_snap=int(args.initial_snap_z0), 

@@ -54,11 +54,12 @@ shell_multipliers = np.load(f'{pars.directory}/shell_multipliers.npy')
 # data_dir = f'{pars.directory}/temp_data_{rand_code}'
 # os.makedirs(data_dir)
 
-# Parent directory of current sim folder
-parent_dir = str(pathlib.Path(pars.directory).parent)
+# Parent and root directory of current sim folder
+sim_output_dir = str(pathlib.Path(pars.directory).parent)
+root_dir = str(pathlib.Path(sim_output_dir).parent)
 
 # All precalculations are stored here
-data_dir = f'{parent_dir}/data_precalculations'
+data_dir = f"{root_dir}/Data/halo_grids"
 if not os.path.exists(data_dir):
     os.makedirs(data_dir)
 

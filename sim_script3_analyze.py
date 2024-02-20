@@ -4,16 +4,12 @@ from analysis_class import analyze_simulation_outputs
 # Argparse inputs.
 parser = argparse.ArgumentParser()
 parser.add_argument('-sd', '--sim_directory', required=True)
-parser.add_argument('-st', '--sim_type', required=True)
 parser.add_argument(
-    '--NFW_halo', required=True, action=argparse.BooleanOptionalAction
-)
+    '--NFW_halo', required=True, action=argparse.BooleanOptionalAction)
 parser.add_argument(
-    '--box_halos', required=True, action=argparse.BooleanOptionalAction
-)
+    '--box_halos', required=True, action=argparse.BooleanOptionalAction)
 parser.add_argument(
-    '--analytical_halo', required=True, action=argparse.BooleanOptionalAction
-)
+    '--analytical_halo', required=True, action=argparse.BooleanOptionalAction)
 args = parser.parse_args()
 
 # All objects to analyze.
@@ -30,7 +26,7 @@ Analysis = analyze_simulation_outputs(
     sim_type = args.sim_type,
 )
 
-# Analysis.plot_overdensity_band(plot_ylims=None)
+Analysis.plot_overdensity_band(plot_ylims=None)
 
 # Analysis.plot_overdensity_evolution(plot_ylims=(1e-4,1e1))
 
@@ -38,15 +34,15 @@ Analysis = analyze_simulation_outputs(
 
 # print(Analysis.final_halos)
 # print(Analysis.halo_num)
-halo_array = np.arange(Analysis.halo_num)+1
+# halo_array = np.arange(Analysis.halo_num)+1
 
 # Generate power spectra plots.
 # Analysis.plot_all_spectra_1plot(halo_array, 0.1)
 
 
 # Generate all all-sky anisotropy maps.
-for halo in halo_array:
-    Analysis.plot_all_sky_map('numerical', halo, 0.3)
+# for halo in halo_array:
+#     Analysis.plot_all_sky_map('numerical', halo, 0.3)
 # Analysis.plot_all_sky_map('numerical', 1, 0.3)
 
 # For benchmark NFW:
