@@ -1,6 +1,6 @@
 #!/bin/bash
 
-sim_fullname=Dopri5_2k_per_pix
+sim_fullname=Dopri8_1k_per_pix
 
 python make1_simulation_box.py \
 --box_directory /projects/0/prjs0781/simulation_data/Tango_sims \
@@ -17,7 +17,7 @@ python make2_simulation_parameters.py \
 --nu_sim_mass 0.3 \
 --p_start 0.01 \
 --p_stop 400 \
---p_num 2_000 \
+--p_num 1_000 \
 --init_x_dis 8.178 \
 --z_int_shift 0.1 \
 --z_int_stop 4 \

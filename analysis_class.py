@@ -424,20 +424,24 @@ class analyze_simulation_outputs(object):
         cy = np.cos(yAngle)
         sy = np.sin(yAngle)
 
+        # Rotation matrix around z-axis
         R_z = np.array([
             [cz, -sz, 0],
             [sz, cz,  0],
             [0,  0,   1]
         ])
+
+        # Rotation matrix around y-axis
         R_y = np.array([
             [cy,  0, sy],
             [0,   1,  0],
             [-sy, 0, cy]
         ])
 
+        # Combined rotation matrix
         rot_mat = np.matmul(R_y, R_z)
 
-        # Observer position in nex frame (aligned with x-axis).
+        # Observer position in new frame (aligned with x-axis).
         obs_orig_in_rot_frame = np.matmul(rot_mat, obs_pos.T).T
 
         # Dark matter positions in observer frame.
