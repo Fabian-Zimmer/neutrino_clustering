@@ -229,6 +229,9 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
     # Number of healpixels 
     Npix = sim_setup["Npix"]
 
+    # Number of neutrinos per healpixel
+    nu_per_pix = sim_setup["momentum_num"]
+
     init_vels = np.load(f'{pars.directory}/initial_velocities.npy')  
     # shape = (Npix, neutrinos_per_pix, 3)
     
@@ -264,7 +267,7 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
 
     # Compute individual number densities for each healpixel
     pix_dens = Physics.number_densities_all_sky(
-        v_arr=nu_vectors[..., 3:],
+        v_arr=nu_vectors[..., 3:].reshape(Npix, nu_per_pix, -1, 3),
         m_arr=nu_massrange,
         Npix=Npix,
         pix_sr=pix_sr_sim,
@@ -273,7 +276,7 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
     
     # Compute total number density, by using all neutrino vectors for integral
     tot_dens = Physics.number_densities_mass_range(
-        v_arr=nu_vectors[...,3:], 
+        v_arr=nu_vectors[..., 3:], 
         m_arr=nu_massrange, 
         pix_sr=4*Params.Pi,
         args=Params())
