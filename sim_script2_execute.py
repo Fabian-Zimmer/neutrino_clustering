@@ -105,21 +105,22 @@ def backtrack_1_neutrino(
     term = diffrax.ODETerm(EOMs)
     t0 = s_int_steps[0]
     t1 = s_int_steps[-1]
-    dt0 = (s_int_steps[0] + s_int_steps[1]) / 2
+    dt0 = (s_int_steps[0] + s_int_steps[1]) / 1000
     
 
     ### ------------- ###
     ### Dopri5 Solver ###
     ### ------------- ###
-    # solver = diffrax.Dopri5()
-    # stepsize_controller = diffrax.PIDController(rtol=1e-3, atol=1e-6)
-    
+    solver = diffrax.Dopri5()
+    stepsize_controller = diffrax.PIDController(rtol=1e-3, atol=1e-6)
+    # note: no change for tighter rtol and atol, e.g. rtol=1e-5, atol=1e-9
+
 
     ### ------------- ###
     ### Dopri8 Solver ###
     ### ------------- ###
-    solver = diffrax.Dopri8()
-    stepsize_controller = diffrax.PIDController(rtol=1e-7, atol=1e-9)
+    # solver = diffrax.Dopri8()
+    # stepsize_controller = diffrax.PIDController(rtol=1e-7, atol=1e-9)
 
 
     # Specify timesteps where solutions should be saved
@@ -233,7 +234,7 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
     nu_per_pix = sim_setup["momentum_num"]
 
     init_vels = np.load(f'{pars.directory}/initial_velocities.npy')  
-    # shape = (Npix, neutrinos_per_pix, 3)
+    # shape = (Npix, neutrinos per pixel, 3)
     
     # Common arguments for simulation
     common_args = (
@@ -247,10 +248,7 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
         ]
         
         # Wait for all futures to complete and collect results in order
-        results = [future.result() for future in futures]
-        
-    # Combine results into final array
-    nu_vectors = jnp.vstack(results)
+        nu_vectors = jnp.array([future.result() for future in futures])
 
     # Save all sky neutrino vectors for current halo
     jnp.save(f'{pars.directory}/vectors_{end_str}.npy', nu_vectors)
@@ -267,20 +265,19 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
 
     # Compute individual number densities for each healpixel
     pix_dens = Physics.number_densities_all_sky(
-        v_arr=nu_vectors[..., 3:].reshape(Npix, nu_per_pix, -1, 3),
+        v_arr=nu_vectors[..., 3:],
         m_arr=nu_massrange,
-        Npix=Npix,
         pix_sr=pix_sr_sim,
         args=Params())
-    pix_dens_l.append(pix_dens)
+    pix_dens_l.append(jnp.squeeze(pix_dens))
     
     # Compute total number density, by using all neutrino vectors for integral
     tot_dens = Physics.number_densities_mass_range(
-        v_arr=nu_vectors[..., 3:], 
+        v_arr=nu_vectors.reshape(-1, 2, 6)[..., 3:], 
         m_arr=nu_massrange, 
         pix_sr=4*Params.Pi,
         args=Params())
-    tot_dens_l.append(tot_dens)
+    tot_dens_l.append(jnp.squeeze(tot_dens))
     
     ana_time = time.perf_counter() - ana_start
     print(f"Analysis time: {ana_time/60.:.2f} min, {ana_time/(60**2):.2f} h\n")
@@ -289,9 +286,9 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
     if pars.benchmark:
         break
 
-    # Save number density arrays for all halos
-    jnp.save(f"{pars.directory}/pixel_densities.npy"), jnp.array(pix_dens_l)
-    jnp.save(f"{pars.directory}/total_densities.npy"), jnp.array(tot_dens_l)
+# Save number density arrays for all halos
+jnp.save(f"{pars.directory}/total_densities.npy", jnp.array(tot_dens_l))
+jnp.save(f"{pars.directory}/pixel_densities.npy", jnp.array(pix_dens_l))
 
 tot_time = time.perf_counter() - total_start
 print(f"Total time: {tot_time/60.:.2f} min, {tot_time/(60**2):.2f} h")

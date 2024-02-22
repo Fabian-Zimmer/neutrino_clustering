@@ -1,6 +1,6 @@
 #!/bin/bash
 
-sim_fullname=Dopri5_1k_dt0
+sim_fullname=Dopri5_5k
 
 python make1_simulation_box.py \
 --box_directory /projects/0/prjs0781/simulation_data/Tango_sims \
@@ -13,11 +13,12 @@ python make2_simulation_parameters.py \
 --healpix_nside 8 \
 --nu_mass_start 0.01 \
 --nu_mass_stop 0.3 \
---nu_mass_num 100 \
+--nu_mass_num 50 \
 --nu_sim_mass 0.3 \
+--specific_masses "0.01,0.05,0.1,0.2,0.3" \
 --p_start 0.01 \
 --p_stop 400 \
---p_num 1_000 \
+--p_num 5_000 \
 --init_x_dis 8.178 \
 --z_int_shift 0.1 \
 --z_int_stop 4 \

@@ -4,6 +4,7 @@ from shared.preface import *
 def make2_simulation_parameters(
         sim_dir,
         nu_mass_start, nu_mass_stop, nu_mass_num, nu_sim_mass,
+        specific_masses,
         p_start, p_stop, p_num,
         phis, thetas,
         init_x_dis,
@@ -59,12 +60,18 @@ def make2_simulation_parameters(
     else:
         neutrinos = len(thetas)*p_num
 
-    # Neutrino masses.
+    # Neutrino masses in eV and kg.
     nu_mass_eV = nu_sim_mass*eV
     nu_mass_kg = nu_mass_eV/kg
+
+    # Neutrino mass range
     neutrino_massrange_eV = np.geomspace(
-        nu_mass_start, nu_mass_stop, nu_mass_num
-    )*eV
+        nu_mass_start, nu_mass_stop, nu_mass_num)*eV
+
+    # Ensure mass range contains specified masses
+    for m_val in specific_masses:
+        idx = np.abs(neutrino_massrange_eV - m_val).argmin()
+        neutrino_massrange_eV[idx] = m_val
 
     # Neutrino momentum range.
     neutrino_momenta = np.geomspace(p_start*T_CNB, p_stop*T_CNB, p_num)
@@ -186,6 +193,7 @@ parser.add_argument('-ni', '--nu_mass_start', required=True)
 parser.add_argument('-nf', '--nu_mass_stop', required=True)
 parser.add_argument('-nn', '--nu_mass_num', required=True)
 parser.add_argument('-nm', '--nu_sim_mass', required=True)
+parser.add_argument('--specific_masses', type=str, required=True)
 parser.add_argument('-pi', '--p_start', required=True)
 parser.add_argument('-pf', '--p_stop', required=True)
 parser.add_argument('-pn', '--p_num', required=True)
@@ -210,6 +218,8 @@ pix_sr = (4*np.pi)/Npix  # Pixel size  [sr]
 phi_angles, theta_angles = np.array(
     hp.pixelfunc.pix2ang(Nside, np.arange(Npix), lonlat=True))
 
+# Specified neutrino masses to be contained in the neutrino mass range
+specific_masses = list(map(float, args.specific_masses.split(',')))
 
 make2_simulation_parameters(
     sim_dir=args.sim_dir,
@@ -217,6 +227,7 @@ make2_simulation_parameters(
     nu_mass_stop=float(args.nu_mass_stop),
     nu_mass_num=int(args.nu_mass_num),
     nu_sim_mass=float(args.nu_sim_mass),
+    specific_masses=specific_masses,
     p_start=float(args.p_start),
     p_stop=float(args.p_stop),
     p_num=int(args.p_num),
