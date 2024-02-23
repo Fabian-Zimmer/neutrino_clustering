@@ -27,6 +27,7 @@ Cl_qs = jnp.geomspace(0.01, 100, 50)
 # Microkelvin unit
 uK = 1e-6*Params.K
 
+Deltas_halos_l = []
 pix_dens_incl_PFs_l = []
 tot_dens_incl_PFs_l = []
 
@@ -74,26 +75,37 @@ for halo_j in range(int(pars.halo_num)):
     m_idx = jnp.arange(m_num)[:, None]
 
     # Select corresponding pixels, i.e. temp. perturbations, for all neutrinos
-    nu_Deltas = Deltas_sync[m_idx, q_idx, p_idx]
-    #? (masses, q bins, neutrinos)
-    print(f"nu_Deltas", nu_Deltas.shape)
+    Deltas_halo = jnp.reshape(
+        Deltas_sync[m_idx, q_idx, p_idx], (m_num, Npix, nu_per_pix))
+    Deltas_halos_l.append(Deltas_halo)
+    # (masses, Npix, neutrinos per pixel)
 
-    # nu_Deltas_allsky = jnp.reshape(nu_Deltas, (m_num, ))
 
+    ### ------------------------------------------------------------------ ###
+    ### Compute number densities incl. primordial temperature fluctuations ###
+    ### ------------------------------------------------------------------ ###
 
-    # Compute number densities incl. primordial temperature fluctuations
-    # CNB_primordial_skymap = Physics.number_density_Delta(
-    #     p_arr_z0, p_arr_z4, nu_Deltas_allsky, pix_sr, Params())
+    # For individual allsky map pixels
+    pix_dens_halo = Physics.number_density_Delta(
+        p_z0, p_z4, Deltas_halo, pix_sr, Params())
+    pix_dens_incl_PFs_l.append(pix_dens_halo / (Params.N0/Npix/Params.cm**-3))
     # (masses, Npix)
 
-    # CNB_primordial /= (Params.N0/Npix/Params.cm**-3)
+    # For total local value
+    tot_dens_halo = Physics.number_density_Delta(
+        p_z0.reshape(m_num, -1), 
+        p_z4.reshape(m_num, -1), 
+        Deltas_halo.reshape(m_num, -1), 
+        pix_sr, Params())
+    tot_dens_incl_PFs_l.append(tot_dens_halo / (Params.N0/Params.cm**-3))
 
 
-# pix_dens_incl_PFs = jnp.array(pix_dens_incl_PFs_l)
-# jnp.save(f"{sim_folder}/pixel_densities_incl_PFs", pix_dens_incl_PFs)
-
-# tot_dens_incl_PFs = jnp.array(tot_dens_incl_PFs_l)
-# jnp.save(f"{sim_folder}/total_densities_incl_PFs", tot_dens_incl_PFs)
+jnp.save(
+    f"{pars.sim_dir}/Deltas_halos.npy", jnp.array(Deltas_halos_l))
+jnp.save(
+    f"{pars.sim_dir}/pixel_densities_incl_PFs", jnp.array(pix_dens_incl_PFs_l))
+jnp.save(
+    f"{pars.sim_dir}/total_densities_incl_PFs", jnp.array(tot_dens_incl_PFs_l))
 
 
 # note: then can download to local repo and make skymaps, power spectra, etc.
