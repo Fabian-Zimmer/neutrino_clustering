@@ -264,9 +264,10 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
     ana_start = time.perf_counter()
 
     # Compute individual number densities for each healpixel
+    nu_allsky_masses = jnp.array([0.01, 0.05, 0.1, 0.2, 0.3])*Params.eV
     pix_dens = Physics.number_densities_all_sky(
         v_arr=nu_vectors[..., 3:],
-        m_arr=nu_massrange,
+        m_arr=nu_allsky_masses,
         pix_sr=pix_sr_sim,
         args=Params())
     pix_dens_l.append(jnp.squeeze(pix_dens))
