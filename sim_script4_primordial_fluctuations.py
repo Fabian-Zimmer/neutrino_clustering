@@ -27,6 +27,57 @@ Cl_qs = jnp.geomspace(0.01, 100, 50)
 # Microkelvin unit
 uK = 1e-6*Params.K
 
+
+### ============= ###
+### Create Deltas ###
+### ============= ###
+
+np.random.seed(5)  # fixed seed for skymaps
+Cl_folder = f"Shared/Cls"
+Delta_folder = f"Shared/Deltas"
+
+Deltas_z4_m_l = []
+Deltas_z0_m_l = []
+for m_Cl in nu_allsky_masses:
+
+    # Load Cl's for current neutrino mass
+    Cls_z4_raw = jnp.load(f"{Cl_folder}/Cls_z=4_m={m_Cl}eV.npy")
+    Cls_z0_raw = jnp.load(f"{Cl_folder}/Cls_z=0_m={m_Cl}eV.npy")
+    # (q momentum bins, l multipoles) = (50, 20)
+
+    # Add monopole
+    Cl_z4 = jnp.insert(Cls_z4_raw, 0, 0, axis=1)
+    Cl_z0 = jnp.insert(Cls_z0_raw, 0, 0, axis=1)
+    # (q momentum bins, l multipoles + 1) = (50, 21)
+
+    # Create temp. flucts. skymaps from Cls, fixed with a seed, for each q
+    Deltas_z4_q_l = []
+    Deltas_z0_q_l = []
+    for qi in range(Primordial.n_qbins):
+
+        Tmap_z4 = hp.sphtfunc.synfast(
+            Cl_z4[qi], nside=Nside, lmax=None, pol=False)
+        Tmap_z0 = hp.sphtfunc.synfast(
+            Cl_z0[qi], nside=Nside, lmax=None, pol=False)
+
+        #? Convert temp. maps to correct units and conventions
+        # Tmap_z4 += Params.T_CNB*(1+4)  #?
+        # Tmap_z0 += Params.T_CNB        #?
+
+        Deltas_z4 = Tmap_z4 * uK / (Params.T_CNB*(1+4))
+        Deltas_z0 = Tmap_z0 * uK / (Params.T_CNB)
+        # (Npix)
+
+        Deltas_z4_q_l.append(Deltas_z4)
+        Deltas_z0_q_l.append(Deltas_z0)
+
+    Deltas_z4_m_l.append(jnp.array(Deltas_z4_q_l))
+    Deltas_z0_m_l.append(jnp.array(Deltas_z0_q_l))
+
+
+jnp.save(f"{Delta_folder}/Delta_matrix_z4.npy", jnp.array(Deltas_z4_m_l))
+jnp.save(f"{Delta_folder}/Delta_matrix_z0.npy", jnp.array(Deltas_z0_m_l))
+
 Deltas_halos_l = []
 pix_dens_incl_PFs_l = []
 tot_dens_incl_PFs_l = []
@@ -64,7 +115,8 @@ for halo_j in range(int(pars.halo_num)):
     Deltas_sync = jnp.reshape(Delta_matrix, (m_num, Primordial.n_qbins, Npix))
     # (masses, q bins, Npix)
 
-    # Pixel indices for all neutrinos (looks like [0,...,0,1,...,1,...])
+    # Pixel indices for all neutrinos
+    # (looks like [0,...,0,1,...,1,...,Npix-1,...,Npix-1])
     p_idx = jnp.repeat(jnp.arange(Npix), nu_per_pix)[None, :]
 
     # Find indices to match neutrino momenta to Cl momenta
