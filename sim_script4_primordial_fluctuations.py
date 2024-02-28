@@ -18,7 +18,10 @@ Npix = sim_setup["Npix"]
 nu_per_pix = sim_setup["momentum_num"]
 pix_sr = sim_setup["pix_sr"]
 
-nu_allsky_masses = jnp.array([0.01, 0.05, 0.1, 0.2, 0.3])*Params.eV
+nu_allsky_masses = jnp.array([
+    0.01, 0.05, 
+    # 0.1, 0.2, 0.3
+])*Params.eV
 m_num = len(nu_allsky_masses)
 
 # Momenta of the Cl maps
@@ -75,14 +78,18 @@ for m_Cl in nu_allsky_masses:
     Deltas_z0_m_l.append(jnp.array(Deltas_z0_q_l))
 
 
-jnp.save(f"{Delta_folder}/Delta_matrix_z4.npy", jnp.array(Deltas_z4_m_l))
-jnp.save(f"{Delta_folder}/Delta_matrix_z0.npy", jnp.array(Deltas_z0_m_l))
+Deltas_z4_matrix = jnp.array(Deltas_z4_m_l)
+Deltas_z0_matrix = jnp.array(Deltas_z0_m_l)
+# (masses, q momentum bins, Npix)
+jnp.save(f"{Delta_folder}/Delta_matrix_z4.npy", Deltas_z4_matrix)
+jnp.save(f"{Delta_folder}/Delta_matrix_z0.npy", Deltas_z0_matrix)
 
+
+
+# Loop over all halos in directory
 Deltas_halos_l = []
 pix_dens_incl_PFs_l = []
 tot_dens_incl_PFs_l = []
-
-# Loop over all halos in directory
 for halo_j in range(int(pars.halo_num)):
 
     # Load neutrino vectors from simulation
@@ -103,18 +110,6 @@ for halo_j in range(int(pars.halo_num)):
     q_z4 = y_arr[...,-1] / (1+4)  #? in terms of T_CNB(z=0) or T_CNB(z=4) ?
     # (masses, Npix, neutrinos per pixel)
 
-    # Load temperature fluctuations
-    Delta_matrix_l = []
-    data_dir = f"{pars.shared_dir}/Deltas"
-    for m_nu in nu_allsky_masses:
-        for qi in range(Primordial.n_qbins):
-            Delta_matrix_l.append(jnp.load(
-                f"{data_dir}/Deltas_Nside={Nside}_qi={qi}_z=4_m={m_nu}eV.npy")) 
-
-    Delta_matrix = jnp.array(Delta_matrix_l) * uK / (Params.T_CNB*(1+4))
-    Deltas_sync = jnp.reshape(Delta_matrix, (m_num, Primordial.n_qbins, Npix))
-    # (masses, q bins, Npix)
-
     # Pixel indices for all neutrinos
     # (looks like [0,...,0,1,...,1,...,Npix-1,...,Npix-1])
     p_idx = jnp.repeat(jnp.arange(Npix), nu_per_pix)[None, :]
@@ -124,11 +119,12 @@ for halo_j in range(int(pars.halo_num)):
     q_idx = jnp.reshape(q_idx, (m_num, -1))
     # (masses, Npix, neutrinos per pixel)
 
+    # Mass indices adjusted for broadcasting / fancy indexing of Delta matrix
     m_idx = jnp.arange(m_num)[:, None]
 
     # Select corresponding pixels, i.e. temp. perturbations, for all neutrinos
     Deltas_halo = jnp.reshape(
-        Deltas_sync[m_idx, q_idx, p_idx], (m_num, Npix, nu_per_pix))
+        Deltas_z4_matrix[m_idx, q_idx, p_idx], (m_num, Npix, nu_per_pix))
     Deltas_halos_l.append(Deltas_halo)
     # (masses, Npix, neutrinos per pixel)
 
