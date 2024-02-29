@@ -35,7 +35,7 @@ uK = 1e-6*Params.K
 ### Create Deltas ###
 ### ============= ###
 
-np.random.seed(5)  # fixed seed for skymaps
+
 Cl_folder = f"Shared/Cls"
 Delta_folder = f"Shared/Deltas"
 
@@ -58,8 +58,11 @@ for m_Cl in nu_allsky_masses:
     Deltas_z0_q_l = []
     for qi in range(Primordial.n_qbins):
 
+        # note: seed needs to be initiated before each use for some reason...
+        np.random.seed(5)  # fixed seed for skymaps
         Tmap_z4 = hp.sphtfunc.synfast(
             Cl_z4[qi], nside=Nside, lmax=None, pol=False)
+        np.random.seed(5)  # fixed seed for skymaps
         Tmap_z0 = hp.sphtfunc.synfast(
             Cl_z0[qi], nside=Nside, lmax=None, pol=False)
 
@@ -136,7 +139,7 @@ for halo_j in range(int(pars.halo_num)):
     # For individual allsky map pixels
     pix_dens_halo = Physics.number_density_Delta(
         p_z0, p_z4, Deltas_halo, pix_sr, Params())
-    pix_dens_incl_PFs_l.append(pix_dens_halo / (Params.N0/Npix/Params.cm**-3))
+    pix_dens_incl_PFs_l.append(pix_dens_halo)
     # (masses, Npix)
 
     # For total local value
@@ -145,7 +148,7 @@ for halo_j in range(int(pars.halo_num)):
         p_z4.reshape(m_num, -1), 
         Deltas_halo.reshape(m_num, -1), 
         pix_sr, Params())
-    tot_dens_incl_PFs_l.append(tot_dens_halo / (Params.N0/Params.cm**-3))
+    tot_dens_incl_PFs_l.append(tot_dens_halo)
 
 
 jnp.save(

@@ -1,0 +1,33 @@
+#!/bin/bash
+#SBATCH --job-name=no_gravity
+#SBATCH -p rome
+#SBATCH -t 00:05:00
+#SBATCH -N 1
+#SBATCH --tasks-per-node=1
+#SBATCH --cpus-per-task=32
+#SBATCH --mem=56000
+#SBATCH -o jobs/no_gravity.out
+#SBATCH -e jobs/no_gravity.err
+#SBATCH -v
+
+
+# rome  node- full: 128/224 ; half: 64/112 ; quarter: 32/56 ; CPUs/GB.
+# genoa node- full: 192/336 ; half: 96/168 ; quarter: 48/84 ; CPUs/GB.
+
+module purge
+
+# Load .bashrc if it exists
+if [ -f "$HOME/.bashrc" ]; then
+    source $HOME/.bashrc
+fi
+
+conda activate neutrino_clustering
+
+sim_fullname=no_gravity
+
+python $HOME/neutrino_clustering/sim_script2_execute_no_gravity.py \
+--directory $HOME/neutrino_clustering/sim_output/$sim_fullname \
+--mass_gauge 12.0 \
+--mass_lower 0.6 \
+--mass_upper 2.0 \
+--halo_num 1 \
