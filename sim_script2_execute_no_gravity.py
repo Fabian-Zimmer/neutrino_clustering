@@ -5,20 +5,21 @@ total_start = time.perf_counter()
 
 # Argparse inputs.
 parser = argparse.ArgumentParser()
-parser.add_argument('-d', '--directory', required=True)
-parser.add_argument('-mg', '--mass_gauge', required=True)
-parser.add_argument('-ml', '--mass_lower', required=True)
-parser.add_argument('-mu', '--mass_upper', required=True)
-parser.add_argument('-hn', '--halo_num', required=True)
+parser.add_argument('--directory', required=True)
+parser.add_argument(
+    '--pixel_densities', required=True, action=argparse.BooleanOptionalAction)
+parser.add_argument(
+    '--total_densities', required=True, action=argparse.BooleanOptionalAction)
 pars = parser.parse_args()
 
 # Create halo batch, files and other simulation setup parameters and arrays
-DM_mass, CPUs_sim, neutrinos, init_dis, zeds_snaps, z_int_steps, s_int_steps, nu_massrange, data_dir, _, _ = SimData.simulation_setup(
+DM_mass, CPUs_sim, neutrinos, init_dis, zeds_snaps, z_int_steps, s_int_steps, nu_massrange = SimData.simulation_setup(
     sim_dir=pars.directory,
-    m_lower=pars.mass_lower,
-    m_upper=pars.mass_upper,
-    m_gauge=pars.mass_gauge,
-    halo_num_req=pars.halo_num)
+    m_lower=None,
+    m_upper=None,
+    m_gauge=None,
+    halo_num_req=None,
+    no_gravity=True)
 
 
 @jax.jit
@@ -148,32 +149,42 @@ print(f"Simulation time: {sim_time/60.:.2f} min, {sim_time/(60**2):.2f} h")
 ### Compute number densities ###
 ### ======================== ###
 
-ana_start = time.perf_counter()
+if pars.pixel_densities:
 
-# Compute individual number densities for each healpixel
-nu_allsky_masses = jnp.array([0.01, 0.05, 0.1, 0.2, 0.3])*Params.eV
-pix_dens = Physics.number_densities_all_sky(
-    v_arr=nu_vectors[..., 3:],
-    m_arr=nu_allsky_masses,
-    pix_sr=pix_sr_sim,
-    args=Params())
-pix_dens_l.append(jnp.squeeze(pix_dens))
+    # Compute individual number densities for each healpixel
+    pix_start = time.perf_counter()
 
-# Compute total number density, by using all neutrino vectors for integral
-tot_dens = Physics.number_densities_mass_range(
-    v_arr=nu_vectors.reshape(-1, 2, 6)[..., 3:], 
-    m_arr=nu_massrange, 
-    pix_sr=4*Params.Pi,
-    args=Params())
-tot_dens_l.append(jnp.squeeze(tot_dens))
+    nu_allsky_masses = jnp.array([0.01, 0.05, 0.1, 0.2, 0.3])*Params.eV
+    pix_dens = Physics.number_densities_all_sky(
+        v_arr=nu_vectors[..., 3:],
+        m_arr=nu_allsky_masses,
+        pix_sr=pix_sr_sim,
+        args=Params())
+    pix_dens_l.append(jnp.squeeze(pix_dens))
 
-ana_time = time.perf_counter() - ana_start
-print(f"Analysis time: {ana_time/60.:.2f} min, {ana_time/(60**2):.2f} h\n")
+    pix_time = time.perf_counter() - pix_start
+
+    jnp.save(f"{pars.directory}/pixel_densities.npy", jnp.array(pix_dens_l))
+    print(f"Analysis time: {pix_time/60.:.2f} min, {pix_time/(60**2):.2f} h\n")
+
+if pars.total_densities:
+
+    # Compute total number density, by using all neutrino vectors for integral
+    tot_start = time.perf_counter()
+
+    tot_dens = Physics.number_densities_mass_range(
+        v_arr=nu_vectors.reshape(-1, 2, 6)[..., 3:], 
+        m_arr=nu_massrange, 
+        pix_sr=4*Params.Pi,
+        args=Params())
+    tot_dens_l.append(jnp.squeeze(tot_dens))
+
+    tot_time = time.perf_counter() - tot_start
+
+    jnp.save(f"{pars.directory}/total_densities.npy", jnp.array(tot_dens_l))
+    print(f"Analysis time: {tot_time/60.:.2f} min, {tot_time/(60**2):.2f} h\n")
 
 
-# Save number density arrays for all halos
-jnp.save(f"{pars.directory}/total_densities.npy", jnp.array(tot_dens_l))
-jnp.save(f"{pars.directory}/pixel_densities.npy", jnp.array(pix_dens_l))
 
-tot_time = time.perf_counter() - total_start
-print(f"Total time: {tot_time/60.:.2f} min, {tot_time/(60**2):.2f} h")
+total_time = time.perf_counter() - total_start
+print(f"Total time: {total_time/60.:.2f} min, {total_time/(60**2):.2f} h")
