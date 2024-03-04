@@ -61,13 +61,6 @@ def backtrack_1_neutrino(init_vector, s_int_steps):
     # note: no change for tighter rtol and atol, e.g. rtol=1e-5, atol=1e-9
 
 
-    ### ------------- ###
-    ### Dopri8 Solver ###
-    ### ------------- ###
-    # solver = diffrax.Dopri8()
-    # stepsize_controller = diffrax.PIDController(rtol=1e-7, atol=1e-9)
-
-
     # Specify timesteps where solutions should be saved
     saveat = diffrax.SaveAt(ts=jnp.array(s_int_steps))
     
@@ -79,21 +72,26 @@ def backtrack_1_neutrino(init_vector, s_int_steps):
     
     trajectory = sol.ys.reshape(100,6)
 
+    # Only return the initial [0] and last [-1] positions and velocities
     return jnp.stack([trajectory[0], trajectory[-1]])
 
 
 def simulate_neutrinos_1_pix(init_xyz, init_vels, s_int_steps):
 
+    """
+    Function for the multiprocessing routine below, which simulates all neutrinos for 1 pixel on the healpix skymap.
+    """
+
     # Neutrinos per pixel
     nus = init_vels.shape[0]
 
+    # Make vector with same starting position but different velocities
     init_vectors = jnp.array(
-        [jnp.concatenate((init_xyz, init_vels[k])) for k in range(nus)]
-    )
+        [jnp.concatenate((init_xyz, init_vels[k])) for k in range(nus)])
+
 
     trajectories = jnp.array([
-        backtrack_1_neutrino(vec, s_int_steps) for vec in init_vectors
-    ])
+        backtrack_1_neutrino(vec, s_int_steps) for vec in init_vectors])
     
     return trajectories  # shape = (neutrinos, 2, 3)
 
@@ -129,7 +127,8 @@ nu_per_pix = sim_setup["momentum_num"]  # Number of neutrinos per healpixel
 init_vels = np.load(f'{pars.directory}/initial_velocities.npy')  
 # shape = (Npix, neutrinos per pixel, 3)
 
-# Use ProcessPoolExecutor to distribute the simulations across processes
+# Use ProcessPoolExecutor to distribute the simulations across processes:
+# 1 process (i.e. CPU) simulates all neutrinos for one healpixel.
 with ProcessPoolExecutor(CPUs_sim) as executor:
     futures = [
         executor.submit(
