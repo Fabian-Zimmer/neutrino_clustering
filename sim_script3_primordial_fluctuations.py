@@ -19,8 +19,8 @@ nu_per_pix = sim_setup["momentum_num"]
 pix_sr = sim_setup["pix_sr"]
 
 nu_allsky_masses = jnp.array([
-    0.01, 0.05, 
-    # 0.1, 0.2, 0.3
+    0.01, 0.05, 0.1,
+    # 0.2, 0.3
 ])*Params.eV
 m_num = len(nu_allsky_masses)
 
