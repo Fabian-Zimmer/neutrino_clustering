@@ -27,5 +27,5 @@ sim_fullname=no_gravity
 
 python $HOME/neutrino_clustering/sim_script2_execute_no_gravity.py \
 --directory $HOME/neutrino_clustering/sim_output/$sim_fullname \
---no-pixel_densities \
+--pixel_densities \
 --total_densities
