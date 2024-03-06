@@ -11,18 +11,13 @@ parser.add_argument('--halo_num', required=True)
 pars = parser.parse_args()
 
 # Load simulation parameters
-with open(f"{pars.sim_dir}/sim_parameters.yaml", "r") as file:
-    sim_setup = yaml.safe_load(file)
-Nside = sim_setup["Nside"]
-Npix = sim_setup["Npix"]
-nu_per_pix = sim_setup["momentum_num"]
-pix_sr = sim_setup["pix_sr"]
+simdata = SimData(pars.sim_dir)
 
-nu_allsky_masses = jnp.array([
+nu_m_picks = jnp.array([
     0.01, 0.05, 0.1,
     # 0.2, 0.3
 ])*Params.eV
-m_num = len(nu_allsky_masses)
+m_num = len(nu_m_picks)
 
 # Momenta of the Cl maps
 Cl_qs = jnp.geomspace(0.01, 100, 50)
@@ -41,7 +36,7 @@ Delta_folder = f"Shared/Deltas"
 
 Deltas_z4_m_l = []
 Deltas_z0_m_l = []
-for m_Cl in nu_allsky_masses:
+for m_Cl in nu_m_picks:
 
     # Load Cl's for current neutrino mass
     Cls_z4_raw = jnp.load(f"{Cl_folder}/Cls_z=4_m={m_Cl}eV.npy")
@@ -61,10 +56,10 @@ for m_Cl in nu_allsky_masses:
         # note: seed needs to be initiated before each use for some reason...
         np.random.seed(5)  # fixed seed for skymaps
         Tmap_z4 = hp.sphtfunc.synfast(
-            Cl_z4[qi], nside=Nside, lmax=None, pol=False)
+            Cl_z4[qi], nside=simdata.Nside, lmax=None, pol=False)
         np.random.seed(5)  # fixed seed for skymaps
         Tmap_z0 = hp.sphtfunc.synfast(
-            Cl_z0[qi], nside=Nside, lmax=None, pol=False)
+            Cl_z0[qi], nside=simdata.Nside, lmax=None, pol=False)
 
         #? Convert temp. maps to correct units and conventions
         # Tmap_z4 += Params.T_CNB*(1+4)  #?
@@ -101,7 +96,7 @@ for halo_j in range(int(pars.halo_num)):
     # Convert to momenta
     v_arr = nu_vectors[..., 3:]
     p_arr, y_arr = Physics.velocities_to_momenta_all_sky(
-        v_arr, nu_allsky_masses, Params())
+        v_arr, nu_m_picks, Params())
     # (masses, Npix, neutrinos per pixel, 2 (first and last time step))
 
     # Momenta at z=0 and z=4
@@ -115,7 +110,7 @@ for halo_j in range(int(pars.halo_num)):
 
     # Pixel indices for all neutrinos
     # (looks like [0,...,0,1,...,1,...,Npix-1,...,Npix-1])
-    p_idx = jnp.repeat(jnp.arange(Npix), nu_per_pix)[None, :]
+    p_idx = jnp.repeat(jnp.arange(simdata.Npix), simdata.p_num)[None, :]
 
     # Find indices to match neutrino momenta to Cl momenta
     q_idx = jnp.abs(Cl_qs[None,None,None,:] - q_z4[...,None]).argmin(axis=-1)
@@ -127,7 +122,7 @@ for halo_j in range(int(pars.halo_num)):
 
     # Select corresponding pixels, i.e. temp. perturbations, for all neutrinos
     Deltas_halo = jnp.reshape(
-        Deltas_z4_matrix[m_idx, q_idx, p_idx], (m_num, Npix, nu_per_pix))
+        Deltas_z4_matrix[m_idx, q_idx, p_idx], (m_num, simdata.Npix, simdata.p_num))
     Deltas_halos_l.append(Deltas_halo)
     # (masses, Npix, neutrinos per pixel)
 
@@ -138,7 +133,7 @@ for halo_j in range(int(pars.halo_num)):
 
     # For individual allsky map pixels
     pix_dens_halo = Physics.number_density_Delta(
-        p_z0, p_z4, Deltas_halo, pix_sr, Params())
+        p_z0, p_z4, Deltas_halo, simdata.pix_sr, Params())
     pix_dens_incl_PFs_l.append(pix_dens_halo)
     # (masses, Npix)
 
@@ -147,7 +142,7 @@ for halo_j in range(int(pars.halo_num)):
         p_z0.reshape(m_num, -1), 
         p_z4.reshape(m_num, -1), 
         Deltas_halo.reshape(m_num, -1), 
-        pix_sr, Params())
+        simdata.pix_sr, Params())
     tot_dens_incl_PFs_l.append(tot_dens_halo)
 
 
