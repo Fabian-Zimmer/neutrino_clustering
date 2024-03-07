@@ -19,12 +19,6 @@ nu_m_picks = jnp.array([
 ])*Params.eV
 m_num = len(nu_m_picks)
 
-# Momenta of the Cl maps
-Cl_qs = jnp.geomspace(0.01, 100, 50)
-
-# Microkelvin unit
-uK = 1e-6*Params.K
-
 
 ### ============= ###
 ### Create Deltas ###
@@ -53,20 +47,15 @@ for m_Cl in nu_m_picks:
     Deltas_z0_q_l = []
     for qi in range(Primordial.n_qbins):
 
-        # note: seed needs to be initiated before each use for some reason...
-        np.random.seed(5)  # fixed seed for skymaps
+        np.random.seed(5)
         Tmap_z4 = hp.sphtfunc.synfast(
             Cl_z4[qi], nside=simdata.Nside, lmax=None, pol=False)
-        np.random.seed(5)  # fixed seed for skymaps
+        np.random.seed(5)  #note: seed needs to reset
         Tmap_z0 = hp.sphtfunc.synfast(
             Cl_z0[qi], nside=simdata.Nside, lmax=None, pol=False)
 
-        #? Convert temp. maps to correct units and conventions
-        # Tmap_z4 += Params.T_CNB*(1+4)  #?
-        # Tmap_z0 += Params.T_CNB        #?
-
-        Deltas_z4 = Tmap_z4 * uK / (Params.T_CNB*(1+4))
-        Deltas_z0 = Tmap_z0 * uK / (Params.T_CNB)
+        Deltas_z4 = Tmap_z4 * Primordial.uK / (Params.T_CNB*(1+simdata.z4_sim_val))
+        Deltas_z0 = Tmap_z0 * Primordial.uK / (Params.T_CNB)
         # (Npix)
 
         Deltas_z4_q_l.append(Deltas_z4)
@@ -113,7 +102,7 @@ for halo_j in range(int(pars.halo_num)):
     p_idx = jnp.repeat(jnp.arange(simdata.Npix), simdata.p_num)[None, :]
 
     # Find indices to match neutrino momenta to Cl momenta
-    q_idx = jnp.abs(Cl_qs[None,None,None,:] - q_z4[...,None]).argmin(axis=-1)
+    q_idx = jnp.abs(Primordial.Cl_qs[None,None,None,:] - q_z4[...,None]).argmin(axis=-1)
     q_idx = jnp.reshape(q_idx, (m_num, -1))
     # (masses, Npix, neutrinos per pixel)
 
