@@ -13,10 +13,7 @@ pars = parser.parse_args()
 # Load simulation parameters
 simdata = SimData(pars.sim_dir)
 
-nu_m_picks = jnp.array([
-    0.01, 0.05, 0.1,
-    # 0.2, 0.3
-])*Params.eV
+nu_m_picks = jnp.array([0.01, 0.05, 0.1, 0.2, 0.3])*Params.eV
 m_num = len(nu_m_picks)
 
 
@@ -93,18 +90,19 @@ for halo_j in range(int(pars.halo_num)):
     p_z4 = p_arr[...,-1]
     # (masses, Npix, neutrinos per pixel)
 
-    q_z0 = y_arr[..., 0]
-    q_z4 = y_arr[...,-1] / (1+4)  #? in terms of T_CNB(z=0) or T_CNB(z=4) ?
+    # Cl momenta are expressed in terms of T_CNB(z=0). For proper matching we 
+    # need momenta at z=4 in terms of T_CNB(z=0) as well, i.e. just y_arr.
+    q_z4 = y_arr[...,-1]
     # (masses, Npix, neutrinos per pixel)
-
-    # Pixel indices for all neutrinos
-    # (looks like [0,...,0,1,...,1,...,Npix-1,...,Npix-1])
-    p_idx = jnp.repeat(jnp.arange(simdata.Npix), simdata.p_num)[None, :]
 
     # Find indices to match neutrino momenta to Cl momenta
     q_idx = jnp.abs(Primordial.Cl_qs[None,None,None,:] - q_z4[...,None]).argmin(axis=-1)
     q_idx = jnp.reshape(q_idx, (m_num, -1))
     # (masses, Npix, neutrinos per pixel)
+
+    # Pixel indices for all neutrinos
+    # (looks like [0,...,0,1,...,1,...,Npix-1,...,Npix-1])
+    p_idx = jnp.repeat(jnp.arange(simdata.Npix), simdata.p_num)[None, :]
 
     # Mass indices adjusted for broadcasting / fancy indexing of Delta matrix
     m_idx = jnp.arange(m_num)[:, None]
