@@ -92,7 +92,7 @@ for halo_j in range(int(pars.halo_num)):
 
     # Cl momenta are expressed in terms of T_CNB(z=0), but for proper matching 
     # we need momenta at z=4 in terms of T_CNB(z=4).
-    q_z4 = y_arr[...,-1]#/(1+4)
+    q_z4 = y_arr[...,-1]/(1+4)
     # (masses, Npix, neutrinos per pixel)
 
     # Find indices to match neutrino momenta to Cl momenta
