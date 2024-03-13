@@ -129,7 +129,7 @@ for halo_j in range(int(pars.halo_num)):
         p_z0.reshape(m_num, -1), 
         p_z4.reshape(m_num, -1), 
         Deltas_halo.reshape(m_num, -1), 
-        simdata.pix_sr, Params())
+        4*Params.Pi, Params())
     tot_dens_incl_PFs_l.append(tot_dens_halo)
 
 
