@@ -137,6 +137,8 @@ with ProcessPoolExecutor(CPUs_sim) as executor:
     # Wait for all futures to complete and collect results in order
     nu_vectors = jnp.array([future.result() for future in futures])
 
+trajectories_1_pix = simulate_neutrinos_1_pix(init_xyz, init_vels[0], s_int_steps)
+
 # Save all sky neutrino vectors for current halo
 jnp.save(f'{pars.directory}/vectors_{end_str}.npy', nu_vectors)
 
