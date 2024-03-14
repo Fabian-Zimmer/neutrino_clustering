@@ -23,9 +23,17 @@ fi
 
 conda activate neutrino_clustering
 
-sim_fullname=no_gravity
+# sim_fullname=no_gravity
+
+# python $HOME/neutrino_clustering/sim_script2_execute_no_gravity.py \
+# --directory $HOME/neutrino_clustering/sim_output/$sim_fullname \
+# --pixel_densities \
+# --total_densities
+
+sim_fullname=test_no_gravity
 
 python $HOME/neutrino_clustering/sim_script2_execute_no_gravity.py \
 --directory $HOME/neutrino_clustering/sim_output/$sim_fullname \
 --pixel_densities \
---total_densities
+--total_densities \
+--testing

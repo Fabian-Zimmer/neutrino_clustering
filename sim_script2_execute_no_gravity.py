@@ -10,6 +10,8 @@ parser.add_argument(
     '--pixel_densities', required=True, action=argparse.BooleanOptionalAction)
 parser.add_argument(
     '--total_densities', required=True, action=argparse.BooleanOptionalAction)
+parser.add_argument(
+    '--testing', required=True, action=argparse.BooleanOptionalAction)
 pars = parser.parse_args()
 
 # Create halo batch, files and other simulation setup parameters and arrays
@@ -93,7 +95,7 @@ def simulate_neutrinos_1_pix(init_xyz, init_vels, s_int_steps):
     trajectories = jnp.array([
         backtrack_1_neutrino(vec, s_int_steps) for vec in init_vectors])
     
-    return trajectories  # shape = (neutrinos, 2, 3)
+    return trajectories  # shape = (neutrinos, 2, 6)
 
 
 
@@ -127,17 +129,23 @@ nu_per_pix = sim_setup["momentum_num"]  # Number of neutrinos per healpixel
 init_vels = np.load(f'{pars.directory}/initial_velocities.npy')  
 # shape = (Npix, neutrinos per pixel, 3)
 
-# Use ProcessPoolExecutor to distribute the simulations across processes:
-# 1 process (i.e. CPU) simulates all neutrinos for one healpixel.
-with ProcessPoolExecutor(CPUs_sim) as executor:
-    futures = [
-        executor.submit(
-            simulate_neutrinos_1_pix, init_xyz, init_vels[pixel], s_int_steps) for pixel in range(Npix)]
-    
-    # Wait for all futures to complete and collect results in order
-    nu_vectors = jnp.array([future.result() for future in futures])
+if pars.testing:
 
-trajectories_1_pix = simulate_neutrinos_1_pix(init_xyz, init_vels[0], s_int_steps)
+    # Simulate all neutrinos along 1 pixel, without multiprocessing
+    nu_vectors = simulate_neutrinos_1_pix(init_xyz, init_vels[0], s_int_steps)
+
+else:
+
+    # Use ProcessPoolExecutor to distribute the simulations across processes:
+    # 1 process (i.e. CPU) simulates all neutrinos for one healpixel.
+    with ProcessPoolExecutor(CPUs_sim) as executor:
+        futures = [
+            executor.submit(
+                simulate_neutrinos_1_pix, init_xyz, init_vels[pixel], s_int_steps) for pixel in range(Npix)]
+        
+        # Wait for all futures to complete and collect results in order
+        nu_vectors = jnp.array([future.result() for future in futures])
+
 
 # Save all sky neutrino vectors for current halo
 jnp.save(f'{pars.directory}/vectors_{end_str}.npy', nu_vectors)
