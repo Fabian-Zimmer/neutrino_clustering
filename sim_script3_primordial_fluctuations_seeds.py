@@ -35,71 +35,75 @@ _, Deltas_z4_matrix = SimUtil.generate_DeltaTs_seeds(
     args=Params())
 
 
+### ======================================= ###
+### Do all calculations for 1 selected halo ###
+### ======================================= ###
+
+# Load neutrino vectors from simulation, for most massive halo
+nu_vectors = jnp.load(f'{pars.sim_dir}/vectors_halo1.npy')
+
+# Convert to momenta
+v_arr = nu_vectors[..., 3:]
+p_arr, y_arr = Physics.velocities_to_momenta_all_sky(
+    v_arr, nu_m_picks, Params())
+# (masses, Npix, neutrinos per pixel, 2 (first and last time step))
+
+# Momenta at z=0 and z=4
+p_z0 = p_arr[..., 0]
+p_z4 = p_arr[...,-1]
+# (masses, Npix, neutrinos per pixel)
+
+# Cl momenta are expressed in terms of T_CNB(z=0), but for proper matching 
+# we need momenta at z=4 in terms of T_CNB(z=4).
+q_z4 = y_arr[...,-1]/(1+4)
+# (masses, Npix, neutrinos per pixel)
+
+# Find indices to match neutrino momenta to Cl momenta
+q_idx = jnp.abs(Primordial.Cl_qs[None,None,None,:] - q_z4[...,None]).argmin(axis=-1)
+q_idx = jnp.reshape(q_idx, (m_num, -1))
+# (masses, Npix, neutrinos per pixel)
+
+# Pixel indices for all neutrinos
+# (looks like [0,...,0,1,...,1,...,Npix-1,...,Npix-1])
+p_idx = jnp.repeat(jnp.arange(simdata.Npix), simdata.p_num)[None, :]
+
+# Mass indices adjusted for broadcasting / fancy indexing of Delta matrix
+m_idx = jnp.arange(m_num)[:, None]
+
+
+### ====================================== ###
+### Compute number densities for all seeds ###
+### ====================================== ###
+
 # Loop over all seeds for one fixed halo
 Deltas_seeds_l = []
 pix_dens_incl_PFs_seeds_l = []
 tot_dens_incl_PFs_seeds_l = []
 for i, _ in enumerate(seeds):
 
-    # Load neutrino vectors from simulation, for most massive halo
-    nu_vectors = jnp.load(f'{pars.sim_dir}/vectors_halo1.npy')
-
-    # Convert to momenta
-    v_arr = nu_vectors[..., 3:]
-    p_arr, y_arr = Physics.velocities_to_momenta_all_sky(
-        v_arr, nu_m_picks, Params())
-    # (masses, Npix, neutrinos per pixel, 2 (first and last time step))
-
-    # Momenta at z=0 and z=4
-    p_z0 = p_arr[..., 0]
-    p_z4 = p_arr[...,-1]
-    # (masses, Npix, neutrinos per pixel)
-
-    # Cl momenta are expressed in terms of T_CNB(z=0), but for proper matching 
-    # we need momenta at z=4 in terms of T_CNB(z=4).
-    q_z4 = y_arr[...,-1]/(1+4)
-    # (masses, Npix, neutrinos per pixel)
-
-    # Find indices to match neutrino momenta to Cl momenta
-    q_idx = jnp.abs(Primordial.Cl_qs[None,None,None,:] - q_z4[...,None]).argmin(axis=-1)
-    q_idx = jnp.reshape(q_idx, (m_num, -1))
-    # (masses, Npix, neutrinos per pixel)
-
-    # Pixel indices for all neutrinos
-    # (looks like [0,...,0,1,...,1,...,Npix-1,...,Npix-1])
-    p_idx = jnp.repeat(jnp.arange(simdata.Npix), simdata.p_num)[None, :]
-
-    # Mass indices adjusted for broadcasting / fancy indexing of Delta matrix
-    m_idx = jnp.arange(m_num)[:, None]
-
     # Choose submatrix for current seed
     Deltas_z4_seed = Deltas_z4_matrix[i]
 
     # Select corresponding pixels, i.e. temp. perturbations, for all neutrinos
-    Deltas_halo = jnp.reshape(
+    Deltas_seed = jnp.reshape(
         Deltas_z4_seed[m_idx, q_idx, p_idx], 
         (m_num, simdata.Npix, simdata.p_num))
-    Deltas_seeds_l.append(Deltas_halo)
+    Deltas_seeds_l.append(Deltas_seed)
     # (masses, Npix, neutrinos per pixel)
 
-
-    ### ------------------------------------------------------------------ ###
-    ### Compute number densities incl. primordial temperature fluctuations ###
-    ### ------------------------------------------------------------------ ###
-
     # For individual allsky map pixels
-    pix_dens_halo = Physics.number_density_Delta(
-        p_z0, p_z4, Deltas_halo, simdata.pix_sr, Params())
-    pix_dens_incl_PFs_seeds_l.append(pix_dens_halo)
+    pix_dens_seed = Physics.number_density_Delta(
+        p_z0, p_z4, Deltas_seed, simdata.pix_sr, Params())
+    pix_dens_incl_PFs_seeds_l.append(pix_dens_seed)
     # (masses, Npix)
 
     # For total local value
-    tot_dens_halo = Physics.number_density_Delta(
+    tot_dens_seed = Physics.number_density_Delta(
         p_z0.reshape(m_num, -1), 
         p_z4.reshape(m_num, -1), 
-        Deltas_halo.reshape(m_num, -1), 
+        Deltas_seed.reshape(m_num, -1), 
         4*Params.Pi, Params())
-    tot_dens_incl_PFs_seeds_l.append(tot_dens_halo)
+    tot_dens_incl_PFs_seeds_l.append(tot_dens_seed)
 
 
 jnp.save(
