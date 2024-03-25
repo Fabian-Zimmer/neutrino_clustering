@@ -28,6 +28,7 @@ Delta_folder = f"Shared/Deltas"
 
 _, Deltas_z4_matrix = SimUtil.generate_DeltaTs_seeds(
     m_arr=nu_m_picks,
+    Cl_dir=Cl_folder,
     Delta_dir=Delta_folder,
     seeds=seeds,
     simdata=simdata,
