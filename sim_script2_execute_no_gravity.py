@@ -1,8 +1,18 @@
 from Shared.specific_CNB_sim import *
-
+import jax.random as random
+from scipy.optimize import fsolve
+from scipy.optimize import minimize
 
 total_start = time.perf_counter()
 
+angle_momentum_decay = jnp.load(f'sim_output/no_gravity/neutrino_angle_momentum_decay.npy') 
+decayed_neutrinos_z = jnp.load(f'sim_output/no_gravity/decayed_neutrinos_z.npy')
+z_array = jnp.load(f'sim_output/no_gravity/z_int_steps.npy')
+neutrino_momenta = jnp.load(f'sim_output/no_gravity/neutrino_momenta.npy')
+
+m_l = 0.05 
+m_l = 0.3 
+m_phi = 0.000001
 # Argparse inputs.
 parser = argparse.ArgumentParser()
 parser.add_argument('--directory', required=True)
@@ -21,14 +31,48 @@ DM_mass, CPUs_sim, neutrinos, init_dis, zeds_snaps, z_int_steps, s_int_steps, nu
     halo_num_req=None,
     no_gravity=True)
 
+def find_nearest(array, value):
+    idx = jnp.argmin(jnp.abs(array - value))
+    return array[idx]
 
-@jax.jit
-def EOMs_no_gravity(s_val, y, args):
 
-    # Initialize vector.
-    _, u_i = y
+#@jax.jit
+#specify mass as an argument too
+def EOMs_no_gravity(s_val, y, Nr):
+    Nr_index = Nr
 
-    # Hamilton eqns. for integration (global minus, s.t. we go back in time).
+    # Find z corresponding to s via interpolation.
+    z =  Utils.jax_interpolate(s_val, s_int_steps, z_int_steps)
+    z_nearest = find_nearest(z_array, z)
+
+   # check index of z in our z array
+    z_index = jnp.argmax(jnp.equal(z_nearest, z_array)) # Need to access the first element of the array returned by where function
+    neutrino_number = jnp.int16(decayed_neutrinos_z[z_index,Nr_index][0])
+    prev_neutrino_number = jnp.int16(decayed_neutrinos_z[z_index - 1,Nr_index][0])
+    
+ 
+    def true_func(y):
+        true_Nr.append(Nr_index)  
+        _, u_i_p = y
+        p_i = find_nearest(neutrino_momenta, 0.06 * jnp.linalg.norm(u_i_p, axis=-1)) #neutrino momenta pass as arg 
+        p_index = jnp.argmax(jnp.equal(neutrino_momenta, p_i))  # Need to access the first element of the array returned by where function
+        
+        angle_decay_theta = random.randint(jax.random.PRNGKey(0),(1,), 0, 179)
+        angle_decay_phi = random.randint(jax.random.PRNGKey(0),(1,), 0, 360)
+
+        momentum_daughter = angle_momentum_decay[angle_decay_theta,p_index][0]
+        
+        u_i = jnp.array( [(1 / 0.05) * momentum_daughter * jnp.sin(angle_decay_theta) * jnp.cos(angle_decay_phi),
+            (1 / 0.05) * momentum_daughter * jnp.sin(angle_decay_theta) * jnp.sin(angle_decay_phi),
+            (1 / 0.05) * momentum_daughter * jnp.cos(angle_decay_theta)])
+
+        return jnp.squeeze(u_i)
+
+    def false_func(y):
+        return jnp.squeeze(y[1])
+
+    u_i = jax.lax.cond((neutrino_number == 0) & (prev_neutrino_number == 1), y,  true_func, y, false_func)
+  
     dyds = -jnp.array([
         u_i, jnp.zeros(3)
     ])
@@ -36,16 +80,17 @@ def EOMs_no_gravity(s_val, y, args):
     return dyds
 
 
-@jax.jit
+#@jax.jit
 def backtrack_1_neutrino(init_vector, s_int_steps):
 
     """
     Simulate trajectory of 1 neutrino. Input is 6-dim. vector containing starting positions and velocities of neutrino. Solves ODEs given by the EOMs function with an jax-accelerated integration routine, using the diffrax library. Output are the positions and velocities at each timestep, which was specified with diffrax.SaveAt. 
     """
-
+    y0_r, Nr = init_vector[0:-1], init_vector[-1]
+  
     # Initial vector in correct shape for EOMs function
-    y0 = init_vector.reshape(2,3)
-
+    y0 = y0_r.reshape(2,3)
+    
     # ODE solver setup
     term = diffrax.ODETerm(EOMs_no_gravity)
     t0 = s_int_steps[0]
@@ -63,12 +108,11 @@ def backtrack_1_neutrino(init_vector, s_int_steps):
 
     # Specify timesteps where solutions should be saved
     saveat = diffrax.SaveAt(ts=jnp.array(s_int_steps))
-    
     # Solve the coupled ODEs, i.e. the EOMs of the neutrino
     sol = diffrax.diffeqsolve(
         term, solver, 
         t0=t0, t1=t1, dt0=dt0, y0=y0, max_steps=10000,
-        saveat=saveat, stepsize_controller=stepsize_controller, args=None)
+        saveat=saveat, stepsize_controller=stepsize_controller, args=(int(Nr),))
     
     trajectory = sol.ys.reshape(100,6)
 
@@ -76,31 +120,32 @@ def backtrack_1_neutrino(init_vector, s_int_steps):
     return jnp.stack([trajectory[0], trajectory[-1]])
 
 
+#@jax.jit
 def simulate_neutrinos_1_pix(init_xyz, init_vels, s_int_steps):
-
     """
     Function for the multiprocessing routine below, which simulates all neutrinos for 1 pixel on the healpix skymap.
     """
 
     # Neutrinos per pixel
     nus = init_vels.shape[0]
-
     # Make vector with same starting position but different velocities
-    init_vectors = jnp.array(
+    init_vectors_0 = jnp.array(
         [jnp.concatenate((init_xyz, init_vels[k])) for k in range(nus)])
 
+    Nr_column = jnp.arange(1000).reshape(-1, 1)
+    # Concatenate the additional column to the original array
+    init_vectors = jnp.hstack((init_vectors_0, Nr_column))
 
     trajectories = jnp.array([
         backtrack_1_neutrino(vec, s_int_steps) for vec in init_vectors])
-    
-    return trajectories  # shape = (neutrinos, 2, 3)
 
+    return trajectories  # shape = (neutrinos, 2, 3)
 
 
 # Lists for pixel and total number densities
 pix_dens_l = []
 tot_dens_l = []
-
+true_Nr =[]
 # File name ending
 end_str = f'halo1'
 

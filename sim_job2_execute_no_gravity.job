@@ -4,8 +4,8 @@
 #SBATCH -t 00:05:00
 #SBATCH -N 1
 #SBATCH --tasks-per-node=1
-#SBATCH --cpus-per-task=32
-#SBATCH --mem=56000
+#SBATCH --cpus-per-task=64
+#SBATCH --mem=112000
 #SBATCH -o jobs/no_gravity.out
 #SBATCH -e jobs/no_gravity.err
 #SBATCH -v
@@ -25,7 +25,7 @@ conda activate neutrino_clustering
 
 sim_fullname=no_gravity
 
-python $HOME/neutrino_clustering/sim_script2_execute_no_gravity.py \
---directory $HOME/neutrino_clustering/sim_output/$sim_fullname \
+python $HOME/maria/maria_neutrino_clustering/neutrino_clustering/sim_script2_execute_no_gravity.py \
+--directory $HOME/maria/maria_neutrino_clustering/neutrino_clustering/sim_output/$sim_fullname \
 --no-pixel_densities \
 --total_densities
