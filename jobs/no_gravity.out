@@ -1,1 +1,20 @@
 *** Simulation for no_gravity ***
+Simulation time: 0.21 min, 0.00 h
+Analysis time: 0.24 min, 0.00 h
+
+Total time: 0.45 min, 0.01 h
+
+JOB STATISTICS
+==============
+Job ID: 5728079
+Cluster: snellius
+User/Group: fzimmer/fzimmer
+State: RUNNING
+Nodes: 1
+Cores per node: 128
+CPU Utilized: 00:00:00
+CPU Efficiency: 0.00% of 01:48:48 core-walltime
+Job Wall-clock time: 00:00:51
+Memory Utilized: 0.00 MB (estimated maximum)
+Memory Efficiency: 0.00% of 218.75 GB (218.75 GB/node)
+WARNING: Efficiency statistics may be misleading for RUNNING jobs.

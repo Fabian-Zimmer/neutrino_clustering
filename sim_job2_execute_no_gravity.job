@@ -1,11 +1,11 @@
 #!/bin/bash
 #SBATCH --job-name=no_gravity
 #SBATCH -p rome
-#SBATCH -t 00:05:00
+#SBATCH -t 00:20:00
 #SBATCH -N 1
 #SBATCH --tasks-per-node=1
-#SBATCH --cpus-per-task=64
-#SBATCH --mem=112000
+#SBATCH --cpus-per-task=128
+#SBATCH --mem=224000
 #SBATCH -o jobs/no_gravity.out
 #SBATCH -e jobs/no_gravity.err
 #SBATCH -v
