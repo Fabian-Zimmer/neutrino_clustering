@@ -111,6 +111,7 @@ for halo_j in range(int(pars.halo_num)):
     Deltas_halo = jnp.reshape(
         Deltas_z4_matrix[m_idx, q_idx, p_idx], (m_num, simdata.Npix, simdata.p_num))
     Deltas_halos_l.append(Deltas_halo)
+    #! check if Deltas_z4_matrix is used (did some manual tests)
     # (masses, Npix, neutrinos per pixel)
 
 
@@ -133,12 +134,13 @@ for halo_j in range(int(pars.halo_num)):
     tot_dens_incl_PFs_l.append(tot_dens_halo)
 
 
+#! check if file names don't end in z0 (did some manual tests)
 jnp.save(
     f"{pars.sim_dir}/Deltas_halos.npy", jnp.array(Deltas_halos_l))
 jnp.save(
-    f"{pars.sim_dir}/pixel_densities_incl_PFs", jnp.array(pix_dens_incl_PFs_l))
+    f"{pars.sim_dir}/pixel_densities_incl_PFs.npy", jnp.array(pix_dens_incl_PFs_l))
 jnp.save(
-    f"{pars.sim_dir}/total_densities_incl_PFs", jnp.array(tot_dens_incl_PFs_l))
+    f"{pars.sim_dir}/total_densities_incl_PFs.npy", jnp.array(tot_dens_incl_PFs_l))
 
 
 # note: then can download to local repo and make skymaps, power spectra, etc.

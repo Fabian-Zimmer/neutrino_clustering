@@ -26,7 +26,7 @@ Cl_folder = f"Shared/Cls"
 Delta_folder = f"Shared/Deltas"
 
 
-_, Deltas_z4_matrix = SimUtil.generate_DeltaTs_seeds(
+Deltas_z0_matrix, Deltas_z4_matrix = SimUtil.generate_DeltaTs_seeds(
     m_arr=nu_m_picks,
     Cl_dir=Cl_folder,
     Delta_dir=Delta_folder,
@@ -82,6 +82,7 @@ tot_dens_incl_PFs_seeds_l = []
 for i, _ in enumerate(seeds):
 
     # Choose submatrix for current seed
+    #! check if Deltas_z4_matrix is used (did some manual tests)
     Deltas_z4_seed = Deltas_z4_matrix[i]
 
     # Select corresponding pixels, i.e. temp. perturbations, for all neutrinos
@@ -106,12 +107,13 @@ for i, _ in enumerate(seeds):
     tot_dens_incl_PFs_seeds_l.append(tot_dens_seed)
 
 
+#! check if file names don't end in z0 (did some manual tests)
 jnp.save(
     f"{pars.sim_dir}/Deltas_seeds.npy", jnp.array(Deltas_seeds_l))
 jnp.save(
-    f"{pars.sim_dir}/pixel_densities_incl_PFs_seeds", jnp.array(pix_dens_incl_PFs_seeds_l))
+    f"{pars.sim_dir}/pixel_densities_incl_PFs_seeds.npy", jnp.array(pix_dens_incl_PFs_seeds_l))
 jnp.save(
-    f"{pars.sim_dir}/total_densities_incl_PFs_seeds", jnp.array(tot_dens_incl_PFs_seeds_l))
+    f"{pars.sim_dir}/total_densities_incl_PFs_seeds.npy", jnp.array(tot_dens_incl_PFs_seeds_l))
 
 
 # note: then can download to local repo and make skymaps, power spectra, etc.
