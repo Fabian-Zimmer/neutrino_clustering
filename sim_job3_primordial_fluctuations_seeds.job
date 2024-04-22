@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=DeltsSeed
 #SBATCH -p rome
-#SBATCH -t 00:10:00
+#SBATCH -t 00:50:00
 #SBATCH -N 1
 #SBATCH --tasks-per-node=1
 #SBATCH --cpus-per-task=32
@@ -24,15 +24,17 @@ fi
 conda activate neutrino_clustering
 
 
-sim_fullname=no_gravity
+# sim_fullname=no_gravity
 
-python $HOME/neutrino_clustering/sim_script3_primordial_fluctuations_seeds.py \
---sim_dir $HOME/neutrino_clustering/sim_output/$sim_fullname \
---shared_dir $HOME/neutrino_clustering/Shared
+# python $HOME/neutrino_clustering/sim_script3_primordial_fluctuations_seeds.py \
+# --sim_dir $HOME/neutrino_clustering/sim_output/$sim_fullname \
+# --shared_dir $HOME/neutrino_clustering/Shared \
+# --halo_num 1
 
 
 sim_fullname=Dopri5_1k
 
 python $HOME/neutrino_clustering/sim_script3_primordial_fluctuations_seeds.py \
 --sim_dir $HOME/neutrino_clustering/sim_output/$sim_fullname \
---shared_dir $HOME/neutrino_clustering/Shared
+--shared_dir $HOME/neutrino_clustering/Shared \
+--halo_num 30
