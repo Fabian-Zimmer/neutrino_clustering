@@ -100,7 +100,8 @@ for halo_j in range(int(pars.halo_num)):
     # (masses, Npix, neutrinos per pixel)
 
     # Find indices to match neutrino momenta to Cl momenta
-    q_idx = jnp.abs(Primordial.Cl_qs[None,None,None,:] - q_z4[...,None]).argmin(axis=-1)
+    q_idx = jnp.abs(
+        Primordial.Cl_qs[None,None,None,:] - q_z4[...,None]).argmin(axis=-1)
     q_idx = jnp.reshape(q_idx, (m_num, -1))
     # (masses, Npix, neutrinos per pixel)
 
@@ -113,7 +114,8 @@ for halo_j in range(int(pars.halo_num)):
 
     # Select corresponding pixels, i.e. temp. perturbations, for all neutrinos
     Deltas_halo = jnp.reshape(
-        Deltas_z4_matrix[m_idx, q_idx, p_idx], (m_num, simdata.Npix, simdata.p_num))
+        Deltas_z4_matrix[m_idx, q_idx, p_idx], 
+        (m_num, simdata.Npix, simdata.p_num))
     Deltas_halos_l.append(Deltas_halo)
     #! check if Deltas_z4_matrix is used (did some manual tests with z0)
     # (masses, Npix, neutrinos per pixel)
