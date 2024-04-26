@@ -1,18 +1,20 @@
 #!/bin/bash
-#SBATCH --job-name=Deltas
+#SBATCH --job-name=Deltas5k
 #SBATCH -p rome
-#SBATCH -t 00:05:00
+#SBATCH -t 00:30:00
 #SBATCH -N 1
 #SBATCH --tasks-per-node=1
 #SBATCH --cpus-per-task=32
 #SBATCH --mem=56000
-#SBATCH -o jobs/Deltas.out
-#SBATCH -e jobs/Deltas.err
+#SBATCH -o jobs/Deltas5k.out
+#SBATCH -e jobs/Deltas5k.err
 #SBATCH -v
 
 
 # rome  node- full: 128/224 ; half: 64/112 ; quarter: 32/56 ; CPUs/GB.
 # genoa node- full: 192/336 ; half: 96/168 ; quarter: 48/84 ; CPUs/GB.
+
+# Dopri5_1k only needs 5 min.
 
 module purge
 
@@ -32,7 +34,7 @@ conda activate neutrino_clustering
 # --halo_num 1
 
 
-sim_fullname=Dopri5_1k
+sim_fullname=Dopri5_5k
 
 python $HOME/neutrino_clustering/sim_script3_primordial_fluctuations.py \
 --sim_dir $HOME/neutrino_clustering/sim_output/$sim_fullname \
