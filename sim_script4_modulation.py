@@ -112,8 +112,8 @@ def simulate_neutrinos_1_pix(init_xyz, init_vels, common_args):
 
 
 # Integration steps and massrange
-z_int_steps = jnp.load(f'{pars.directory}/z_int_steps.npy')
-s_int_steps = jnp.load(f'{pars.directory}/s_int_steps.npy')
+z_int_steps = jnp.load(f'{pars.directory}/z_int_steps_1year.npy')
+s_int_steps = jnp.load(f'{pars.directory}/s_int_steps_1year.npy')
 nu_massrange = jnp.load(f'{pars.directory}/neutrino_massrange_eV.npy')*Params.eV
 
 # Earth distances from file, and days array
