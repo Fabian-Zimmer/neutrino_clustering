@@ -156,7 +156,6 @@ def simulate_neutrinos_1_pix(init_xyz, init_vels, common_args):
     return trajectories  # shape = (nus, 2, 3)
 
 
-
 # Lists for pixel and total number densities
 pix_dens_l = []
 tot_dens_l = []
@@ -211,7 +210,6 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
     jnp.save(f'{pars.directory}/init_xyz_{end_str}.npy', init_xyz)
     # note: for some reason this routine chooses a different cell to those in the paper, ergo the all-sky maps look different for the same halos
 
-    # Display parameters for simulation.
     print(f"*** Simulation for halo={halo_j+1}/{halo_num} ***")
 
 
@@ -238,7 +236,9 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
     
     # Common arguments for simulation
     common_args = (
-        s_int_steps, z_int_steps, zeds_snaps, snaps_GRID_L, snaps_DM_com, snaps_DM_num, snaps_QJ_abs, dPsi_grids, cell_grids, cell_gens, DM_mass, Params.kpc, Params.s)
+        s_int_steps, z_int_steps, zeds_snaps, 
+        snaps_GRID_L, snaps_DM_com, snaps_DM_num, snaps_QJ_abs, 
+        dPsi_grids, cell_grids, cell_gens, DM_mass, Params.kpc, Params.s)
 
     # Use ProcessPoolExecutor to distribute the simulations across processes
     with ProcessPoolExecutor(CPUs_sim) as executor:
@@ -286,6 +286,7 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
     # Benchmark (NFW-like) halo is considered halo 0, so break off loop here
     if pars.benchmark:
         break
+
 
 # Save number density arrays for all halos
 jnp.save(f"{pars.directory}/total_densities.npy", jnp.array(tot_dens_l))
