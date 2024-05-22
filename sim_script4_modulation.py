@@ -9,7 +9,7 @@ parser.add_argument('--directory', required=True)
 pars = parser.parse_args()
 
 
-@jax.jit
+# @jax.jit
 def EOMs_sun(s_val, y, args):
 
     # Unpack the input data
@@ -26,7 +26,7 @@ def EOMs_sun(s_val, y, args):
     z = Utils.jax_interpolate(s_val, s_int_steps, z_int_steps)
 
     # Compute gradient of sun.
-    grad_sun = SimExec.sun_gravity(x_i)
+    grad_sun = SimExec.sun_gravity(x_i, jnp.array([0.,0.,0.]))
 
 
     # Switch to "physical reality" here.
@@ -43,15 +43,65 @@ def EOMs_sun(s_val, y, args):
     return dyds
 
 
-@jax.jit
-def backtrack_1_neutrino(
-    init_vector, s_int_steps, z_int_steps, zeds_snaps, 
-    snaps_GRID_L, snaps_DM_com, snaps_DM_num, snaps_QJ_abs, 
-    dPsi_grid_data, cell_grid_data, cell_gens_data, DM_mass, kpc, s):
+def save_to_file(data, filename):
+    np.savetxt(filename, data, fmt='%s')
 
+
+@jax.jit
+def compute_trajectory(init_vector, s_int_steps, z_int_steps, kpc, s):
     """
-    Simulate trajectory of 1 neutrino. Input is 6-dim. vector containing starting positions and velocities of neutrino. Solves ODEs given by the EOMs function with an jax-accelerated integration routine, using the diffrax library. Output are the positions and velocities at each timestep, which was specified with diffrax.SaveAt. 
+    Core computation function to be JIT compiled. This function performs the ODE solving without error handling.
     """
+    # Initial vector in correct shape for EOMs function
+    y0 = init_vector.reshape(2, 3)
+
+    # ODE solver setup
+    term = diffrax.ODETerm(EOMs_sun)
+    t0 = s_int_steps[0]
+    t1 = s_int_steps[-1]
+    dt0 = (s_int_steps[4] - s_int_steps[3]) / 10  # Adjusting initial step size
+
+    solver = diffrax.Dopri5()
+    stepsize_controller = diffrax.PIDController(rtol=1e-3, atol=1e-5)
+
+    saveat = diffrax.SaveAt(ts=jnp.array(s_int_steps))
+    max_steps = 10_000
+
+    sol = diffrax.diffeqsolve(
+        term, solver,
+        t0=t0, t1=t1, dt0=dt0, y0=y0, max_steps=max_steps,
+        saveat=saveat, stepsize_controller=stepsize_controller,
+        args=(s_int_steps, z_int_steps, kpc, s), throw=False)
+
+    trajectory = sol.ys.reshape(len(s_int_steps), 6)
+
+    return sol, jnp.stack([trajectory[0], trajectory[-1]])
+
+
+
+def backtrack_1_neutrino(init_vector, s_int_steps, z_int_steps, kpc, s, day, pixel, directory):
+    try:
+        sol, result = compute_trajectory(init_vector, s_int_steps, z_int_steps, kpc, s)
+        return result
+    except Exception as e:
+        print("Solver failed to converge within the max steps limit.")
+
+        ts_filename = os.path.join(
+            directory, f"sol_ts_day{day}_pixel{pixel}.txt")
+        stats_filename = os.path.join(
+            directory, f"sol_stats_day{day}_pixel{pixel}.txt")
+
+        save_to_file(sol.ts, ts_filename)
+        save_to_file(sol.stats, stats_filename)
+
+        raise e
+
+
+
+"""
+# @jax.jit
+def backtrack_1_neutrino(
+    init_vector, s_int_steps, z_int_steps, kpc, s):
 
     # Initial vector in correct shape for EOMs function
     y0 = init_vector.reshape(2,3)
@@ -60,55 +110,62 @@ def backtrack_1_neutrino(
     term = diffrax.ODETerm(EOMs_sun)
     t0 = s_int_steps[0]
     t1 = s_int_steps[-1]
-    dt0 = (s_int_steps[0] + s_int_steps[1]) / 1000
+    dt0 = (s_int_steps[4] - s_int_steps[3]) / 10
     
 
     ### ------------- ###
     ### Dopri5 Solver ###
     ### ------------- ###
     solver = diffrax.Dopri5()
-    stepsize_controller = diffrax.PIDController(rtol=1e-3, atol=1e-6)
+    stepsize_controller = diffrax.PIDController(rtol=1e-3, atol=1e-5)
+    # stepsize_controller = diffrax.PIDController(rtol=1e-1, atol=1e-3)
     # note: no change for tighter rtol and atol, e.g. rtol=1e-5, atol=1e-9
 
 
     ### ------------- ###
-    ### Dopri8 Solver ###
+    ### Alter. Solver ###
     ### ------------- ###
-    # solver = diffrax.Dopri8()
-    # stepsize_controller = diffrax.PIDController(rtol=1e-7, atol=1e-9)
+    # solver = diffrax.Tsit5()
+    # stepsize_controller = diffrax.PIDController(rtol=1e-1, atol=1e-2)
 
 
     # Specify timesteps where solutions should be saved
     saveat = diffrax.SaveAt(ts=jnp.array(s_int_steps))
     
-    # Solve the coupled ODEs, i.e. the EOMs of the neutrino
-    sol = diffrax.diffeqsolve(
-        term, solver, 
-        t0=t0, t1=t1, dt0=dt0, y0=y0, max_steps=10000,
-        saveat=saveat, stepsize_controller=stepsize_controller,
-        args=( 
-            s_int_steps, z_int_steps, zeds_snaps, snaps_GRID_L, snaps_DM_com, snaps_DM_num, snaps_QJ_abs, dPsi_grid_data, cell_grid_data, cell_gens_data, DM_mass, kpc, s)
-    )
+    try:
+        # Solve the coupled ODEs, i.e. the EOMs of the neutrino
+        sol = diffrax.diffeqsolve(
+            term, solver, 
+            t0=t0, t1=t1, dt0=dt0, y0=y0, max_steps=100_000,
+            saveat=saveat, stepsize_controller=stepsize_controller,
+            args=(s_int_steps, z_int_steps, kpc, s))
     
-    trajectory = sol.ys.reshape(100,6)
+        trajectory = sol.ys.reshape(len(s_int_steps),6)
+        return jnp.stack([trajectory[0], trajectory[-1]]) 
+    
+    # Print relevant information when the solver fails
+    ts_filename = f"{pars.directory}/sol_ts.txt"
+    stats_filename = f"{pars.directory}/sol_stats.txt"
+    
+    save_to_file(sol.ts, ts_filename)
+    save_to_file(sol.stats, stats_filename)
 
-    return jnp.stack([trajectory[0], trajectory[-1]])
+    trajectory = sol.ys.reshape(len(s_int_steps),6)
+    return jnp.stack([trajectory[0], trajectory[-1]]) 
+"""
 
-
-def simulate_neutrinos_1_pix(init_xyz, init_vels, common_args):
-
-    # Neutrinos per pixel
+def simulate_neutrinos_1_pix(init_xyz, init_vels, common_args, day, directory):
     nus = init_vels.shape[0]
-
     init_vectors = jnp.array(
         [jnp.concatenate((init_xyz, init_vels[k])) for k in range(nus)]
     )
 
     trajectories = jnp.array([
-        backtrack_1_neutrino(vec, *common_args) for vec in init_vectors
+        backtrack_1_neutrino(vec, *common_args, day=day, pixel=k, directory=directory) for k, vec in enumerate(init_vectors)
     ])
-    
+
     return trajectories  # shape = (nus, 2, 3)
+
 
 
 # Integration steps and massrange
@@ -129,6 +186,11 @@ tot_dens_l = []
 for day, ES_dist in zip(days, ES_distances):
 
     init_xyz = jnp.array([ES_dist*Params.AU/Params.kpc, 0., 0.])
+
+    if day == days[0]:
+        print(init_xyz)
+        print(s_int_steps[0], s_int_steps[-1])
+        print(z_int_steps[0], z_int_steps[-1])
 
     print(f"*** Simulation for day={day}/{len(days)} ***")
 
@@ -160,10 +222,10 @@ for day, ES_dist in zip(days, ES_distances):
     common_args = (s_int_steps, z_int_steps, Params.kpc, Params.s)
 
     # Use ProcessPoolExecutor to distribute the simulations across processes
-    with ProcessPoolExecutor(1) as executor:
+    with ProcessPoolExecutor(128) as executor:
         futures = [
             executor.submit(
-                simulate_neutrinos_1_pix, init_xyz, init_vels[pixel], common_args) for pixel in range(Npix)
+                simulate_neutrinos_1_pix, init_xyz, init_vels[pixel], common_args, day, pars.directory) for pixel in range(Npix)
         ]
 
         # Wait for all futures to complete and collect results in order
