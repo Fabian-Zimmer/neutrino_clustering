@@ -1,6 +1,6 @@
 #!/bin/bash
 
-sim_fullname=Dopri5_1k_z2
+sim_fullname=Dopri5_1k_z1
 
 python make1_simulation_box.py \
 --box_directory /projects/0/prjs0781/simulation_data/Tango_sims \
@@ -21,7 +21,7 @@ python make2_simulation_parameters.py \
 --p_num 1000 \
 --init_x_dis 8.178 \
 --z_int_shift 0.1 \
---z_int_stop 2.07 \
+--z_int_stop 1.081 \
 --z_int_num 100 \
 --CPUs_precalculations 128 \
 --CPUs_simulations 128 \
