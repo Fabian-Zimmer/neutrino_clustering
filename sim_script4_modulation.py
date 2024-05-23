@@ -9,7 +9,7 @@ parser.add_argument('--directory', required=True)
 pars = parser.parse_args()
 
 
-# @jax.jit
+@jax.jit
 def EOMs_sun(s_val, y, args):
 
     # Unpack the input data

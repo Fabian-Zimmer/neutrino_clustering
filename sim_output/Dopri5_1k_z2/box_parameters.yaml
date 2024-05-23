@@ -1,0 +1,15 @@
+Content:
+  DM Mass [Msun]: 1437874.875
+  Smoothening Length [pc]: 650.0000017695129
+  final redshift: 3.8100000000000014
+  initial redshift: 0.0
+  z=0 snapshot: '0036'
+  z=4 snapshot: '0012'
+Cosmology:
+  Omega_L: 0.693
+  Omega_M: 0.307
+  Omega_R: 0.0
+  h: 0.6777
+File Paths:
+  Box File Directory: /projects/0/prjs0781/simulation_data/Tango_sims
+  Output Directory: /gpfs/home3/fzimmer/neutrino_clustering/sim_output/Dopri5_1k_z2

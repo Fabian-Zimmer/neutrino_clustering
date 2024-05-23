@@ -1,11 +1,11 @@
 #!/bin/bash
 #SBATCH --job-name=DaysSim
 #SBATCH -p rome
-#SBATCH -t 00:30:00
+#SBATCH -t 00:10:00
 #SBATCH -N 1
 #SBATCH --tasks-per-node=1
-#SBATCH --cpus-per-task=64
-#SBATCH --mem=112000
+#SBATCH --cpus-per-task=32
+#SBATCH --mem=56000
 #SBATCH -o jobs/DaysSim.out
 #SBATCH -e jobs/DaysSim.err
 #SBATCH -v
@@ -27,5 +27,8 @@ conda activate neutrino_clustering
 
 sim_fullname=Dopri5_1k
 
-python $HOME/neutrino_clustering/sim_script4_modulation.py \
---directory $HOME/neutrino_clustering/sim_output/$sim_fullname
+python $HOME/neutrino_clustering/sim_script4_execute_modulation.py \
+--directory $HOME/neutrino_clustering/sim_output/$sim_fullname \
+--pixel_densities \
+--total_densities \
+--no-testing
