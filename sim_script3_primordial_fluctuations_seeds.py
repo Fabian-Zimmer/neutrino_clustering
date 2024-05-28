@@ -17,9 +17,9 @@ simdata = SimData(pars.sim_dir)
 
 nu_m_picks = jnp.array([
     0.01, 
-    0.05, 
+    # 0.05, 
     0.1, 
-    0.2, 
+    # 0.2, 
     # 0.3
 ])*Params.eV
 m_num = len(nu_m_picks)
