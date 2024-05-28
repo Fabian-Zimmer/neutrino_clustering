@@ -9,12 +9,19 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--sim_dir', required=True)
 parser.add_argument('--shared_dir', required=True)
 parser.add_argument('--halo_num', required=True)
+parser.add_argument('--redshift_cut', required=True)
 pars = parser.parse_args()
 
 # Load simulation parameters
 simdata = SimData(pars.sim_dir)
 
-nu_m_picks = jnp.array([0.01, 0.05, 0.1, 0.2, 0.3])*Params.eV
+nu_m_picks = jnp.array([
+    0.01, 
+    0.05, 
+    0.1, 
+    0.2, 
+    # 0.3
+])*Params.eV
 m_num = len(nu_m_picks)
 seeds = jnp.arange(10)
 
@@ -27,12 +34,13 @@ Cl_folder = f"Shared/Cls"
 Delta_folder = f"Shared/Deltas"
 
 
-Deltas_z0_matrix, Deltas_z4_matrix = SimUtil.generate_DeltaTs_seeds(
+Deltas_z0_matrix, Deltas_z_cut_matrix = SimUtil.generate_DeltaTs_seeds(
     m_arr=nu_m_picks,
     Cl_dir=Cl_folder,
     Delta_dir=Delta_folder,
     seeds=seeds,
     simdata=simdata,
+    z_cut=int(pars.redshift_cut),
     args=Params())
 
 
@@ -55,18 +63,18 @@ for halo_j in range(int(pars.halo_num)):
         v_arr, nu_m_picks, Params())
     # (masses, Npix, neutrinos per pixel, 2 (first and last time step))
 
-    # Momenta at z=0 and z=4
+    # Momenta at z=0 and z=z_cut
     p_z0 = p_arr[..., 0]
-    p_z4 = p_arr[...,-1]
+    p_z_cut = p_arr[...,-1]
     # (masses, Npix, neutrinos per pixel)
 
     # Cl momenta are expressed in terms of T_CNB(z=0), but for proper matching 
-    # we need momenta at z=4 in terms of T_CNB(z=4).
-    q_z4 = y_arr[...,-1]/(1+4)
+    # we need momenta at z=z_cut in terms of T_CNB(z=z_cut).
+    q_z_cut = y_arr[...,-1]/(1+int(pars.redshift_cut))
     # (masses, Npix, neutrinos per pixel)
 
     # Find indices to match neutrino momenta to Cl momenta
-    q_idx = jnp.abs(Primordial.Cl_qs[None,None,None,:] - q_z4[...,None]).argmin(axis=-1)
+    q_idx = jnp.abs(Primordial.Cl_qs[None,None,None,:] - q_z_cut[...,None]).argmin(axis=-1)
     q_idx = jnp.reshape(q_idx, (m_num, -1))
     # (masses, Npix, neutrinos per pixel)
 
@@ -89,32 +97,30 @@ for halo_j in range(int(pars.halo_num)):
     for i, _ in enumerate(seeds):
 
         # Choose submatrix for current seed
-        #! check if Deltas_z4_matrix is used (did some manual tests)
-        Deltas_z4_seed = Deltas_z4_matrix[i]
+        Deltas_z_cut_seed = Deltas_z_cut_matrix[i]
 
         # Select corresponding pixels, i.e. temp. perturbations, for all neutrinos
         Deltas_seed = jnp.reshape(
-            Deltas_z4_seed[m_idx, q_idx, p_idx], 
+            Deltas_z_cut_seed[m_idx, q_idx, p_idx], 
             (m_num, simdata.Npix, simdata.p_num))
         Deltas_seeds_l.append(Deltas_seed)
         # (masses, Npix, neutrinos per pixel)
 
         # For individual allsky map pixels
         pix_dens_seed = Physics.number_density_Delta(
-            p_z0, p_z4, Deltas_seed, simdata.pix_sr, Params())
+            p_z0, p_z_cut, Deltas_seed, simdata.pix_sr, Params())
         pix_dens_incl_PFs_seeds_l.append(pix_dens_seed)
         # (masses, Npix)
 
         # For total local value
         tot_dens_seed = Physics.number_density_Delta(
             p_z0.reshape(m_num, -1), 
-            p_z4.reshape(m_num, -1), 
+            p_z_cut.reshape(m_num, -1), 
             Deltas_seed.reshape(m_num, -1), 
             4*Params.Pi, Params())
         tot_dens_incl_PFs_seeds_l.append(tot_dens_seed)
 
 
-    #! check if file names don't end in z0 (did some manual tests)
     jnp.save(
         f"{pars.sim_dir}/Deltas_seeds_halo{halo_j+1}.npy", 
         jnp.array(Deltas_seeds_l))
