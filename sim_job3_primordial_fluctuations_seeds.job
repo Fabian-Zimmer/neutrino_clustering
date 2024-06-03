@@ -1,13 +1,13 @@
 #!/bin/bash
-#SBATCH --job-name=DelSeedz1
+#SBATCH --job-name=DelSeedz0p5
 #SBATCH -p rome
 #SBATCH -t 00:50:00
 #SBATCH -N 1
 #SBATCH --tasks-per-node=1
 #SBATCH --cpus-per-task=32
 #SBATCH --mem=56000
-#SBATCH -o jobs/DelSeedz1.out
-#SBATCH -e jobs/DelSeedz1.err
+#SBATCH -o jobs/DelSeedz0p5.out
+#SBATCH -e jobs/DelSeedz0p5.err
 #SBATCH -v
 
 
@@ -32,10 +32,10 @@ conda activate neutrino_clustering
 # --halo_num 1
 
 
-sim_fullname=Dopri5_1k_z1
+sim_fullname=Dopri5_1k_z0p5
 
 python $HOME/neutrino_clustering/sim_script3_primordial_fluctuations_seeds.py \
 --sim_dir $HOME/neutrino_clustering/sim_output/$sim_fullname \
 --shared_dir $HOME/neutrino_clustering/Shared \
 --halo_num 10 \
---redshift_cut 1
+--redshift_cut 0.5

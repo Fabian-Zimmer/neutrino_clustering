@@ -12,6 +12,11 @@ parser.add_argument('--halo_num', required=True)
 parser.add_argument('--redshift_cut', required=True)
 pars = parser.parse_args()
 
+if pars.redshift_cut == "0.5":
+    z_cut = 0.5
+else:
+    z_cut = int(pars.redshift_cut)
+
 # Load simulation parameters
 simdata = SimData(pars.sim_dir)
 
@@ -40,7 +45,7 @@ Deltas_z0_matrix, Deltas_z_cut_matrix = SimUtil.generate_DeltaTs_seeds(
     Delta_dir=Delta_folder,
     seeds=seeds,
     simdata=simdata,
-    z_cut=int(pars.redshift_cut),
+    z_cut=z_cut,
     args=Params())
 
 
@@ -70,7 +75,7 @@ for halo_j in range(int(pars.halo_num)):
 
     # Cl momenta are expressed in terms of T_CNB(z=0), but for proper matching 
     # we need momenta at z=z_cut in terms of T_CNB(z=z_cut).
-    q_z_cut = y_arr[...,-1]/(1+int(pars.redshift_cut))
+    q_z_cut = y_arr[...,-1]/(1+z_cut)
     # (masses, Npix, neutrinos per pixel)
 
     # Find indices to match neutrino momenta to Cl momenta
