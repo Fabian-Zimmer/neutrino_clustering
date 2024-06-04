@@ -14,6 +14,8 @@ pars = parser.parse_args()
 
 if pars.redshift_cut == "0.5":
     z_cut = 0.5
+elif pars.redshift_cut == "0.15":
+    z_cut = 0.15
 else:
     z_cut = int(pars.redshift_cut)
 
