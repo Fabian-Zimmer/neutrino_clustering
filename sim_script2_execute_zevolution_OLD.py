@@ -1,5 +1,5 @@
 from Shared.specific_CNB_sim import *
-from scipy.integrate import quad
+
 
 total_start = time.perf_counter()
 
@@ -15,42 +15,12 @@ parser.add_argument(
 pars = parser.parse_args()
 
 # Create halo batch, files and other simulation setup parameters and arrays
-DM_mass, CPUs_sim, neutrinos, init_dis, zeds_snaps, z_int_steps_orig, s_int_steps_orig, nu_massrange, data_dir, halo_batch_IDs, halo_num = SimData.simulation_setup(
+DM_mass, CPUs_sim, neutrinos, init_dis, zeds_snaps, z_int_steps, s_int_steps, nu_massrange, data_dir, halo_batch_IDs, halo_num = SimData.simulation_setup(
     sim_dir=pars.directory,
     m_lower=pars.mass_lower,
     m_upper=pars.mass_upper,
     m_gauge=pars.mass_gauge,
     halo_num_req=pars.halo_num)
-
-simdata = SimData(pars.directory)
-local_scope_H0 = simdata.h * 100 * Params.km/Params.s/Params.Mpc
-
-
-def s_of_z(z):
-    """
-    Convert redshift to time variable s with eqn. 4.1 in Mertsch et al.
-    (2020), keeping only Omega_M and Omega_L in the Hubble eqn. for H(z).
-
-    Args:
-        z (float): redshift
-
-    Returns:
-        float: time variable s (in [seconds] if 1/H0 factor is included)
-    """    
-
-    def s_integrand(z):        
-
-        # We need value of H0 in units of 1/s.
-        H0_val = local_scope_H0/(1/Params.s)
-        a_dot = np.sqrt(simdata.Omega_M*(1.+z)**3 + simdata.Omega_L)/(1.+z)*H0_val
-        s_int = 1./a_dot
-
-        return s_int
-
-    s_of_z, _ = quad(s_integrand, 0., z)
-
-    return np.float64(s_of_z)
-
 
 
 @jax.jit
@@ -120,7 +90,7 @@ def EOMs(s_val, y, args):
 
 @jax.jit
 def backtrack_1_neutrino(
-    init_vector, s_int_steps, z_int_steps, zeds_snaps, 
+    zi, init_vector, s_int_steps, z_int_steps, zeds_snaps, 
     snaps_GRID_L, snaps_DM_com, snaps_DM_num, snaps_QJ_abs, 
     dPsi_grid_data, cell_grid_data, cell_gens_data, DM_mass, kpc, s):
 
@@ -168,10 +138,10 @@ def backtrack_1_neutrino(
     
     trajectory = sol.ys.reshape(100,6)
 
-    return jnp.stack([trajectory[0], trajectory[-1]])
+    return jnp.stack([trajectory[0], trajectory[zi]])
 
 
-def simulate_neutrinos_1_pix(init_xyz, init_vels, common_args):
+def simulate_neutrinos_1_pix(zi, init_xyz, init_vels, common_args):
 
     # Neutrinos per pixel
     nus = init_vels.shape[0]
@@ -181,7 +151,7 @@ def simulate_neutrinos_1_pix(init_xyz, init_vels, common_args):
     )
 
     trajectories = jnp.array([
-        backtrack_1_neutrino(vec, *common_args) for vec in init_vectors
+        backtrack_1_neutrino(zi, vec, *common_args) for vec in init_vectors
     ])
     
     return trajectories  # shape = (nus, 2, 3)
@@ -190,6 +160,7 @@ def simulate_neutrinos_1_pix(init_xyz, init_vels, common_args):
 # Lists for pixel and total number densities
 pix_dens_l = []
 tot_dens_l = []
+zed_dens_l = []
 
 for halo_j, halo_ID in enumerate(halo_batch_IDs):
 
@@ -265,46 +236,39 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
     init_vels = np.load(f'{pars.directory}/initial_velocities.npy')  
     # shape = (Npix, neutrinos per pixel, 3)
     
-    tot_dens_zed_l = []
-    #! Create z_int_steps & s_int_steps arrays for different z_back
-    for z_back in z_int_steps_orig[jnp.arange(1,99,5)]:
+    # Common arguments for simulation
+    common_args = (
+        s_int_steps, z_int_steps, zeds_snaps, 
+        snaps_GRID_L, snaps_DM_com, snaps_DM_num, snaps_QJ_abs, 
+        dPsi_grids, cell_grids, cell_gens, DM_mass, Params.kpc, Params.s)
 
-        # Logarithmic redshift spacing, and conversion to integration variable s.
-        # Using numpy arrays to keep everything consistent
-        z_int_shift = 0.1
-        z_int_steps = np.geomspace(z_int_shift, z_back+z_int_shift, 100)
-        z_int_steps -= z_int_shift
-        s_int_steps = np.array([s_of_z(z) for z in z_int_steps])
+    # Inspecting individual call of function
+    # inspect = simulate_neutrinos_1_pix(init_xyz, init_vels[0], common_args)
+    # print(inspect.shape)
 
-        # Common arguments for simulation
-        common_args = (
-            s_int_steps, z_int_steps, zeds_snaps, 
-            snaps_GRID_L, snaps_DM_com, snaps_DM_num, snaps_QJ_abs, 
-            dPsi_grids, cell_grids, cell_gens, DM_mass, Params.kpc, Params.s)
+    tot_dens_zeds_l = []
+    for zi in jnp.arange(1,99,5):
+
+        
 
         # Use ProcessPoolExecutor to distribute the simulations across processes
         with ProcessPoolExecutor(CPUs_sim) as executor:
             futures = [
                 executor.submit(
-                    simulate_neutrinos_1_pix, init_xyz, init_vels[pixel], common_args) for pixel in range(Npix)
+                    simulate_neutrinos_1_pix, zi, init_xyz, init_vels[pixel], common_args) for pixel in range(Npix)
             ]
             
             # Wait for all futures to complete and collect results in order
             nu_vectors = jnp.array([future.result() for future in futures])
 
-        tot_dens = Physics.number_densities_mass_range(
+        tot_dens_zeds_l.append(Physics.number_densities_mass_range(
             v_arr=nu_vectors.reshape(-1, 2, 6)[..., 3:], 
             m_arr=nu_massrange, 
             pix_sr=4*Params.Pi,
-            args=Params())
-        tot_dens_zed_l.append(jnp.squeeze(tot_dens))
+            args=Params()))
 
-    tot_dens_l.append(tot_dens_zed_l)
+    zed_dens_l.append(tot_dens_zeds_l)
 
-
-    # Save all sky neutrino vectors for current halo
-    # jnp.save(f'{pars.directory}/vectors_{end_str}.npy', nu_vectors)
-    
     sim_time = time.perf_counter()-sim_start
     print(f"Simulation time: {sim_time/60.:.2f} min, {sim_time/(60**2):.2f} h")
 
@@ -315,7 +279,7 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
 
     # ana_start = time.perf_counter()
 
-    # Compute individual number densities for each healpixel
+    # # Compute individual number densities for each healpixel
     # nu_allsky_masses = jnp.array([0.01, 0.05, 0.1, 0.2, 0.3])*Params.eV
     # pix_dens = Physics.number_densities_all_sky(
     #     v_arr=nu_vectors[..., 3:],
@@ -324,7 +288,7 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
     #     args=Params())
     # pix_dens_l.append(jnp.squeeze(pix_dens))
     
-    # Compute total number density, by using all neutrino vectors for integral
+    # # Compute total number density, by using all neutrino vectors for integral
     # tot_dens = Physics.number_densities_mass_range(
     #     v_arr=nu_vectors.reshape(-1, 2, 6)[..., 3:], 
     #     m_arr=nu_massrange, 
@@ -340,8 +304,12 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
         break
 
 
+jnp.save(
+    f"{pars.directory}/total_densities_zeds.npy", jnp.array(zed_dens_l))
+
+
 # Save number density arrays for all halos
-jnp.save(f"{pars.directory}/total_densities_zeds.npy", jnp.array(tot_dens_l))
+# jnp.save(f"{pars.directory}/total_densities.npy", jnp.array(tot_dens_l))
 # jnp.save(f"{pars.directory}/pixel_densities.npy", jnp.array(pix_dens_l))
 
 tot_time = time.perf_counter() - total_start
