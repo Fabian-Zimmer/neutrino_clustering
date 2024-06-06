@@ -1,6 +1,6 @@
 #!/bin/bash
 
-sim_fullname=Dopri5_1k_z0p15
+sim_fullname=Dopri5_1k
 
 python make1_simulation_box.py \
 --box_directory /projects/0/prjs0781/simulation_data/Tango_sims \
