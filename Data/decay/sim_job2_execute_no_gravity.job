@@ -1,0 +1,34 @@
+#!/bin/bash
+#SBATCH --job-name=FZnoG
+#SBATCH -p rome
+#SBATCH -t 00:20:00
+#SBATCH -N 1
+#SBATCH --tasks-per-node=1
+#SBATCH --cpus-per-task=128
+#SBATCH --mem=224000
+#SBATCH -o jobs/FZnoG.out
+#SBATCH -e jobs/FZnoG.err
+#SBATCH -v
+
+
+# rome  node- full: 128/224 ; half: 64/112 ; quarter: 32/56 ; CPUs/GB.
+# genoa node- full: 192/336 ; half: 96/168 ; quarter: 48/84 ; CPUs/GB.
+
+module purge
+
+# Load .bashrc if it exists
+if [ -f "$HOME/.bashrc" ]; then
+    source $HOME/.bashrc
+fi
+
+conda activate neutrino_clustering
+
+sim_fullname=no_gravity_decay
+
+python $HOME/maria/maria_neutrino_clustering/neutrino_clustering/sim_script2_execute_no_gravity_FZ.py \
+--directory $HOME/maria/maria_neutrino_clustering/neutrino_clustering/sim_output/$sim_fullname \
+--m_p 0.06 \
+--m_d 0.05 \
+--gamma 2T \
+--pixel_densities \
+--total_densities
