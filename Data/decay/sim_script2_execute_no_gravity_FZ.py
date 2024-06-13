@@ -57,14 +57,14 @@ decayed_neutrinos_theta = jnp.load(
 decayed_neutrinos_phi = jnp.load(
     f'{pars.directory}/decayed_neutrinos_phi_{pars.gamma}.npy')
 
-# note: old predetermined angle-parent_momenta rray
+# note: old predetermined angle-parent_momenta array
 """ 
 # Created in Decay.daughter_momentum_4 function
 angle_momentum_decay = jnp.load(
     f'{pars.directory}/neutrino_angle_momentum_decay.npy') 
 """
 
-# note: loading combined anlge-parent_momenta array from new routinge
+# note: loading combined angle-parent_momenta array from new routine
 angle_momentum_decay = jnp.load(
     f'{pars.directory}/allowed_decay_angles_and_momenta.npy')
 decay_angles = angle_momentum_decay[..., 0]
@@ -88,7 +88,7 @@ def find_nearest(array, value):
     return idx, array[idx]
 
 
-#@jax.jit
+@jax.jit
 def EOMs_no_gravity_decay(s_val, y, args):
 
     # Load arguments
@@ -143,9 +143,9 @@ def EOMs_no_gravity_decay(s_val, y, args):
     v_parent = jnp.squeeze(
         jnp.array(
             [
-                (1/m_p)*p_parent*jnp.sin(decay_theta)*jnp.cos(decay_phi),  # x
-                (1/m_p)*p_parent*jnp.sin(decay_theta)*jnp.sin(decay_phi),  # y
-                (1/m_p)*p_parent*jnp.cos(decay_theta)                      # z
+                (1/m_p)*p_parent*jnp.sin(decay_theta)*jnp.cos(decay_phi),
+                (1/m_p)*p_parent*jnp.sin(decay_theta)*jnp.sin(decay_phi),
+                (1/m_p)*p_parent*jnp.cos(decay_theta)
             ]
         )
     )
@@ -178,7 +178,7 @@ def EOMs_no_gravity_decay(s_val, y, args):
     return dyds
 
 
-#@jax.jit
+@jax.jit
 def backtrack_1_neutrino(
     init_vector, s_int_steps, decay_angles, parent_momenta, decayed_neutrinos_z, 
     z_array, neutrino_momenta, m_parent, m_daughter, kpc, s):
@@ -193,11 +193,8 @@ def backtrack_1_neutrino(
     # Create array used as "dummy" integration vector to keep decay to occur only once
     decay_tracker = jnp.zeros(3)
 
-    # 
+    # Combine initial vector and decay_tracker array, then reshape
     y0 = jnp.concatenate((y0_r, decay_tracker)).reshape(3,3)
-
-    # Initial vector in correct shape for EOMs function
-    # y0 = y0_r.reshape(2,3)
     
     # ODE solver setup
     term = diffrax.ODETerm(EOMs_no_gravity_decay)
@@ -226,8 +223,8 @@ def backtrack_1_neutrino(
             neutrino_momenta, m_parent, m_daughter, kpc, s)
     )
     
-    # Total integration vector has 9 elements (3 from decay_tracker)
-    # We only need first 6
+    # Total integration vector has 9 elements, as 3 are from decay_tracker,
+    # but we only need first 6, i.e. the neutrino positions and velocities.
     trajectory = sol.ys.reshape(100, 9)[:, :6]
 
     # Only return the initial [0] and last [-1] positions and velocities
