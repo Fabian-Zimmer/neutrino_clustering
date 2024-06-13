@@ -84,13 +84,13 @@ DM_mass, CPUs_sim, neutrinos, init_dis, zeds_snaps, z_int_steps, s_int_steps, nu
     no_gravity=True)
 
 
-# @jax.jit
+@jax.jit
 def find_nearest(array, value):
     idx = jnp.argmin(jnp.abs(array - value))
     return idx, array[idx]
 
 
-# @jax.jit
+@jax.jit
 def EOMs_no_gravity_decay(s_val, y, args):
 
     # Load arguments
@@ -175,7 +175,7 @@ def EOMs_no_gravity_decay(s_val, y, args):
 
     # Switch to "physical reality"
     v_out /= (kpc/s)
-    decay_tracker /= (kpc/s)
+    decay_tracker /= kpc
 
     dyds = -jnp.array([
         v_out, jnp.zeros(3), jnp.zeros(3)
@@ -184,7 +184,7 @@ def EOMs_no_gravity_decay(s_val, y, args):
     return dyds
 
 
-# @jax.jit
+@jax.jit
 def backtrack_1_neutrino(
     init_vector, s_int_steps, decay_angles, parent_momenta, first_negative_indices, decayed_neutrinos_z, z_array, neutrino_momenta, 
     m_parent, m_daughter, kpc, s):
@@ -318,23 +318,29 @@ with ProcessPoolExecutor(CPUs_sim) as executor:
 jnp.save(f'{pars.directory}/vectors_{end_str}_test.npy', nu_vectors)
 
 
-### Manipulate array values for number density computations
-#? Setting elements to zero, where neutrinos have decayed
-setter = np.concatenate([arr for arr in  decayed_neutrinos_index_z if arr.size > 0])
-nu_vectors = nu_vectors.reshape((nu_total, 2, 6))
-nu_vectors_p = nu_vectors.at[setter, 0, 3:6].set(0)
-nu_vectors_p = nu_vectors_p.at[setter, 1, 3:6].set(0)
-nu_vectors_p = nu_vectors_p.reshape((Npix, nu_per_pix, 2, 6))
+### ------------------------------------------------------- ###
+### Manipulate array values for number density computations ###
+### ------------------------------------------------------- ###
 
-#? 
-nu_vectors_d = jnp.zeros(np.shape(nu_vectors))
-nu_vectors_d = nu_vectors_d.at[setter,0,3:6].set(nu_vectors[setter,0,3:6])
-nu_vectors_d = nu_vectors_d.at[setter,1,3:6].set(nu_vectors[setter,1,3:6])
-nu_vectors_d = nu_vectors_d.reshape((Npix, nu_per_pix, 2, 6))
+# Indices of all neutrinos that (anti-)decayed
+# decIDs = np.concatenate(
+#     [arr for arr in  decayed_neutrinos_index_z if arr.size > 0])
 
-#? Set elements in nu_vectors_p and nu_vectors_d based on setter
-jnp.save(f'{pars.directory}/vectors_{end_str}_p_{pars.gamma}.npy', nu_vectors_p)
-jnp.save(f'{pars.directory}/vectors_{end_str}_d_{pars.gamma}.npy', nu_vectors_d)
+# nu_vectors = nu_vectors.reshape((nu_total, 2, 6))
+
+# nu_vectors_p = nu_vectors.at[decIDs, 0, 3:6].set(0)
+# nu_vectors_p = nu_vectors_p.at[decIDs, 1, 3:6].set(0)
+# nu_vectors_p = nu_vectors_p.reshape((Npix, nu_per_pix, 2, 6))
+
+# #? 
+# nu_vectors_d = jnp.zeros(np.shape(nu_vectors))
+# nu_vectors_d = nu_vectors_d.at[decIDs,0,3:6].set(nu_vectors[decIDs,0,3:6])
+# nu_vectors_d = nu_vectors_d.at[decIDs,1,3:6].set(nu_vectors[decIDs,1,3:6])
+# nu_vectors_d = nu_vectors_d.reshape((Npix, nu_per_pix, 2, 6))
+
+# #? Set elements in nu_vectors_p and nu_vectors_d based on setter
+# jnp.save(f'{pars.directory}/vectors_{end_str}_p_{pars.gamma}.npy', nu_vectors_p)
+# jnp.save(f'{pars.directory}/vectors_{end_str}_d_{pars.gamma}.npy', nu_vectors_d)
 
 
 # TODO: additionally, account for neutrinos that never decayed as they have 
