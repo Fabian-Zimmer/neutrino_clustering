@@ -16,6 +16,7 @@ total_start = time.perf_counter()
 # - Changed random selection routine, since jax does it differently
 # - Decay might happen multiple times, since s_val can change little:
 #   - requires new "dummy" integration variable that is used to track if decay happened
+# - TODO: remove neutrinos that survived as parents throughout (depending on gamma) from daughter integral
 
 
 # Argparse inputs.
@@ -48,9 +49,9 @@ neutrino_momenta = jnp.load(
 
 # Created in Decay.decay_neutrinos function
 decayed_neutrinos_index_z = jnp.load(
-    f'decays_gamma/decayed_neutrinos_index_z_{pars.gamma}.npy', allow_pickle=True)
+    f'{pars.directory}/decayed_neutrinos_index_z_{pars.gamma}.npy', allow_pickle=True)
 decayed_neutrinos_z = jnp.load(
-    f'decays_gamma/decayed_neutrinos_z_{pars.gamma}.npy')
+    f'{pars.directory}/decayed_neutrinos_z_{pars.gamma}.npy')
 
 # note: loading combined angle-parent_momenta array from new routine
 angle_momentum_decay = jnp.load(
@@ -312,6 +313,11 @@ nu_vectors_d = nu_vectors_d.reshape((Npix, nu_per_pix, 2, 6))
 #? Set elements in nu_vectors_p and nu_vectors_d based on setter
 jnp.save(f'{pars.directory}/vectors_{end_str}_p_{pars.gamma}.npy', nu_vectors_p)
 jnp.save(f'{pars.directory}/vectors_{end_str}_d_{pars.gamma}.npy', nu_vectors_d)
+
+
+# TODO: additionally, account for neutrinos that never decayed as they have 
+# TODO: survived as parent particles according to gamma, and must be treated 
+# TODO: as parent particles, and removed from daughter integral as well.
 
 
 # Save all sky neutrino vectors for current halo

@@ -1,13 +1,13 @@
 #!/bin/bash
-#SBATCH --job-name=no_gravity
+#SBATCH --job-name=no_gravD
 #SBATCH -p rome
 #SBATCH -t 00:05:00
 #SBATCH -N 1
 #SBATCH --tasks-per-node=1
 #SBATCH --cpus-per-task=32
 #SBATCH --mem=56000
-#SBATCH -o jobs/no_gravity.out
-#SBATCH -e jobs/no_gravity.err
+#SBATCH -o jobs/no_gravity_decay.out
+#SBATCH -e jobs/no_gravity_decay.err
 #SBATCH -v
 
 
@@ -23,18 +23,11 @@ fi
 
 conda activate neutrino_clustering
 
-# sim_fullname=no_gravity
-
-# python $HOME/neutrino_clustering/sim_script2_execute_no_gravity.py \
-# --directory $HOME/neutrino_clustering/sim_output/$sim_fullname \
-# --pixel_densities \
-# --total_densities
-
-sim_fullname=test_no_gravity
+sim_fullname=no_gravity_decay
 
 python $HOME/neutrino_clustering/sim_script2_execute_no_gravity_decay.py \
 --directory $HOME/neutrino_clustering/sim_output/$sim_fullname \
 --m_lightest 0.05 \
--gamma "2T" \
+--gamma "2T" \
 --no-pixel_densities \
 --total_densities
