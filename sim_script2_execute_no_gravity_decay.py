@@ -58,7 +58,20 @@ angle_momentum_decay = jnp.load(
     f'{pars.directory}/allowed_decay_angles_and_momenta.npy')
 decay_angles = angle_momentum_decay[..., 0]
 parent_momenta = angle_momentum_decay[..., 1]
-parent_momenta = parent_momenta.at[parent_momenta <= 0.0].set(np.nan)
+# parent_momenta = parent_momenta.at[parent_momenta <= 0.0].set(np.nan)
+
+
+### Find first negative indices ###
+# Create a mask where the condition (array < 0) is True
+negative_mask = parent_momenta < 0
+
+# Find the index of the first negative value in each row
+first_negative_indices = jnp.argmax(negative_mask, axis=-1)
+
+# If no negative values, set index to the last element in the row
+row_has_negative = jnp.any(negative_mask, axis=-1)
+first_negative_indices = jnp.where(
+    row_has_negative, first_negative_indices, parent_momenta.shape[1] - 1)
 
 
 # Create halo batch, files and other simulation setup parameters and arrays
@@ -71,23 +84,24 @@ DM_mass, CPUs_sim, neutrinos, init_dis, zeds_snaps, z_int_steps, s_int_steps, nu
     no_gravity=True)
 
 
-@jax.jit
+# @jax.jit
 def find_nearest(array, value):
     idx = jnp.argmin(jnp.abs(array - value))
     return idx, array[idx]
 
 
-@jax.jit
+# @jax.jit
 def EOMs_no_gravity_decay(s_val, y, args):
 
     # Load arguments
-    Nr_index, decay_angles, parent_momenta, decayed_neutrinos_z, z_array, nu_momenta, m_p, m_d, kpc, s = args
+    Nr_index, decay_angles, parent_momenta, first_negative_indices, decayed_neutrinos_z, z_array, nu_momenta, m_p, m_d, kpc, s = args
 
     # Read velocity from input vector
     _, v_in, decay_tracker = y
 
     # Switch to "numerical reality"
     v_in *= (kpc/s)
+    decay_tracker *= kpc
 
     # Find z corresponding to s via interpolation.
     z =  Utils.jax_interpolate(s_val, s_int_steps, z_int_steps)
@@ -97,6 +111,7 @@ def EOMs_no_gravity_decay(s_val, y, args):
     
     # Read current and previous decay flag number (1 = not decayed, 0 = decayed)
     # Combination of pre = 1 and now = 0 is unique, and is condition for decay
+    #? are these arrays the "right way around"? i.e. matching to backwards z
     now_nu_number = jnp.int16(decayed_neutrinos_z[z_index, Nr_index])
     pre_nu_number = jnp.int16(decayed_neutrinos_z[z_index-1, Nr_index])
 
@@ -119,14 +134,14 @@ def EOMs_no_gravity_decay(s_val, y, args):
     s_key = jax.random.key(jnp.int64(s_val))
 
     # Randomly selecting from new (combined) angle-parent_momentum array
-    valid_mask = ~jnp.isnan(parent_momenta[p_index])
-    valid_indices = jnp.where(valid_mask)[0]
-    random_idx = jax.random.choice(s_key, valid_indices)
-    decay_theta = decay_angles[p_index, random_idx]
+    valid_idx_end = first_negative_indices[p_index]
+    random_idx = jax.random.randint(
+        s_key, shape=(), minval=0, maxval=valid_idx_end + 1)
+    decay_theta = jnp.deg2rad(decay_angles[p_index, random_idx])
     p_parent = parent_momenta[p_index, random_idx]
 
     # Also randomly select phi angle between 0 and 360
-    decay_phi = jax.random.uniform(s_key)*360
+    decay_phi = jnp.deg2rad(jax.random.uniform(s_key)*360)
 
     # Compute parent velocity vector in cartesian coordinates
     v_parent = jnp.squeeze(
@@ -139,38 +154,40 @@ def EOMs_no_gravity_decay(s_val, y, args):
         )
     )
     ### --------------------------------- ###
-    
 
-    # If neutrino has decayed: Assign new velocity
-    def true_func(v_parent):
-        decay_tracker = decay_tracker.at[:].set(1)
-        return v_parent
+
+    # If neutrino has decayed: Assign new velocity, set decay_tracker to ones
+    def true_func(v_parent, decay_tracker):
+        decay_tracker += 1.*kpc
+        return v_parent, decay_tracker
     
-    # If neutrino has not decayed: Keep current velocity
-    def false_func(v_in):
-        return v_in
+    # If neutrino has not decayed: Keep current velocity and decay_tracker
+    def false_func(v_in, decay_tracker):
+        return v_in, decay_tracker
 
     # Get new/current velocity depending on decay condition being True/False
-    v_out = jax.lax.cond(
-        (now_nu_number == 0) & (pre_nu_number == 1) & jnp.all(decay_tracker == 0), 
-        v_parent, true_func, 
-        v_in, false_func
+    v_out, decay_tracker = jax.lax.cond(
+        (now_nu_number==0)&(pre_nu_number==1)&jnp.all(decay_tracker==8.*kpc), 
+        lambda _: true_func(v_parent, decay_tracker),
+        lambda _: false_func(v_in, decay_tracker),
+        operand=None
     )
-   
+
     # Switch to "physical reality"
     v_out /= (kpc/s)
+    decay_tracker /= (kpc/s)
 
     dyds = -jnp.array([
-        v_out, jnp.zeros(3), decay_tracker
+        v_out, jnp.zeros(3), jnp.zeros(3)
     ])
     
     return dyds
 
 
-@jax.jit
+# @jax.jit
 def backtrack_1_neutrino(
-    init_vector, s_int_steps, decay_angles, parent_momenta, decayed_neutrinos_z, 
-    z_array, neutrino_momenta, m_parent, m_daughter, kpc, s):
+    init_vector, s_int_steps, decay_angles, parent_momenta, first_negative_indices, decayed_neutrinos_z, z_array, neutrino_momenta, 
+    m_parent, m_daughter, kpc, s):
 
     """
     Simulate trajectory of 1 neutrino. Input is 6-dim. vector containing starting positions and velocities of neutrino. Solves ODEs given by the EOMs function with an jax-accelerated integration routine, using the diffrax library. Output are the positions and velocities at each timestep, which was specified with diffrax.SaveAt. 
@@ -180,7 +197,7 @@ def backtrack_1_neutrino(
     y0_r, Nr = init_vector[0:-1], init_vector[-1]
 
     # Create array used as "dummy" integration vector to keep decay to occur only once
-    decay_tracker = jnp.zeros(3)
+    decay_tracker = jnp.ones(3)*8.
 
     # Combine initial vector and decay_tracker array, then reshape
     y0 = jnp.concatenate((y0_r, decay_tracker)).reshape(3,3)
@@ -195,7 +212,8 @@ def backtrack_1_neutrino(
     ### ------------- ###
     ### Dopri5 Solver ###
     ### ------------- ###
-    solver = diffrax.Dopri5()
+    # solver = diffrax.Dopri5()
+    solver = diffrax.Kvaerno3()
     stepsize_controller = diffrax.PIDController(rtol=1e-3, atol=1e-6)
     # note: no change for tighter rtol and atol, e.g. rtol=1e-5, atol=1e-9
 
@@ -208,10 +226,10 @@ def backtrack_1_neutrino(
         t0=t0, t1=t1, dt0=dt0, y0=y0, max_steps=10000,
         saveat=saveat, stepsize_controller=stepsize_controller, 
         args=(
-            Nr.astype(int), decay_angles, parent_momenta, decayed_neutrinos_z, z_array, 
-            neutrino_momenta, m_parent, m_daughter, kpc, s)
+            Nr.astype(int), decay_angles, parent_momenta, first_negative_indices, decayed_neutrinos_z,
+            z_array, neutrino_momenta, m_parent, m_daughter, kpc, s)
     )
-    
+
     # Total integration vector has 9 elements, as 3 are from decay_tracker,
     # but we only need first 6, i.e. the neutrino positions and velocities.
     trajectory = sol.ys.reshape(100, 9)[:, :6]
@@ -280,8 +298,9 @@ Nr_column= jnp.arange(nu_total).reshape(Npix, nu_per_pix)
 
 # Common arguments for simulation
 common_args = (
-    s_int_steps, decay_angles, parent_momenta, decayed_neutrinos_z, z_array, 
-    neutrino_momenta, m_parent, m_daughter, Params.kpc, Params.s)
+    s_int_steps, decay_angles, parent_momenta, first_negative_indices, 
+    decayed_neutrinos_z, z_array, neutrino_momenta, m_parent, m_daughter, 
+    Params.kpc, Params.s)
 
 # Use ProcessPoolExecutor to distribute the simulations across processes:
 # 1 process (i.e. CPU) simulates all neutrinos for one healpixel.
@@ -294,6 +313,9 @@ with ProcessPoolExecutor(CPUs_sim) as executor:
     
     # Wait for all futures to complete and collect results in order
     nu_vectors = jnp.array([future.result() for future in futures])
+
+
+jnp.save(f'{pars.directory}/vectors_{end_str}_test.npy', nu_vectors)
 
 
 ### Manipulate array values for number density computations

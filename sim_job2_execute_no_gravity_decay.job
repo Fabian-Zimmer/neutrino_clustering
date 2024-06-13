@@ -1,11 +1,11 @@
 #!/bin/bash
 #SBATCH --job-name=no_gravD
 #SBATCH -p rome
-#SBATCH -t 00:05:00
+#SBATCH -t 00:15:00
 #SBATCH -N 1
 #SBATCH --tasks-per-node=1
-#SBATCH --cpus-per-task=32
-#SBATCH --mem=56000
+#SBATCH --cpus-per-task=128
+#SBATCH --mem=224000
 #SBATCH -o jobs/no_gravity_decay.out
 #SBATCH -e jobs/no_gravity_decay.err
 #SBATCH -v
@@ -30,4 +30,4 @@ python $HOME/neutrino_clustering/sim_script2_execute_no_gravity_decay.py \
 --m_lightest 0.05 \
 --gamma "2T" \
 --no-pixel_densities \
---total_densities
+--no-total_densities
