@@ -41,17 +41,17 @@ m_daughter, _, m_parent = Physics.neutrino_masses(
 ### Load arrays generated before simulation ###
 ### --------------------------------------- ###
 
-# From original simulation code
-z_array = jnp.load(
-    f'{pars.directory}/z_int_steps.npy')
+# Arrays from original simulation code
 neutrino_momenta = jnp.load(
     f'{pars.directory}/neutrino_momenta.npy')
 
-# Created in Decay.decay_neutrinos function
+# Arrays created specifically for decay simulation
 decayed_neutrinos_index_z = jnp.load(
     f'{pars.directory}/decayed_neutrinos_index_z_{pars.gamma}.npy', allow_pickle=True)
 decayed_neutrinos_z = jnp.load(
     f'{pars.directory}/decayed_neutrinos_z_{pars.gamma}.npy')
+z_array = jnp.load(
+    f'{pars.directory}/decayed_neutrinos_bin_z_{pars.gamma}.npy')
 
 # note: loading combined angle-parent_momenta array from new routine
 angle_momentum_decay = jnp.load(
@@ -111,7 +111,9 @@ def EOMs_no_gravity_decay(s_val, y, args):
     
     # Read current and previous decay flag number (1 = not decayed, 0 = decayed)
     # Combination of pre = 1 and now = 0 is unique, and is condition for decay
-    now_nu_number = jnp.int16(decayed_neutrinos_z[z_index, Nr_index])
+    #!
+    #? doesn't work for decaying neutrinos in first bin? since z_index-1 is last elem
+    now_nu_number = jnp.int16(decayed_neutrinos_z[z_index,   Nr_index])
     pre_nu_number = jnp.int16(decayed_neutrinos_z[z_index-1, Nr_index])
 
 
@@ -164,9 +166,11 @@ def EOMs_no_gravity_decay(s_val, y, args):
     def false_func(v_in, decay_tracker):
         return v_in, decay_tracker
 
-    # Get new/current velocity depending on decay condition being True/False
+    # Get new/current velocity depending on decay condition(s) being True/False
+    cond_0bin = (now_nu_number==0)&(pre_nu_number==1)&(z_index==0)
+    cond_rest = (now_nu_number==0)&(pre_nu_number==1)&jnp.all(decay_tracker==8.*kpc)
     v_out, decay_tracker = jax.lax.cond(
-        (now_nu_number==0)&(pre_nu_number==1)&jnp.all(decay_tracker==8.*kpc), 
+        cond_0bin or cond_rest, 
         lambda _: true_func(v_parent, decay_tracker),
         lambda _: false_func(v_in, decay_tracker),
         operand=None
