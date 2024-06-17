@@ -111,7 +111,6 @@ def EOMs_no_gravity_decay(s_val, y, args):
     
     # Read current and previous decay flag number (1 = not decayed, 0 = decayed)
     # Combination of pre = 1 and now = 0 is unique, and is condition for decay
-    #? are these arrays the "right way around"? i.e. matching to backwards z
     now_nu_number = jnp.int16(decayed_neutrinos_z[z_index, Nr_index])
     pre_nu_number = jnp.int16(decayed_neutrinos_z[z_index-1, Nr_index])
 
