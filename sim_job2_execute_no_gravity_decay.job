@@ -30,4 +30,4 @@ python $HOME/neutrino_clustering/sim_script2_execute_no_gravity_decay.py \
 --m_lightest 0.05 \
 --gamma "2T" \
 --no-pixel_densities \
---no-total_densities
+--total_densities

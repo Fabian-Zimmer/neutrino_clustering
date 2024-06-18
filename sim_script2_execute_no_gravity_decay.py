@@ -111,10 +111,9 @@ def EOMs_no_gravity_decay(s_val, y, args):
     
     # Read current and previous decay flag number (1 = not decayed, 0 = decayed)
     # Combination of pre = 1 and now = 0 is unique, and is condition for decay
-    #!
-    #? doesn't work for decaying neutrinos in first bin? since z_index-1 is last elem
-    now_nu_number = jnp.int16(decayed_neutrinos_z[z_index,   Nr_index])
-    pre_nu_number = jnp.int16(decayed_neutrinos_z[z_index-1, Nr_index])
+    # note: See below for first redshift bin condition
+    now_nu_nr = jnp.int16(decayed_neutrinos_z[z_index,   Nr_index])
+    pre_nu_nr = jnp.int16(decayed_neutrinos_z[z_index-1, Nr_index])
 
 
     ### --------------------------------- ###
@@ -166,11 +165,14 @@ def EOMs_no_gravity_decay(s_val, y, args):
     def false_func(v_in, decay_tracker):
         return v_in, decay_tracker
 
+    # Conditions for first (redshift) bin and rest of bins
+    cond_0bin = (now_nu_nr==0)&(z_index==0)&jnp.all(decay_tracker==8.*kpc)
+    cond_rest = (now_nu_nr==0)&(pre_nu_nr==1)&jnp.all(decay_tracker==8.*kpc)
+    cond_comb = jnp.logical_or(cond_0bin, cond_rest)
+
     # Get new/current velocity depending on decay condition(s) being True/False
-    cond_0bin = (now_nu_number==0)&(pre_nu_number==1)&(z_index==0)
-    cond_rest = (now_nu_number==0)&(pre_nu_number==1)&jnp.all(decay_tracker==8.*kpc)
     v_out, decay_tracker = jax.lax.cond(
-        cond_0bin or cond_rest, 
+        cond_comb, 
         lambda _: true_func(v_parent, decay_tracker),
         lambda _: false_func(v_in, decay_tracker),
         operand=None
@@ -217,7 +219,7 @@ def backtrack_1_neutrino(
     ### ------------- ###
     # solver = diffrax.Dopri5()
     solver = diffrax.Kvaerno3()
-    stepsize_controller = diffrax.PIDController(rtol=1e-3, atol=1e-6)
+    stepsize_controller = diffrax.PIDController(rtol=1e-1, atol=1e-3)
     # note: no change for tighter rtol and atol, e.g. rtol=1e-5, atol=1e-9
 
     # Specify timesteps where solutions should be saved
@@ -226,7 +228,7 @@ def backtrack_1_neutrino(
     # Solve the coupled ODEs, i.e. the EOMs of the neutrino
     sol = diffrax.diffeqsolve(
         term, solver, 
-        t0=t0, t1=t1, dt0=dt0, y0=y0, max_steps=10000,
+        t0=t0, t1=t1, dt0=dt0, y0=y0, max_steps=100000,
         saveat=saveat, stepsize_controller=stepsize_controller, 
         args=(
             Nr.astype(int), decay_angles, parent_momenta, first_negative_indices, decayed_neutrinos_z,
@@ -266,12 +268,10 @@ def simulate_neutrinos_1_pix(init_xyz, init_vels, Nr_column, common_args):
 
 
 # Lists for pixel and total number densities: d=daughter, p=parent, nd=no_decay
-pix_dens_l_d = []
-tot_dens_l_d = []
-pix_dens_l_p = []
-tot_dens_l_p = []
-pix_dens_l_nd = []
-tot_dens_l_nd = []
+pix_dens_l_used = []
+tot_dens_l_used = []
+pix_dens_l_rest = []
+tot_dens_l_rest = []
 
 # File name ending
 end_str = f'halo1'
@@ -318,37 +318,48 @@ with ProcessPoolExecutor(CPUs_sim) as executor:
     nu_vectors = jnp.array([future.result() for future in futures])
 
 
-jnp.save(f'{pars.directory}/vectors_{end_str}_test.npy', nu_vectors)
+jnp.save(f'{pars.directory}/vectors_{end_str}.npy', nu_vectors)
+
+# nu_vectors = simulate_neutrinos_1_pix(
+#     init_xyz, init_vels[0], Nr_column[0], common_args)
 
 
 ### ------------------------------------------------------- ###
 ### Manipulate array values for number density computations ###
 ### ------------------------------------------------------- ###
+# note: Those that (anti-)decayed in the sim are daughter neutrinos at z=0,
+# note: rest are all parent neutrinos that survived until today.
 
-# Indices of all neutrinos that (anti-)decayed
-# decIDs = np.concatenate(
-#     [arr for arr in  decayed_neutrinos_index_z if arr.size > 0])
+# Load percentage values of total decayed neutrinos for specific gamma
+gammas = np.array(["0.1T", "0.5T", "1T", "2T"])
+g_idx = np.argwhere(gammas == pars.gamma).flatten()[0]
+decay_perc_data = np.load(f"{pars.directory}/decayed_neutrinos_perc.npy")
 
-# nu_vectors = nu_vectors.reshape((nu_total, 2, 6))
+# Amount of daughter and parent neutrinos
+daughter_neutrinos = int(decay_perc_data[g_idx] / 100 * simdata.nus_in_sim)
+parent_neutrinos = simdata.nus_in_sim - daughter_neutrinos
 
-# nu_vectors_p = nu_vectors.at[decIDs, 0, 3:6].set(0)
-# nu_vectors_p = nu_vectors_p.at[decIDs, 1, 3:6].set(0)
-# nu_vectors_p = nu_vectors_p.reshape((Npix, nu_per_pix, 2, 6))
+# Indices of daughter and parent neutrinos
+daughter_indices = np.concatenate(
+    [arr for arr in  decayed_neutrinos_index_z if arr.size > 0])
+parent_indices = np.setdiff1d(np.arange(simdata.nus_in_sim), daughter_neutrinos)
 
-# #? 
-# nu_vectors_d = jnp.zeros(np.shape(nu_vectors))
-# nu_vectors_d = nu_vectors_d.at[decIDs,0,3:6].set(nu_vectors[decIDs,0,3:6])
-# nu_vectors_d = nu_vectors_d.at[decIDs,1,3:6].set(nu_vectors[decIDs,1,3:6])
-# nu_vectors_d = nu_vectors_d.reshape((Npix, nu_per_pix, 2, 6))
+# Load history of all decayed neutrinos, i.e. total of decays beyond z_sim = 4
+# hist_data = np.load(f"{pars.directory}/histogram_data.npy")[g_idx].sum()
 
-# #? Set elements in nu_vectors_p and nu_vectors_d based on setter
-# jnp.save(f'{pars.directory}/vectors_{end_str}_p_{pars.gamma}.npy', nu_vectors_p)
-# jnp.save(f'{pars.directory}/vectors_{end_str}_d_{pars.gamma}.npy', nu_vectors_d)
-
-
-# TODO: additionally, account for neutrinos that never decayed as they have 
-# TODO: survived as parent particles according to gamma, and must be treated 
-# TODO: as parent particles, and removed from daughter integral as well.
+# Determine more abundant neutrino type: parents or daughter
+# Then use those to compute the number density, and the other is 1 - that value
+nu_vecs_pre = nu_vectors.reshape((nu_total, 2, 6))
+if parent_neutrinos >= daughter_neutrinos:
+    nu_vecs_set = nu_vecs_pre.at[daughter_neutrinos, :, 3:].set(0)
+    nu_vecs_use = nu_vecs_set.reshape((Npix, nu_per_pix, 2, 6))
+    used_str = "parents"
+    rest_str = "daughters"
+else:
+    nu_vecs_set = nu_vecs_pre.at[parent_neutrinos, :, 3:].set(0)
+    nu_vecs_use = nu_vecs_set.reshape((Npix, nu_per_pix, 2, 6))
+    used_str = "daughters"
+    rest_str = "parents"
 
 
 # Save all sky neutrino vectors for current halo
@@ -371,7 +382,7 @@ if pars.pixel_densities:
 
     # Pixel densities: daughter neutrinos
     pix_dens_d = Decay.number_densities_all_sky(
-        v_arr=nu_vectors_d[..., 3:],
+        v_arr=nu_vecs_use[..., 3:],
         m_arr=nu_allsky_masses,
         pix_sr=pix_sr_sim,
         args=Params())
@@ -379,19 +390,19 @@ if pars.pixel_densities:
 
     # Pixel densities: parent neutrinos
     pix_dens_p = Decay.number_densities_all_sky(
-        v_arr=nu_vectors_p[..., 3:],
+        v_arr=nu_vecs_use[..., 3:],
         m_arr=nu_allsky_masses,
         pix_sr=pix_sr_sim,
         args=Params())
     pix_dens_l_p.append(jnp.squeeze(pix_dens_p))
     
     # Pixel densities: no_decay
-    pix_dens_nd = Decay.number_densities_all_sky(
-        v_arr=nu_vectors[..., 3:],
-        m_arr=nu_allsky_masses,
-        pix_sr=pix_sr_sim,
-        args=Params())
-    pix_dens_l_nd.append(jnp.squeeze(pix_dens_nd))
+    # pix_dens_nd = Decay.number_densities_all_sky(
+    #     v_arr=nu_vectors[..., 3:],
+    #     m_arr=nu_allsky_masses,
+    #     pix_sr=pix_sr_sim,
+    #     args=Params())
+    # pix_dens_l_nd.append(jnp.squeeze(pix_dens_nd))
 
     pix_time = time.perf_counter() - pix_start
     print(f"Analysis time: {pix_time/60.:.2f} min, {pix_time/(60**2):.2f} h\n")
@@ -407,37 +418,31 @@ if pars.total_densities:
     # Compute total number density, by using all neutrino vectors for integral
     tot_start = time.perf_counter()
 
-    # Total densities: daughter neutrinos
-    tot_dens_d = Decay.number_densities_mass_range_decay(
-        v_arr=nu_vectors_d.reshape(-1, 2, 6)[..., 3:], 
+    # Total densities for neutrino type (parents or daughter) with larger amount
+    tot_dens_used = Decay.number_densities_mass_range_decay(
+        v_arr=nu_vecs_use.reshape(-1, 2, 6)[..., 3:], 
         m_arr=nu_massrange, 
         pix_sr=4*Params.Pi,
         args=Params())
-    tot_dens_l_d.append(jnp.squeeze(tot_dens_d))
+    tot_dens_l_used.append(jnp.squeeze(tot_dens_used))
 
-    # Total densities: parent neutrinos
-    tot_dens_p = Decay.number_densities_mass_range_decay(
-        v_arr=nu_vectors_p.reshape(-1, 2, 6)[..., 3:], 
-        m_arr=nu_massrange, 
-        pix_sr=4*Params.Pi,
-        args=Params())
-    tot_dens_l_p.append(jnp.squeeze(tot_dens_p))
-
-    # Total densities: no_decay
-    tot_dens_nd = Decay.number_densities_mass_range_decay(
-        v_arr=nu_vectors.reshape(-1, 2, 6)[..., 3:], 
-        m_arr=nu_massrange, 
-        pix_sr=4*Params.Pi,
-        args=Params())
-    tot_dens_l_nd.append(jnp.squeeze(tot_dens_nd))
+    # Total densities for other neutrino type, not used above
+    # For this we load number densities from seperate simulation without decay
+    tot_dens_no_decay = jnp.load(
+        f"{pars.directory}/../no_gravity/total_densities.npy")
+    tot_dens_rest = tot_dens_no_decay - jnp.array(tot_dens_l_used)
+    tot_dens_l_rest.append(jnp.squeeze(tot_dens_rest))
 
     tot_time = time.perf_counter() - tot_start
     print(f"Analysis time: {tot_time/60.:.2f} min, {tot_time/(60**2):.2f} h\n")
     
     # Save total densities
-    jnp.save(f"{pars.directory}/total_densities_{pars.gamma}_d.npy", jnp.array(tot_dens_l_d))
-    jnp.save(f"{pars.directory}/total_densities_{pars.gamma}_p.npy", jnp.array(tot_dens_l_p))
-    jnp.save(f"{pars.directory}/total_densities_{pars.gamma}_nd.npy", jnp.array(tot_dens_l_nd))
+    jnp.save(
+        f"{pars.directory}/total_densities_{pars.gamma}_{used_str}.npy", 
+        jnp.array(tot_dens_l_used))
+    jnp.save(
+        f"{pars.directory}/total_densities_{pars.gamma}_{rest_str}.npy", 
+        jnp.array(tot_dens_l_rest))
     
 
 total_time = time.perf_counter() - total_start
