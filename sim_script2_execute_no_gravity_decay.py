@@ -351,12 +351,12 @@ parent_indices = np.setdiff1d(np.arange(simdata.nus_in_sim), daughter_neutrinos)
 # Then use those to compute the number density, and the other is 1 - that value
 nu_vecs_pre = nu_vectors.reshape((nu_total, 2, 6))
 if parent_neutrinos >= daughter_neutrinos:
-    nu_vecs_set = nu_vecs_pre.at[daughter_neutrinos, :, 3:].set(0)
+    nu_vecs_set = nu_vecs_pre.at[daughter_indices, :, 3:].set(0)
     nu_vecs_use = nu_vecs_set.reshape((Npix, nu_per_pix, 2, 6))
     used_str = "parents"
     rest_str = "daughters"
 else:
-    nu_vecs_set = nu_vecs_pre.at[parent_neutrinos, :, 3:].set(0)
+    nu_vecs_set = nu_vecs_pre.at[parent_indices, :, 3:].set(0)
     nu_vecs_use = nu_vecs_set.reshape((Npix, nu_per_pix, 2, 6))
     used_str = "daughters"
     rest_str = "parents"
