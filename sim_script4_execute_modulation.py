@@ -20,7 +20,14 @@ with open(f'{pars.directory}/sim_parameters.yaml', 'r') as file:
 
 CPUs_sim = 128
 neutrinos = 1000
-init_dis = sim_setup['initial_haloGC_distance']
+
+# Load Earth-Sun distances
+df = pd.read_excel('Data/Earth-Sun_distances.xlsx')
+ES_distances = jnp.array(df.iloc[:, 1::2].apply(pd.to_numeric, errors='coerce')\
+                                  .stack().reset_index(drop=True).tolist())[:-1]
+ES_distances *= Params.AU/Params.kpc
+init_dis = ES_distances[0]  # day1
+
 z_int_steps = jnp.load(f'{pars.directory}/z_int_steps_1year.npy')
 s_int_steps = jnp.load(f'{pars.directory}/s_int_steps_1year.npy')
 nu_massrange = jnp.load(f'{pars.directory}/neutrino_massrange_eV.npy')*Params.eV
@@ -43,11 +50,13 @@ def EOMs_sun(s_val, y, args):
     z = Utils.jax_interpolate(s_val, s_int_steps, z_int_steps)
 
     # Compute gradient of sun.
-    grad_sun = SimExec.sun_gravity(x_i, jnp.array([0.,0.,0.]))
+    eps = 350_000/3e16*kpc
+    grad_sun = SimExec.sun_gravity(x_i, jnp.array([0.,0.,0.]), eps)
 
     # Replace NaNs with zeros and apply cutoff
-    grad_sun = jnp.nan_to_num(grad_sun)
-    cutoff = 1e-100
+    grad_sun = jnp.nan_to_num(
+        grad_sun, copy=False, nan=0.0, posinf=0.0, neginf=0.0)
+    cutoff = 1e-50
     grad_sun = jnp.where(jnp.abs(grad_sun) < cutoff, 0.0, grad_sun)
 
     # Switch to "physical reality" here.
@@ -55,15 +64,16 @@ def EOMs_sun(s_val, y, args):
     x_i /= kpc
     u_i /= (kpc/s)
 
-
     # Hamilton eqns. for integration (global minus, s.t. we go back in time).
     dyds = -jnp.array([
         u_i, 1./(1.+z)**2 * grad_sun
     ])
+    """
+    """
 
-    # dyds = -jnp.array([
-    #     u_i, jnp.zeros(3)
-    # ])
+    dyds = -jnp.array([
+        u_i, jnp.zeros(3)
+    ])
 
     return dyds
 
@@ -82,16 +92,16 @@ def backtrack_1_neutrino(init_vector, s_int_steps, z_int_steps, kpc, s):
     term = diffrax.ODETerm(EOMs_sun)
     t0 = s_int_steps[0]
     t1 = s_int_steps[-1]
-    dt0 = (s_int_steps[4] - s_int_steps[3]) / 2
+    dt0 = (s_int_steps[2]) / 50
     
 
-    ### ------------- ###
-    ### Dopri5 Solver ###
-    ### ------------- ###
+    ### ------------------ ###
+    ### Integration Solver ###
+    ### ------------------ ###
     solver = diffrax.Dopri5()
-    # stepsize_controller = diffrax.PIDController(rtol=1e-3, atol=1e-6)
-    # note: no change for tighter rtol and atol, e.g. rtol=1e-5, atol=1e-9
+    stepsize_controller = diffrax.ConstantStepSize()
 
+    args = (s_int_steps, z_int_steps, kpc, s)
 
     # Specify timesteps where solutions should be saved
     saveat = diffrax.SaveAt(ts=jnp.array(s_int_steps))
@@ -103,8 +113,8 @@ def backtrack_1_neutrino(init_vector, s_int_steps, z_int_steps, kpc, s):
         dt0=dt0, 
         y0=y0, max_steps=10000,
         saveat=saveat, 
-        # stepsize_controller=None, 
-        args=(s_int_steps, z_int_steps, kpc, s))
+        stepsize_controller=stepsize_controller,
+        args=args)
     
     trajectory = sol.ys.reshape(365,6)
 
@@ -168,7 +178,7 @@ common_args = (s_int_steps, z_int_steps, Params.kpc, Params.s)
 if pars.testing:
 
     # Simulate all neutrinos along 1 pixel, without multiprocessing
-    nu_vectors = simulate_neutrinos_1_pix(init_xyz, init_vels[0], s_int_steps)
+    nu_vectors = simulate_neutrinos_1_pix(init_xyz, init_vels[0], common_args)
 
 else:
 
