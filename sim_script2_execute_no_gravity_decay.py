@@ -128,6 +128,7 @@ def EOMs_no_gravity_decay(s_val, y, args):
 
     # Find index in nu_momenta array of value closest to current momentum
     # (nu_momenta array already has numerical units attached)
+    #? we have to find closest of z-component, after we pre-computed the arrays correctly
     p_index, _ = find_nearest(nu_momenta, p_in)
     
     # Random key works differently with jax. Make new key for each s_val
