@@ -49,8 +49,11 @@ def EOMs_sun(s_val, y, args):
     # Find z corresponding to s via interpolation.
     z = Utils.jax_interpolate(s_val, s_int_steps, z_int_steps)
 
+    # note: sun implementation causes nan densities 
+    # note: (commenting this part out restores working no_gravity densities)
+    # """
     # Compute gradient of sun.
-    eps = 350_000/3e16*kpc
+    eps = (696_340/(3.086e16))*kpc
     grad_sun = SimExec.sun_gravity(x_i, jnp.array([0.,0.,0.]), eps)
 
     # Replace NaNs with zeros and apply cutoff
@@ -63,16 +66,12 @@ def EOMs_sun(s_val, y, args):
     grad_sun /= (kpc/s**2)
     x_i /= kpc
     u_i /= (kpc/s)
+    # """
+    # grad_sun = jnp.zeros(3)
 
     # Hamilton eqns. for integration (global minus, s.t. we go back in time).
     dyds = -jnp.array([
         u_i, 1./(1.+z)**2 * grad_sun
-    ])
-    """
-    """
-
-    dyds = -jnp.array([
-        u_i, jnp.zeros(3)
     ])
 
     return dyds
@@ -148,7 +147,7 @@ pix_dens_l = []
 tot_dens_l = []
 
 # File name ending
-end_str = f'modulation'
+end_str = f'day1'
 
 # Initial position (Earth)
 init_xyz = np.array([float(init_dis), 0., 0.])
@@ -220,7 +219,7 @@ if pars.pixel_densities:
     pix_time = time.perf_counter() - pix_start
 
     jnp.save(
-        f"{pars.directory}/pixel_densities_day1.npy", jnp.array(pix_dens_l))
+        f"{pars.directory}/pixel_densities_{end_str}.npy", jnp.array(pix_dens_l))
     print(f"Analysis time: {pix_time/60.:.2f} min, {pix_time/(60**2):.2f} h\n")
 
 if pars.total_densities:
@@ -238,7 +237,7 @@ if pars.total_densities:
     tot_time = time.perf_counter() - tot_start
 
     jnp.save(
-        f"{pars.directory}/total_densities_day1.npy", jnp.array(tot_dens_l))
+        f"{pars.directory}/total_densities_{end_str}.npy", jnp.array(tot_dens_l))
     print(f"Analysis time: {tot_time/60.:.2f} min, {tot_time/(60**2):.2f} h\n")
 
 
