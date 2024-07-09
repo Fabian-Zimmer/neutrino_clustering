@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=Dopri5_1k_zevo
 #SBATCH -p rome
-#SBATCH -t 07:00:00
+#SBATCH -t 08:00:00
 #SBATCH -N 1
 #SBATCH --tasks-per-node=1
 #SBATCH --cpus-per-task=128
