@@ -413,7 +413,7 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
     # Indices of daughter and parent neutrinos
     daughter_indices = np.concatenate(
         [arr for arr in  decayed_neutrinos_index_z if arr.size > 0])
-    parent_indices = np.setdiff1d(np.arange(simdata.nus_in_sim), daughter_neutrinos)
+    parent_indices = np.setdiff1d(np.arange(simdata.nus_in_sim), daughter_indices) #! wrong before, was daughter_neutrinos
 
     # Load history of all decayed neutrinos, i.e. total of decays beyond z_sim = 4
     # hist_data = np.load(f"{pars.directory}/histogram_data.npy")[g_idx].sum()
