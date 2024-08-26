@@ -688,7 +688,7 @@ def load_dPsi_long_range(c_id, batches, out_dir):
 parent_dir = str(pathlib.Path(args.directory).parent)
 
 # All precalculations are stored here
-data_dir = f'{parent_dir}/data_precalculations'
+data_dir = f'{parent_dir}/Data/halo_grids'
 if not os.path.exists(data_dir):
     os.makedirs(data_dir)
 
@@ -785,46 +785,10 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
             elif 'benchmark' in args.sim_type:
 
                 DM_raw = np.load(
-                    f'{parent_dir}/benchmark_halo_files/benchmark_halo_snap_{snap}.npy'
+                    f'{parent_dir}/Data/benchmark_halo_grids/benchmark_halo_snap_{snap}.npy'
                 )
                 DM_particles = len(DM_raw)
                 DM_com = np.sum(DM_raw, axis=0)/len(DM_raw)*kpc
-
-            elif args.sim_type == 'spheres':
-                
-                # note: the relevant arrays are:
-                # DM_shell_edges = np.array([0,5,10,15,20,40,100])*100*kpc
-                # DM_shell_multipliers = np.array([1,3,6,9,12,15])
-                halo_limits = np.array([10, 8, 6, 4, 2, 1])
-
-                # Determine inclusion region based on input of number of shells.
-                DM_shell_edges = DM_shell_edges[:int(args.shells)+1]
-                
-                read_DM_all_inRange(
-                    snap, int(prog_ID), 'spheres', DM_shell_edges, 
-                    IDname, box_file_dir, data_dir
-                )
-
-                # read_DM_halos_shells(
-                #     snap, int(prog_ID), DM_shell_edges, halo_limits,
-                #     IDname, box_file_dir, data_dir, CPUs_pre
-                # )
-
-                DM_raw = np.load(f'{data_dir}/DM_pos_{IDname}.npy')
-                DM_com = np.load(f'{data_dir}/DM_com_coord_{IDname}.npy')*kpc
-                DM_particles = len(DM_raw)
-
-                # Load DM from all used shells.
-                # DM_pre = []
-                # for shell_i in range(int(args.shells)):
-                #     DM_pre.append(
-                #         np.load(f'{data_dir}/DM_pos_{IDname}_shell{shell_i}.npy')
-                #     )
-                # DM_raw = np.array(list(chain.from_iterable(DM_pre)))
-                # DM_particles = len(DM_raw)
-                # print(f'snap={snap} DM_particles={DM_particles}')
-                # DM_com = (np.sum(DM_raw, axis=0)/len(DM_raw))*kpc
-                # del DM_pre
 
 
             # ---------------------- #
