@@ -1,6 +1,6 @@
 #!/bin/bash
 
-sim_fullname=no_gravity_decay
+sim_fullname=rel_EOMs
 
 python make1_simulation_box.py \
 --box_directory /projects/0/prjs0781/simulation_data/Tango_sims \

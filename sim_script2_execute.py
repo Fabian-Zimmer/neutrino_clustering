@@ -164,7 +164,8 @@ def backtrack_1_neutrino(
     y0 = init_vector.reshape(2,3)
 
     # ODE solver setup
-    term = diffrax.ODETerm(EOMs)
+    # term = diffrax.ODETerm(EOMs)
+    term = diffrax.ODETerm(EOMs_relativistic)
     t0 = s_int_steps[0]
     t1 = s_int_steps[-1]
     dt0 = (s_int_steps[0] + s_int_steps[1]) / 1000
