@@ -85,7 +85,7 @@ def halo_sample_z(z, snap, Mvir_z0, DM_mass, out_dir, args, origin_offset=0.):
     np.save(f'{out_dir}/benchmark_halo_snap_{snap}.npy', coords)
 
 
-benchmark_outdir = f"Data/benchmark_halo_grids"
+benchmark_outdir = f"Data/benchmark_halo_files"
 if not os.path.exists(benchmark_outdir):
     os.makedirs(benchmark_outdir)
 
