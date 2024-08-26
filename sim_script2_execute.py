@@ -89,6 +89,68 @@ def EOMs(s_val, y, args):
 
 
 @jax.jit
+def EOMs_relativistic(s_val, y, args):
+    
+    # Unpack the simulation grid data
+    s_int_steps, z_int_steps, zeds_snaps, snaps_GRID_L, snaps_DM_com, snaps_DM_num, snaps_QJ_abs, dPsi_grid_data, cell_grid_data, cell_gens_data, DM_mass, kpc, s = args
+
+    # Initialize vector.
+    x_i, u_i = y
+
+    # Switch to "numerical reality" here.
+    x_i *= kpc
+    u_i *= (kpc/s)
+
+    # Find z corresponding to s via interpolation.
+    z = Utils.jax_interpolate(s_val, s_int_steps, z_int_steps)
+
+    # Snapshot specific parameters.
+    idx = jnp.abs(zeds_snaps - z).argmin()
+    snap_GRID_L = snaps_GRID_L[idx]
+
+    def inside_cell(_):
+
+        # Load files for current z, to find in which cell neutrino is. 
+        # Then load gravity for that cell.
+        dPsi_grid = dPsi_grid_data[idx]
+        cell_grid = cell_grid_data[idx]
+        cell_gens = cell_gens_data[idx]
+        
+        cell_idx, *_ = SimExec.nu_in_which_cell(
+            x_i, cell_grid, cell_gens, snap_GRID_L)
+        grad_tot = dPsi_grid[cell_idx, :]
+
+        return grad_tot
+
+    def outside_cell(_):
+
+        # Apply long range force (incl. quadrupole) of whole grid content.
+        DM_com = snaps_DM_com[idx]
+        DM_num = snaps_DM_num[idx]
+        QJ_abs = snaps_QJ_abs[idx]
+        grad_tot = SimExec.outside_gravity_quadrupole(
+            x_i, DM_com, DM_mass, DM_num, QJ_abs)
+
+        return grad_tot
+
+    grad_tot = jax.lax.cond(
+        jnp.all(jnp.abs(x_i) < snap_GRID_L), inside_cell, outside_cell, None)
+
+    # Switch to "physical reality" here.
+    grad_tot /= (kpc/s**2)
+    x_i /= kpc
+    u_i /= (kpc/s)
+
+    # Relativistic EOMs for integration (global minus, s.t. we go back in time).
+    dyds = -jnp.array([
+        u_i/(1+z)**2 / jnp.sqrt(jnp.sum(u_i**2) + (1+z)**-2), 
+        1/(1+z)**2 * grad_tot
+    ])
+
+    return dyds
+
+
+@jax.jit
 def backtrack_1_neutrino(
     init_vector, s_int_steps, z_int_steps, zeds_snaps, 
     snaps_GRID_L, snaps_DM_com, snaps_DM_num, snaps_QJ_abs, 
