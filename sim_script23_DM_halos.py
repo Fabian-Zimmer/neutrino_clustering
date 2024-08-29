@@ -20,7 +20,8 @@ DM_mass, CPUs_sim, neutrinos, init_dis, zeds_snaps, z_int_steps, s_int_steps, nu
     m_lower=pars.mass_lower,
     m_upper=pars.mass_upper,
     m_gauge=pars.mass_gauge,
-    halo_num_req=pars.halo_num)
+    halo_num_req=pars.halo_num,
+    benchmark=pars.benchmark)
 
 
 @jax.jit
@@ -235,7 +236,7 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
     ### ======================== ###
 
     if pars.benchmark:
-        end_str = f'halo{halo_j}'
+        end_str = f'benchmark_halo'
     else:
         end_str = f'halo{halo_j+1}'
     
@@ -252,7 +253,11 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
     snaps_QJ_abs = jnp.load(f'{data_dir}/snaps_QJ_abs_{end_str}.npy')
 
     # Load grav. forces, coordinates and generation/lengths of cells in grid.
-    dPsi_grids, cell_grids, cell_gens = SimGrid.grid_data(halo_ID, data_dir)
+    if pars.benchmark:
+        dPsi_grids, cell_grids, cell_gens = SimGrid.grid_data(
+            halo_ID, data_dir, benchmark=True)
+    else:
+        dPsi_grids, cell_grids, cell_gens = SimGrid.grid_data(halo_ID, data_dir)
 
 
     ### ===================== ###
@@ -273,7 +278,10 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
     jnp.save(f'{pars.directory}/init_xyz_{end_str}.npy', init_xyz)
     # note: for some reason this routine chooses a different cell to those in the paper, ergo the all-sky maps look different for the same halos
 
-    print(f"*** Simulation for halo={halo_j+1}/{halo_num} ***")
+    if pars.benchmark:
+        print(f"*** Simulation for benchmark halo ***")
+    else:
+        print(f"*** Simulation for halo={halo_j+1}/{halo_num} ***")
 
 
     ### ============== ###
