@@ -23,7 +23,6 @@ pars = parser.parse_args()
 # Box parameters.
 with open(f'{pars.directory}/box_parameters.yaml', 'r') as file:
     box_setup = yaml.safe_load(file)
-
 box_file_dir = box_setup['File Paths']['Box File Directory']
 DM_mass = box_setup['Content']['DM Mass [Msun]']*Params.Msun
 Smooth_L = box_setup['Content']['Smoothening Length [pc]']*Params.pc
@@ -32,16 +31,16 @@ z0_snap_4cif = box_setup['Content']['z=0 snapshot']
 # Simulation parameters.
 with open(f'{pars.directory}/sim_parameters.yaml', 'r') as file:
     sim_setup = yaml.safe_load(file)
-
 CPUs_pre = sim_setup['CPUs_precalculations']
 mem_lim_GB = sim_setup['memory_limit_GB']
 DM_lim = sim_setup['DM_in_cell_limit']
 
-
-# Load arrays.
+# Load constants and arrays, which some functions below need.
 nums_snaps = np.load(f'{pars.directory}/nums_snaps.npy')
+DM_shell_edges = np.load(f'{pars.directory}/DM_shell_edges.npy')  # *kpc already
 shell_multipliers = np.load(f'{pars.directory}/shell_multipliers.npy')
-
+FCT_DM_shell_edges = np.copy(DM_shell_edges)
+FCT_shell_multipliers = np.copy(shell_multipliers)
 
 # Make temporary folder to store files, s.t. parallel runs don't clash.
 # rand_code = ''.join(
@@ -180,7 +179,7 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
 
         # Cell division.
         cell_division_count = SimGrid.cell_division(
-            init_grid, DM_pos_for_cell_division, snap_GRID_L, DM_lim, None, data_dir, IDname
+            init_grid, DM_pos_for_cell_division, snap_GRID_L, DM_lim, None, FCT_DM_shell_edges, FCT_shell_multipliers, data_dir, IDname
         )
         del DM_pos_for_cell_division
 
@@ -229,6 +228,7 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
                 SimGrid.cell_gravity_short_range, 
                 cell_chunks, cgen_chunks, repeat(snap_GRID_L), 
                 repeat(DM_pos), repeat(DM_lim), repeat(DM_mass), 
+                repeat(FCT_shell_multipliers),
                 repeat(Smooth_L), repeat(data_dir), batch_arr, 
                 repeat(chunksize_sr)
             )
