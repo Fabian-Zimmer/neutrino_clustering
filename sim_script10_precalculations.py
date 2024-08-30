@@ -85,7 +85,6 @@ print('***********************************')
 
 
 for halo_j, halo_ID in enumerate(halo_batch_IDs):
-    grav_time = time.perf_counter()
 
     # note: "Broken" halo, no DM position data at snapshot 0012.
     if halo_j == 19:
@@ -195,6 +194,7 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
         
         # Save snapshot specific parameters.
         save_GRID_L[j] = snap_GRID_L
+        print(np.sum(DM_count))
         save_DM_num[j] = np.sum(DM_count)
         save_CC_num[j] = DM_particles
         save_DM_com.append(DM_com)
@@ -207,6 +207,7 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
         cells = len(cell_coords)
 
         print(f'DM Particles = {DM_particles}, cells = {cells}')
+
 
         # -------------------- #
         # Short-range gravity. #
@@ -305,14 +306,6 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
 
 
     if 'benchmark' in pars.sim_type:
-        break
-
-
-    grav_time_tot = time.perf_counter()-grav_time
-    print(f'Grid time: {grav_time_tot/60.} min, {grav_time_tot/(60**2)} h.')
-
-
-    if 'benchmark' in pars.sim_type:
         end_str = 'benchmark_halo'
     else:
         end_str = f'halo{halo_j+1}'
@@ -324,6 +317,9 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
     np.save(f'{data_dir}/snaps_DM_com_{end_str}.npy', np.array(save_DM_com))
     np.save(f'{data_dir}/snaps_QJ_abs_{end_str}.npy', np.array(save_QJ_abs))
 
+    # End loop over halos after first round for benchmark halo
+    if 'benchmark' in pars.sim_type:
+        break
 
 total_time = time.perf_counter() - total_start
 print(f'Total time: {total_time/60.} min, {total_time/(60**2)} h.')

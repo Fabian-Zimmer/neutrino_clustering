@@ -32,4 +32,4 @@ python $HOME/neutrino_clustering/sim_script10_precalculations.py \
 --mass_gauge 12.0 \
 --mass_lower 0.6 \
 --mass_upper 2.0 \
---halo_num 2  # 2 for benchmark, 10-30 for simulation halos (i.e. all_sky type)
+--halo_num 30

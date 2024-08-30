@@ -31,5 +31,5 @@ python $HOME/neutrino_clustering/sim_script23_DM_halos.py \
 --mass_gauge 12.0 \
 --mass_lower 0.6 \
 --mass_upper 2.0 \
---halo_num 2 \
+--halo_num 30 \
 --benchmark
