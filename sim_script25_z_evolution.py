@@ -299,11 +299,10 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
             args=Params())
         tot_dens_zed_l.append(jnp.squeeze(tot_dens))
 
+        # Save all sky neutrino vectors for current halo at current z_back
+        jnp.save(f'{pars.directory}/vectors_{end_str}_z={z_back:.2f}.npy', nu_vectors[..., -1, :])
+
     tot_dens_l.append(tot_dens_zed_l)
-
-
-    # Save all sky neutrino vectors for current halo
-    jnp.save(f'{pars.directory}/vectors_{end_str}_z={z_back:.2f}.npy', nu_vectors[..., -1, :])
     
     sim_time = time.perf_counter()-sim_start
     print(f"Simulation time: {sim_time/60.:.2f} min, {sim_time/(60**2):.2f} h")

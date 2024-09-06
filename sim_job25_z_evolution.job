@@ -1,13 +1,13 @@
 #!/bin/bash
-#SBATCH --job-name=Dopri5_1k_zevo
+#SBATCH --job-name=zevo_vecs
 #SBATCH -p rome
-#SBATCH -t 08:00:00
+#SBATCH -t 01:30:00
 #SBATCH -N 1
 #SBATCH --tasks-per-node=1
 #SBATCH --cpus-per-task=128
 #SBATCH --mem=224000
-#SBATCH -o jobs/Dopri5_1k_zevo.out
-#SBATCH -e jobs/Dopri5_1k_zevo.err
+#SBATCH -o jobs/zevo_vecs.out
+#SBATCH -e jobs/zevo_vecs.err
 #SBATCH -v
 #SBATCH --exclusive
 
@@ -26,10 +26,12 @@ conda activate neutrino_clustering
 
 sim_fullname=Dopri5_1k
 
+# 30 halos take about 8 hours
+
 python $HOME/neutrino_clustering/sim_script25_z_evolution.py \
 --directory $HOME/neutrino_clustering/sim_output/$sim_fullname \
 --mass_gauge 12.0 \
 --mass_lower 0.6 \
 --mass_upper 2.0 \
---halo_num 30 \
+--halo_num 5 \
 --no-benchmark
