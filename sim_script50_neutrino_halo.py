@@ -268,15 +268,20 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
     cell_ccs = cell_grids[-1]
 
     # Construct (reduced) spherical grid with Fibonacci spiral method
-    spherical_ccs = SimUtil.select_spherical_grid(
-        cell_ccs, target_n=300, n_shells=10)    
+    # reduced_ccs = SimUtil.select_spherical_grid(
+    #     cell_ccs, target_n=300, n_shells=10)    
+    # note: didn't result in cells close enough to center (min was ~40 kpc away)
+
+    # Reduce cell count while respecting DM density
+    reduced_ccs = SimUtil.reduce_cells(
+        cell_ccs, target_n=300, k_neighbors=len(cell_ccs))
 
     # Compute distances
-    spherical_ccs_kpc = spherical_ccs/Params.kpc
-    cell_dis = jnp.linalg.norm(spherical_ccs_kpc, axis=-1)
+    reduced_ccs_kpc = reduced_ccs/Params.kpc
+    cell_dis = jnp.linalg.norm(reduced_ccs_kpc, axis=-1)
 
     # Get rid of zeros we appended when loading data (see in SimGrid.grid_data)
-    spherical_ccs_kpc = spherical_ccs_kpc[cell_dis != 0.]
+    reduced_ccs_kpc = reduced_ccs_kpc[cell_dis != 0.]
 
     sim_start = time.perf_counter()
 
@@ -306,11 +311,11 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
         snaps_GRID_L, snaps_DM_com, snaps_DM_num, snaps_QJ_abs, 
         dPsi_grids, cell_grids, cell_gens, DM_mass, Params.kpc, Params.s)
 
-    # Iterate over all (starting) cells in spherical grid.
+    # Iterate over all (starting) cells in reduced grid.
     # Needs to be without kpc units (thus using _kpc grid) for simulation start.
     pix_dens_cell_l = []
     tot_dens_cell_l = []
-    for c, init_xyz in enumerate(spherical_ccs_kpc):
+    for c, init_xyz in enumerate(reduced_ccs_kpc):
 
         ### ============== ###
         ### Run Simulation ###
