@@ -21,6 +21,9 @@ m_num = len(nu_m_picks)
 ### Create Deltas ###
 ### ============= ###
 
+#! to test random phases for momentum bins, unique ending to files
+end_str = "random_phases"
+
 
 Cl_folder = f"Shared/Cls"
 Delta_folder = f"Shared/Deltas"
@@ -68,8 +71,8 @@ for m_Cl in nu_m_picks:
 Deltas_z4_matrix = jnp.array(Deltas_z4_m_l)
 Deltas_z0_matrix = jnp.array(Deltas_z0_m_l)
 # (masses, q momentum bins, Npix)
-jnp.save(f"{Delta_folder}/Delta_matrix_z4.npy", Deltas_z4_matrix)
-jnp.save(f"{Delta_folder}/Delta_matrix_z0.npy", Deltas_z0_matrix)
+jnp.save(f"{Delta_folder}/Delta_matrix_z4_{end_str}.npy", Deltas_z4_matrix)
+jnp.save(f"{Delta_folder}/Delta_matrix_z0_{end_str}.npy", Deltas_z0_matrix)
 
 
 
@@ -145,11 +148,11 @@ for halo_j in range(int(pars.halo_num)):
 
 #! check if file names (if at all) end in z4 (did some manual tests with z0)
 jnp.save(
-    f"{pars.sim_dir}/Deltas_halos.npy", 
+    f"{pars.sim_dir}/Deltas_halos_{end_str}.npy", 
     jnp.array(Deltas_halos_l))
 jnp.save(
-    f"{pars.sim_dir}/pixel_densities_incl_PFs.npy", 
+    f"{pars.sim_dir}/pixel_densities_incl_PFs_{end_str}.npy", 
     jnp.array(pix_dens_incl_PFs_l))
 jnp.save(
-    f"{pars.sim_dir}/total_densities_incl_PFs.npy", 
+    f"{pars.sim_dir}/total_densities_incl_PFs_{end_str}.npy", 
     jnp.array(tot_dens_incl_PFs_l))

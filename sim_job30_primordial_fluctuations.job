@@ -28,15 +28,15 @@ conda activate neutrino_clustering
 
 # sim_fullname=no_gravity
 
-# python $HOME/neutrino_clustering/sim_script3_primordial_fluctuations.py \
+# python $HOME/neutrino_clustering/sim_script30_primordial_fluctuations.py \
 # --sim_dir $HOME/neutrino_clustering/sim_output/$sim_fullname \
 # --shared_dir $HOME/neutrino_clustering/Shared \
 # --halo_num 1
 
 
-sim_fullname=primordial_fluctuations
+sim_fullname=Dopri5_1k
 
-python $HOME/neutrino_clustering/sim_script3_primordial_fluctuations.py \
+python $HOME/neutrino_clustering/sim_script30_primordial_fluctuations.py \
 --sim_dir $HOME/neutrino_clustering/sim_output/$sim_fullname \
 --shared_dir $HOME/neutrino_clustering/Shared \
 --halo_num 30
