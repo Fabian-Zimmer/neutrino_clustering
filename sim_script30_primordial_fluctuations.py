@@ -53,7 +53,7 @@ for m_Cl in nu_m_picks:
             Cl_z4[qi], nside=simdata.Nside, lmax=None, pol=False)
         
         # np.random.seed(5)  # original  #note: seed needs to reset
-        np.random.seed(Primordial.n_qbins + seed_int)
+        np.random.seed(seed_int)
         Tmap_z0 = hp.sphtfunc.synfast(
             Cl_z0[qi], nside=simdata.Nside, lmax=None, pol=False)
 

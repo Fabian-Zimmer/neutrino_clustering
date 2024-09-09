@@ -14,6 +14,8 @@
 # rome  node- full: 128/224 ; half: 64/112 ; quarter: 32/56 ; CPUs/GB.
 # genoa node- full: 192/336 ; half: 96/168 ; quarter: 48/84 ; CPUs/GB.
 
+# only needs 5 min.
+
 module purge
 
 # Load .bashrc if it exists
