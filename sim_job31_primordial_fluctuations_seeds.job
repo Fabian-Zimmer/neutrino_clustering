@@ -1,13 +1,13 @@
 #!/bin/bash
-#SBATCH --job-name=DelSeedz0p15
+#SBATCH --job-name=SeedsPhases
 #SBATCH -p rome
-#SBATCH -t 00:50:00
+#SBATCH -t 00:10:00
 #SBATCH -N 1
 #SBATCH --tasks-per-node=1
 #SBATCH --cpus-per-task=32
 #SBATCH --mem=56000
-#SBATCH -o jobs/DelSeedz0p15.out
-#SBATCH -e jobs/DelSeedz0p15.err
+#SBATCH -o jobs/SeedsPhases.out
+#SBATCH -e jobs/SeedsPhases.err
 #SBATCH -v
 
 
@@ -26,16 +26,16 @@ conda activate neutrino_clustering
 
 # sim_fullname=no_gravity
 
-# python $HOME/neutrino_clustering/sim_script3_primordial_fluctuations_seeds.py \
+# python $HOME/neutrino_clustering/sim_script31_primordial_fluctuations_seeds.py \
 # --sim_dir $HOME/neutrino_clustering/sim_output/$sim_fullname \
 # --shared_dir $HOME/neutrino_clustering/Shared \
 # --halo_num 1
 
 
-sim_fullname=Dopri5_1k_z0p15
+sim_fullname=Dopri5_1k
 
-python $HOME/neutrino_clustering/sim_script3_primordial_fluctuations_seeds.py \
+python $HOME/neutrino_clustering/sim_script31_primordial_fluctuations_seeds.py \
 --sim_dir $HOME/neutrino_clustering/sim_output/$sim_fullname \
 --shared_dir $HOME/neutrino_clustering/Shared \
---halo_num 10 \
---redshift_cut 0.15
+--halo_num 30 \
+--redshift_cut 4

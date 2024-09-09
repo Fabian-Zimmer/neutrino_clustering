@@ -32,6 +32,9 @@ nu_m_picks = jnp.array([
 m_num = len(nu_m_picks)
 seeds = jnp.arange(10)
 
+# note: False for synchronized harmonic maps for all q bins
+random_phases = True
+
 ### ============= ###
 ### Create Deltas ###
 ### ============= ###
@@ -40,7 +43,6 @@ seeds = jnp.arange(10)
 Cl_folder = f"Shared/Cls"
 Delta_folder = f"Shared/Deltas"
 
-
 Deltas_z0_matrix, Deltas_z_cut_matrix = SimUtil.generate_DeltaTs_seeds(
     m_arr=nu_m_picks,
     Cl_dir=Cl_folder,
@@ -48,6 +50,7 @@ Deltas_z0_matrix, Deltas_z_cut_matrix = SimUtil.generate_DeltaTs_seeds(
     seeds=seeds,
     simdata=simdata,
     z_cut=z_cut,
+    phases=random_phases,
     args=Params())
 
 
@@ -128,15 +131,23 @@ for halo_j in range(int(pars.halo_num)):
         tot_dens_incl_PFs_seeds_l.append(tot_dens_seed)
 
 
-    jnp.save(
-        f"{pars.sim_dir}/Deltas_seeds_halo{halo_j+1}.npy", 
-        jnp.array(Deltas_seeds_l))
-    jnp.save(
-        f"{pars.sim_dir}/pixel_densities_incl_PFs_seeds_halo{halo_j+1}.npy", 
-        jnp.array(pix_dens_incl_PFs_seeds_l))
-    jnp.save(
-        f"{pars.sim_dir}/total_densities_incl_PFs_seeds_halo{halo_j+1}.npy", 
-        jnp.array(tot_dens_incl_PFs_seeds_l))
-
-
-# note: then can download to local repo and make skymaps, power spectra, etc.
+    if random_phases:
+        jnp.save(
+            f"{pars.sim_dir}/Deltas_seeds_halo{halo_j+1}_random_phases.npy", 
+            jnp.array(Deltas_seeds_l))
+        jnp.save(
+            f"{pars.sim_dir}/pixel_densities_incl_PFs_seeds_halo{halo_j+1}_random_phases.npy", 
+            jnp.array(pix_dens_incl_PFs_seeds_l))
+        jnp.save(
+            f"{pars.sim_dir}/total_densities_incl_PFs_seeds_halo{halo_j+1}_random_phases.npy", 
+            jnp.array(tot_dens_incl_PFs_seeds_l))
+    else:
+        jnp.save(
+            f"{pars.sim_dir}/Deltas_seeds_halo{halo_j+1}.npy", 
+            jnp.array(Deltas_seeds_l))
+        jnp.save(
+            f"{pars.sim_dir}/pixel_densities_incl_PFs_seeds_halo{halo_j+1}.npy", 
+            jnp.array(pix_dens_incl_PFs_seeds_l))
+        jnp.save(
+            f"{pars.sim_dir}/total_densities_incl_PFs_seeds_halo{halo_j+1}.npy", 
+            jnp.array(tot_dens_incl_PFs_seeds_l))
