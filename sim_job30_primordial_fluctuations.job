@@ -1,0 +1,42 @@
+#!/bin/bash
+#SBATCH --job-name=rand_seeds
+#SBATCH -p rome
+#SBATCH -t 00:10:00
+#SBATCH -N 1
+#SBATCH --tasks-per-node=1
+#SBATCH --cpus-per-task=32
+#SBATCH --mem=56000
+#SBATCH -o jobs/rand_seeds.out
+#SBATCH -e jobs/rand_seeds.err
+#SBATCH -v
+
+
+# rome  node- full: 128/224 ; half: 64/112 ; quarter: 32/56 ; CPUs/GB.
+# genoa node- full: 192/336 ; half: 96/168 ; quarter: 48/84 ; CPUs/GB.
+
+# only needs 5 min.
+
+module purge
+
+# Load .bashrc if it exists
+if [ -f "$HOME/.bashrc" ]; then
+    source $HOME/.bashrc
+fi
+
+conda activate neutrino_clustering
+
+
+# sim_fullname=no_gravity
+
+# python $HOME/neutrino_clustering/sim_script3_primordial_fluctuations.py \
+# --sim_dir $HOME/neutrino_clustering/sim_output/$sim_fullname \
+# --shared_dir $HOME/neutrino_clustering/Shared \
+# --halo_num 1
+
+
+sim_fullname=primordial_fluctuations
+
+python $HOME/neutrino_clustering/sim_script3_primordial_fluctuations.py \
+--sim_dir $HOME/neutrino_clustering/sim_output/$sim_fullname \
+--shared_dir $HOME/neutrino_clustering/Shared \
+--halo_num 30
