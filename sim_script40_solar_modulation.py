@@ -51,6 +51,11 @@ def EOMs_sun(s_val, y, args):
 
     # note: sun implementation causes nan densities 
     # note: (commenting this part out restores working no_gravity densities)
+
+    #TODO: couple things to try:
+    # 1. see older analytic_simulation script to see if there's an obious mistake here
+    # 2. see if computations can be done in different units, closer to order 1; both the space and time/redshift coordinates?
+
     # """
     # Compute gradient of sun.
     eps = (696_340/(3.086e16))*kpc
