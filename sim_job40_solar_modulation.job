@@ -30,5 +30,5 @@ sim_fullname=Dopri5_1k
 python $HOME/neutrino_clustering/sim_script40_solar_modulation.py \
 --directory $HOME/neutrino_clustering/sim_output/$sim_fullname \
 --no-pixel_densities \
---total_densities \
+--no-total_densities \
 --no-testing

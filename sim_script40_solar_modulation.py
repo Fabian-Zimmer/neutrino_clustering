@@ -26,7 +26,7 @@ df = pd.read_excel('Data/Earth-Sun_distances.xlsx')
 ES_distances = jnp.array(df.iloc[:, 1::2].apply(pd.to_numeric, errors='coerce')\
                                   .stack().reset_index(drop=True).tolist())[:-1]
 ES_distances *= Params.AU/Params.kpc
-init_dis = ES_distances[0]  # day1
+init_dis = ES_distances[0]  # day1 distance, without numerical units (is in kpc)
 
 z_int_steps = jnp.load(f'{pars.directory}/z_int_steps_1year.npy')
 s_int_steps = jnp.load(f'{pars.directory}/s_int_steps_1year.npy')
@@ -49,34 +49,19 @@ def EOMs_sun(s_val, y, args):
     # Find z corresponding to s via interpolation.
     z = Utils.jax_interpolate(s_val, s_int_steps, z_int_steps)
 
-    # note: sun implementation causes nan densities 
-    # note: (commenting this part out restores working no_gravity densities)
-
-    #TODO: couple things to try:
-    # 1. see older analytic_simulation script to see if there's an obious mistake here
-    # 2. see if computations can be done in different units, closer to order 1; both the space and time/redshift coordinates?
-
-    # """
     # Compute gradient of sun.
-    eps = (696_340/(3.086e16))*kpc
-    grad_sun = SimExec.sun_gravity(x_i, jnp.array([0.,0.,0.]), eps)
-
-    # Replace NaNs with zeros and apply cutoff
-    grad_sun = jnp.nan_to_num(
-        grad_sun, copy=False, nan=0.0, posinf=0.0, neginf=0.0)
-    cutoff = 1e-50
-    grad_sun = jnp.where(jnp.abs(grad_sun) < cutoff, 0.0, grad_sun)
+    eps = 696_340*Params.km  # solar radius in numerical units
+    grad_sun = SimExec.sun_gravity(x_i, eps)
 
     # Switch to "physical reality" here.
     grad_sun /= (kpc/s**2)
     x_i /= kpc
     u_i /= (kpc/s)
-    # """
-    # grad_sun = jnp.zeros(3)
 
-    # Hamilton eqns. for integration (global minus, s.t. we go back in time).
+    # Relativistic EOMs for integration (global minus, s.t. we go back in time).
     dyds = -jnp.array([
-        u_i, 1./(1.+z)**2 * grad_sun
+        u_i/(1+z)**2 / jnp.sqrt(jnp.sum(u_i**2) + (1+z)**-2), 
+        1/(1+z)**2 * grad_sun
     ])
 
     return dyds
@@ -96,31 +81,39 @@ def backtrack_1_neutrino(init_vector, s_int_steps, z_int_steps, kpc, s):
     term = diffrax.ODETerm(EOMs_sun)
     t0 = s_int_steps[0]
     t1 = s_int_steps[-1]
-    dt0 = (s_int_steps[2]) / 50
-    
+    dt0 = jnp.median(jnp.diff(s_int_steps)) / 1000
 
     ### ------------------ ###
     ### Integration Solver ###
     ### ------------------ ###
-    solver = diffrax.Dopri5()
-    stepsize_controller = diffrax.ConstantStepSize()
 
-    args = (s_int_steps, z_int_steps, kpc, s)
+    solver = diffrax.Tsit5()
+    stepsize_controller = diffrax.PIDController(rtol=1e-3, atol=1e-6)
 
     # Specify timesteps where solutions should be saved
-    saveat = diffrax.SaveAt(ts=jnp.array(s_int_steps))
+    saveat = diffrax.SaveAt(steps=True, ts=jnp.array(s_int_steps))
+
+    # Common arguments for solver
+    args = (s_int_steps, z_int_steps, kpc, s)
     
     # Solve the coupled ODEs, i.e. the EOMs of the neutrino
     sol = diffrax.diffeqsolve(
         term, solver, 
         t0=t0, t1=t1, 
         dt0=dt0, 
-        y0=y0, max_steps=10000,
+        y0=y0, max_steps=100_000,
         saveat=saveat, 
         stepsize_controller=stepsize_controller,
-        args=args)
-    
-    trajectory = sol.ys.reshape(365,6)
+        args=args, throw=False)
+
+    # note: integration stops close to end_point and timesteps then suddenly
+    # note: switch to inf values. We save solution up to last finite value
+    # Get all timesteps closest to s_int_steps (days in the year)
+    day_indices = jnp.argmin(jnp.abs(sol.ts[:, None] - s_int_steps), axis=0)
+    trajectory = sol.ys[day_indices].reshape(365,6)
+
+    # Keep everything
+    # return sol.ts[day_indices], sol.stats, trajectory
 
     # Only return the initial [0] and last [-1] positions and velocities
     return jnp.stack([trajectory[0], trajectory[-1]])
@@ -139,9 +132,16 @@ def simulate_neutrinos_1_pix(init_xyz, init_vels, common_args):
     init_vectors = jnp.array(
         [jnp.concatenate((init_xyz, init_vels[k])) for k in range(nus)])
 
-
     trajectories = jnp.array([
         backtrack_1_neutrino(vec, *common_args) for vec in init_vectors])
+
+    # note: for individual testing
+    """
+    init_vector = jnp.concatenate((init_xyz, init_vels))
+    sol_ts, sol_stats, trajectory = backtrack_1_neutrino(
+        init_vector, *common_args)
+    return sol_ts, sol_stats, trajectory
+    """
     
     return trajectories  # shape = (neutrinos, 2, 6)
 
@@ -163,7 +163,7 @@ jnp.save(f'{pars.directory}/init_xyz_{end_str}.npy', init_xyz)
 ### Run Simulation ###
 ### ============== ###
 
-print(f"*** Simulation for modulation ***")
+print(f"*** Simulation for {end_str}/365 ***")
 
 sim_start = time.perf_counter()
 

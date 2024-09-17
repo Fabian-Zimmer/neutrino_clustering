@@ -177,15 +177,6 @@ def backtrack_1_neutrino(
     ### ------------- ###
     solver = diffrax.Dopri5()
     stepsize_controller = diffrax.PIDController(rtol=1e-3, atol=1e-6)
-    # note: no change for tighter rtol and atol, e.g. rtol=1e-5, atol=1e-9
-
-
-    ### ------------- ###
-    ### Dopri8 Solver ###
-    ### ------------- ###
-    # solver = diffrax.Dopri8()
-    # stepsize_controller = diffrax.PIDController(rtol=1e-7, atol=1e-9)
-
 
     # Specify timesteps where solutions should be saved
     saveat = diffrax.SaveAt(ts=jnp.array(s_int_steps))
