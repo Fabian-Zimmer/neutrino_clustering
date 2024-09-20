@@ -6,18 +6,12 @@ total_start = time.perf_counter()
 # Argparse inputs.
 parser = argparse.ArgumentParser()
 parser.add_argument('--directory', required=True)
-parser.add_argument(
-    '--pixel_densities', required=True, action=argparse.BooleanOptionalAction)
-parser.add_argument(
-    '--total_densities', required=True, action=argparse.BooleanOptionalAction)
+parser.add_argument('-hn', '--halo_num', required=True)
 parser.add_argument(
     '--testing', required=True, action=argparse.BooleanOptionalAction)
 pars = parser.parse_args()
 
-# Simulation parameters.
-with open(f'{pars.directory}/sim_parameters.yaml', 'r') as file:
-    sim_setup = yaml.safe_load(file)
-
+# Instead of SimData.simulation_setup, define only parameters you need
 CPUs_sim = 128
 neutrinos = 1000
 
@@ -31,6 +25,7 @@ init_dis = ES_distances[0]  # day1 distance, without numerical units (is in kpc)
 z_int_steps = jnp.load(f'{pars.directory}/z_int_steps_1year.npy')
 s_int_steps = jnp.load(f'{pars.directory}/s_int_steps_1year.npy')
 nu_massrange = jnp.load(f'{pars.directory}/neutrino_massrange_eV.npy')*Params.eV
+simdata = SimData(pars.directory)
 
 
 @jax.jit
@@ -87,7 +82,7 @@ def backtrack_1_neutrino(init_vector, s_int_steps, z_int_steps, kpc, s):
     ### Integration Solver ###
     ### ------------------ ###
 
-    solver = diffrax.Tsit5()
+    solver = diffrax.Dopri5()
     stepsize_controller = diffrax.PIDController(rtol=1e-3, atol=1e-6)
 
     # Specify timesteps where solutions should be saved
@@ -101,7 +96,7 @@ def backtrack_1_neutrino(init_vector, s_int_steps, z_int_steps, kpc, s):
         term, solver, 
         t0=t0, t1=t1, 
         dt0=dt0, 
-        y0=y0, max_steps=100_000,
+        y0=y0, max_steps=10_000,
         saveat=saveat, 
         stepsize_controller=stepsize_controller,
         args=args, throw=False)
@@ -111,9 +106,6 @@ def backtrack_1_neutrino(init_vector, s_int_steps, z_int_steps, kpc, s):
     # Get all timesteps closest to s_int_steps (days in the year)
     day_indices = jnp.argmin(jnp.abs(sol.ts[:, None] - s_int_steps), axis=0)
     trajectory = sol.ys[day_indices].reshape(365,6)
-
-    # Keep everything
-    # return sol.ts[day_indices], sol.stats, trajectory
 
     # Only return the initial [0] and last [-1] positions and velocities
     return jnp.stack([trajectory[0], trajectory[-1]])
@@ -134,14 +126,6 @@ def simulate_neutrinos_1_pix(init_xyz, init_vels, common_args):
 
     trajectories = jnp.array([
         backtrack_1_neutrino(vec, *common_args) for vec in init_vectors])
-
-    # note: for individual testing
-    """
-    init_vector = jnp.concatenate((init_xyz, init_vels))
-    sol_ts, sol_stats, trajectory = backtrack_1_neutrino(
-        init_vector, *common_args)
-    return sol_ts, sol_stats, trajectory
-    """
     
     return trajectories  # shape = (neutrinos, 2, 6)
 
@@ -169,7 +153,6 @@ sim_start = time.perf_counter()
 
 with open(f'{pars.directory}/sim_parameters.yaml', 'r') as file:
     sim_setup = yaml.safe_load(file)
-
 pix_sr_sim = sim_setup['pix_sr']        # Size (in sr) of all-sky healpixels
 Npix = sim_setup["Npix"]                # Number of healpixels 
 nu_per_pix = sim_setup["momentum_num"]  # Number of neutrinos per healpixel
@@ -198,7 +181,11 @@ else:
 
 
 # Save all sky neutrino vectors for current halo
-jnp.save(f'{pars.directory}/vectors_{end_str}.npy', nu_vectors)
+if pars.testing:
+    jnp.save(f'{pars.directory}/vectors_{end_str}_TEST.npy', nu_vectors)
+else:
+    jnp.save(f'{pars.directory}/vectors_{end_str}.npy', nu_vectors)
+
 
 sim_time = time.perf_counter()-sim_start
 print(f"Simulation time: {sim_time/60.:.2f} min, {sim_time/(60**2):.2f} h")
@@ -208,42 +195,43 @@ print(f"Simulation time: {sim_time/60.:.2f} min, {sim_time/(60**2):.2f} h")
 ### Compute number densities ###
 ### ======================== ###
 
-if pars.pixel_densities:
+"""
+ana_start = time.perf_counter()
 
-    # Compute individual number densities for each healpixel
-    pix_start = time.perf_counter()
+# Compute individual number densities for each healpixel
+pix_start = time.perf_counter()
 
-    nu_allsky_masses = jnp.array([0.01, 0.05, 0.1, 0.2, 0.3])*Params.eV
-    pix_dens = Physics.number_densities_all_sky(
-        v_arr=nu_vectors[..., 3:],
-        m_arr=nu_allsky_masses,
-        pix_sr=pix_sr_sim,
-        args=Params())
-    pix_dens_l.append(jnp.squeeze(pix_dens))
+nu_allsky_masses = jnp.array([0.01, 0.05, 0.1, 0.2, 0.3])*Params.eV
+pix_dens = Physics.number_densities_all_sky(
+    v_arr=nu_vectors[..., 3:],
+    m_arr=nu_allsky_masses,
+    pix_sr=pix_sr_sim,
+    args=Params())
+pix_dens_l.append(jnp.squeeze(pix_dens))
 
-    pix_time = time.perf_counter() - pix_start
+pix_time = time.perf_counter() - pix_start
 
-    jnp.save(
-        f"{pars.directory}/pixel_densities_{end_str}.npy", jnp.array(pix_dens_l))
-    print(f"Analysis time: {pix_time/60.:.2f} min, {pix_time/(60**2):.2f} h\n")
+jnp.save(
+    f"{pars.directory}/pixel_densities_{end_str}.npy", jnp.array(pix_dens_l))
 
-if pars.total_densities:
+# Compute total number density, by using all neutrino vectors for integral
+tot_start = time.perf_counter()
 
-    # Compute total number density, by using all neutrino vectors for integral
-    tot_start = time.perf_counter()
+tot_dens = Physics.number_densities_mass_range(
+    v_arr=nu_vectors.reshape(-1, 2, 6)[..., 3:], 
+    m_arr=nu_massrange, 
+    pix_sr=4*Params.Pi,
+    args=Params())
+tot_dens_l.append(jnp.squeeze(tot_dens))
 
-    tot_dens = Physics.number_densities_mass_range(
-        v_arr=nu_vectors.reshape(-1, 2, 6)[..., 3:], 
-        m_arr=nu_massrange, 
-        pix_sr=4*Params.Pi,
-        args=Params())
-    tot_dens_l.append(jnp.squeeze(tot_dens))
+tot_time = time.perf_counter() - tot_start
 
-    tot_time = time.perf_counter() - tot_start
+jnp.save(
+    f"{pars.directory}/total_densities_{end_str}.npy", jnp.array(tot_dens_l))
 
-    jnp.save(
-        f"{pars.directory}/total_densities_{end_str}.npy", jnp.array(tot_dens_l))
-    print(f"Analysis time: {tot_time/60.:.2f} min, {tot_time/(60**2):.2f} h\n")
+ana_time = time.perf_counter() - ana_start
+print(f"Analysis time: {ana_time/60.:.2f} min, {ana_time/(60**2):.2f} h\n")
+"""
 
 
 total_time = time.perf_counter() - total_start

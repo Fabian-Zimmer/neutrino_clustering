@@ -1,13 +1,13 @@
 #!/bin/bash
-#SBATCH --job-name=DaysSim
+#SBATCH --job-name=DaysTest
 #SBATCH -p rome
 #SBATCH -t 00:10:00
 #SBATCH -N 1
 #SBATCH --tasks-per-node=1
 #SBATCH --cpus-per-task=128
 #SBATCH --mem=224000
-#SBATCH -o jobs/DaysSim.out
-#SBATCH -e jobs/DaysSim.err
+#SBATCH -o jobs/DaysTest.out
+#SBATCH -e jobs/DaysTest.err
 #SBATCH -v
 
 
@@ -29,6 +29,5 @@ sim_fullname=Dopri5_1k
 
 python $HOME/neutrino_clustering/sim_script40_solar_modulation.py \
 --directory $HOME/neutrino_clustering/sim_output/$sim_fullname \
---no-pixel_densities \
---no-total_densities \
---no-testing
+--halo_num 2 \
+--testing
