@@ -22,8 +22,15 @@ ES_distances = jnp.array(df.iloc[:, 1::2].apply(pd.to_numeric, errors='coerce')\
 ES_distances *= Params.AU/Params.kpc
 init_dis = ES_distances[0]  # day1 distance, without numerical units (is in kpc)
 
+# Redshift from today until 1 year ago
 z_int_steps = jnp.load(f'{pars.directory}/z_int_steps_1year.npy')
+
+# Corresponding integration variable for EOMs
 s_int_steps = jnp.load(f'{pars.directory}/s_int_steps_1year.npy')
+
+# Corresponding lookback time
+t_int_steps = jnp.load(f'{pars.directory}/t_int_steps_1year.npy')
+
 nu_massrange = jnp.load(f'{pars.directory}/neutrino_massrange_eV.npy')*Params.eV
 simdata = SimData(pars.directory)
 
@@ -32,7 +39,7 @@ simdata = SimData(pars.directory)
 def EOMs_sun(s_val, y, args):
 
     # Unpack the input data
-    s_int_steps, z_int_steps, kpc, s = args
+    s_int_steps, z_int_steps, t_int_steps, kpc, km, s = args
 
     # Initialize vector.
     x_i, u_i = y
@@ -41,12 +48,18 @@ def EOMs_sun(s_val, y, args):
     x_i *= kpc
     u_i *= (kpc/s)
 
-    # Find z corresponding to s via interpolation.
+    # Find z (redshift) corresponding to s via interpolation.
     z = Utils.jax_interpolate(s_val, s_int_steps, z_int_steps)
 
+    # Find t (lookback time) corresponding to s via interpolation.
+    t = Utils.jax_interpolate(s_val, s_int_steps, t_int_steps)
+
+    # Find current position of Sun w.r.t. CNB(==CMB) frame
+    sun_position = SimExec.update_sun_position(t, km, s)
+
     # Compute gradient of sun.
-    eps = 696_340*Params.km  # solar radius in numerical units
-    grad_sun = SimExec.sun_gravity(x_i, eps)
+    eps = 696_340*km  # solar radius in numerical units
+    grad_sun = SimExec.sun_gravity(x_i, eps, sun_position)
 
     # Switch to "physical reality" here.
     grad_sun /= (kpc/s**2)
@@ -63,7 +76,8 @@ def EOMs_sun(s_val, y, args):
 
 
 @jax.jit
-def backtrack_1_neutrino(init_vector, s_int_steps, z_int_steps, kpc, s):
+def backtrack_1_neutrino(
+    init_vector, s_int_steps, z_int_steps, t_int_steps, km, kpc, s):
 
     """
     Simulate trajectory of 1 neutrino. Input is 6-dim. vector containing starting positions and velocities of neutrino. Solves ODEs given by the EOMs function with an jax-accelerated integration routine, using the diffrax library. Output are the positions and velocities at each timestep, which was specified with diffrax.SaveAt. 
@@ -88,8 +102,10 @@ def backtrack_1_neutrino(init_vector, s_int_steps, z_int_steps, kpc, s):
     # Specify timesteps where solutions should be saved
     saveat = diffrax.SaveAt(steps=True, ts=jnp.array(s_int_steps))
 
+    #? computing time is too long...is it that we save all steps (10 - 100k)?
+
     # Common arguments for solver
-    args = (s_int_steps, z_int_steps, kpc, s)
+    args = (s_int_steps, z_int_steps, t_int_steps, kpc, km, s)
     
     # Solve the coupled ODEs, i.e. the EOMs of the neutrino
     sol = diffrax.diffeqsolve(
@@ -160,7 +176,9 @@ nu_per_pix = sim_setup["momentum_num"]  # Number of neutrinos per healpixel
 init_vels = np.load(f'{pars.directory}/initial_velocities.npy')  
 # shape = (Npix, neutrinos per pixel, 3)
 
-common_args = (s_int_steps, z_int_steps, Params.kpc, Params.s)
+common_args = (
+    s_int_steps, z_int_steps, t_int_steps, 
+    Params.kpc, Params.km, Params.s)
 
 if pars.testing:
 
