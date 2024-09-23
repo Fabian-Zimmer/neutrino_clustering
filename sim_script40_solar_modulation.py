@@ -15,22 +15,6 @@ pars = parser.parse_args()
 CPUs_sim = 128
 neutrinos = 1000
 
-# Load Earth-Sun distances
-df = pd.read_excel('Data/Earth-Sun_distances.xlsx')
-ES_distances = jnp.array(df.iloc[:, 1::2].apply(pd.to_numeric, errors='coerce')\
-                                  .stack().reset_index(drop=True).tolist())[:-1]
-ES_distances *= Params.AU/Params.kpc
-init_dis = ES_distances[0]  # day1 distance, without numerical units (is in kpc)
-
-# Redshift from today until 1 year ago
-z_int_steps = jnp.load(f'{pars.directory}/z_int_steps_1year.npy')
-
-# Corresponding integration variable for EOMs
-s_int_steps = jnp.load(f'{pars.directory}/s_int_steps_1year.npy')
-
-# Corresponding lookback time
-t_int_steps = jnp.load(f'{pars.directory}/t_int_steps_1year.npy')
-
 nu_massrange = jnp.load(f'{pars.directory}/neutrino_massrange_eV.npy')*Params.eV
 simdata = SimData(pars.directory)
 
@@ -100,7 +84,8 @@ def backtrack_1_neutrino(
     stepsize_controller = diffrax.PIDController(rtol=1e-3, atol=1e-6)
 
     # Specify timesteps where solutions should be saved
-    saveat = diffrax.SaveAt(steps=True, ts=jnp.array(s_int_steps))
+    # saveat = diffrax.SaveAt(steps=True, ts=jnp.array(s_int_steps))
+    saveat = diffrax.SaveAt(ts=jnp.array(s_int_steps))
 
     # Common arguments for solver
     args = (s_int_steps, z_int_steps, t_int_steps, kpc, km, s)
@@ -110,7 +95,7 @@ def backtrack_1_neutrino(
         term, solver, 
         t0=t0, t1=t1, 
         dt0=dt0, 
-        y0=y0, max_steps=10_000,
+        y0=y0, max_steps=10000,
         saveat=saveat, 
         stepsize_controller=stepsize_controller,
         args=args, throw=False)
@@ -118,11 +103,12 @@ def backtrack_1_neutrino(
     # note: integration stops close to end_point and timesteps then suddenly
     # note: switch to inf values. We save solution up to last finite value
     # Get all timesteps closest to s_int_steps (days in the year)
-    day_indices = jnp.argmin(jnp.abs(sol.ts[:, None] - s_int_steps), axis=0)
-    trajectory = sol.ys[day_indices].reshape(365,6)
+    # day_indices = jnp.argmin(jnp.abs(sol.ts[:, None] - s_int_steps), axis=0)
+    # trajectory = sol.ys[day_indices].reshape(365,6)
+    trajectory = sol.ys.reshape(-1,6)
 
-    # Only return the initial [0] and last [-1] positions and velocities
-    return jnp.stack([trajectory[0], trajectory[-1]])
+    # Only return the initial [0] and 2nd last [-2] positions and velocities
+    return jnp.stack([trajectory[0], trajectory[-2]])
 
 
 def simulate_neutrinos_1_pix(init_xyz, init_vels, common_args):
@@ -142,6 +128,26 @@ def simulate_neutrinos_1_pix(init_xyz, init_vels, common_args):
         backtrack_1_neutrino(vec, *common_args) for vec in init_vectors])
     
     return trajectories  # shape = (neutrinos, 2, 6)
+
+
+
+# Load Earth-Sun distances
+df = pd.read_excel('Data/Earth-Sun_distances.xlsx')
+ES_distances = jnp.array(df.iloc[:, 1::2].apply(pd.to_numeric, errors='coerce')\
+                                  .stack().reset_index(drop=True).tolist())[:-1]
+ES_distances *= Params.AU/Params.kpc
+init_dis = ES_distances[0]  # day1 distance, without numerical units (is in kpc)
+
+# Redshift from today until 1 year ago
+z_int_steps = jnp.load(f'{pars.directory}/z_int_steps_1year.npy')
+
+# Corresponding integration variable for EOMs
+s_int_steps = jnp.load(f'{pars.directory}/s_int_steps_1year.npy')
+
+# Corresponding lookback time
+t_int_steps = jnp.load(f'{pars.directory}/t_int_steps_1year.npy')
+
+
 
 
 
@@ -178,14 +184,11 @@ common_args = (
     s_int_steps, z_int_steps, t_int_steps, 
     Params.kpc, Params.km, Params.s)
 
-"""
+# """
 if pars.testing:
-
     # Simulate all neutrinos along 1 pixel, without multiprocessing
     nu_vectors = simulate_neutrinos_1_pix(init_xyz, init_vels[0], common_args)
-
 else:
-
     # Use ProcessPoolExecutor to distribute the simulations across processes:
     # 1 process (i.e. CPU) simulates all neutrinos for one healpixel.
     with ProcessPoolExecutor(CPUs_sim) as executor:
@@ -195,9 +198,10 @@ else:
         
         # Wait for all futures to complete and collect results in order
         nu_vectors = jnp.array([future.result() for future in futures])
+# """
+
+
 """
-
-
 if pars.testing:
     # Simulate all neutrinos along 1 pixel, without multiprocessing
     nu_vectors = simulate_neutrinos_1_pix(init_xyz, init_vels[0], common_args)
@@ -220,6 +224,7 @@ else:
                 print(f"Processed {completed}/{Npix} pixels")
     
     nu_vectors = jnp.array(nu_vectors)
+"""
 
 
 # Save all sky neutrino vectors for current halo
