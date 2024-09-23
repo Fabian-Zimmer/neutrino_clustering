@@ -52,7 +52,7 @@ def EOMs_sun(s_val, y, args):
     z = Utils.jax_interpolate(s_val, s_int_steps, z_int_steps)
 
     # Find t (lookback time) corresponding to s via interpolation.
-    t = Utils.jax_interpolate(s_val, s_int_steps, t_int_steps)
+    t = Utils.jax_interpolate(s_val, s_int_steps, t_int_steps)*s
 
     # Find current position of Sun w.r.t. CNB(==CMB) frame
     sun_position = SimExec.update_sun_position(t, km, s)
@@ -77,7 +77,7 @@ def EOMs_sun(s_val, y, args):
 
 @jax.jit
 def backtrack_1_neutrino(
-    init_vector, s_int_steps, z_int_steps, t_int_steps, km, kpc, s):
+    init_vector, s_int_steps, z_int_steps, t_int_steps, kpc, km, s):
 
     """
     Simulate trajectory of 1 neutrino. Input is 6-dim. vector containing starting positions and velocities of neutrino. Solves ODEs given by the EOMs function with an jax-accelerated integration routine, using the diffrax library. Output are the positions and velocities at each timestep, which was specified with diffrax.SaveAt. 
@@ -101,8 +101,6 @@ def backtrack_1_neutrino(
 
     # Specify timesteps where solutions should be saved
     saveat = diffrax.SaveAt(steps=True, ts=jnp.array(s_int_steps))
-
-    #? computing time is too long...is it that we save all steps (10 - 100k)?
 
     # Common arguments for solver
     args = (s_int_steps, z_int_steps, t_int_steps, kpc, km, s)
@@ -180,6 +178,7 @@ common_args = (
     s_int_steps, z_int_steps, t_int_steps, 
     Params.kpc, Params.km, Params.s)
 
+"""
 if pars.testing:
 
     # Simulate all neutrinos along 1 pixel, without multiprocessing
@@ -196,6 +195,31 @@ else:
         
         # Wait for all futures to complete and collect results in order
         nu_vectors = jnp.array([future.result() for future in futures])
+"""
+
+
+if pars.testing:
+    # Simulate all neutrinos along 1 pixel, without multiprocessing
+    nu_vectors = simulate_neutrinos_1_pix(init_xyz, init_vels[0], common_args)
+else:
+    # Use ProcessPoolExecutor to distribute the simulations across processes:
+    # 1 process (i.e. CPU) simulates all neutrinos for one healpixel
+    nu_vectors = []
+    with ProcessPoolExecutor(CPUs_sim) as executor:
+        futures = [
+            executor.submit(
+                simulate_neutrinos_1_pix, init_xyz, init_vels[pixel], common_args) 
+            for pixel in range(Npix)
+        ]
+        
+        completed = 0
+        for future in as_completed(futures):
+            nu_vectors.append(future.result())
+            completed += 1
+            if completed % 100 == 0:
+                print(f"Processed {completed}/{Npix} pixels")
+    
+    nu_vectors = jnp.array(nu_vectors)
 
 
 # Save all sky neutrino vectors for current halo
