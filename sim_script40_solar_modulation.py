@@ -95,19 +95,16 @@ def backtrack_1_neutrino(
         term, solver, 
         t0=t0, t1=t1, 
         dt0=dt0, 
-        y0=y0, max_steps=10000,
+        y0=y0, max_steps=5000,
         saveat=saveat, 
         stepsize_controller=stepsize_controller,
         args=args, throw=False)
-
-    # note: integration stops close to end_point and timesteps then suddenly
-    # note: switch to inf values. We save solution up to last finite value
-    # Get all timesteps closest to s_int_steps (days in the year)
-    # day_indices = jnp.argmin(jnp.abs(sol.ts[:, None] - s_int_steps), axis=0)
-    # trajectory = sol.ys[day_indices].reshape(365,6)
+    
+    # Full neutrino trajectory (positions and velocities) for 1 year
     trajectory = sol.ys.reshape(-1,6)
 
-    # Only return the initial [0] and 2nd last [-2] positions and velocities
+    # note: integration stops close to end_point and timesteps then suddenly
+    # note: switch to inf values. So we take [-2] (last finite) values.
     return jnp.stack([trajectory[0], trajectory[-2]])
 
 
