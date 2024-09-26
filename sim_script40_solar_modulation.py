@@ -32,20 +32,19 @@ def EOMs_sun(s_val, y, args):
     x_i *= kpc
     u_i *= (kpc/s)
 
-    # Find z (redshift) corresponding to s via interpolation.
+    # Find z (redshift) corresponding to s_val via interpolation.
     z = Utils.jax_interpolate(s_val, s_int_steps, z_int_steps)
 
-    # Find t (lookback time) corresponding to s via interpolation.
+    # Find t (lookback time) corresponding to s_val via interpolation.
     t = Utils.jax_interpolate(s_val, s_int_steps, t_int_steps)*s
 
-    # Find current position of Sun w.r.t. CNB(==CMB) frame
-    idx = jnp.abs(t_int_steps - t).argmin()
-    # sun_position = SimExec.update_sun_position_at_origin(t, km, s)
-    sun_position = SimExec.update_sun_position(t, sun_pos, sun_vel, km, s)
+    # Compute current position of Sun w.r.t. CNB(==CMB) frame, given starting 
+    # position and velocity vectors of current day being simulated
+    sun_pos_t = sun_pos_init - sun_vel_init*t
 
     # Compute gradient of sun.
     eps = 696_340*km  # solar radius in numerical units
-    grad_sun = SimExec.sun_gravity(x_i, eps, sun_position)
+    grad_sun = SimExec.sun_gravity(x_i, eps, sun_pos_t)
 
     # Switch to "physical reality" here.
     grad_sun /= (kpc/s**2)
@@ -137,13 +136,13 @@ def simulate_neutrinos_1_pix(init_xyz, init_vels, common_args):
 sun_positions, sun_velocities = SimPlot.calculate_sun_position_and_velocity(
     2024)
 sun_positions *= Params.AU
-sun_velocities *=
+sun_velocities *= Params.km/Params.s
 
 # Repeat sun positions and velocities arrays to match length of special 2year+1
-sun_pos_tiled = jnp.repeat(sun_positions, 2, axis=0)
-sun_pos_ext = jnp.append(sun_pos_tiled, sun_pos_tiled[0][None,:], axis=0)
-sun_vel_tiled = jnp.repeat(sun_velocities_CNB, 2, axis=0)
-sun_vel_ext = jnp.append(sun_vel_tiled, sun_vel_tiled[0][None,:], axis=0)
+# sun_pos_tiled = jnp.repeat(sun_positions, 2, axis=0)
+# sun_pos_ext = jnp.append(sun_pos_tiled, sun_pos_tiled[0][None,:], axis=0)
+# sun_vel_tiled = jnp.repeat(sun_velocities_CNB, 2, axis=0)
+# sun_vel_ext = jnp.append(sun_vel_tiled, sun_vel_tiled[0][None,:], axis=0)
 
 # Redshift from today until (365*2)+1 days ago
 z_int_steps_all = jnp.load(f'{pars.directory}/z_int_steps_2years.npy')
@@ -165,24 +164,24 @@ jnp.save(f'{pars.directory}/init_xyz_modulation.npy', init_xyz)
 # Lists for pixel and total number densities
 tot_dens_days_l = []
 pix_dens_days_l = []
-# for di, day in enumerate(range(365)):
-for di, day in enumerate(range(10)):  #note: testing
+# for day, day in enumerate(range(365)):
+for day in enumerate(range(10)):  #note: testing
 
     # Select 1 years worth of redshift/time steps, +1 because we select second 
     # last time step in integration routine due to infinities issue (see above)
-    z_int_steps = z_int_steps_all[di:di+365+1]
-    s_int_steps = s_int_steps_all[di:di+365+1]
-    t_int_steps = t_int_steps_all[di:di+365+1]
+    z_int_steps = z_int_steps_all[day:day+365+1]
+    s_int_steps = s_int_steps_all[day:day+365+1]
+    t_int_steps = t_int_steps_all[day:day+365+1]
 
     # File name ending
-    end_str = f"day{di+1}"
+    end_str = f"day{day+1}"
 
 
     ### ============== ###
     ### Run Simulation ###
     ### ============== ###
 
-    print(f"*** Simulation for {end_str}/365 ***")
+    print(f"*** Simulation for day {day+1}/365 ***")
     sim_start = time.perf_counter()
 
     # Load initial velocities, same for each day due to Earth-GC frame
@@ -190,7 +189,8 @@ for di, day in enumerate(range(10)):  #note: testing
     # shape = (Npix, neutrinos per pixel, 3)
 
     common_args = (
-        s_int_steps, z_int_steps, t_int_steps, sun_pos_ext, sun_vel_ext, 
+        s_int_steps, z_int_steps, t_int_steps, 
+        sun_positions[day], sun_velocities[day], 
         Params.kpc, Params.km, Params.s)
 
     # """
