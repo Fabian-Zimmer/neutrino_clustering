@@ -40,7 +40,7 @@ def EOMs_sun(s_val, y, args):
 
     # Compute current position of Sun w.r.t. CNB(==CMB) frame, given starting 
     # position and velocity vectors of current day being simulated
-    sun_pos_t = sun_pos_init - sun_vel_init*t
+    sun_pos_t = sun_pos - sun_vel*t
 
     # Compute gradient of sun.
     eps = 696_340*km  # solar radius in numerical units
@@ -165,7 +165,7 @@ jnp.save(f'{pars.directory}/init_xyz_modulation.npy', init_xyz)
 tot_dens_days_l = []
 pix_dens_days_l = []
 # for day, day in enumerate(range(365)):
-for day in enumerate(range(10)):  #note: testing
+for day in range(10):  #note: testing
 
     # Select 1 years worth of redshift/time steps, +1 because we select second 
     # last time step in integration routine due to infinities issue (see above)
