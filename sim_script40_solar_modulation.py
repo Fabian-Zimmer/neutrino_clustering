@@ -128,154 +128,160 @@ def simulate_neutrinos_1_pix(init_xyz, init_vels, common_args):
 
 
 
-# Load Earth-Sun distances
-df = pd.read_excel('Data/Earth-Sun_distances.xlsx')
-ES_distances = jnp.array(df.iloc[:, 1::2].apply(pd.to_numeric, errors='coerce')\
-                                  .stack().reset_index(drop=True).tolist())[:-1]
-ES_distances *= Params.AU/Params.kpc
-init_dis = ES_distances[0]  # day1 distance, without numerical units (is in kpc)
+# Load Sun's positions and velocity vectors (w.r.t. CNB==CMB) in Earth-GC frame
+sun_positions, sun_velocities_CNB = SimPlot.calculate_sun_position_and_velocity
+sun_positions *= Params.AU/Params.kpc
 
-# Redshift from today until 1 year ago
+# Redshift from today until (365*2)+1 days ago
+# z_int_steps_all = jnp.load(f'{pars.directory}/z_int_steps_2years.npy')
 z_int_steps = jnp.load(f'{pars.directory}/z_int_steps_1year.npy')
 
 # Corresponding integration variable for EOMs
+# s_int_steps_all = jnp.load(f'{pars.directory}/s_int_steps_2years.npy')
 s_int_steps = jnp.load(f'{pars.directory}/s_int_steps_1year.npy')
 
 # Corresponding lookback time
+# t_int_steps_all = jnp.load(f'{pars.directory}/t_int_steps_2years.npy')
 t_int_steps = jnp.load(f'{pars.directory}/t_int_steps_1year.npy')
 
+# When using 2year long arrays:
+# Select 1 years worth of redshift/time steps
+# for di, day in enumerate(range(365)):
+#     z_int_steps = z_int_steps_all[di:di+366]
+#     s_int_steps = s_int_steps_all[di:di+366]
+#     t_int_steps = t_int_steps_all[di:di+366]
+
+for di, day in enumerate(range(10)):  #note: testing
+
+    # Lists for pixel and total number densities
+    pix_dens_l = []
+    tot_dens_l = []
+
+    # File name ending
+    end_str = f"day{di+1}"
+
+    # Initial position (Earth)
+    init_dis = ES_distances[di]  # without numerical units (is in kpc)
+    init_xyz = np.array([float(init_dis), 0., 0.])
+    jnp.save(f'{pars.directory}/init_xyz_{end_str}.npy', init_xyz)
 
 
+    ### ============== ###
+    ### Run Simulation ###
+    ### ============== ###
+
+    print(f"*** Simulation for {end_str}/365 ***")
+
+    sim_start = time.perf_counter()
+
+    with open(f'{pars.directory}/sim_parameters.yaml', 'r') as file:
+        sim_setup = yaml.safe_load(file)
+    pix_sr_sim = sim_setup['pix_sr']        # Size (in sr) of all-sky healpixels
+    Npix = sim_setup["Npix"]                # Number of healpixels 
+    nu_per_pix = sim_setup["momentum_num"]  # Number of neutrinos per healpixel
+
+    init_vels = np.load(f'{pars.directory}/initial_velocities.npy')  
+    # shape = (Npix, neutrinos per pixel, 3)
+
+    common_args = (
+        s_int_steps, z_int_steps, t_int_steps, 
+        Params.kpc, Params.km, Params.s)
+
+    # """
+    if pars.testing:
+        # Simulate all neutrinos along 1 pixel, without multiprocessing
+        nu_vectors = simulate_neutrinos_1_pix(init_xyz, init_vels[0], common_args)
+    else:
+        # Use ProcessPoolExecutor to distribute the simulations across processes:
+        # 1 process (i.e. CPU) simulates all neutrinos for one healpixel.
+        with ProcessPoolExecutor(CPUs_sim) as executor:
+            futures = [
+                executor.submit(
+                    simulate_neutrinos_1_pix, init_xyz, init_vels[pixel], common_args) for pixel in range(Npix)]
+            
+            # Wait for all futures to complete and collect results in order
+            nu_vectors = jnp.array([future.result() for future in futures])
+    # """
 
 
-# Lists for pixel and total number densities
-pix_dens_l = []
-tot_dens_l = []
-
-# File name ending
-end_str = f'day1'
-
-# Initial position (Earth)
-init_xyz = np.array([float(init_dis), 0., 0.])
-jnp.save(f'{pars.directory}/init_xyz_{end_str}.npy', init_xyz)
-
-
-### ============== ###
-### Run Simulation ###
-### ============== ###
-
-print(f"*** Simulation for {end_str}/365 ***")
-
-sim_start = time.perf_counter()
-
-with open(f'{pars.directory}/sim_parameters.yaml', 'r') as file:
-    sim_setup = yaml.safe_load(file)
-pix_sr_sim = sim_setup['pix_sr']        # Size (in sr) of all-sky healpixels
-Npix = sim_setup["Npix"]                # Number of healpixels 
-nu_per_pix = sim_setup["momentum_num"]  # Number of neutrinos per healpixel
-
-init_vels = np.load(f'{pars.directory}/initial_velocities.npy')  
-# shape = (Npix, neutrinos per pixel, 3)
-
-common_args = (
-    s_int_steps, z_int_steps, t_int_steps, 
-    Params.kpc, Params.km, Params.s)
-
-# """
-if pars.testing:
-    # Simulate all neutrinos along 1 pixel, without multiprocessing
-    nu_vectors = simulate_neutrinos_1_pix(init_xyz, init_vels[0], common_args)
-else:
-    # Use ProcessPoolExecutor to distribute the simulations across processes:
-    # 1 process (i.e. CPU) simulates all neutrinos for one healpixel.
-    with ProcessPoolExecutor(CPUs_sim) as executor:
-        futures = [
-            executor.submit(
-                simulate_neutrinos_1_pix, init_xyz, init_vels[pixel], common_args) for pixel in range(Npix)]
+    """
+    if pars.testing:
+        # Simulate all neutrinos along 1 pixel, without multiprocessing
+        nu_vectors = simulate_neutrinos_1_pix(init_xyz, init_vels[0], common_args)
+    else:
+        # Use ProcessPoolExecutor to distribute the simulations across processes:
+        # 1 process (i.e. CPU) simulates all neutrinos for one healpixel
+        nu_vectors = []
+        with ProcessPoolExecutor(CPUs_sim) as executor:
+            futures = [
+                executor.submit(
+                    simulate_neutrinos_1_pix, init_xyz, init_vels[pixel], common_args) 
+                for pixel in range(Npix)
+            ]
+            
+            completed = 0
+            for future in as_completed(futures):
+                nu_vectors.append(future.result())
+                completed += 1
+                if completed % 100 == 0:
+                    print(f"Processed {completed}/{Npix} pixels")
         
-        # Wait for all futures to complete and collect results in order
-        nu_vectors = jnp.array([future.result() for future in futures])
-# """
+        nu_vectors = jnp.array(nu_vectors)
+    """
 
 
-"""
-if pars.testing:
-    # Simulate all neutrinos along 1 pixel, without multiprocessing
-    nu_vectors = simulate_neutrinos_1_pix(init_xyz, init_vels[0], common_args)
-else:
-    # Use ProcessPoolExecutor to distribute the simulations across processes:
-    # 1 process (i.e. CPU) simulates all neutrinos for one healpixel
-    nu_vectors = []
-    with ProcessPoolExecutor(CPUs_sim) as executor:
-        futures = [
-            executor.submit(
-                simulate_neutrinos_1_pix, init_xyz, init_vels[pixel], common_args) 
-            for pixel in range(Npix)
-        ]
-        
-        completed = 0
-        for future in as_completed(futures):
-            nu_vectors.append(future.result())
-            completed += 1
-            if completed % 100 == 0:
-                print(f"Processed {completed}/{Npix} pixels")
-    
-    nu_vectors = jnp.array(nu_vectors)
-"""
+    # Save all sky neutrino vectors for current halo
+    if pars.testing:
+        jnp.save(f'{pars.directory}/vectors_{end_str}_TEST.npy', nu_vectors)
+    else:
+        jnp.save(f'{pars.directory}/vectors_{end_str}.npy', nu_vectors)
 
 
-# Save all sky neutrino vectors for current halo
-if pars.testing:
-    jnp.save(f'{pars.directory}/vectors_{end_str}_TEST.npy', nu_vectors)
-else:
-    jnp.save(f'{pars.directory}/vectors_{end_str}.npy', nu_vectors)
+    sim_time = time.perf_counter()-sim_start
+    print(f"Simulation time: {sim_time/60.:.2f} min, {sim_time/(60**2):.2f} h")
 
 
-sim_time = time.perf_counter()-sim_start
-print(f"Simulation time: {sim_time/60.:.2f} min, {sim_time/(60**2):.2f} h")
+    ### ======================== ###
+    ### Compute number densities ###
+    ### ======================== ###
 
+    """
+    ana_start = time.perf_counter()
 
-### ======================== ###
-### Compute number densities ###
-### ======================== ###
+    # Compute individual number densities for each healpixel
+    pix_start = time.perf_counter()
 
-"""
-ana_start = time.perf_counter()
+    nu_allsky_masses = jnp.array([0.01, 0.05, 0.1, 0.2, 0.3])*Params.eV
+    pix_dens = Physics.number_densities_all_sky(
+        v_arr=nu_vectors[..., 3:],
+        m_arr=nu_allsky_masses,
+        pix_sr=pix_sr_sim,
+        args=Params())
+    pix_dens_l.append(jnp.squeeze(pix_dens))
 
-# Compute individual number densities for each healpixel
-pix_start = time.perf_counter()
+    pix_time = time.perf_counter() - pix_start
 
-nu_allsky_masses = jnp.array([0.01, 0.05, 0.1, 0.2, 0.3])*Params.eV
-pix_dens = Physics.number_densities_all_sky(
-    v_arr=nu_vectors[..., 3:],
-    m_arr=nu_allsky_masses,
-    pix_sr=pix_sr_sim,
-    args=Params())
-pix_dens_l.append(jnp.squeeze(pix_dens))
+    jnp.save(
+        f"{pars.directory}/pixel_densities_{end_str}.npy", jnp.array(pix_dens_l))
 
-pix_time = time.perf_counter() - pix_start
+    # Compute total number density, by using all neutrino vectors for integral
+    tot_start = time.perf_counter()
 
-jnp.save(
-    f"{pars.directory}/pixel_densities_{end_str}.npy", jnp.array(pix_dens_l))
+    tot_dens = Physics.number_densities_mass_range(
+        v_arr=nu_vectors.reshape(-1, 2, 6)[..., 3:], 
+        m_arr=nu_massrange, 
+        pix_sr=4*Params.Pi,
+        args=Params())
+    tot_dens_l.append(jnp.squeeze(tot_dens))
 
-# Compute total number density, by using all neutrino vectors for integral
-tot_start = time.perf_counter()
+    tot_time = time.perf_counter() - tot_start
 
-tot_dens = Physics.number_densities_mass_range(
-    v_arr=nu_vectors.reshape(-1, 2, 6)[..., 3:], 
-    m_arr=nu_massrange, 
-    pix_sr=4*Params.Pi,
-    args=Params())
-tot_dens_l.append(jnp.squeeze(tot_dens))
+    jnp.save(
+        f"{pars.directory}/total_densities_{end_str}.npy", jnp.array(tot_dens_l))
 
-tot_time = time.perf_counter() - tot_start
-
-jnp.save(
-    f"{pars.directory}/total_densities_{end_str}.npy", jnp.array(tot_dens_l))
-
-ana_time = time.perf_counter() - ana_start
-print(f"Analysis time: {ana_time/60.:.2f} min, {ana_time/(60**2):.2f} h\n")
-"""
+    ana_time = time.perf_counter() - ana_start
+    print(f"Analysis time: {ana_time/60.:.2f} min, {ana_time/(60**2):.2f} h\n")
+    """
 
 
 total_time = time.perf_counter() - total_start
