@@ -23,7 +23,7 @@ simdata = SimData(pars.directory)
 def EOMs_sun(s_val, y, args):
 
     # Unpack the input data
-    s_int_steps, z_int_steps, t_int_steps, kpc, km, s = args
+    s_int_steps, z_int_steps, t_int_steps, sun_pos, sun_vel, kpc, km, s = args
 
     # Initialize vector.
     x_i, u_i = y
@@ -39,7 +39,9 @@ def EOMs_sun(s_val, y, args):
     t = Utils.jax_interpolate(s_val, s_int_steps, t_int_steps)*s
 
     # Find current position of Sun w.r.t. CNB(==CMB) frame
-    sun_position = SimExec.update_sun_position(t, km, s)
+    idx = jnp.abs(t_int_steps - t).argmin()
+    # sun_position = SimExec.update_sun_position_at_origin(t, km, s)
+    sun_position = SimExec.update_sun_position(t, sun_pos, sun_vel, km, s)
 
     # Compute gradient of sun.
     eps = 696_340*km  # solar radius in numerical units
@@ -61,7 +63,8 @@ def EOMs_sun(s_val, y, args):
 
 @jax.jit
 def backtrack_1_neutrino(
-    init_vector, s_int_steps, z_int_steps, t_int_steps, kpc, km, s):
+    init_vector, s_int_steps, z_int_steps, t_int_steps, sun_pos, sun_vel, 
+    kpc, km, s):
 
     """
     Simulate trajectory of 1 neutrino. Input is 6-dim. vector containing starting positions and velocities of neutrino. Solves ODEs given by the EOMs function with an jax-accelerated integration routine, using the diffrax library. Output are the positions and velocities at each timestep, which was specified with diffrax.SaveAt. 
@@ -88,7 +91,9 @@ def backtrack_1_neutrino(
     saveat = diffrax.SaveAt(ts=jnp.array(s_int_steps))
 
     # Common arguments for solver
-    args = (s_int_steps, z_int_steps, t_int_steps, kpc, km, s)
+    args = (
+        s_int_steps, z_int_steps, t_int_steps, sun_pos, sun_vel, 
+        kpc, km, s)
     
     # Solve the coupled ODEs, i.e. the EOMs of the neutrino
     sol = diffrax.diffeqsolve(
@@ -129,41 +134,48 @@ def simulate_neutrinos_1_pix(init_xyz, init_vels, common_args):
 
 
 # Load Sun's positions and velocity vectors (w.r.t. CNB==CMB) in Earth-GC frame
-sun_positions, sun_velocities_CNB = SimPlot.calculate_sun_position_and_velocity
-sun_positions *= Params.AU/Params.kpc
+sun_positions, sun_velocities = SimPlot.calculate_sun_position_and_velocity(
+    2024)
+sun_positions *= Params.AU
+sun_velocities *=
+
+# Repeat sun positions and velocities arrays to match length of special 2year+1
+sun_pos_tiled = jnp.repeat(sun_positions, 2, axis=0)
+sun_pos_ext = jnp.append(sun_pos_tiled, sun_pos_tiled[0][None,:], axis=0)
+sun_vel_tiled = jnp.repeat(sun_velocities_CNB, 2, axis=0)
+sun_vel_ext = jnp.append(sun_vel_tiled, sun_vel_tiled[0][None,:], axis=0)
 
 # Redshift from today until (365*2)+1 days ago
-# z_int_steps_all = jnp.load(f'{pars.directory}/z_int_steps_2years.npy')
-z_int_steps = jnp.load(f'{pars.directory}/z_int_steps_1year.npy')
+z_int_steps_all = jnp.load(f'{pars.directory}/z_int_steps_2years.npy')
+# z_int_steps = jnp.load(f'{pars.directory}/z_int_steps_1year.npy')
 
 # Corresponding integration variable for EOMs
-# s_int_steps_all = jnp.load(f'{pars.directory}/s_int_steps_2years.npy')
-s_int_steps = jnp.load(f'{pars.directory}/s_int_steps_1year.npy')
+s_int_steps_all = jnp.load(f'{pars.directory}/s_int_steps_2years.npy')
+# s_int_steps = jnp.load(f'{pars.directory}/s_int_steps_1year.npy')
 
 # Corresponding lookback time
-# t_int_steps_all = jnp.load(f'{pars.directory}/t_int_steps_2years.npy')
-t_int_steps = jnp.load(f'{pars.directory}/t_int_steps_1year.npy')
+t_int_steps_all = jnp.load(f'{pars.directory}/t_int_steps_2years.npy')
+# t_int_steps = jnp.load(f'{pars.directory}/t_int_steps_1year.npy')
 
-# When using 2year long arrays:
-# Select 1 years worth of redshift/time steps
+# Initial position (Earth) is at (0,0,0) always, we move the Sun around in 
+# special Earth-GC frame
+init_xyz = np.array([0., 0., 0.])
+jnp.save(f'{pars.directory}/init_xyz_modulation.npy', init_xyz)
+
+# Lists for pixel and total number densities
+tot_dens_days_l = []
+pix_dens_days_l = []
 # for di, day in enumerate(range(365)):
-#     z_int_steps = z_int_steps_all[di:di+366]
-#     s_int_steps = s_int_steps_all[di:di+366]
-#     t_int_steps = t_int_steps_all[di:di+366]
-
 for di, day in enumerate(range(10)):  #note: testing
 
-    # Lists for pixel and total number densities
-    pix_dens_l = []
-    tot_dens_l = []
+    # Select 1 years worth of redshift/time steps, +1 because we select second 
+    # last time step in integration routine due to infinities issue (see above)
+    z_int_steps = z_int_steps_all[di:di+365+1]
+    s_int_steps = s_int_steps_all[di:di+365+1]
+    t_int_steps = t_int_steps_all[di:di+365+1]
 
     # File name ending
     end_str = f"day{di+1}"
-
-    # Initial position (Earth)
-    init_dis = ES_distances[di]  # without numerical units (is in kpc)
-    init_xyz = np.array([float(init_dis), 0., 0.])
-    jnp.save(f'{pars.directory}/init_xyz_{end_str}.npy', init_xyz)
 
 
     ### ============== ###
@@ -171,63 +183,32 @@ for di, day in enumerate(range(10)):  #note: testing
     ### ============== ###
 
     print(f"*** Simulation for {end_str}/365 ***")
-
     sim_start = time.perf_counter()
 
-    with open(f'{pars.directory}/sim_parameters.yaml', 'r') as file:
-        sim_setup = yaml.safe_load(file)
-    pix_sr_sim = sim_setup['pix_sr']        # Size (in sr) of all-sky healpixels
-    Npix = sim_setup["Npix"]                # Number of healpixels 
-    nu_per_pix = sim_setup["momentum_num"]  # Number of neutrinos per healpixel
-
+    # Load initial velocities, same for each day due to Earth-GC frame
     init_vels = np.load(f'{pars.directory}/initial_velocities.npy')  
     # shape = (Npix, neutrinos per pixel, 3)
 
     common_args = (
-        s_int_steps, z_int_steps, t_int_steps, 
+        s_int_steps, z_int_steps, t_int_steps, sun_pos_ext, sun_vel_ext, 
         Params.kpc, Params.km, Params.s)
 
     # """
     if pars.testing:
         # Simulate all neutrinos along 1 pixel, without multiprocessing
-        nu_vectors = simulate_neutrinos_1_pix(init_xyz, init_vels[0], common_args)
+        nu_vectors = simulate_neutrinos_1_pix(
+            init_xyz, init_vels[0], common_args)
     else:
         # Use ProcessPoolExecutor to distribute the simulations across processes:
         # 1 process (i.e. CPU) simulates all neutrinos for one healpixel.
         with ProcessPoolExecutor(CPUs_sim) as executor:
             futures = [
                 executor.submit(
-                    simulate_neutrinos_1_pix, init_xyz, init_vels[pixel], common_args) for pixel in range(Npix)]
+                    simulate_neutrinos_1_pix, init_xyz, init_vels[pixel], common_args) for pixel in range(simdata.Npix)]
             
             # Wait for all futures to complete and collect results in order
             nu_vectors = jnp.array([future.result() for future in futures])
     # """
-
-
-    """
-    if pars.testing:
-        # Simulate all neutrinos along 1 pixel, without multiprocessing
-        nu_vectors = simulate_neutrinos_1_pix(init_xyz, init_vels[0], common_args)
-    else:
-        # Use ProcessPoolExecutor to distribute the simulations across processes:
-        # 1 process (i.e. CPU) simulates all neutrinos for one healpixel
-        nu_vectors = []
-        with ProcessPoolExecutor(CPUs_sim) as executor:
-            futures = [
-                executor.submit(
-                    simulate_neutrinos_1_pix, init_xyz, init_vels[pixel], common_args) 
-                for pixel in range(Npix)
-            ]
-            
-            completed = 0
-            for future in as_completed(futures):
-                nu_vectors.append(future.result())
-                completed += 1
-                if completed % 100 == 0:
-                    print(f"Processed {completed}/{Npix} pixels")
-        
-        nu_vectors = jnp.array(nu_vectors)
-    """
 
 
     # Save all sky neutrino vectors for current halo
@@ -255,7 +236,7 @@ for di, day in enumerate(range(10)):  #note: testing
     pix_dens = Physics.number_densities_all_sky(
         v_arr=nu_vectors[..., 3:],
         m_arr=nu_allsky_masses,
-        pix_sr=pix_sr_sim,
+        pix_sr=simdata.pix_sr,
         args=Params())
     pix_dens_l.append(jnp.squeeze(pix_dens))
 
