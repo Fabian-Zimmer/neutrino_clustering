@@ -170,7 +170,7 @@ init_vels = np.load(f'{pars.directory}/initial_velocities.npy')
 tot_dens_days_l = []
 pix_dens_days_l = []
 # for day, day in enumerate(range(365)):
-for day in range(10):  #note: testing
+for day in range(365)[::33]:  #note: testing
 
     # Select 1 years worth of redshift/time steps, +1 because we select second 
     # last time step in integration routine due to infinities issue (see above)
