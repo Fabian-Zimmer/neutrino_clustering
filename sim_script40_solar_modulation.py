@@ -133,6 +133,7 @@ def simulate_neutrinos_1_pix(init_xyz, init_vels, common_args):
 
 
 # Load Sun's positions and velocity vectors (w.r.t. CNB==CMB) in Earth-GC frame
+# for 1 year
 sun_positions, sun_velocities = SimPlot.calculate_sun_position_and_velocity(
     2024)
 sun_positions *= Params.AU
@@ -141,7 +142,7 @@ sun_velocities *= Params.km/Params.s
 # Repeat sun positions and velocities arrays to match length of special 2year+1
 # sun_pos_tiled = jnp.repeat(sun_positions, 2, axis=0)
 # sun_pos_ext = jnp.append(sun_pos_tiled, sun_pos_tiled[0][None,:], axis=0)
-# sun_vel_tiled = jnp.repeat(sun_velocities_CNB, 2, axis=0)
+# sun_vel_tiled = jnp.repeat(sun_velocities, 2, axis=0)
 # sun_vel_ext = jnp.append(sun_vel_tiled, sun_vel_tiled[0][None,:], axis=0)
 
 # Redshift from today until (365*2)+1 days ago
@@ -149,17 +150,21 @@ z_int_steps_all = jnp.load(f'{pars.directory}/z_int_steps_2years.npy')
 # z_int_steps = jnp.load(f'{pars.directory}/z_int_steps_1year.npy')
 
 # Corresponding integration variable for EOMs
-s_int_steps_all = jnp.load(f'{pars.directory}/s_int_steps_2years.npy')
-# s_int_steps = jnp.load(f'{pars.directory}/s_int_steps_1year.npy')
+# s_int_steps_all = jnp.load(f'{pars.directory}/s_int_steps_2years.npy')
+s_int_steps_1year = jnp.load(f'{pars.directory}/s_int_steps_1year.npy')
 
 # Corresponding lookback time
-t_int_steps_all = jnp.load(f'{pars.directory}/t_int_steps_2years.npy')
-# t_int_steps = jnp.load(f'{pars.directory}/t_int_steps_1year.npy')
+# t_int_steps_all = jnp.load(f'{pars.directory}/t_int_steps_2years.npy')
+t_int_steps_1year = jnp.load(f'{pars.directory}/t_int_steps_1year.npy')
 
 # Initial position (Earth) is at (0,0,0) always, we move the Sun around in 
 # special Earth-GC frame
 init_xyz = np.array([0., 0., 0.])
 jnp.save(f'{pars.directory}/init_xyz_modulation.npy', init_xyz)
+
+# Load initial velocities, same for each day due to Earth-GC frame
+init_vels = np.load(f'{pars.directory}/initial_velocities.npy')
+# shape = (Npix, neutrinos per pixel, 3)
 
 # Lists for pixel and total number densities
 tot_dens_days_l = []
@@ -169,9 +174,12 @@ for day in range(10):  #note: testing
 
     # Select 1 years worth of redshift/time steps, +1 because we select second 
     # last time step in integration routine due to infinities issue (see above)
-    z_int_steps = z_int_steps_all[day:day+365+1]
-    s_int_steps = s_int_steps_all[day:day+365+1]
-    t_int_steps = t_int_steps_all[day:day+365+1]
+    z_int_steps_1year = z_int_steps_all[day:day+365+1]
+    # s_int_steps_1year = s_int_steps_all[day:day+365+1]
+    # t_int_steps_1year = t_int_steps_all[day:day+365+1]
+
+    # sun_pos_1year = sun_pos_ext[day:day+365+1]
+    # sun_vel_1year = sun_vel_ext[day:day+365+1]
 
     # File name ending
     end_str = f"day{day+1}"
@@ -182,15 +190,13 @@ for day in range(10):  #note: testing
     ### ============== ###
 
     print(f"*** Simulation for day {day+1}/365 ***")
-    sim_start = time.perf_counter()
-
-    # Load initial velocities, same for each day due to Earth-GC frame
-    init_vels = np.load(f'{pars.directory}/initial_velocities.npy')  
-    # shape = (Npix, neutrinos per pixel, 3)
+    sim_start = time.perf_counter()    
 
     common_args = (
-        s_int_steps, z_int_steps, t_int_steps, 
-        sun_positions[day], sun_velocities[day], 
+        s_int_steps_1year, z_int_steps_1year, t_int_steps_1year, 
+        # s_int_steps_1year, z_int_steps_1year, t_int_steps_1year, 
+        sun_positions[day], sun_velocities[day],
+        # sun_pos_1year, sun_vel_1year, 
         Params.kpc, Params.km, Params.s)
 
     # """
