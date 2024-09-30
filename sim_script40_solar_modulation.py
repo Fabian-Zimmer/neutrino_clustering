@@ -82,8 +82,11 @@ def backtrack_1_neutrino(
     ### Integration Solver ###
     ### ------------------ ###
 
-    solver = diffrax.Dopri5()
-    stepsize_controller = diffrax.PIDController(rtol=1e-3, atol=1e-6)
+    # solver = diffrax.Dopri5()
+    # stepsize_controller = diffrax.PIDController(rtol=1e-3, atol=1e-6)
+
+    solver = diffrax.Dopri8()
+    stepsize_controller = diffrax.PIDController(rtol=1e-6, atol=1e-8)
 
     # Specify timesteps where solutions should be saved
     # saveat = diffrax.SaveAt(steps=True, ts=jnp.array(s_int_steps))
@@ -170,7 +173,7 @@ init_vels = np.load(f'{pars.directory}/initial_velocities.npy')
 tot_dens_days_l = []
 pix_dens_days_l = []
 # for day, day in enumerate(range(365)):
-for day in range(365)[::33]:  #note: testing
+for day in range(1,365)[::90][:4]:  #note: testing
 
     # Select 1 years worth of redshift/time steps, +1 because we select second 
     # last time step in integration routine due to infinities issue (see above)
