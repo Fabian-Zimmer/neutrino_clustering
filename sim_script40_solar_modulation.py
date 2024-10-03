@@ -35,16 +35,19 @@ def EOMs_sun(s_val, y, args):
     z = Utils.jax_interpolate(s_val, s_int_steps, z_int_steps)
 
     # Find t (lookback time) corresponding to s_val via interpolation.
-    # t = Utils.jax_interpolate(s_val, s_int_steps, t_int_steps)*s
+    t = Utils.jax_interpolate(s_val, s_int_steps, t_int_steps)*s
 
     # Compute current position of Sun w.r.t. CNB(==CMB) frame, given starting 
     # position and velocity vectors of current day being simulated
-    # sun_pos_t = sun_pos - sun_vel*t
+    sun_pos_t = sun_pos - sun_vel*t
 
     # Compute gradient of sun.
     eps = 696_340*km  # solar radius in numerical units
-    # grad_sun = SimExec.sun_gravity(x_i, eps, sun_pos_t)
-    grad_sun = SimExec.sun_gravity(x_i, eps, sun_pos)
+    grad_sun = SimExec.sun_gravity(x_i, eps, sun_pos_t)
+    # grad_sun = SimExec.sun_gravity(x_i, eps, sun_pos)
+
+    # Add gravity vector of DM sim cell
+    grad_DM = ...
 
     # Switch to "physical reality" here.
     grad_sun /= (kpc/s**2)
@@ -82,11 +85,11 @@ def backtrack_1_neutrino(
     ### Integration Solver ###
     ### ------------------ ###
 
-    # solver = diffrax.Dopri5()
-    # stepsize_controller = diffrax.PIDController(rtol=1e-3, atol=1e-6)
+    solver = diffrax.Dopri5()
+    stepsize_controller = diffrax.PIDController(rtol=1e-3, atol=1e-6)
 
-    solver = diffrax.Dopri8()
-    stepsize_controller = diffrax.PIDController(rtol=1e-6, atol=1e-8)
+    # solver = diffrax.Dopri8()
+    # stepsize_controller = diffrax.PIDController(rtol=1e-6, atol=1e-8)
 
     # Specify timesteps where solutions should be saved
     # saveat = diffrax.SaveAt(steps=True, ts=jnp.array(s_int_steps))
@@ -172,8 +175,8 @@ init_vels = np.load(f'{pars.directory}/initial_velocities.npy')
 # Lists for pixel and total number densities
 tot_dens_days_l = []
 pix_dens_days_l = []
-# for day, day in enumerate(range(365)):
-for day in range(1,365)[::90][:4]:  #note: testing
+# for day in range(365):
+for day in range(0, 365, 4):  #note: testing
 
     # Select 1 years worth of redshift/time steps, +1 because we select second 
     # last time step in integration routine due to infinities issue (see above)
