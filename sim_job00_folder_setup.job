@@ -1,0 +1,52 @@
+#!/bin/bash
+#SBATCH --job-name=SimFolder
+#SBATCH -p rome
+#SBATCH -t 00:10:00
+#SBATCH -N 1
+#SBATCH --tasks-per-node=1
+#SBATCH --cpus-per-task=32
+#SBATCH --mem=56000
+#SBATCH -o jobs/SimFolder.out
+#SBATCH -e jobs/SimFolder.err
+#SBATCH -v
+
+# rome  node- full: 128/224 ; half: 64/112 ; quarter: 32/56 ; CPUs/GB.
+# genoa node- full: 192/336 ; half: 96/168 ; quarter: 48/84 ; CPUs/GB.
+
+module purge
+
+# Load .bashrc if it exists
+if [ -f "$HOME/.bashrc" ]; then
+    source $HOME/.bashrc
+fi
+
+conda activate neutrino_clustering
+
+
+sim_fullname=SunMod_1k
+
+python $HOME/neutrino_clustering/make1_simulation_box.py \
+--box_directory /projects/0/prjs0781/simulation_data/Tango_sims \
+--sim_fullname $sim_fullname \
+--initial_snap_z0 36 \
+--final_snap_z4 12
+
+python $HOME/neutrino_clustering/make2_simulation_parameters.py \
+--sim_dir $HOME/neutrino_clustering/sim_output/$sim_fullname \
+--healpix_nside 8 \
+--nu_mass_start 0.01 \
+--nu_mass_stop 0.3 \
+--nu_mass_num 50 \
+--nu_sim_mass 0.3 \
+--specific_masses "0.01,0.05,0.1,0.2,0.3" \
+--p_start 0.01 \
+--p_stop 400 \
+--p_num 1000 \
+--init_x_dis 8.178 \
+--z_int_shift 0.1 \
+--z_int_stop 4.0 \
+--z_int_num 100 \
+--CPUs_precalculations 128 \
+--CPUs_simulations 128 \
+--memory_limit_GB 224 \
+--DM_in_cell_limit 1_000

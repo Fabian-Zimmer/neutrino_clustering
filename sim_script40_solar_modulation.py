@@ -13,7 +13,6 @@ pars = parser.parse_args()
 
 # Instead of SimData.simulation_setup, define only parameters you need
 CPUs_sim = 128
-neutrinos = 1000
 
 nu_massrange = jnp.load(f'{pars.directory}/neutrino_massrange_eV.npy')*Params.eV
 simdata = SimData(pars.directory)
