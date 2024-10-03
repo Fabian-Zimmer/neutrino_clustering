@@ -1,6 +1,6 @@
 #!/bin/bash
 
-sim_fullname=rel_EOMs
+sim_fullname=high_res
 
 python make1_simulation_box.py \
 --box_directory /projects/0/prjs0781/simulation_data/Tango_sims \
@@ -10,7 +10,7 @@ python make1_simulation_box.py \
 
 python make2_simulation_parameters.py \
 --sim_dir sim_output/$sim_fullname \
---healpix_nside 8 \
+--healpix_nside 16 \
 --nu_mass_start 0.01 \
 --nu_mass_stop 0.3 \
 --nu_mass_num 50 \
@@ -18,7 +18,7 @@ python make2_simulation_parameters.py \
 --specific_masses "0.01,0.05,0.1,0.2,0.3" \
 --p_start 0.01 \
 --p_stop 400 \
---p_num 1000 \
+--p_num 5000 \
 --init_x_dis 8.178 \
 --z_int_shift 0.1 \
 --z_int_stop 4.0 \
