@@ -6,15 +6,25 @@ total_start = time.perf_counter()
 # Argparse inputs.
 parser = argparse.ArgumentParser()
 parser.add_argument('--directory', required=True)
+parser.add_argument('-mg', '--mass_gauge', required=True)
+parser.add_argument('-ml', '--mass_lower', required=True)
+parser.add_argument('-mu', '--mass_upper', required=True)
 parser.add_argument('-hn', '--halo_num', required=True)
+parser.add_argument(
+    '--benchmark', required=True, action=argparse.BooleanOptionalAction)
 parser.add_argument(
     '--testing', required=True, action=argparse.BooleanOptionalAction)
 pars = parser.parse_args()
 
-# Instead of SimData.simulation_setup, define only parameters you need
-CPUs_sim = 128
+# Create halo batch, files and other simulation setup parameters and arrays
+_, CPUs_sim, _, init_dis, _, _, _, nu_massrange, data_dir, halo_batch_IDs, _ = SimData.simulation_setup(
+    sim_dir=pars.directory,
+    m_lower=pars.mass_lower,
+    m_upper=pars.mass_upper,
+    m_gauge=pars.mass_gauge,
+    halo_num_req=pars.halo_num,
+    benchmark=pars.benchmark)
 
-nu_massrange = jnp.load(f'{pars.directory}/neutrino_massrange_eV.npy')*Params.eV
 simdata = SimData(pars.directory)
 
 
@@ -22,7 +32,7 @@ simdata = SimData(pars.directory)
 def EOMs_sun(s_val, y, args):
 
     # Unpack the input data
-    s_int_steps, z_int_steps, t_int_steps, sun_pos, sun_vel, kpc, km, s = args
+    s_int_steps, z_int_steps, t_int_steps, sun_pos, sun_vel, dPsi_Sun_cell, kpc, km, s = args
 
     # Initialize vector.
     x_i, u_i = y
@@ -47,17 +57,17 @@ def EOMs_sun(s_val, y, args):
     # grad_sun = SimExec.sun_gravity(x_i, eps, sun_pos)
 
     # Add gravity vector of DM sim cell
-    grad_DM = ...
+    grad_tot = grad_sun + dPsi_Sun_cell
 
     # Switch to "physical reality" here.
-    grad_sun /= (kpc/s**2)
+    grad_tot /= (kpc/s**2)
     x_i /= kpc
     u_i /= (kpc/s)
 
     # Relativistic EOMs for integration (global minus, s.t. we go back in time).
     dyds = -jnp.array([
         u_i/(1+z)**2 / jnp.sqrt(jnp.sum(u_i**2) + (1+z)**-2), 
-        1/(1+z)**2 * grad_sun
+        1/(1+z)**2 * grad_tot
     ])
 
     return dyds
@@ -65,8 +75,8 @@ def EOMs_sun(s_val, y, args):
 
 @jax.jit
 def backtrack_1_neutrino(
-    init_vector, s_int_steps, z_int_steps, t_int_steps, sun_pos, sun_vel, 
-    kpc, km, s):
+    init_vector, s_int_steps, z_int_steps, t_int_steps, 
+    sun_pos, sun_vel, dPsi_Sun_cell, kpc, km, s):
 
     """
     Simulate trajectory of 1 neutrino. Input is 6-dim. vector containing starting positions and velocities of neutrino. Solves ODEs given by the EOMs function with an jax-accelerated integration routine, using the diffrax library. Output are the positions and velocities at each timestep, which was specified with diffrax.SaveAt. 
@@ -97,7 +107,7 @@ def backtrack_1_neutrino(
 
     # Common arguments for solver
     args = (
-        s_int_steps, z_int_steps, t_int_steps, sun_pos, sun_vel, 
+        s_int_steps, z_int_steps, t_int_steps, sun_pos, sun_vel, dPsi_Sun_cell,
         kpc, km, s)
     
     # Solve the coupled ODEs, i.e. the EOMs of the neutrino
@@ -163,6 +173,34 @@ jnp.save(f'{pars.directory}/init_xyz_modulation.npy', init_xyz)
 init_vels = np.load(f'{pars.directory}/initial_velocities.npy')
 # shape = (Npix, neutrinos per pixel, 3)
 
+# note: manually choose first halo for now
+halo_ID = halo_batch_IDs[0]
+
+# Load grav. forces, coordinates and generation/lengths of cells in grid.
+dPsi_grids, cell_grids, cell_gens = SimGrid.grid_data(halo_ID, data_dir)
+
+# Load grid data and compute radial distances from center of cell centers.
+cell_ccs = cell_grids[-1]
+cell_ccs_kpc = cell_ccs/Params.kpc
+cell_dis = jnp.linalg.norm(cell_ccs_kpc, axis=-1)
+
+# Get rid of zeros we appended when loading data (see in SimGrid.grid_data)
+cell_dis = cell_dis[cell_dis != 0.]
+
+# Take first cell, which is in Earth-like position (there can be multiple).
+# Needs to be without kpc units (thus doing /kpc) for simulation start.
+init_cell_xyz = cell_ccs[jnp.abs(cell_dis - init_dis).argsort()][0]/Params.kpc.flatten()
+
+z_idx = 0  # z=0 index
+
+# Find cell index of starting cell in main sim
+snaps_GRID_L = jnp.load(f'{data_dir}/snaps_GRID_L_halo1.npy')
+cell_idx, *_ = SimExec.nu_in_which_cell(
+    init_cell_xyz, cell_grids[z_idx], cell_gens[z_idx], snaps_GRID_L[z_idx])
+
+# Choose cell gravity
+dPsi_Sun_cell = dPsi_grids[z_idx, cell_idx, :]
+
 # Lists for pixel and total number densities
 tot_dens_days_l = []
 pix_dens_days_l = []
@@ -186,7 +224,7 @@ for day in range(0, 365, 12):  #note: testing
 
     common_args = (
         s_int_steps_1year, z_int_steps_1year, t_int_steps_1year, 
-        sun_positions[day], sun_velocities[day],
+        sun_positions[day], sun_velocities[day], dPsi_Sun_cell,
         Params.kpc, Params.km, Params.s)
 
     if pars.testing:
