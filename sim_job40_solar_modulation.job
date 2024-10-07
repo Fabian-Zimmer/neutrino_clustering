@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=HighRes
 #SBATCH -p rome
-#SBATCH -t 06:00:00
+#SBATCH -t 04:00:00
 #SBATCH -N 1
 #SBATCH --tasks-per-node=1
 #SBATCH --cpus-per-task=128

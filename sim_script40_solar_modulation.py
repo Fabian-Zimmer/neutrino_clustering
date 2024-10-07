@@ -85,14 +85,14 @@ def backtrack_1_neutrino(
     ### Integration Solver ###
     ### ------------------ ###
 
-    # solver = diffrax.Dopri5()
-    # stepsize_controller = diffrax.PIDController(rtol=1e-3, atol=1e-6)
+    solver = diffrax.Dopri5()
+    stepsize_controller = diffrax.PIDController(rtol=1e-3, atol=1e-6)
 
-    solver = diffrax.Dopri8()
-    stepsize_controller = diffrax.PIDController(rtol=1e-6, atol=1e-8)
+    # note: more accurate solver takes too long with current EOM fctn structure
+    # solver = diffrax.Dopri8()
+    # stepsize_controller = diffrax.PIDController(rtol=1e-6, atol=1e-8)
 
     # Specify timesteps where solutions should be saved
-    # saveat = diffrax.SaveAt(steps=True, ts=jnp.array(s_int_steps))
     saveat = diffrax.SaveAt(ts=jnp.array(s_int_steps))
 
     # Common arguments for solver
@@ -145,22 +145,13 @@ sun_positions, sun_velocities = SimPlot.calculate_sun_position_and_velocity(
 sun_positions *= Params.AU
 sun_velocities *= Params.km/Params.s
 
-# Repeat sun positions and velocities arrays to match length of special 2year+1
-# sun_pos_tiled = jnp.repeat(sun_positions, 2, axis=0)
-# sun_pos_ext = jnp.append(sun_pos_tiled, sun_pos_tiled[0][None,:], axis=0)
-# sun_vel_tiled = jnp.repeat(sun_velocities, 2, axis=0)
-# sun_vel_ext = jnp.append(sun_vel_tiled, sun_vel_tiled[0][None,:], axis=0)
-
 # Redshift from today until (365*2)+1 days ago
 z_int_steps_all = jnp.load(f'{pars.directory}/z_int_steps_2years.npy')
-# z_int_steps = jnp.load(f'{pars.directory}/z_int_steps_1year.npy')
 
 # Corresponding integration variable for EOMs
-# s_int_steps_all = jnp.load(f'{pars.directory}/s_int_steps_2years.npy')
 s_int_steps_1year = jnp.load(f'{pars.directory}/s_int_steps_1year.npy')
 
 # Corresponding lookback time
-# t_int_steps_all = jnp.load(f'{pars.directory}/t_int_steps_2years.npy')
 t_int_steps_1year = jnp.load(f'{pars.directory}/t_int_steps_1year.npy')
 
 # Initial position (Earth) is at (0,0,0) always, we move the Sun around in 
@@ -178,14 +169,9 @@ pix_dens_days_l = []
 # for day in range(365):
 for day in range(0, 365, 12):  #note: testing
 
-    # Select 1 years worth of redshift/time steps, +1 because we select second 
+    # Select 1 years worth of redshift steps, +1 because we select second 
     # last time step in integration routine due to infinities issue (see above)
     z_int_steps_1year = z_int_steps_all[day:day+365+1]
-    # s_int_steps_1year = s_int_steps_all[day:day+365+1]
-    # t_int_steps_1year = t_int_steps_all[day:day+365+1]
-
-    # sun_pos_1year = sun_pos_ext[day:day+365+1]
-    # sun_vel_1year = sun_vel_ext[day:day+365+1]
 
     # File name ending
     end_str = f"day{day+1}"
@@ -200,12 +186,9 @@ for day in range(0, 365, 12):  #note: testing
 
     common_args = (
         s_int_steps_1year, z_int_steps_1year, t_int_steps_1year, 
-        # s_int_steps_1year, z_int_steps_1year, t_int_steps_1year, 
         sun_positions[day], sun_velocities[day],
-        # sun_pos_1year, sun_vel_1year, 
         Params.kpc, Params.km, Params.s)
 
-    # """
     if pars.testing:
         # Simulate all neutrinos along 1 pixel, without multiprocessing
         nu_vectors = simulate_neutrinos_1_pix(
@@ -220,7 +203,6 @@ for day in range(0, 365, 12):  #note: testing
             
             # Wait for all futures to complete and collect results in order
             nu_vectors = jnp.array([future.result() for future in futures])
-    # """
 
 
     # Save all sky neutrino vectors for current halo
