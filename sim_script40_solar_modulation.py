@@ -115,7 +115,7 @@ def backtrack_1_neutrino(
         term, solver, 
         t0=t0, t1=t1, 
         dt0=dt0, 
-        y0=y0, max_steps=5000,
+        y0=y0, max_steps=1000,
         saveat=saveat, 
         stepsize_controller=stepsize_controller,
         args=args, throw=False)
