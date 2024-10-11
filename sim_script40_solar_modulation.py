@@ -27,6 +27,7 @@ _, CPUs_sim, _, init_dis, _, _, _, nu_massrange, data_dir, halo_batch_IDs, _ = S
 
 simdata = SimData(pars.directory)
 
+print(datetime.today().strftime('%Y-%m-%d %H:%M:%S'))
 
 @jax.jit
 def EOMs_sun(s_val, y, args):
@@ -150,8 +151,7 @@ def simulate_neutrinos_1_pix(init_xyz, init_vels, common_args):
 
 # Load Sun's positions and velocity vectors (w.r.t. CNB==CMB) in Earth-GC frame
 # for 1 year
-sun_positions, sun_velocities = SimPlot.calculate_sun_position_and_velocity(
-    2024)
+sun_positions, sun_velocities, _ = SimPlot.SunEarthGC_frame_coords(2024)
 sun_positions *= Params.AU
 sun_velocities *= Params.km/Params.s
 
@@ -164,8 +164,7 @@ s_int_steps_1year = jnp.load(f'{pars.directory}/s_int_steps_1year.npy')
 # Corresponding lookback time
 t_int_steps_1year = jnp.load(f'{pars.directory}/t_int_steps_1year.npy')
 
-# Initial position (Earth) is at (0,0,0) always, we move the Sun around in 
-# special Earth-GC frame
+# Earth is at (0,0,0) always in Earth-GC frame, and we move the Sun
 init_xyz = np.array([0., 0., 0.])
 jnp.save(f'{pars.directory}/init_xyz_modulation.npy', init_xyz)
 
