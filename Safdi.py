@@ -126,7 +126,8 @@ def f_distr_3D(mesh_v_range, t_index, m_nu, bound, v_0):
         mask = v_for_f_mag < v_esc_MW
 
         # Calculate the distribution
-        exp_term = jnp.exp(-v_for_f_mag**2 / v_0**2)
+        # exp_term = jnp.exp(-v_for_f_mag**2 / v_0**2)
+        exp_term = jnp.exp(-(v_x**2 + v_y**2 + v_z**2) / v_0**2)
         f_v = jnp.where(
             mask, 
             jnp.power(jnp.pi * v_0**2, -3/2) * exp_term, 
