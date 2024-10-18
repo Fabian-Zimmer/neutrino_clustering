@@ -1,15 +1,6 @@
 from Shared.shared import *
 from Shared.specific_CNB_sim import *
 
-sim_name = f"SunMod_1k"
-sim_folder = f"sim_output/{sim_name}"
-
-fig_folder = f"figures_local/{sim_name}"
-Cl_folder = f"Shared/Cls"
-nu_m_range = jnp.load(f"{sim_folder}/neutrino_massrange_eV.npy")
-nu_m_picks = jnp.array([0.01, 0.05, 0.1, 0.2, 0.3])*Params.eV
-simdata = SimData(sim_folder)
-
 
 def calculate_fractional_day_numbers(year):
     """
@@ -250,7 +241,7 @@ def number_density(t_index, m_nu, bound, v_0):
     """Calculate the neutrino number density at time t (a certain day)."""
 
     # note: below reso of (0.001, 100, 100_000), curves are wonky
-    p_range = jnp.geomspace(0.001, 1000, 1_000_000) * Params.T_CNB
+    p_range = jnp.geomspace(0.001, 1000, 10_000_000) * Params.T_CNB
     v_range = p_range / m_nu
 
     def bound_case(_):
@@ -276,16 +267,17 @@ def number_density(t_index, m_nu, bound, v_0):
 @jax.jit
 def calculate_modulation(m_nu, bound, v_0):
     """Calculate the fractional modulation throughout the year."""
+    
+    num_days = len(times)
+    densities = jnp.zeros(num_days)
+    
+    def body_fun(i, densities):
+        density = number_density(i, m_nu, bound, v_0)
+        return densities.at[i].set(density)
+    
+    densities = jax.lax.fori_loop(0, num_days, body_fun, densities)
 
-    # nu_dens_fctn = lambda t_idx: number_density_3D(t_idx, m_nu, bound, v_0)
-    nu_dens_fctn = lambda t_idx: number_density(t_idx, m_nu, bound, v_0)
-    densities = jax.vmap(nu_dens_fctn)(jnp.arange(len(times)))
-
-    min_density = jnp.min(densities)
-    mod = (densities - min_density) / (densities + min_density) * 100
-
-    return times, mod
-    # return times, densities
+    return times, densities
 
 def plot_modulations(which, start_date_str='09-11'):
     """Plot the fractional modulations for different scenarios."""
@@ -317,7 +309,19 @@ def plot_modulations(which, start_date_str='09-11'):
         scenarios = cases
 
     for m_nu, bound, v_0, label, linestyle, color, alpha in scenarios:
-        days, mod = calculate_modulation(m_nu, bound, v_0)
+        days, densities = calculate_modulation(m_nu, bound, v_0)
+
+        if bound == False:
+            jnp.save(
+                f"annual_densities_{m_nu}eV_unbound.npy", 
+                densities)
+        if bound == True:
+            jnp.save(
+                f"annual_densities_{v_0/(Params.km/Params.s)}kms_bound.npy", 
+                densities)
+
+        min_density = jnp.min(densities)
+        mod = (densities - min_density) / (densities + min_density) * 100
 
         # Check if all elements are zero
         if jnp.all(mod == 0):
@@ -387,5 +391,5 @@ def plot_modulations(which, start_date_str='09-11'):
 
 # Run the function with a specific start date
 # plot_modulations(which="unbound", start_date_str='09-20')
-plot_modulations(which="bound", start_date_str='09-20')
-# plot_modulations(which="both", start_date_str='09-20')
+# plot_modulations(which="bound", start_date_str='09-20')
+plot_modulations(which="both", start_date_str='09-20')
