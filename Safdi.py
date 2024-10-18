@@ -11,78 +11,173 @@ nu_m_picks = jnp.array([0.01, 0.05, 0.1, 0.2, 0.3])*Params.eV
 simdata = SimData(sim_folder)
 
 
-import datetime
+def calculate_fractional_day_numbers(year):
+    """
+    Calculate the fractional day number n for each day of the given year.
+    
+    :param year: The year for which to calculate the fractional day numbers
+    :return: A list of tuples, each containing (date, fractional day number)
+    """
+    results = []
+    start_date = datetime(year, 1, 1)
+    
+    for day in range(
+        366 if year % 4 == 0 and (year % 100 != 0 or year % 400 == 0) else 365):
+        current_date = start_date + timedelta(days=day)
+        Y, M, D = current_date.year, current_date.month, current_date.day
+        
+        Y_tilde = Y - 1 if M <= 2 else Y
+        M_tilde = M + 12 if M <= 2 else M
+        
+        n = np.floor(365.25 * Y_tilde) + np.floor(30.61 * (M_tilde + 1)) + D - 730563.5
+        
+        results.append((current_date.strftime('%Y-%m-%d'), n))
+    
+    return results
 
 
-### --------- ###
-### Constants ###
-### --------- ###
+def calculate_average_ecliptic_vectors(year):
+    """
+    Calculate the average ecliptic unit vectors ϵ_x and ϵ_y for the given year.
+    
+    :param year: The year for which to calculate the average ecliptic vectors
+    :return: A tuple containing (year, average ϵ_x, average ϵ_y)
+    """
+    # Constants for ϵ_x and ϵ_y calculations
+    eps_x_0 = np.array([0.054876, -0.494109, 0.867666])
+    eps_x_T = np.array([-0.024232, -0.002689, 1.546e-6])
+    eps_y_0 = np.array([0.993821, 0.110992, 0.000352])
+    eps_y_T = np.array([0.001316, -0.011851, 0.021267])
+    
+    eps_x_sum = np.zeros(3)
+    eps_y_sum = np.zeros(3)
+    
+    # Get fractional day numbers for the year
+    fractional_days = calculate_fractional_day_numbers(year)
+    
+    for _, n in fractional_days:
+        # Calculate T
+        T = n / 36525
+        
+        # Calculate ϵ_x and ϵ_y for this day
+        eps_x = eps_x_0 + eps_x_T * T
+        eps_y = eps_y_0 + eps_y_T * T
+        
+        # Add to the sum
+        eps_x_sum += eps_x
+        eps_y_sum += eps_y
+    
+    # Calculate averages
+    days_in_year = len(fractional_days)
+    eps_x_avg = eps_x_sum / days_in_year
+    eps_y_avg = eps_y_sum / days_in_year
+    
+    # Normalize the average vectors
+    eps_x_avg /= np.linalg.norm(eps_x_avg)
+    eps_y_avg /= np.linalg.norm(eps_y_avg)
+    
+    return eps_x_avg, eps_y_avg
 
 
-# Length of semi-major axis of Earth's orbit
-a = 1.4960e8*Params.km  # (almost equal to Params.AU)
+def calculate_earth_position(year):
+    """
+    Calculate Earth's position relative to the Sun in ecliptic coordinates for each day of the year.
+    
+    :param year: The year for which to calculate Earth's position
+    :return: A list of tuples, each containing (date, position vector)
+    """
+    # Constants
+    e = 0.9574  # eccentricity in degrees
+    e_rad = np.radians(e)
 
-# Eccentricity of Earth's orbit
-ecc = 0.016722
+    # Get fractional day numbers and ecliptic vectors for the year
+    fractional_days = calculate_fractional_day_numbers(year)
+    eps_x, eps_y = calculate_average_ecliptic_vectors(year)
 
-# Ecliptic longitude of the perihelion as in 2013
-y_p = 102*Params.deg
+    results = []
 
-# Earth's average orbital speed
-v_earth = 29.79*Params.km/Params.s
+    for date, n in fractional_days:
+        # Calculate L, g, and varpi
+        L = np.radians(280.460 + 0.9856474 * n)
+        g = np.radians(357.528 + 0.9856003 * n)
+        varpi = np.radians(282.932 + 0.0000471 * n)
 
-# Approximate escape velocity for MW
-v_esc_MW = 550*Params.km/Params.s
+        # Calculate ecliptic longitude
+        l = L + 2 * e_rad * np.sin(g) + 5/4 * e_rad**2 * np.sin(2*g)
 
-# Angular frequency of Earth's orbit
-omega = 2*Params.Pi/Params.yr
+        # Calculate Earth-Sun distance (in AU)
+        r = 1.00014 - 0.01671 * np.cos(g) - 0.00014 * np.cos(2*g)
 
-# Time of vernal equinox (in fraction of 1 year)
-t_ve = 79/365*Params.yr
+        # Calculate position vector
+        position = r * (np.cos(l) * eps_x + np.sin(l) * eps_y)
 
-# Time of perihelion (in fraction of 1 year)
-t_p = 4/365*Params.yr
+        results.append((date, position))
 
-# Sun's velocity in CNB(==CMB) frame
-v_CNB = jnp.array([-0.0695, -0.662, 0.747])*369*Params.km/Params.s
+    return results
 
-# Sun's velocity in Galactic frame
-v_sun = jnp.array([11, 232, 7])*Params.km/Params.s
 
-# Analytical expression for uniform CNB energy density, "far away from Sun"
-rho_infty = Params.rho_0
+def calculate_earth_velocity(year):
+    """
+    Calculate Earth's velocity for each day of the year.
+    
+    :param year: The year for which to calculate Earth's velocity
+    :return: A list of tuples, each containing (date, velocity vector)
+    """
+    # Constants
+    e = 0.9574  # eccentricity in degrees
+    e_rad = np.radians(e)
+    u_E_avg = 29.79  # Average Earth velocity in km/s
 
-# Unit vectors of ecliptic plane in Galactic coordinates as in 2013
-eps1 = jnp.array([0.9940, 0.1095, 0.0031])
-eps2 = jnp.array([-0.0517, 0.4945, -0.8677])
+    # Get fractional day numbers and ecliptic vectors for the year
+    fractional_days = calculate_fractional_day_numbers(year)
+    eps_x, eps_y = calculate_average_ecliptic_vectors(year)
 
+    results = []
+
+    for date, n in fractional_days:
+        # Calculate L and varpi
+        L = np.radians(280.460 + 0.9856474 * n)
+        varpi = np.radians(282.932 + 0.0000471 * n)
+
+        # Calculate velocity components
+        v_x = -u_E_avg * (np.sin(L) + e_rad * np.sin(2*L - varpi))
+        v_y = u_E_avg * (np.cos(L) + e_rad * np.cos(2*L - varpi))
+
+        # Calculate velocity vector
+        velocity = v_x * eps_x + v_y * eps_y
+
+        results.append((date, velocity))
+
+    return results
+
+
+
+### ==================================== ###
+### Get Earth's positions and velocities ###
+### ==================================== ###
+
+year = 2023
+
+earth_positions = jnp.array(
+    [pos for _, pos in calculate_earth_position(year)])*Params.AU
+earth_velocities = jnp.array(
+    [vel for _, vel in calculate_earth_velocity(year)])*Params.km/Params.s
+# print(earth_positions.shape, earth_velocities.shape)
+# print(earth_positions[0], jnp.linalg.norm(earth_velocities[0]))
 
 # Generate time points for one year
 times = jnp.linspace(0, Params.yr, 365)
 jd_times = Time('2023-01-01').jd + times / Params.yr * 365
 
+# Sun's velocity in CNB(==CMB) frame
+v_CNB = jnp.array([-0.0695, -0.662, 0.747])*369*Params.km/Params.s
 
-@jax.jit
-def earth_vector(t):
-    """Calculate Earth's position vector relative to the Sun at time t."""
-    g_of_t = omega * (t - t_p)
-    nu_angle = g_of_t + 2*ecc*jnp.sin(g_of_t) + 5/4*ecc**2*jnp.sin(2*g_of_t)
-    r_of_t = a*(1-ecc**2)/(1+ecc*jnp.cos(nu_angle))
-    y_of_t = y_p + nu_angle
-    return r_of_t * (-eps1*jnp.sin(y_of_t) + eps2*jnp.cos(y_of_t))
+# Approximate escape velocity for MW
+v_esc_MW = 550*Params.km/Params.s
 
+# Sun's velocity in Galactic frame
+v_Sun = jnp.array([11, 232, 7])*Params.km/Params.s
 
-@jax.jit
-def earth_velocity(t):
-    """Calculate Earth's velocity relative to the Sun at time t."""
-    phase = omega * (t - t_p)
-    return v_earth * (eps1*jnp.cos(phase) + eps2*jnp.sin(phase))
-
-
-# Using ecliptic functions
-earth_positions = jnp.array([earth_vector(t) for t in times])  # in num. AU
-earth_velocities = jnp.array([earth_velocity(t) for t in times]) # in num. km/s
-# print(earth_positions.shape, earth_velocities.shape)
 
 @jax.jit
 def v_infinity(v_s, r_s):
@@ -92,8 +187,8 @@ def v_infinity(v_s, r_s):
     
     v_GM = 2*Params.G*Params.Msun/jnp.linalg.norm(r_s, axis=-1)
     v_inf2 = jnp.linalg.norm(v_s, axis=-1)**2 - v_GM
-    # v_inf = jnp.sqrt(jnp.maximum(0, v_inf2))
-    v_inf = jnp.sqrt(v_inf2)
+    v_inf = jnp.sqrt(jnp.maximum(0, v_inf2))
+    # v_inf = jnp.sqrt(v_inf2)
     r_s_unit = r_s / jnp.linalg.norm(r_s, axis=-1)
     vr_s_dot = jnp.dot(v_s, r_s_unit)
 
@@ -104,137 +199,93 @@ def v_infinity(v_s, r_s):
 
 
 @jax.jit
-def f_distr_3D(mesh_v_range, t_index, m_nu, bound, v_0):
-
-    # Create a meshgrid for v_x, v_y, v_z
-    v_x, v_y, v_z = jnp.meshgrid(
-        mesh_v_range, mesh_v_range, mesh_v_range, indexing='ij')
-
-    def bound_case(_):
-
-        # Calculate v_s for each point in the meshgrid
-        v_nu = jnp.stack([v_x, v_y, v_z], axis=-1)
-        r_s = earth_positions[t_index]
-        v_s = v_nu + earth_velocities[t_index]
-        v_inf = v_infinity(v_s, r_s)
-        v_for_f = v_CNB + v_inf
-
-        # Calculate the magnitude of v_for_f
-        v_for_f_mag = jnp.linalg.norm(v_for_f, axis=-1)
-
-        # Create the mask
-        mask = v_for_f_mag < v_esc_MW
-
-        # Calculate the distribution
-        # exp_term = jnp.exp(-v_for_f_mag**2 / v_0**2)
-        exp_term = jnp.exp(-(v_x**2 + v_y**2 + v_z**2) / v_0**2)
-        f_v = jnp.where(
-            mask, 
-            jnp.power(jnp.pi * v_0**2, -3/2) * exp_term, 
-            jnp.zeros_like(exp_term)
-        )
-
-        # Normalize
-        z = v_esc_MW / v_0
-        N_esc = jsp.special.erf(z) - 2 / jnp.sqrt(jnp.pi) * z * jnp.exp(-z**2)
-        f_v_normalized = f_v / N_esc
-
-        return f_v_normalized
-
-    def unbound_case(_):
-        # Implementation for unbound case
-        return jnp.zeros_like(v_x)
-
-    f_v = jax.lax.cond(bound, bound_case, unbound_case, operand=None)
-
-    return f_v
-
-
-@jax.jit
 def f_distr(v_range, t_index, m_nu, bound, v_0):
     """Phase-space distribution at Earth's location."""
 
     # Get x,y,z coords.
     v_nu = Utils.v_mag_to_xyz(v_range, Params.key)
-    
+
+    # Compute v_inf and v argument as used for f(v)
     r_s = earth_positions[t_index]
     v_s = v_nu + earth_velocities[t_index]
     v_inf = v_infinity(v_s, r_s)
-    v_for_f = v_CNB + v_inf
-
-    # Test without Sun
-    # v_for_f = v_nu #+ v_CNB + earth_velocities[t_index]
 
     def bound_case(_):
+
+        v_for_f = v_inf + v_Sun
         v_for_f_mag = jnp.linalg.norm(v_for_f, axis=-1)
+
+        # Create mask for velocity magnitudes smaller than escape velocity
         mask = v_for_f_mag < v_esc_MW
 
+        # Compute standard halo model (SHM) distribution
+        exp_term = jnp.exp(-v_for_f_mag**2/v_0**2)
         f_v = jnp.where(
             mask, 
-            jnp.power(jnp.pi*v_0**2, -3/2) * jnp.exp(-v_for_f_mag**2/v_0**2), 
-            0.0)
+            jnp.power(jnp.pi*v_0**2, -3/2) * exp_term, 
+            jnp.zeros_like(exp_term))
+        
+        # Normalisation constant, and normalised velocity distribution
         z = v_esc_MW/v_0
         N_esc = jsp.special.erf(z) - 2/jnp.sqrt(jnp.pi)*z*jnp.exp(-z**2)
         f_v_normalized = f_v / N_esc
 
-        return f_v_normalized
+        return Params.N0 * f_v_normalized
 
     def unbound_case(_):
+
+        v_for_f = v_inf + v_CNB
         v_for_f_mag = jnp.linalg.norm(v_for_f, axis=-1)
-        f_v = Physics.Fermi_Dirac(v_for_f_mag, Params())
-        # f_norm = 
+
+        f_v = m_nu**3/(jnp.exp(m_nu*v_for_f_mag/Params.T_CNB)+1)
+
         return f_v
 
     f_v = jax.lax.cond(bound, bound_case, unbound_case, operand=None)
 
     return f_v
 
-
 @jax.jit
-def number_density_3D(t_index, m_nu, bound, v_0):
+def number_density(t_index, m_nu, bound, v_0):
     """Calculate the neutrino number density at time t (a certain day)."""
 
-    p_range = jnp.geomspace(0.01, 100, 1000) * Params.T_CNB
+    # note: below reso of (0.001, 100, 100_000), curves are wonky
+    p_range = jnp.geomspace(0.001, 1000, 1_000_000) * Params.T_CNB
     v_range = p_range / m_nu
-    v_max = 100*Params.T_CNB / m_nu
-    mesh_v_range = jnp.linspace(-v_max, v_max, 50)
 
     def bound_case(_):
         
-        # Get 3D velocity distribution
-        f_v = f_distr_3D(mesh_v_range, t_index, m_nu, bound, v_0)
-        
-        # Integrate over 3D velocity sphere
-        integral_over_z = trap(f_v, mesh_v_range, axis=-1)
-        integral_over_yz = trap(integral_over_z, mesh_v_range, axis=-1)
-        integral_over_xyz = trap(integral_over_yz, mesh_v_range, axis=-1)
-        
-        # Compute and return number density        
-        return integral_over_xyz / (2*jnp.pi)**3
+        f_v = f_distr(v_range, t_index, m_nu, bound, v_0)
+        integrand = v_range**3 * f_v
+        integral = trap(integrand, x=jnp.log(v_range), axis=-1)
+        nu_dens_cm3 = integral/(2*jnp.pi**2)/Params.cm**-3
+        return nu_dens_cm3
 
     def unbound_case(_):
-        integrand = p_range**3 * f_distr(v_range, t_index, m_nu, bound, v_0)
-        integral = trap(integrand, x=jnp.log(v_range))
-        nu_dens = integral/(2*jnp.pi**2)/Params.cm**-3
-        return nu_dens
+
+        f_v = f_distr(v_range, t_index, m_nu, bound, v_0)
+        integrand = v_range**3 * f_v
+        integral = trap(integrand, x=jnp.log(v_range), axis=-1)
+        nu_dens_cm3 = integral/(2*jnp.pi**2)/Params.cm**-3
+        return nu_dens_cm3
     
     nu_dens = jax.lax.cond(bound, bound_case, unbound_case, operand=None)
 
     return nu_dens
 
-
 @jax.jit
 def calculate_modulation(m_nu, bound, v_0):
     """Calculate the fractional modulation throughout the year."""
 
-    nu_dens_fctn = lambda t_index: number_density_3D(t_index, m_nu, bound, v_0)
+    # nu_dens_fctn = lambda t_idx: number_density_3D(t_idx, m_nu, bound, v_0)
+    nu_dens_fctn = lambda t_idx: number_density(t_idx, m_nu, bound, v_0)
     densities = jax.vmap(nu_dens_fctn)(jnp.arange(len(times)))
+
     min_density = jnp.min(densities)
     mod = (densities - min_density) / (densities + min_density) * 100
 
-    # return times, mod
-    return times, densities
-
+    return times, mod
+    # return times, densities
 
 def plot_modulations(which, start_date_str='09-11'):
     """Plot the fractional modulations for different scenarios."""
@@ -243,7 +294,7 @@ def plot_modulations(which, start_date_str='09-11'):
     ax = fig.add_subplot(111)
 
     # Convert start_date_str to datetime object
-    start_date = datetime.datetime.strptime(start_date_str, '%m-%d')
+    start_date = datetime.strptime(start_date_str, '%m-%d')
     
     # Calculate the day of the year for the start date
     start_day_of_year = start_date.timetuple().tm_yday
@@ -268,6 +319,14 @@ def plot_modulations(which, start_date_str='09-11'):
     for m_nu, bound, v_0, label, linestyle, color, alpha in scenarios:
         days, mod = calculate_modulation(m_nu, bound, v_0)
 
+        # Check if all elements are zero
+        if jnp.all(mod == 0):
+            print("all zeros")
+
+        # Check if all elements are nan
+        if jnp.all(jnp.isnan(mod)):
+            print("all nan")
+
         # Shift days to start from the specified date
         shifted_days = (days/Params.yr*365 - start_day_of_year) % 365 + 1
         sorted_indices = jnp.argsort(shifted_days)
@@ -279,11 +338,10 @@ def plot_modulations(which, start_date_str='09-11'):
             linestyle=linestyle, color=color, label=label, alpha=alpha)
 
     # Calculate tick positions and labels
-    tick_dates = [datetime.date(2000, 11, 1), datetime.date(2000, 2, 1), 
-                  datetime.date(2000, 5, 1), datetime.date(2000, 8, 1)]
-    tick_days = [
-        (date - datetime.date(2000, start_date.month, start_date.day)).days % 365 + 1 for date in tick_dates
-    ]
+    tick_dates = [datetime_date(2000, 11, 1), datetime_date(2000, 2, 1), 
+                datetime_date(2000, 5, 1), datetime_date(2000, 8, 1)]
+    tick_days = [(d - datetime_date(2000, start_date.month, start_date.day)).days % 365 + 1 for d in tick_dates]
+
     tick_labels = ['Nov 1', 'Feb 1', 'May 1', 'Aug 1']
 
     plt.xticks(tick_days, tick_labels)
@@ -294,23 +352,38 @@ def plot_modulations(which, start_date_str='09-11'):
     plt.title('Annual Modulation of Cosmic Relic Neutrino Density')
     plt.ylabel(r'Modulation ($\%$)')
     plt.grid(True, which="major", linestyle="dashed")
+    
+    if which == "unbound" or which == "both":
+        # Add vertical lines for ~March 12th and ~September 11th
+        march_12 = (datetime_date(2000, 3, 12) - datetime_date(2000, start_date.month, start_date.day)).days % 365 + 1
+        sept_11 = (datetime_date(2000, 9, 11) - datetime_date(2000, start_date.month, start_date.day)).days % 365 + 1
 
-    # Add vertical lines for March 12th and September 11th
-    march_12 = (datetime.date(2000, 3, 12) - datetime.date(2000, start_date.month, start_date.day)).days % 365 + 1
-    sept_11 = (datetime.date(2000, 9, 11) - datetime.date(2000, start_date.month, start_date.day)).days % 365 + 1
-    plt.axvline(
-        x=march_12, color='dodgerblue', linestyle=':', 
-        label=r'$\textbf{Min. unbound}$ (Mar 12th)')
-    plt.axvline(
-        x=sept_11, color='magenta', linestyle=':', 
-        label=r'$\textbf{Max. unbound}$ (Sep 11th)')
+        plt.axvline(
+            x=march_12, color='dodgerblue', linestyle=':', 
+            label=r'$\textbf{Min. Unbound}$ (Mar 12th)')
+        plt.axvline(
+            x=sept_11, color='magenta', linestyle=':', 
+            label=r'$\textbf{Max. Unbound}$ (Sep 11th)')
+        
+    elif which == "bound" or which == "both":
+        # Add vertical lines for ~March 1st and ~September 1st
+        march_1 = (datetime_date(2000, 3, 1) - datetime_date(2000, start_date.month, start_date.day)).days % 365 + 1
+        sept_1 = (datetime_date(2000, 9, 1) - datetime_date(2000, start_date.month, start_date.day)).days % 365 + 1
+
+        # Plot the vertical lines
+        plt.axvline(
+            x=march_1, color='red', linestyle=':', 
+            label=r'$\textbf{Max. Bound}$ (Mar 1st)')
+        plt.axvline(
+            x=sept_1, color='purple', linestyle=':', 
+            label=r'$\textbf{Min. Bound}$ (Sep 1st)')
+
 
     plt.legend(prop={"size":12})
 
     plt.savefig(
         f"Safdi.pdf",
         bbox_inches="tight")
-    
 
 # Run the function with a specific start date
 # plot_modulations(which="unbound", start_date_str='09-20')
