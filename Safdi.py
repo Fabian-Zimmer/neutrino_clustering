@@ -142,7 +142,6 @@ def calculate_earth_velocity(year):
     return results
 
 
-
 ### ==================================== ###
 ### Get Earth's positions and velocities ###
 ### ==================================== ###
@@ -236,6 +235,7 @@ def f_distr(v_range, t_index, m_nu, bound, v_0):
 
     return f_v
 
+
 @jax.jit
 def number_density(t_index, m_nu, bound, v_0):
     """Calculate the neutrino number density at time t (a certain day)."""
@@ -264,6 +264,7 @@ def number_density(t_index, m_nu, bound, v_0):
 
     return nu_dens
 
+
 @jax.jit
 def calculate_modulation(m_nu, bound, v_0):
     """Calculate the fractional modulation throughout the year."""
@@ -279,6 +280,7 @@ def calculate_modulation(m_nu, bound, v_0):
 
     return times, densities
 
+
 def plot_modulations(which, start_date_str='09-11'):
     """Plot the fractional modulations for different scenarios."""
     fig = plt.figure(figsize=(10, 6))
@@ -291,8 +293,13 @@ def plot_modulations(which, start_date_str='09-11'):
     # Calculate the day of the year for the start date
     start_day_of_year = start_date.timetuple().tm_yday
 
-    m_nu_light = 0.15 * Params.eV
-    m_nu_heavy = 0.35 * Params.eV
+    # A Masses as in Safdi+
+    # m_nu_light = 0.15 * Params.eV
+    # m_nu_heavy = 0.35 * Params.eV
+
+    # Masses to compare with our results
+    m_nu_light = 0.1 * Params.eV
+    m_nu_heavy = 0.2 * Params.eV
     
     cases = [
         (m_nu_light, False, 220*Params.km/Params.s, 'Unbound, 0.15 eV', 'dashed', 'purple', 0.5),
@@ -317,7 +324,7 @@ def plot_modulations(which, start_date_str='09-11'):
                 densities)
         if bound == True:
             jnp.save(
-                f"annual_densities_{v_0/(Params.km/Params.s)}kms_bound.npy", 
+                f"annual_densities_{v_0/(Params.km/Params.s)}kms_{m_nu}eV_bound.npy", 
                 densities)
 
         min_density = jnp.min(densities)
@@ -369,7 +376,7 @@ def plot_modulations(which, start_date_str='09-11'):
             x=sept_11, color='magenta', linestyle=':', 
             label=r'$\textbf{Max. Unbound}$ (Sep 11th)')
         
-    elif which == "bound" or which == "both":
+    if which == "bound" or which == "both":
         # Add vertical lines for ~March 1st and ~September 1st
         march_1 = (datetime_date(2000, 3, 1) - datetime_date(2000, start_date.month, start_date.day)).days % 365 + 1
         sept_1 = (datetime_date(2000, 9, 1) - datetime_date(2000, start_date.month, start_date.day)).days % 365 + 1
@@ -386,8 +393,9 @@ def plot_modulations(which, start_date_str='09-11'):
     plt.legend(prop={"size":12})
 
     plt.savefig(
-        f"Safdi.pdf",
+        f"Sim_masses_1.pdf",
         bbox_inches="tight")
+
 
 # Run the function with a specific start date
 # plot_modulations(which="unbound", start_date_str='09-20')
