@@ -298,8 +298,8 @@ def plot_modulations(which, start_date_str='09-11'):
     # m_nu_heavy = 0.35 * Params.eV
 
     # Masses to compare with our results
-    m_nu_light = 0.1 * Params.eV
-    m_nu_heavy = 0.2 * Params.eV
+    m_nu_light = 0.05 * Params.eV
+    m_nu_heavy = 0.3 * Params.eV
     
     cases = [
         (m_nu_light, False, 220*Params.km/Params.s, 'Unbound, 0.15 eV', 'dashed', 'purple', 0.5),
@@ -393,7 +393,7 @@ def plot_modulations(which, start_date_str='09-11'):
     plt.legend(prop={"size":12})
 
     plt.savefig(
-        f"Sim_masses_1.pdf",
+        f"Sim_masses_2.pdf",
         bbox_inches="tight")
 
 
