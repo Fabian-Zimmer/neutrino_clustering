@@ -281,42 +281,20 @@ def calculate_modulation(m_nu, bound, v_0):
     return times, densities
 
 
-def plot_modulations(which, start_date_str='09-11'):
-    """Plot the fractional modulations for different scenarios."""
-    fig = plt.figure(figsize=(10, 6))
-    fig.tight_layout()
-    ax = fig.add_subplot(111)
-
-    # Convert start_date_str to datetime object
-    start_date = datetime.strptime(start_date_str, '%m-%d')
+def compute_modulations(m_nu_light, m_nu_heavy):
+    """Compute the annually modulated densities for different scenarios."""
     
-    # Calculate the day of the year for the start date
-    start_day_of_year = start_date.timetuple().tm_yday
-
-    # A Masses as in Safdi+
-    # m_nu_light = 0.15 * Params.eV
-    # m_nu_heavy = 0.35 * Params.eV
-
-    # Masses to compare with our results
-    m_nu_light = 0.05 * Params.eV
-    m_nu_heavy = 0.3 * Params.eV
-    
+    v_unit = Params.km/Params.s
     cases = [
-        (m_nu_light, False, 220*Params.km/Params.s, 'Unbound, 0.15 eV', 'dashed', 'purple', 0.5),
-        (m_nu_heavy, False, 220*Params.km/Params.s, 'Unbound, 0.35 eV', 'dashed', 'blue', 0.5),
-        (m_nu_heavy, True, 220*Params.km/Params.s, 'Bound, v_0 = 220 km/s', 'solid', 'black', 0.5),
-        (m_nu_heavy, True, 400*Params.km/Params.s, 'Bound, v_0 = 400 km/s', 'solid', 'orange', 0.5)
+        (m_nu_light, False, 220*v_unit),
+        (m_nu_heavy, False, 220*v_unit),
+        (m_nu_heavy, True, 220*v_unit),
+        (m_nu_heavy, True, 400*v_unit)
     ]
 
-    if which == "unbound":
-        scenarios = cases[:2]
-    elif which == "bound":
-        scenarios = cases[2:]
-    elif which == "both":
-        scenarios = cases
-
-    for m_nu, bound, v_0, label, linestyle, color, alpha in scenarios:
-        days, densities = calculate_modulation(m_nu, bound, v_0)
+    for triplet in cases:
+        m_nu, bound, v_0 = triplet[0], triplet[1], triplet[2]
+        _, densities = calculate_modulation(m_nu, bound, v_0)
 
         if bound == False:
             jnp.save(
@@ -327,77 +305,9 @@ def plot_modulations(which, start_date_str='09-11'):
                 f"annual_densities_{v_0/(Params.km/Params.s)}kms_{m_nu}eV_bound.npy", 
                 densities)
 
-        min_density = jnp.min(densities)
-        mod = (densities - min_density) / (densities + min_density) * 100
 
-        # Check if all elements are zero
-        if jnp.all(mod == 0):
-            print("all zeros")
-
-        # Check if all elements are nan
-        if jnp.all(jnp.isnan(mod)):
-            print("all nan")
-
-        # Shift days to start from the specified date
-        shifted_days = (days/Params.yr*365 - start_day_of_year) % 365 + 1
-        sorted_indices = jnp.argsort(shifted_days)
-        shifted_days = shifted_days[sorted_indices]
-        mod = mod[sorted_indices]
-
-        ax.plot(
-            shifted_days, mod, 
-            linestyle=linestyle, color=color, label=label, alpha=alpha)
-
-    # Calculate tick positions and labels
-    tick_dates = [datetime_date(2000, 11, 1), datetime_date(2000, 2, 1), 
-                datetime_date(2000, 5, 1), datetime_date(2000, 8, 1)]
-    tick_days = [(d - datetime_date(2000, start_date.month, start_date.day)).days % 365 + 1 for d in tick_dates]
-
-    tick_labels = ['Nov 1', 'Feb 1', 'May 1', 'Aug 1']
-
-    plt.xticks(tick_days, tick_labels)
-
-    # Set y-axis limits
-    # plt.ylim(0, 3)
-
-    plt.title('Annual Modulation of Cosmic Relic Neutrino Density')
-    plt.ylabel(r'Modulation ($\%$)')
-    plt.grid(True, which="major", linestyle="dashed")
-    
-    if which == "unbound" or which == "both":
-        # Add vertical lines for ~March 12th and ~September 11th
-        march_12 = (datetime_date(2000, 3, 12) - datetime_date(2000, start_date.month, start_date.day)).days % 365 + 1
-        sept_11 = (datetime_date(2000, 9, 11) - datetime_date(2000, start_date.month, start_date.day)).days % 365 + 1
-
-        plt.axvline(
-            x=march_12, color='dodgerblue', linestyle=':', 
-            label=r'$\textbf{Min. Unbound}$ (Mar 12th)')
-        plt.axvline(
-            x=sept_11, color='magenta', linestyle=':', 
-            label=r'$\textbf{Max. Unbound}$ (Sep 11th)')
-        
-    if which == "bound" or which == "both":
-        # Add vertical lines for ~March 1st and ~September 1st
-        march_1 = (datetime_date(2000, 3, 1) - datetime_date(2000, start_date.month, start_date.day)).days % 365 + 1
-        sept_1 = (datetime_date(2000, 9, 1) - datetime_date(2000, start_date.month, start_date.day)).days % 365 + 1
-
-        # Plot the vertical lines
-        plt.axvline(
-            x=march_1, color='red', linestyle=':', 
-            label=r'$\textbf{Max. Bound}$ (Mar 1st)')
-        plt.axvline(
-            x=sept_1, color='purple', linestyle=':', 
-            label=r'$\textbf{Min. Bound}$ (Sep 1st)')
-
-
-    plt.legend(prop={"size":12})
-
-    plt.savefig(
-        f"Sim_masses_2.pdf",
-        bbox_inches="tight")
-
-
-# Run the function with a specific start date
-# plot_modulations(which="unbound", start_date_str='09-20')
-# plot_modulations(which="bound", start_date_str='09-20')
-plot_modulations(which="both", start_date_str='09-20')
+m_nu_l = 0.01
+m_nu_h = 0.1
+# compute_modulations(m_nu_l, m_nu_h)
+# compute_modulations(m_nu_l, m_nu_h)
+compute_modulations(m_nu_l, m_nu_h)
