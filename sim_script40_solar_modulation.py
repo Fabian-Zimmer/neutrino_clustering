@@ -55,10 +55,10 @@ def EOMs_sun(s_val, y, args):
     # Compute gradient of sun.
     eps = 696_340*km  # solar radius in numerical units
     grad_sun = SimExec.sun_gravity(x_i, eps, sun_pos_t)
-    # grad_sun = SimExec.sun_gravity(x_i, eps, sun_pos)
+    grad_tot = grad_sun
 
     # Add gravity vector of DM sim cell
-    grad_tot = grad_sun + dPsi_Sun_cell
+    # grad_tot = grad_sun + dPsi_Sun_cell
 
     # Switch to "physical reality" here.
     grad_tot /= (kpc/s**2)
