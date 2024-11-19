@@ -281,7 +281,7 @@ def calculate_modulation(m_nu, bound, v_0):
     return times, densities
 
 
-def compute_modulations(m_nu_light, m_nu_heavy):
+def compute_modulations(m_nu_light, m_nu_heavy, out_dir):
     """Compute the annually modulated densities for different scenarios."""
     
     v_unit = Params.km/Params.s
@@ -298,11 +298,11 @@ def compute_modulations(m_nu_light, m_nu_heavy):
 
         if bound == False:
             jnp.save(
-                f"annual_densities_{m_nu}eV_unbound.npy", 
+                f"{out_dir}/annual_densities_{m_nu}eV_unbound.npy", 
                 densities)
         if bound == True:
             jnp.save(
-                f"annual_densities_{v_0/(Params.km/Params.s)}kms_{m_nu}eV_bound.npy", 
+                f"{out_dir}/annual_densities_{v_0/(Params.km/Params.s)}kms_{m_nu}eV_bound.npy", 
                 densities)
 
 
@@ -310,4 +310,4 @@ m_nu_l = 0.01
 m_nu_h = 0.1
 # compute_modulations(m_nu_l, m_nu_h)
 # compute_modulations(m_nu_l, m_nu_h)
-compute_modulations(m_nu_l, m_nu_h)
+compute_modulations(m_nu_l, m_nu_h, out_dir="sim_output/SunMod_1k")
