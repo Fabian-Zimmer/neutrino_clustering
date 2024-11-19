@@ -25,7 +25,7 @@ fi
 conda activate neutrino_clustering
 
 
-sim_fullname=SunMod_1k
+sim_fullname=SunNoG
 
 python $HOME/neutrino_clustering/sim_script40_solar_modulation_no_gravity.py \
 --directory $HOME/neutrino_clustering/sim_output/$sim_fullname \

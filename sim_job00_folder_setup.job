@@ -23,7 +23,7 @@ fi
 conda activate neutrino_clustering
 
 
-sim_fullname=SunMod_1k
+sim_fullname=SunNoG
 
 python $HOME/neutrino_clustering/make1_simulation_box.py \
 --box_directory /projects/0/prjs0781/simulation_data/Tango_sims \
