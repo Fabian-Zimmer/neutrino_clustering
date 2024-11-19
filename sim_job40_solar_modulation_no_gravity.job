@@ -1,0 +1,37 @@
+#!/bin/bash
+#SBATCH --job-name=SunNoG
+#SBATCH -p rome
+#SBATCH -t 00:40:00
+#SBATCH -N 1
+#SBATCH --tasks-per-node=1
+#SBATCH --cpus-per-task=128
+#SBATCH --mem=224000
+#SBATCH -o jobs/SunNoG.out
+#SBATCH -e jobs/SunNoG.err
+#SBATCH -v
+
+
+# rome  node- full: 128/224 ; half: 64/112 ; quarter: 32/56 ; CPUs/GB.
+# genoa node- full: 192/336 ; half: 96/168 ; quarter: 48/84 ; CPUs/GB.
+
+
+module purge
+
+# Load .bashrc if it exists
+if [ -f "$HOME/.bashrc" ]; then
+    source $HOME/.bashrc
+fi
+
+conda activate neutrino_clustering
+
+
+sim_fullname=SunMod_1k
+
+python $HOME/neutrino_clustering/sim_script40_solar_modulation_no_gravity.py \
+--directory $HOME/neutrino_clustering/sim_output/$sim_fullname \
+--mass_gauge 12.0 \
+--mass_lower 0.6 \
+--mass_upper 2.0 \
+--halo_num 1 \
+--no-benchmark \
+--no-testing
