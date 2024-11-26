@@ -55,10 +55,9 @@ def EOMs_sun(s_val, y, args):
     # Compute gradient of sun.
     eps = 696_340*km  # solar radius in numerical units
     grad_sun = SimExec.sun_gravity(x_i, eps, sun_pos_t)
-    grad_tot = grad_sun
 
     # Add gravity vector of DM sim cell
-    # grad_tot = grad_sun + dPsi_Sun_cell
+    grad_tot = grad_sun + dPsi_Sun_cell
 
     # Switch to "physical reality" here.
     grad_tot /= (kpc/s**2)
@@ -151,7 +150,7 @@ def simulate_neutrinos_1_pix(init_xyz, init_vels, common_args):
 
 # Load Sun's positions and velocity vectors (w.r.t. CNB==CMB) in Earth-GC frame
 # for 1 year
-sun_positions, sun_velocities, _ = SimPlot.SunEarthGC_frame_coords(2024)
+sun_positions, sun_velocities, _ = SimPlot.SunEarthGC_frame_coords_posvel(2024)
 sun_positions *= Params.AU
 sun_velocities *= Params.km/Params.s
 
@@ -203,8 +202,8 @@ dPsi_Sun_cell = dPsi_grids[z_idx, cell_idx, :]
 # Lists for pixel and total number densities
 tot_dens_days_l = []
 pix_dens_days_l = []
-# for day in range(365):
-for day in range(0, 365, 12):  #note: testing
+# for day in range(0, 365, 1):  #note: all days of the year
+for day in range(0, 365, 12):  #note: for testing, subset of all days
 
     # Select 1 years worth of redshift steps, +1 because we select second 
     # last time step in integration routine due to infinities issue (see above)

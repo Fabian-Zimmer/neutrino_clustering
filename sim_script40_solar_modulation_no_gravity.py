@@ -58,9 +58,6 @@ def EOMs_sun(s_val, y, args):
     grad_tot = grad_sun
     # grad_tot = jnp.zeros_like(grad_sun)
 
-    # Add gravity vector of DM sim cell
-    # grad_tot = grad_sun + dPsi_Sun_cell
-
     # Switch to "physical reality" here.
     grad_tot /= (kpc/s**2)
     x_i /= kpc
