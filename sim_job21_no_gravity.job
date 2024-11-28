@@ -24,7 +24,7 @@ fi
 conda activate neutrino_clustering
 
 
-sim_fullname=no_gravity
+sim_fullname=OK_sim
 
 python $HOME/neutrino_clustering/sim_script21_no_gravity.py \
 --directory $HOME/neutrino_clustering/sim_output/$sim_fullname \
