@@ -1,62 +1,15 @@
-# Default libraries
-import os
-import sys
-import pathlib
-import yaml
-import time
-from datetime import datetime, timedelta, date as datetime_date
-import argparse
-import random
-import math
-import glob
-
-# Conda install libraries
 import numpy as np
-import astropy.units as apu
-import astropy.constants as apc
-from astropy.coordinates import SkyCoord, GCRS, ICRS, Galactic, get_sun
-from astropy.time import Time
-from astropy.coordinates import get_body_barycentric, CartesianRepresentation, get_body_barycentric_posvel
-import astropy.cosmology as apcosmo
-cosmo = apcosmo.Planck18
-from scipy.signal import savgol_filter
-from scipy.special import zeta
-from scipy.interpolate import interp1d, UnivariateSpline
-from scipy.optimize import root_scalar
-from scipy.spatial import cKDTree
-from scipy.integrate import quad
-import matplotlib as mpl
-import matplotlib.pyplot as plt
-import matplotlib.ticker as ticker
-from matplotlib.animation import FuncAnimation
-import io
-from icecream import ic
-import healpy as hp
-import pandas as pd
-
-# Pip install libraries
-from sklearn.gaussian_process import GaussianProcessRegressor
-from sklearn.gaussian_process.kernels import Matern
 import jax
-import jax.scipy as jsp
-from jax.scipy.integrate import trapezoid as trap
 import jax.numpy as jnp
-import chex
-import diffrax
-import natpy as nat
-import colorcet as cc
-
-# Switch jax to use float64 as default instead of float32
-from jax.config import config
-config.update("jax_enable_x64", True)
-
-# Ignore UserWarnings issued by healpy
-import warnings
-warnings.filterwarnings("ignore", category=UserWarning, module="healpy")
-warnings.filterwarnings("ignore", category=UserWarning, module="matplotlib")
+import astropy.constants as apc
+import astropy.units as apu
+from astropy.cosmology import Planck18 as cosmo
+import matplotlib as mpl
+from scipy.special import zeta
 
 
-@chex.dataclass
+
+
 class Params:
 
     #############
@@ -68,7 +21,7 @@ class Params:
     Binary_MB_unit: float = 1024**2
     Binary_GB_unit: float = 1024**3
     Pi: float      = jnp.pi
-    hc_val: float  = (apc.h/(2*Pi)*apc.c).convert(apu.eV*apu.cm).value
+    hc_val: float = (apc.h / (2 * jnp.pi) * apc.c).to(apu.eV * apu.cm).value
 
     eV: float     = 1.                         # Unit of energy: eV
     meV: float    = 1.0e-3*eV
@@ -88,7 +41,8 @@ class Params:
     pc: float     = 3.08567758128e18*cm        # parsec
     kpc: float    = 1.0e3*pc
     Mpc: float    = 1.0e3*kpc
-    AU: float     = (((1*apu.AU).convert(apu.m)).value)*m
+    AU: float = (1 * apu.AU).to(apu.m).value * m
+
 
     # note: 
     # Natural units defined via c=1, i.e. s/m = 299792458
@@ -295,3 +249,34 @@ class Params:
         ls="dashed", 
         alpha=0.5
     )
+
+
+def extract_positions_and_velocities(file_path):
+    """
+    Extracts neutrino positions and velocities at two snapshots: today and high redshift.
+
+    Args:
+        file_path (str): Path to the vector file containing simulation data.
+
+    Returns:
+        tuple: (pos_today, pos_high_redshift, vels_today, vels_high_redshift)
+            - pos_today: Positions at z=0 
+            - pos_high_redshift: Positions at high redshift 
+            - vels_today: Velocities at z=0 
+            - vels_high_redshift: Velocities at high redshift 
+    """
+    # Load the vector file
+    data = np.load(file_path)  
+
+
+    pos_today = data[:, :, 0, :3]
+    pos_high_redshift = data[:, :, 1, :3]
+
+    vels_today = data[:, :, 0, 3:]
+    vels_high_redshift = data[:, :, 1, 3:]
+
+    return pos_today, pos_high_redshift, vels_today, vels_high_redshift
+
+file_path = '/home/fzimmer/neutrino_clustering/sim_output/OK_sim/vectors_halo1.npy'
+pos_today, pos_high_redshift, vels_today, vels_high_redshift = extract_positions_and_velocities(file_path)
+
