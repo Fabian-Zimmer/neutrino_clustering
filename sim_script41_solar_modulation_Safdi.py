@@ -2,146 +2,6 @@ from Shared.shared import *
 from Shared.specific_CNB_sim import *
 
 
-def calculate_fractional_day_numbers(year):
-    """
-    Calculate the fractional day number n for each day of the given year.
-    
-    :param year: The year for which to calculate the fractional day numbers
-    :return: A list of tuples, each containing (date, fractional day number)
-    """
-    results = []
-    start_date = datetime(year, 1, 1)
-    
-    for day in range(
-        366 if year % 4 == 0 and (year % 100 != 0 or year % 400 == 0) else 365):
-        current_date = start_date + timedelta(days=day)
-        Y, M, D = current_date.year, current_date.month, current_date.day
-        
-        Y_tilde = Y - 1 if M <= 2 else Y
-        M_tilde = M + 12 if M <= 2 else M
-        
-        n = np.floor(365.25 * Y_tilde) + np.floor(30.61 * (M_tilde + 1)) + D - 730563.5
-        
-        results.append((current_date.strftime('%Y-%m-%d'), n))
-    
-    return results
-
-
-def calculate_average_ecliptic_vectors(year):
-    """
-    Calculate the average ecliptic unit vectors ϵ_x and ϵ_y for the given year.
-    
-    :param year: The year for which to calculate the average ecliptic vectors
-    :return: A tuple containing (year, average ϵ_x, average ϵ_y)
-    """
-    # Constants for ϵ_x and ϵ_y calculations
-    eps_x_0 = np.array([0.054876, -0.494109, 0.867666])
-    eps_x_T = np.array([-0.024232, -0.002689, 1.546e-6])
-    eps_y_0 = np.array([0.993821, 0.110992, 0.000352])
-    eps_y_T = np.array([0.001316, -0.011851, 0.021267])
-    
-    eps_x_sum = np.zeros(3)
-    eps_y_sum = np.zeros(3)
-    
-    # Get fractional day numbers for the year
-    fractional_days = calculate_fractional_day_numbers(year)
-    
-    for _, n in fractional_days:
-        # Calculate T
-        T = n / 36525
-        
-        # Calculate ϵ_x and ϵ_y for this day
-        eps_x = eps_x_0 + eps_x_T * T
-        eps_y = eps_y_0 + eps_y_T * T
-        
-        # Add to the sum
-        eps_x_sum += eps_x
-        eps_y_sum += eps_y
-    
-    # Calculate averages
-    days_in_year = len(fractional_days)
-    eps_x_avg = eps_x_sum / days_in_year
-    eps_y_avg = eps_y_sum / days_in_year
-    
-    # Normalize the average vectors
-    eps_x_avg /= np.linalg.norm(eps_x_avg)
-    eps_y_avg /= np.linalg.norm(eps_y_avg)
-    
-    return eps_x_avg, eps_y_avg
-
-
-def calculate_earth_position(year):
-    """
-    Calculate Earth's position relative to the Sun in ecliptic coordinates for each day of the year.
-    
-    :param year: The year for which to calculate Earth's position
-    :return: A list of tuples, each containing (date, position vector)
-    """
-    # Constants
-    e = 0.9574  # eccentricity in degrees
-    e_rad = np.radians(e)
-
-    # Get fractional day numbers and ecliptic vectors for the year
-    fractional_days = calculate_fractional_day_numbers(year)
-    eps_x, eps_y = calculate_average_ecliptic_vectors(year)
-
-    results = []
-
-    for date, n in fractional_days:
-        # Calculate L, g, and varpi
-        L = np.radians(280.460 + 0.9856474 * n)
-        g = np.radians(357.528 + 0.9856003 * n)
-        varpi = np.radians(282.932 + 0.0000471 * n)
-
-        # Calculate ecliptic longitude
-        l = L + 2 * e_rad * np.sin(g) + 5/4 * e_rad**2 * np.sin(2*g)
-
-        # Calculate Earth-Sun distance (in AU)
-        r = 1.00014 - 0.01671 * np.cos(g) - 0.00014 * np.cos(2*g)
-
-        # Calculate position vector
-        position = r * (np.cos(l) * eps_x + np.sin(l) * eps_y)
-
-        results.append((date, position))
-
-    return results
-
-
-def calculate_earth_velocity(year):
-    """
-    Calculate Earth's velocity for each day of the year.
-    
-    :param year: The year for which to calculate Earth's velocity
-    :return: A list of tuples, each containing (date, velocity vector)
-    """
-    # Constants
-    e = 0.9574  # eccentricity in degrees
-    e_rad = np.radians(e)
-    u_E_avg = 29.79  # Average Earth velocity in km/s
-
-    # Get fractional day numbers and ecliptic vectors for the year
-    fractional_days = calculate_fractional_day_numbers(year)
-    eps_x, eps_y = calculate_average_ecliptic_vectors(year)
-
-    results = []
-
-    for date, n in fractional_days:
-        # Calculate L and varpi
-        L = np.radians(280.460 + 0.9856474 * n)
-        varpi = np.radians(282.932 + 0.0000471 * n)
-
-        # Calculate velocity components
-        v_x = -u_E_avg * (np.sin(L) + e_rad * np.sin(2*L - varpi))
-        v_y = u_E_avg * (np.cos(L) + e_rad * np.cos(2*L - varpi))
-
-        # Calculate velocity vector
-        velocity = v_x * eps_x + v_y * eps_y
-
-        results.append((date, velocity))
-
-    return results
-
-
 ### ==================================== ###
 ### Get Earth's positions and velocities ###
 ### ==================================== ###
@@ -149,9 +9,9 @@ def calculate_earth_velocity(year):
 year = 2023
 
 earth_positions = jnp.array(
-    [pos for _, pos in calculate_earth_position(year)])*Params.AU
+    [pos for _, pos in SimUtil.calculate_earth_position(year)])*Params.AU
 earth_velocities = jnp.array(
-    [vel for _, vel in calculate_earth_velocity(year)])*Params.km/Params.s
+    [vel for _, vel in SimUtil.calculate_earth_velocity(year)])*Params.km/Params.s
 # print(earth_positions.shape, earth_velocities.shape)
 # print(earth_positions[0], jnp.linalg.norm(earth_velocities[0]))
 
