@@ -46,17 +46,18 @@ def EOMs_sun(s_val, y, args):
     z = Utils.jax_interpolate(s_val, s_int_steps, z_int_steps)
 
     # Find t (lookback time) corresponding to s_val via interpolation.
-    t = Utils.jax_interpolate(s_val, s_int_steps, t_int_steps)*s
+    # t = Utils.jax_interpolate(s_val, s_int_steps, t_int_steps)*s
 
     # Compute current position of Sun w.r.t. CNB(==CMB) frame, given starting 
     # position and velocity vectors of current day being simulated
-    sun_pos_t = sun_pos - sun_vel*t
+    # sun_pos_t = sun_pos - sun_vel*t
 
     # Compute gradient of sun.
-    eps = 696_340*km  # solar radius in numerical units
-    grad_sun = SimExec.sun_gravity(x_i, eps, sun_pos_t)
-    grad_tot = grad_sun
-    # grad_tot = jnp.zeros_like(grad_sun)
+    # eps = 696_340*km  # solar radius in numerical units
+    # grad_sun = SimExec.sun_gravity(x_i, eps, sun_pos_t)
+    # grad_tot = grad_sun
+
+    grad_tot = jnp.zeros(3)
 
     # Switch to "physical reality" here.
     grad_tot /= (kpc/s**2)
@@ -149,7 +150,7 @@ def simulate_neutrinos_1_pix(init_xyz, init_vels, common_args):
 
 # Load Sun's positions and velocity vectors (w.r.t. CNB==CMB) in Earth-GC frame
 # for 1 year
-sun_positions, sun_velocities, _ = SimPlot.SunEarthGC_frame_coords_posvel(2024)
+sun_positions, sun_velocities, _ = SimUtil.SunEarthGC_frame_coords_posvel(2024)
 sun_positions *= Params.AU
 sun_velocities *= Params.km/Params.s
 
@@ -249,49 +250,6 @@ for day in range(0, 365, 12):  #note: for testing, subset of all days
 
     sim_time = time.perf_counter()-sim_start
     print(f"Simulation time: {sim_time/60.:.2f} min, {sim_time/(60**2):.2f} h")
-
-
-    ### ======================== ###
-    ### Compute number densities ###
-    ### ======================== ###
-
-    """
-    ana_start = time.perf_counter()
-
-    # Compute individual number densities for each healpixel
-    pix_start = time.perf_counter()
-
-    nu_allsky_masses = jnp.array([0.01, 0.05, 0.1, 0.2, 0.3])*Params.eV
-    pix_dens = Physics.number_densities_all_sky(
-        v_arr=nu_vectors[..., 3:],
-        m_arr=nu_allsky_masses,
-        pix_sr=simdata.pix_sr,
-        args=Params())
-    pix_dens_l.append(jnp.squeeze(pix_dens))
-
-    pix_time = time.perf_counter() - pix_start
-
-    jnp.save(
-        f"{pars.directory}/pixel_densities_{end_str}.npy", jnp.array(pix_dens_l))
-
-    # Compute total number density, by using all neutrino vectors for integral
-    tot_start = time.perf_counter()
-
-    tot_dens = Physics.number_densities_mass_range(
-        v_arr=nu_vectors.reshape(-1, 2, 6)[..., 3:], 
-        m_arr=nu_massrange, 
-        pix_sr=4*Params.Pi,
-        args=Params())
-    tot_dens_l.append(jnp.squeeze(tot_dens))
-
-    tot_time = time.perf_counter() - tot_start
-
-    jnp.save(
-        f"{pars.directory}/total_densities_{end_str}.npy", jnp.array(tot_dens_l))
-
-    ana_time = time.perf_counter() - ana_start
-    print(f"Analysis time: {ana_time/60.:.2f} min, {ana_time/(60**2):.2f} h\n")
-    """
 
 
 total_time = time.perf_counter() - total_start
