@@ -1,0 +1,7 @@
+# No gravity (no Sun, no DM halo):
+sim_name = f"SunNoG"
+sim_folder = f"sim_output/{sim_name}"
+fig_folder = f"figures_local/{sim_name}"
+prefix = "NoSun"
+
+# 
