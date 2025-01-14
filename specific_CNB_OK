@@ -6,7 +6,8 @@ import astropy.units as apu
 from astropy.cosmology import Planck18 as cosmo
 import matplotlib as mpl
 from scipy.special import zeta
-
+from jax.scipy.integrate import trapezoid as trap
+from scipy.integrate import quad
 
 
 
@@ -250,6 +251,7 @@ class Params:
         alpha=0.5
     )
 
+params = Params()
 
 def extract_positions_and_velocities(file_path):
     """
@@ -277,6 +279,118 @@ def extract_positions_and_velocities(file_path):
 
     return pos_today, pos_high_redshift, vels_today, vels_high_redshift
 
-file_path = '/home/fzimmer/neutrino_clustering/sim_output/OK_sim/vectors_halo1.npy'
+def calculate_masses(m_lightest, hierarchy='NH'):
+    dm21_sq = 7.42e-5 * Params.eV**2
+    dm31_sq = 2.514e-3 * Params.eV**2
+    
+    if hierarchy == 'NH':  # Normal hierarchy
+        m1 = m_lightest
+        m2 = np.sqrt(m1**2 + dm21_sq)
+        m3 = np.sqrt(m1**2 + dm31_sq)
+    elif hierarchy == 'IH':  # Inverted hierarchy
+        m3 = m_lightest
+        m1 = np.sqrt(m3**2 + dm31_sq)
+        m2 = np.sqrt(m3**2 + dm21_sq)
+    else:
+        raise ValueError("Hierarchy must be 'NH' or 'IH'.")
+    
+    return [m1, m2, m3]
+
+
+def velocities_to_momenta(m_lightest, vels_today, vels_high_redshift):
+    masses = calculate_masses(m_lightest)  # Default hierarchy is 'NH'
+    vels_today_magnitudes = np.linalg.norm(vels_today, axis=-1) * (Params.kpc / Params.s)
+    vels_high_redshift_magnitudes = np.linalg.norm(vels_high_redshift, axis=-1) * (Params.kpc / Params.s)
+
+    masses_broadcasted = np.array(masses)[None, None, :]  # Shape: (1, 1, 3)
+    momenta_today = vels_today_magnitudes[..., None] * masses_broadcasted
+    momenta_high_redshift = vels_high_redshift_magnitudes[..., None] * masses_broadcasted
+
+    return momenta_today, momenta_high_redshift
+
+def sort_momenta(m_lightest, vels_today, vels_high_redshift):
+    momenta_today, momenta_high_redshift = velocities_to_momenta(m_lightest, vels_today, vels_high_redshift)
+
+    magnitudes_today = jnp.linalg.norm(momenta_today, axis=-1)
+    magnitudes_high_redshift = jnp.linalg.norm(momenta_high_redshift, axis=-1)
+
+    ind_today = magnitudes_today.argsort(axis=-1)
+    ind_high_redshift = magnitudes_high_redshift.argsort(axis=-1)
+
+    momenta_today_sorted = jnp.take_along_axis(momenta_today, ind_today[..., None], axis=-2)
+    momenta_high_redshift_sorted = jnp.take_along_axis(momenta_high_redshift, ind_high_redshift[..., None], axis=-2)
+
+    return momenta_today_sorted, momenta_high_redshift_sorted
+
+# Fermi-Dirac Distribution
+def distribution_fermi_dirac(p_values, args):
+    return 1 / (np.exp(p_values / args.T_CNB) + 1)
+
+# Gaussian distribution (normalized)
+def gaussian_normalized(p, N_nu_eff, y_star, sigma_star):
+    def gaussian(q):
+        return np.exp(-((q - y_star) ** 2) / (2 * sigma_star**2))
+
+    integral, _ = quad(lambda q: gaussian(q) * q**3, 0, np.inf)
+    A = N_nu_eff / (360 / (7 * params.Pi**4) * (11 / 4)**(4 / 3) * (params.T_CNB/params.T_CMB)**4 * integral)
+    return A * np.exp(-((p/params.T_CNB - y_star) ** 2) / (2 * sigma_star**2))
+
+# Lν-DR Case
+def distribution_ldr(p_values, args):
+    f_gaussian_ldr = gaussian_normalized(p_values, N_nu_eff=0.5, y_star=0.1, sigma_star=0.294218)
+    return f_gaussian_ldr
+
+# Hν Case
+def distribution_hv(p_values, args):
+    f_gaussian_hv = gaussian_normalized(p_values, N_nu_eff=3.044, y_star=30, sigma_star=4.82113)
+    return f_gaussian_hv
+
+# Hν-DR Case
+def distribution_hvdr(p_values, args):
+    f_gaussian_hvdr = gaussian_normalized(p_values, N_nu_eff=1.5, y_star=3, sigma_star=8.82654)
+    return f_gaussian_hvdr
+
+# LT+Mid Case
+def distribution_ltmid(p_values, args):
+    f_gaussian_ltmid = gaussian_normalized(p_values, N_nu_eff=2.3139, y_star=3.5, sigma_star=0.508274)
+    f_fermi_dirac_ltmid = distribution_fermi_dirac(p_values * 2, args)
+    f_combined_ltmid = f_gaussian_ltmid + f_fermi_dirac_ltmid
+    return f_combined_ltmid
+
+
+def number_density(m_lightest, vels_today, vels_high_redshift, pix_sr, args, distribution_func):
+    momenta_today_sorted, momenta_high_redshift_sorted = sort_momenta(m_lightest, vels_today, vels_high_redshift)
+
+    magnitudes_today = jnp.linalg.norm(momenta_today_sorted, axis=-1)
+    magnitudes_high_redshift = jnp.linalg.norm(momenta_high_redshift_sorted, axis=-1)
+
+    distribution_arr = distribution_func(magnitudes_high_redshift, args)
+
+    # Calculate number density using integration
+    y = magnitudes_today**3 * distribution_arr
+    x = magnitudes_today
+    n_raw = trap(y, jnp.log(x), axis=-1)
+
+    # Multiply by constants and/or solid angles and convert to 1/cm^3
+    n_cm3 = pix_sr * args.g_nu / ((2 * args.Pi)**3) * n_raw / (1 / args.cm**3)
+
+    return jnp.array(n_cm3)
+
+file_path = r'/home/fzimmer/neutrino_clustering/sim_output/OK_sim/vectors_halo1.npy'
 pos_today, pos_high_redshift, vels_today, vels_high_redshift = extract_positions_and_velocities(file_path)
+m_lightest = 0.01 * params.eV
+pix_sr = 4 * params.Pi / 768
+
+n_sm = number_density(m_lightest, vels_today, vels_high_redshift, pix_sr, params, distribution_fermi_dirac)
+print(np.sum(n_sm))
+n_ldr = number_density(m_lightest, vels_today, vels_high_redshift, pix_sr, params, distribution_ldr)
+n_hv = number_density(m_lightest, vels_today, vels_high_redshift, pix_sr, params, distribution_hv)
+n_hvdr = number_density(m_lightest, vels_today, vels_high_redshift, pix_sr, params, distribution_hvdr)
+n_ltmid = number_density(m_lightest, vels_today, vels_high_redshift, pix_sr, params, distribution_ltmid)
+
+print("Number density for ΛCDM case:", n_sm[0])
+print("Number density for Lν-DR case:", n_ldr[0])
+print("Number density for Hν case:", n_hv[0])
+print("Number density for Hν-DR case:", n_hvdr[0])
+print("Number density for LT+Mid case:", n_ltmid[0])
 

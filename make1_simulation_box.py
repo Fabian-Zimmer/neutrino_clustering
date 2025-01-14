@@ -1,10 +1,10 @@
-from shared.preface import *
+from old_shared.preface import *
 
 import velociraptor
-from shared.snapshot_data import snapshot_info
-from shared.tree_dataset import TreeCatalogue
-from shared.argumentparser import ArgumentParser
-from shared import simulation_data
+from old_shared.snapshot_data import snapshot_info
+from old_shared.tree_dataset import TreeCatalogue
+from old_shared.argumentparser import ArgumentParser
+from old_shared import simulation_data
 import pathlib
 
 

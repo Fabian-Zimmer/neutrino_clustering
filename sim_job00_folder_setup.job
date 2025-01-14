@@ -23,7 +23,7 @@ fi
 conda activate neutrino_clustering
 
 
-sim_fullname=OK_sim
+sim_fullname=OK_sim_halos
 
 python $HOME/neutrino_clustering/make1_simulation_box.py \
 --box_directory /projects/0/prjs0781/simulation_data/Tango_sims \
