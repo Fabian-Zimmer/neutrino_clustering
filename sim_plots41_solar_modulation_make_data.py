@@ -63,7 +63,8 @@ def calc_CNB_density_days(
         # Load and transform velocities to Earth frame
         v_unit = args.kpc/args.s
         day_v = jnp.load(fpath)[..., 3:][None, ...]*v_unit
-        # (halos, 768, 1000, 2, 3)
+        print(day_v.shape)
+        # (halos, Npix, p_num, 2, 3)
 
         if with_DM_gravity:
             # Calculate momentum arrays for gravity simulation
@@ -145,7 +146,9 @@ def calc_CNB_density_days(
 
 # Set preliminaries
 # sim_name = f"SunNoG"
-sim_name = f"SunMod_1k"
+# sim_name = f"SunMod_1k"
+sim_name = f"SunMod_2k"
+# sim_name = f"SunMod_5k"
 sim_folder = f"sim_output/{sim_name}"
 fig_folder = f"figures_local/{sim_name}"
 nu_m_range = jnp.load(f"{sim_folder}/neutrino_massrange_eV.npy")
@@ -174,17 +177,17 @@ halo_nums = [x for x in range(1, 31) if x not in exclude_nums]
 # interp_grav_psd = False
 
 # With Sun and DM gravity
-days_vecs_dir = f"{sim_folder}/WithSun_vel_MW_vectors"
+days_vecs_dir = f"{sim_folder}/WithSun_vel_CNB_vectors"
 prefix_str = "Sun+DM"
 with_DM_gravity = True
-interp_grav_psd = True
+interp_grav_psd = False
 
 day_step = 24  # Ultimately we want to use 1 to have all days
-Earth_frame = True
-integrate_pixels = True
+Earth_frame = False
+integrate_pixels = False
 
-# rel_vel = "CNB"
-rel_vel = "MW"
+rel_vel = "CNB"
+# rel_vel = "MW"
 bound = None
 # bound: Momentum boundary condition:
 #     None - Use full momentum range
