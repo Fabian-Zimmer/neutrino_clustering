@@ -1,13 +1,13 @@
 #!/bin/bash
-#SBATCH --job-name=Dopri5_1k_z0p15
+#SBATCH --job-name=DMhalo_5k
 #SBATCH -p rome
-#SBATCH -t 00:30:00
+#SBATCH -t 00:20:00
 #SBATCH -N 1
 #SBATCH --tasks-per-node=1
 #SBATCH --cpus-per-task=128
 #SBATCH --mem=224000
-#SBATCH -o jobs/Dopri5_1k_z0p15.out
-#SBATCH -e jobs/Dopri5_1k_z0p15.err
+#SBATCH -o jobs/DMhalo_5k.out
+#SBATCH -e jobs/DMhalo_5k.err
 #SBATCH -v
 #SBATCH --exclusive
 
@@ -24,12 +24,12 @@ fi
 
 conda activate neutrino_clustering
 
-sim_fullname=Dopri5_1k_z0p15
+sim_fullname=SunMod_5k
 
 python $HOME/neutrino_clustering/sim_script23_DM_halos.py \
 --directory $HOME/neutrino_clustering/sim_output/$sim_fullname \
 --mass_gauge 12.0 \
 --mass_lower 0.6 \
 --mass_upper 2.0 \
---halo_num 10 \
+--halo_num 1 \
 --no-benchmark
