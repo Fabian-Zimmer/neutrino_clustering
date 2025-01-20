@@ -155,7 +155,7 @@ def simulate_neutrinos_1_pix(init_xyz, init_vels, common_args):
 # Load Sun's positions and velocity vectors (w.r.t. CNB==CMB) in Earth-GC frame
 # for 1 year
 sun_positions, sun_velocities, _ = SimUtil.SunEarthGC_frame_coords_posvel(2024)
-sun_positions *= Params.AU
+sun_positions *= Params.km
 sun_velocities *= Params.km/Params.s
 
 # Redshift from today until (365*2)+1 days ago

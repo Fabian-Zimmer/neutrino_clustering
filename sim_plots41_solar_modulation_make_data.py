@@ -145,8 +145,8 @@ def calc_CNB_density_days(
 
 # Set preliminaries
 # sim_name = f"SunNoG"
-# sim_name = f"SunMod_1k"
-sim_name = f"SunMod_2k"
+sim_name = f"SunMod_1k"
+# sim_name = f"SunMod_2k"
 # sim_name = f"SunMod_5k"
 sim_folder = f"sim_output/{sim_name}"
 fig_folder = f"figures_local/{sim_name}"
@@ -176,9 +176,9 @@ halo_nums = [x for x in range(1, 31) if x not in exclude_nums]
 # interp_grav_psd = False
 
 # With Sun but no DM gravity
-days_vecs_dir = f"{sim_folder}/EarthSun_frame_Dopri8"
-prefix_str = "SunOnly_Dopri8"
-with_DM_gravity = False
+days_vecs_dir = f"{sim_folder}/SunLock_frame"
+prefix_str = "SunLock"
+with_DM_gravity = True
 interp_grav_psd = False
 
 # Only relevant for Earth frame
