@@ -60,10 +60,15 @@ def calc_CNB_density_days(
         print(f"Day {day+1}/365")
         days.append(day+1)
 
-        # Load and transform velocities to Earth frame
+        # Load velocities from day simulations (these are in "SunLock" frame)
         v_unit = args.kpc/args.s
         day_v = jnp.load(fpath)[..., 3:][None, ...]*v_unit
         # (halos, Npix, p_num, 2, 3)
+
+        if Earth_frame:
+            # Transform velocities to GC frame
+            day_v = SimUtil.S_to_Sprime_frame_trafo(
+                day_v, earth_v[day]*earth_v_unit)
 
         if with_DM_gravity:
             # Calculate momentum arrays for gravity simulation
@@ -117,6 +122,7 @@ def calc_CNB_density_days(
             )
             # p_z0/z4: (halos, masses, 768000) or (halos, masses, 768, 1000)
             # depending on merge_last_axes True or False
+
             psd = Physics.Fermi_Dirac(p_z4, args)
             n_raw = trap(p_z0**3 * psd, jnp.log(p_z0), axis=-1)
 
@@ -176,18 +182,18 @@ halo_nums = [x for x in range(1, 31) if x not in exclude_nums]
 # interp_grav_psd = False
 
 # With Sun but no DM gravity
-days_vecs_dir = f"{sim_folder}/SunLock_frame"
-prefix_str = "SunLock"
+days_vecs_dir = f"{sim_folder}/SunLockDM_frame"
+prefix_str = "SunLockDM"
 with_DM_gravity = True
-interp_grav_psd = False
+interp_grav_psd = True
 
 # Only relevant for Earth frame
-Earth_frame = False
+Earth_frame = True
 rel_vel = "CNB"
 # rel_vel = "MW"
 
-day_step = 24  # Ultimately we want to use 1 to have all days
-integrate_pixels = False
+day_step = 12  # Ultimately we want to use 1 to have all days
+integrate_pixels = True
 bound = None
 # bound: Momentum boundary condition:
 #     None - Use full momentum range
