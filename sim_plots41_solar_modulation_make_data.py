@@ -11,6 +11,7 @@ def compute_psd_day(y_z4_days, y_z0_dm_sim, fd_vals_z0):
 def calc_CNB_density_days(
         days_vecs_dir: str,
         day_step: int,
+        halo_num: int,
         with_DM_gravity: bool = True,
         interp_grav_psd: bool = True,
         Earth_frame: bool = False,
@@ -33,7 +34,6 @@ def calc_CNB_density_days(
 
     # Initialize DM simulation data if using gravity
     if with_DM_gravity:
-        halo_num = 1
         dm_sim_v = SimData.load_velocities(
             sim_dir=sim_folder, halo_num=halo_num)
         
@@ -87,6 +87,7 @@ def calc_CNB_density_days(
                     fd_vals_z0
                 )
                 psd = jnp.take_along_axis(psd, sort_idx, axis=-1)
+                print(psd.shape)
             else:
                 psd = Physics.Fermi_Dirac(p_z4, args)
 
@@ -151,8 +152,8 @@ def calc_CNB_density_days(
 
 # Set preliminaries
 # sim_name = f"SunNoG"
-sim_name = f"SunMod_1k"
-# sim_name = f"SunMod_2k"
+# sim_name = f"SunMod_1k"
+sim_name = f"SunMod_2k"
 # sim_name = f"SunMod_5k"
 sim_folder = f"sim_output/{sim_name}"
 fig_folder = f"figures_local/{sim_name}"
@@ -181,18 +182,21 @@ halo_nums = [x for x in range(1, 31) if x not in exclude_nums]
 # with_DM_gravity = False
 # interp_grav_psd = False
 
-# With Sun but no DM gravity
-days_vecs_dir = f"{sim_folder}/SunLockDM_frame"
-prefix_str = "SunLockDM"
+# Folders and names
+days_vecs_dir = f"{sim_folder}/SunLock_frame"
+prefix_str = "SunLock"
+
+# With DM gravity, and interpolated PSD from core sim, or FD instead
 with_DM_gravity = True
+halo_num = 3
 interp_grav_psd = True
 
 # Only relevant for Earth frame
 Earth_frame = True
-rel_vel = "CNB"
-# rel_vel = "MW"
+# rel_vel = "CNB"
+rel_vel = "MW"
 
-day_step = 12  # Ultimately we want to use 1 to have all days
+day_step = 48  # Ultimately we want to use 1 to have all days
 integrate_pixels = True
 bound = None
 # bound: Momentum boundary condition:
@@ -205,6 +209,7 @@ days, densities, *extra = calc_CNB_density_days(
     days_vecs_dir=days_vecs_dir, 
     day_step=day_step,
     with_DM_gravity=with_DM_gravity,
+    halo_num=halo_num,
     interp_grav_psd=interp_grav_psd,
     Earth_frame=Earth_frame,
     rel_vel=rel_vel,
