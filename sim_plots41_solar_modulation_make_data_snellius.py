@@ -1,6 +1,11 @@
-from Shared.shared import *
 from Shared.specific_CNB_sim import *
 
+parser = argparse.ArgumentParser()
+parser.add_argument('--directory', required=True)
+parser.add_argument('-hn', '--halo_num', required=True)
+pars = parser.parse_args()
+
+print(datetime.today().strftime('%Y-%m-%d %H:%M:%S'))
 
 @jax.jit
 def compute_psd_day(y_z4_days, y_z0_dm_sim, fd_vals_z0):
@@ -35,7 +40,7 @@ def calc_CNB_density_days(
     # Initialize DM simulation data if using gravity
     if with_DM_gravity:
         dm_sim_v = SimData.load_velocities(
-            sim_dir=sim_folder, halo_num=halo_num)
+            sim_dir=pars.directory, halo_num=halo_num)
         
         # Calculate initial momentum arrays
         _, _, p_z4_dm, y_z0_dm, _ = Utils.sim_vels_to_sorted_z0z4(
@@ -49,7 +54,7 @@ def calc_CNB_density_days(
         
         if bound is not None:
             x_earth = jnp.array([8.127, 0., 0.])*args.kpc
-            p_esc, _ = SimUtil.get_p_esc(sim_folder, x_earth, nu_m_picks, args)
+            p_esc, _ = SimUtil.get_p_esc(pars.directory, x_earth, nu_m_picks, args)
 
     for day in range(0, 365, day_step):
         fpath = f"{days_vecs_dir}/vectors_day{day+1}.npy"
@@ -87,7 +92,6 @@ def calc_CNB_density_days(
                     fd_vals_z0
                 )
                 psd = jnp.take_along_axis(psd, sort_idx, axis=-1)
-                print(psd.shape)
             else:
                 psd = Physics.Fermi_Dirac(p_z4, args)
 
@@ -151,15 +155,10 @@ def calc_CNB_density_days(
 
 
 # Set preliminaries
-# sim_name = f"SunNoG"
-# sim_name = f"SunMod_1k"
-sim_name = f"SunMod_2k"
-# sim_name = f"SunMod_5k"
-sim_folder = f"sim_output/{sim_name}"
-fig_folder = f"figures_local/{sim_name}"
-nu_m_range = jnp.load(f"{sim_folder}/neutrino_massrange_eV.npy")
+sim_output_dir = str(pathlib.Path(pars.directory).parent)
+nu_m_range = jnp.load(f"{pars.directory}/neutrino_massrange_eV.npy")
 nu_m_picks = jnp.array([0.01, 0.05, 0.1, 0.2, 0.3])*Params.eV
-simdata = SimData(sim_folder)
+simdata = SimData(pars.directory)
 
 #! Broken halos: either snapshot info missing or anomalous number densities
 exclude_nums = jnp.array([
@@ -171,24 +170,24 @@ exclude_nums = jnp.array([
 halo_nums = [x for x in range(1, 31) if x not in exclude_nums]
 
 # No gravity
-# days_vecs_dir = f"{sim_folder}/NoSun_vectors"
+# days_vecs_dir = f"{pars.directory}/NoSun_vectors"
 # prefix_str = "NoSun"
 # with_DM_gravity = False
 # interp_grav_psd = False
 
 # With Sun but no DM gravity
-# days_vecs_dir = f"{sim_folder}/WithSun_vel_CNB_vectors"
+# days_vecs_dir = f"{pars.directory}/WithSun_vel_CNB_vectors"
 # prefix_str = "SunNoDM"
 # with_DM_gravity = False
 # interp_grav_psd = False
 
 # Folders and names
-days_vecs_dir = f"{sim_folder}/SunLock_frame"
+days_vecs_dir = f"{pars.directory}/SunLock_frame"
 prefix_str = "SunLock"
 
 # With DM gravity, and interpolated PSD from core sim, or FD instead
 with_DM_gravity = True
-halo_num = 10  #! only up to 3 possibe on laptop, beyond only on snellius
+halo_num = int(pars.halo_num)
 interp_grav_psd = True
 
 # Only relevant for Earth frame
@@ -242,9 +241,9 @@ suffix_str = f"_{'_'.join(suffixes)}" if suffixes else ""
 print(f"Done: {prefix_str}{suffix_str}")
 
 # Save arrays with prefix and suffix
-jnp.save(f"{sim_folder}/{prefix_str}_days_nums{suffix_str}.npy", days)
-jnp.save(f"{sim_folder}/{prefix_str}_days_dens{suffix_str}.npy", densities)
+jnp.save(f"{pars.directory}/{prefix_str}_days_nums{suffix_str}.npy", days)
+jnp.save(f"{pars.directory}/{prefix_str}_days_dens{suffix_str}.npy", densities)
 
 # Save percentages if bound condition was used
 if bound is not None and extra:
-    jnp.save(f"{sim_folder}/{prefix_str}_days_perc{suffix_str}.npy", extra[0])
+    jnp.save(f"{pars.directory}/{prefix_str}_days_perc{suffix_str}.npy", extra[0])

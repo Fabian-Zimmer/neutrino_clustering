@@ -207,7 +207,7 @@ dPsi_Sun_cell = dPsi_grids[z_idx, cell_idx, :]
 tot_dens_days_l = []
 pix_dens_days_l = []
 # for day in range(0, 365, 1):  #note: all days of the year
-for day in range(0, 365, 24):  #note: for testing, subset of all days
+for day in range(0, 365, 12):  #note: for testing, subset of all days
 
     # Select 1 years worth of redshift steps, +1 because we select second 
     # last time step in integration routine due to infinities issue (see above)
