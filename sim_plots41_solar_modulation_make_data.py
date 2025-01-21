@@ -188,7 +188,7 @@ prefix_str = "SunLock"
 
 # With DM gravity, and interpolated PSD from core sim, or FD instead
 with_DM_gravity = True
-halo_num = 10  #! only up to 3 possibe on laptop, beyond only on snellius
+halo_num = 3  #! only up to 3 possibe on laptop, beyond only on snellius
 interp_grav_psd = True
 
 # Only relevant for Earth frame
