@@ -153,9 +153,8 @@ def make2_simulation_parameters(
     # Save the theta and phi angles as numpy arrays.
     np.save(f'{sim_dir}/all_sky_angles.npy', np.transpose((thetas, phis)))
 
-    # note: sim goes backwards in time, hence minus sign (see GoodNotes)'
+    # note: sim goes backwards in time, hence minus sign (see GoodNotes)
     np.save(f'{sim_dir}/initial_velocities.npy', -u_i_array)
-
 
     # note: Old way of computing directions, not using healpy
     """
