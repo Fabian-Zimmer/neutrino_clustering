@@ -77,13 +77,6 @@ def calc_CNB_density_days(
             day_v = SimUtil.S_to_Sprime_frame_trafo(
                 day_v, earth_v[day]*earth_v_unit)
 
-            # Transform momenta to GC frame
-            p_GC_mag, p_GC_unit = Physics.transform_momenta_to_orig_frame(
-                p_vec=p_z4_vec, boost_vec=earth_v[day]*earth_v_unit)
-            
-            # Find pixels (indices) that z4 momenta in GC frame point at
-            pixel_indices = Physics.get_p_vec_pixels(
-                p_unit=p_GC_unit, nside=simdata.Nside)
 
         if with_DM_gravity:
             # Calculate momentum arrays for gravity simulation
@@ -98,6 +91,14 @@ def calc_CNB_density_days(
             if interp_grav_psd:
 
                 if Earth_frame:
+                    # Transform momenta to GC frame
+                    p_GC_mag, p_GC_unit = Physics.transform_momenta_to_orig_frame(
+                        p_vec=p_z4_vec, boost_vec=earth_v[day]*earth_v_unit)
+                    
+                    # Find pixels (indices) that z4 momenta in GC frame point at
+                    pixel_indices = Physics.get_p_vec_pixels(
+                        p_unit=p_GC_unit, nside=simdata.Nside)
+                    
                     psd = Physics.interpolate_fd_values(
                         p_GC_mag=p_GC_mag, 
                         pixel_indices=pixel_indices, 
