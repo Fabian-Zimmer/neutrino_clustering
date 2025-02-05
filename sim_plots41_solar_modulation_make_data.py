@@ -38,18 +38,20 @@ def calc_CNB_density_days(
             sim_dir=sim_folder, halo_num=halo_num)
         
         # Calculate initial momentum arrays
-        _, _, p_z4_dm, y_z0_dm, _ = Utils.sim_vels_to_sorted_z0z4(
+        _, p_z0_dm, p_z4_dm, _, _ = Utils.sim_vels_to_sorted_z0z4(
             dm_sim_v, 
             nu_m_picks, 
             merge_last_axes=False, 
             args=args
         )
 
+        # Phase-space "today" through z=4 momenta and Liouville's theorem
         fd_vals_z0 = Physics.Fermi_Dirac(p_z4_dm, args)
         
         if bound is not None:
             x_earth = jnp.array([8.127, 0., 0.])*args.kpc
             p_esc, _ = SimUtil.get_p_esc(sim_folder, x_earth, nu_m_picks, args)
+
 
     for day in range(0, 365, day_step):
         fpath = f"{days_vecs_dir}/vectors_day{day+1}.npy"
@@ -69,10 +71,18 @@ def calc_CNB_density_days(
             # Transform velocities to GC frame
             day_v = SimUtil.S_to_Sprime_frame_trafo(
                 day_v, earth_v[day]*earth_v_unit)
+            
+            # Transform momenta to GC frame
+            p_GC_mag, p_GC_unit = Physics.transform_momenta_to_orig_frame(
+                p_vec=p_z4_vec, boost_vec=earth_v[day]*earth_v_unit)
+            
+            # Find pixels (indices) that z4 momenta in GC frame point at
+            pixel_indices = Physics.get_p_vec_pixels(
+                p_unit=p_GC_unit, nside=simdata.Nside)
 
         if with_DM_gravity:
             # Calculate momentum arrays for gravity simulation
-            sort_idx, p_z0, p_z4, _, y_z4 = Utils.sim_vels_to_sorted_z0z4(
+            _, _, p_z4_vec, p_z0, p_z4, *_ = Utils.sim_vels_to_sorted_z0z4_vec(
                 day_v/v_unit,  # functions expects kpc/s units 
                 nu_m_picks, 
                 merge_last_axes=False, 
@@ -81,13 +91,22 @@ def calc_CNB_density_days(
 
             # Compute phase space density
             if interp_grav_psd:
-                psd = compute_psd_day(
-                    jnp.repeat(y_z4, len(y_z0_dm), axis=0),
-                    y_z0_dm,
-                    fd_vals_z0
-                )
-                psd = jnp.take_along_axis(psd, sort_idx, axis=-1)
-                print(psd.shape)
+
+                if Earth_frame:
+                    psd = Physics.interpolate_fd_values(
+                        p_GC_mag=p_GC_mag, 
+                        pixel_indices=pixel_indices, 
+                        p_grid=p_z0_dm, 
+                        fd_vals=fd_vals_z0)
+                                        
+                else:                
+                    #? unfinished...    
+                    psd = Physics.interpolate_fd_values(
+                        p_GC_mag=jnp.linalg.norm(p_z4_vec, axis=-1),
+                        pixel_indices=pixel_indices,
+                        p_grid=p_z0_dm,
+                        fd_vals=fd_vals_z0)
+                    
             else:
                 psd = Physics.Fermi_Dirac(p_z4, args)
 
@@ -114,14 +133,13 @@ def calc_CNB_density_days(
 
         else:
             # Non-gravitational calculation
-            # _, _, _, p_z0, p_z4, _, _ = Utils.sim_vels_to_sorted_z0z4_vec(
             _, p_z0, p_z4, _, _ = Utils.sim_vels_to_sorted_z0z4(
                 day_v/v_unit,  # functions expects kpc/s units
                 nu_m_picks, 
                 merge_last_axes = not integrate_pixels, 
                 args=args
             )
-            # p_z0/z4: (halos, masses, 768000) or (halos, masses, 768, 1000)
+            # p_z0/z4: (H, M, 768000) or (H, M, 768, 1000)
             # depending on merge_last_axes True or False
 
             psd = Physics.Fermi_Dirac(p_z4, args)
@@ -152,47 +170,26 @@ def calc_CNB_density_days(
 
 # Set preliminaries
 # sim_name = f"SunNoG"
-# sim_name = f"SunMod_1k"
-sim_name = f"SunMod_2k"
-# sim_name = f"SunMod_5k"
+sim_name = f"SunMod_1k"
+# sim_name = f"SunMod_2k"
 sim_folder = f"sim_output/{sim_name}"
 fig_folder = f"figures_local/{sim_name}"
 nu_m_range = jnp.load(f"{sim_folder}/neutrino_massrange_eV.npy")
 nu_m_picks = jnp.array([0.01, 0.05, 0.1, 0.2, 0.3])*Params.eV
 simdata = SimData(sim_folder)
 
-#! Broken halos: either snapshot info missing or anomalous number densities
-exclude_nums = jnp.array([
-    20,  # halo with missing/broken snapshot info
-    23,  # halo with anomalous number densities (~0s on almost all pixels)
-    24,  # anomalous "compactified into 1 cell" DM halo
-    25,  # anomalous "compactified into 1 cell" DM halo
-])
-halo_nums = [x for x in range(1, 31) if x not in exclude_nums]
-
-# No gravity
-# days_vecs_dir = f"{sim_folder}/NoSun_vectors"
-# prefix_str = "NoSun"
-# with_DM_gravity = False
-# interp_grav_psd = False
-
-# With Sun but no DM gravity
-# days_vecs_dir = f"{sim_folder}/WithSun_vel_CNB_vectors"
-# prefix_str = "SunNoDM"
-# with_DM_gravity = False
-# interp_grav_psd = False
-
 # Folders and names
 days_vecs_dir = f"{sim_folder}/SunLock_frame"
-prefix_str = "SunLock"
+# prefix_str = "SunLock"
+prefix_str = "SunLock_test"
 
 # With DM gravity, and interpolated PSD from core sim, or FD instead
 with_DM_gravity = True
-halo_num = 3  #! only up to 3 possibe on laptop, beyond only on snellius
+halo_num = 1  #! only up to 3 possibe on laptop, beyond only on snellius
 interp_grav_psd = True
 
 # Only relevant for Earth frame
-Earth_frame = True
+Earth_frame = False
 # rel_vel = "CNB"
 rel_vel = "MW"
 
