@@ -16,6 +16,7 @@ def calc_CNB_density_days(
         interp_grav_psd: bool = True,
         Earth_frame: bool = False,
         rel_vel: str = "CNB",
+        Earth_rel_Sun: bool = False,
         bound: bool | None = None,
         integrate_pixels: bool = True,
         args = None):
@@ -28,9 +29,11 @@ def calc_CNB_density_days(
     percentages = []
 
     # Earth velocities in GC frame (includes solar system motion)
-    _, _, earth_v = SimUtil.SunEarthGC_frame_coords_posvel(2024, rel_vel)
+    _, _, earth_v = SimUtil.SunEarthGC_frame_coords_posvel(
+        2024, rel_vel, Earth_rel_Sun)
     earth_v_unit = args.km/args.s
-    earth_v_mags = jnp.linalg.norm(earth_v, axis=-1)*earth_v_unit
+    boost_v = earth_v*earth_v_unit
+    # earth_v_mags = jnp.linalg.norm(earth_v, axis=-1)*earth_v_unit
 
     # Initialize DM simulation data if using gravity
     if with_DM_gravity:
@@ -70,18 +73,10 @@ def calc_CNB_density_days(
         if Earth_frame:
             # Transform velocities to GC frame
             day_v = SimUtil.S_to_Sprime_frame_trafo(
-                day_v, earth_v[day]*earth_v_unit)
-            
-            # Transform momenta to GC frame
-            p_GC_mag, p_GC_unit = Physics.transform_momenta_to_orig_frame(
-                p_vec=p_z4_vec, boost_vec=earth_v[day]*earth_v_unit)
-            
-            # Find pixels (indices) that z4 momenta in GC frame point at
-            pixel_indices = Physics.get_p_vec_pixels(
-                p_unit=p_GC_unit, nside=simdata.Nside)
+                day_v, boost_v[day])
 
         if with_DM_gravity:
-            # Calculate momentum arrays for gravity simulation
+            # Calculate momentum arrays for DM-gravity simulation
             _, _, p_z4_vec, p_z0, p_z4, *_ = Utils.sim_vels_to_sorted_z0z4_vec(
                 day_v/v_unit,  # functions expects kpc/s units 
                 nu_m_picks, 
@@ -92,7 +87,15 @@ def calc_CNB_density_days(
             # Compute phase space density
             if interp_grav_psd:
 
-                if Earth_frame:
+                if Earth_frame:        
+                    # Transform momenta to GC frame
+                    p_GC_mag, p_GC_unit = Physics.transform_momenta_to_orig_frame(
+                        p_vec=p_z4_vec, boost_vec=boost_v[day])
+                    
+                    # Find pixels (indices) that z4 momenta in GC frame point at
+                    pixel_indices = Physics.get_p_vec_pixels(
+                        p_unit=p_GC_unit, nside=simdata.Nside)
+            
                     psd = Physics.interpolate_fd_values(
                         p_GC_mag=p_GC_mag, 
                         pixel_indices=pixel_indices, 
@@ -132,8 +135,8 @@ def calc_CNB_density_days(
                 n_raw = trap(p_z0**3 * psd, jnp.log(p_z0), axis=-1)
 
         else:
-            # Non-gravitational calculation
-            _, p_z0, p_z4, _, _ = Utils.sim_vels_to_sorted_z0z4(
+            # Non-DM-gravitational calculation
+            _, _, p_z4_vec, p_z0, *_ = Utils.sim_vels_to_sorted_z0z4_vec(
                 day_v/v_unit,  # functions expects kpc/s units
                 nu_m_picks, 
                 merge_last_axes = not integrate_pixels, 
@@ -142,7 +145,8 @@ def calc_CNB_density_days(
             # p_z0/z4: (H, M, 768000) or (H, M, 768, 1000)
             # depending on merge_last_axes True or False
 
-            psd = Physics.Fermi_Dirac(p_z4, args)
+            # psd = Physics.Fermi_Dirac(p_z4, args)
+            psd = Physics.Fermi_Dirac_boosted(p_z4_vec, boost_v[day], args)
             n_raw = trap(p_z0**3 * psd, jnp.log(p_z0), axis=-1)
 
         # Compute final density
@@ -156,8 +160,8 @@ def calc_CNB_density_days(
             n_total = jnp.array(n_dens)
 
         # Number density as seen on Earth
-        if Earth_frame:
-            n_total *= jnp.sqrt(1 - earth_v_mags[day])
+        # if Earth_frame:
+        #     n_total *= jnp.sqrt(1 - earth_v_mags[day])
 
         densities.append(n_total)
 
@@ -184,12 +188,14 @@ days_vecs_dir = f"{sim_folder}/SunLock_frame"
 prefix_str = "SunLock_test"
 
 # With DM gravity, and interpolated PSD from core sim, or FD instead
-with_DM_gravity = True
+with_DM_gravity = False
 halo_num = 1  #! only up to 3 possibe on laptop, beyond only on snellius
-interp_grav_psd = True
+interp_grav_psd = False
 
-# Only relevant for Earth frame
-Earth_frame = False
+# Earth frame parameters
+Earth_frame = True
+Earth_rel_Sun = True
+# Only relevant if Earth_rel_Sun = False
 # rel_vel = "CNB"
 rel_vel = "MW"
 
@@ -210,6 +216,7 @@ days, densities, *extra = calc_CNB_density_days(
     interp_grav_psd=interp_grav_psd,
     Earth_frame=Earth_frame,
     rel_vel=rel_vel,
+    Earth_rel_Sun=Earth_rel_Sun,
     bound=bound,
     integrate_pixels=integrate_pixels,
     args=Params()
@@ -226,10 +233,13 @@ if with_DM_gravity:
 if not with_DM_gravity:
     suffixes.append('FD_PSD')
 if Earth_frame:
-    if rel_vel == "CNB":
-        suffixes.append('Earth_frame_wrtCNB')
-    if rel_vel == "MW":
-        suffixes.append('Earth_frame_wrtMW')
+    if Earth_rel_Sun:
+        suffixes.append('Earth_frame_wrtSun')
+    else:
+        if rel_vel == "CNB":
+            suffixes.append('Earth_frame_wrtCNB')
+        if rel_vel == "MW":
+            suffixes.append('Earth_frame_wrtMW')
 if bound is not None:
     suffixes.append('bound' if bound else 'unbound')
 if integrate_pixels:
