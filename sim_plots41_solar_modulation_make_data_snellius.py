@@ -7,11 +7,6 @@ pars = parser.parse_args()
 
 print(datetime.today().strftime('%Y-%m-%d %H:%M:%S'))
 
-@jax.jit
-def compute_psd_day(y_z4_days, y_z0_dm_sim, fd_vals_z0):
-    """Compute PSD for given day using vectorized interpolation."""
-    return Utils.vectorized_interpolate_1D(y_z4_days, y_z0_dm_sim, fd_vals_z0)
-
 
 def calc_CNB_density_days(
         days_vecs_dir: str,
@@ -21,6 +16,7 @@ def calc_CNB_density_days(
         interp_grav_psd: bool = True,
         Earth_frame: bool = False,
         rel_vel: str = "CNB",
+        Earth_rel_Sun: bool = False,
         bound: bool | None = None,
         integrate_pixels: bool = True,
         args = None):
@@ -33,9 +29,11 @@ def calc_CNB_density_days(
     percentages = []
 
     # Earth velocities in GC frame (includes solar system motion)
-    _, _, earth_v = SimUtil.SunEarthGC_frame_coords_posvel(2024, rel_vel)
+    _, _, earth_v = SimUtil.SunEarthGC_frame_coords_posvel(
+        2024, rel_vel, Earth_rel_Sun)
     earth_v_unit = args.km/args.s
-    earth_v_mags = jnp.linalg.norm(earth_v, axis=-1)*earth_v_unit
+    boost_v = earth_v*earth_v_unit
+    # earth_v_mags = jnp.linalg.norm(earth_v, axis=-1)*earth_v_unit
 
     # Initialize DM simulation data if using gravity
     if with_DM_gravity:
@@ -89,7 +87,6 @@ def calc_CNB_density_days(
 
             # Compute phase space density
             if interp_grav_psd:
-
                 if Earth_frame:
                     # Transform momenta to GC frame
                     p_GC_mag, p_GC_unit = Physics.transform_momenta_to_orig_frame(
@@ -104,7 +101,6 @@ def calc_CNB_density_days(
                         pixel_indices=pixel_indices, 
                         p_grid=p_z0_dm, 
                         fd_vals=fd_vals_z0)
-                                        
                 else:                
                     #? unfinished...    
                     psd = Physics.interpolate_fd_values(
@@ -112,13 +108,6 @@ def calc_CNB_density_days(
                         pixel_indices=pixel_indices,
                         p_grid=p_z0_dm,
                         fd_vals=fd_vals_z0)
-                    
-                    # psd = compute_psd_day(
-                    #     jnp.repeat(y_z4, len(y_z0_dm), axis=0),
-                    #     y_z0_dm,
-                    #     fd_vals_z0
-                    # )
-                    # psd = jnp.take_along_axis(psd, sort_idx, axis=-1)
             else:
                 psd = Physics.Fermi_Dirac(p_z4, args)
 
@@ -168,8 +157,8 @@ def calc_CNB_density_days(
             n_total = jnp.array(n_dens)
 
         # Number density as seen on Earth
-        if Earth_frame:
-            n_total *= jnp.sqrt(1 - earth_v_mags[day])
+        # if Earth_frame:
+        #     n_total *= jnp.sqrt(1 - earth_v_mags[day])
 
         densities.append(n_total)
 
@@ -197,6 +186,7 @@ interp_grav_psd = True
 
 # Only relevant for Earth frame
 Earth_frame = True
+Earth_rel_Sun = True
 # rel_vel = "CNB"
 rel_vel = "MW"
 
@@ -217,6 +207,7 @@ days, densities, *extra = calc_CNB_density_days(
     interp_grav_psd=interp_grav_psd,
     Earth_frame=Earth_frame,
     rel_vel=rel_vel,
+    Earth_rel_Sun=Earth_rel_Sun,
     bound=bound,
     integrate_pixels=integrate_pixels,
     args=Params()
@@ -233,10 +224,13 @@ if with_DM_gravity:
 if not with_DM_gravity:
     suffixes.append('FD_PSD')
 if Earth_frame:
-    if rel_vel == "CNB":
-        suffixes.append('Earth_frame_wrtCNB')
-    if rel_vel == "MW":
-        suffixes.append('Earth_frame_wrtMW')
+    if Earth_rel_Sun:
+        suffixes.append('Earth_frame_wrtSun')
+    else:
+        if rel_vel == "CNB":
+            suffixes.append('Earth_frame_wrtCNB')
+        if rel_vel == "MW":
+            suffixes.append('Earth_frame_wrtMW')
 if bound is not None:
     suffixes.append('bound' if bound else 'unbound')
 if integrate_pixels:

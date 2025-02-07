@@ -2,12 +2,6 @@ from Shared.shared import *
 from Shared.specific_CNB_sim import *
 
 
-@jax.jit
-def compute_psd_day(y_z4_days, y_z0_dm_sim, fd_vals_z0):
-    """Compute PSD for given day using vectorized interpolation."""
-    return Utils.vectorized_interpolate_1D(y_z4_days, y_z0_dm_sim, fd_vals_z0)
-
-
 def calc_CNB_density_days(
         days_vecs_dir: str,
         day_step: int,
@@ -86,7 +80,6 @@ def calc_CNB_density_days(
 
             # Compute phase space density
             if interp_grav_psd:
-
                 if Earth_frame:        
                     # Transform momenta to GC frame
                     p_GC_mag, p_GC_unit = Physics.transform_momenta_to_orig_frame(
@@ -101,7 +94,6 @@ def calc_CNB_density_days(
                         pixel_indices=pixel_indices, 
                         p_grid=p_z0_dm, 
                         fd_vals=fd_vals_z0)
-                                        
                 else:                
                     #? unfinished...    
                     psd = Physics.interpolate_fd_values(
@@ -109,7 +101,6 @@ def calc_CNB_density_days(
                         pixel_indices=pixel_indices,
                         p_grid=p_z0_dm,
                         fd_vals=fd_vals_z0)
-                    
             else:
                 psd = Physics.Fermi_Dirac(p_z4, args)
 
