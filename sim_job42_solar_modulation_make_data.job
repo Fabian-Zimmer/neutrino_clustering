@@ -1,11 +1,11 @@
 #!/bin/bash
 #SBATCH --job-name=ModData
 #SBATCH -p rome
-#SBATCH -t 02:00:00
+#SBATCH -t 04:00:00
 #SBATCH -N 1
 #SBATCH --tasks-per-node=1
-#SBATCH --cpus-per-task=32
-#SBATCH --mem=56000
+#SBATCH --cpus-per-task=64
+#SBATCH --mem=112000
 #SBATCH -o jobs/ModData.out
 #SBATCH -e jobs/ModData.err
 #SBATCH -v
@@ -27,4 +27,4 @@ sim_fullname=SunMod_2k
 
 python $HOME/neutrino_clustering/sim_plots41_solar_modulation_make_data_snellius.py \
 --directory $HOME/neutrino_clustering/sim_output/$sim_fullname \
---halo_num 5
+--halo_num 3

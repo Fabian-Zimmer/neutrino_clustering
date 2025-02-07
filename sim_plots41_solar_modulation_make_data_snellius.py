@@ -186,7 +186,7 @@ interp_grav_psd = True
 
 # Only relevant for Earth frame
 Earth_frame = True
-Earth_rel_Sun = True
+Earth_rel_Sun = False
 # rel_vel = "CNB"
 rel_vel = "MW"
 
