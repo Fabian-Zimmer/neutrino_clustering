@@ -2,6 +2,42 @@ from Shared.shared import *
 from Shared.specific_CNB_sim import *
 
 
+@jax.jit
+def interpolate_fd_values_parallel(p_GC_mag, pixel_indices, p_grid, fd_vals):
+    @jax.jit
+    def process_halo(h):
+        result = jnp.zeros_like(p_grid[h])
+        
+        def pixel_fun(i, val):
+            for m in range(p_grid.shape[1]):
+                p_interp = p_GC_mag[0, m, i]
+                pixels = pixel_indices[0, m, i]
+                
+                p0_pixels = p_grid[h, m, pixels]
+                fd_pixels = fd_vals[h, m, pixels]
+                
+                idx = jnp.sum(p0_pixels <= p_interp[:, None], axis=1) - 1
+                idx = jnp.clip(idx, 0, p_grid.shape[-1] - 2)
+                
+                x0 = jnp.take_along_axis(
+                    p0_pixels, idx[:, None], axis=1)[:, 0]
+                x1 = jnp.take_along_axis(
+                    p0_pixels, (idx+1)[:, None], axis=1)[:, 0]
+                y0 = jnp.take_along_axis(
+                    fd_pixels, idx[:, None], axis=1)[:, 0]
+                y1 = jnp.take_along_axis(
+                    fd_pixels, (idx+1)[:, None], axis=1)[:, 0]
+                
+                slope = (y1 - y0) / (x1 - x0)
+                val = val.at[m, i].set(y0 + slope * (p_interp - x0))
+            return val
+        
+        return jax.lax.fori_loop(0, p_grid.shape[2], pixel_fun, result)
+    
+    # Vectorize over halos
+    return jax.vmap(process_halo)(jnp.arange(p_grid.shape[0]))
+
+
 def calc_CNB_density_days(
         days_vecs_dir: str,
         day_step: int,
@@ -89,7 +125,13 @@ def calc_CNB_density_days(
                     pixel_indices = Physics.get_p_vec_pixels(
                         p_unit=p_GC_unit, nside=simdata.Nside)
             
-                    psd = Physics.interpolate_fd_values(
+                    # psd = Physics.interpolate_fd_values(
+                    #     p_GC_mag=p_GC_mag, 
+                    #     pixel_indices=pixel_indices, 
+                    #     p_grid=p_z0_dm, 
+                    #     fd_vals=fd_vals_z0)
+                    
+                    psd = interpolate_fd_values_parallel(
                         p_GC_mag=p_GC_mag, 
                         pixel_indices=pixel_indices, 
                         p_grid=p_z0_dm, 
@@ -179,18 +221,18 @@ days_vecs_dir = f"{sim_folder}/SunLock_frame"
 prefix_str = "SunLock_test"
 
 # With DM gravity, and interpolated PSD from core sim, or FD instead
-with_DM_gravity = False
+with_DM_gravity = True
 halo_num = 1  #! only up to 3 possibe on laptop, beyond only on snellius
-interp_grav_psd = False
+interp_grav_psd = True
 
 # Earth frame parameters
 Earth_frame = True
-Earth_rel_Sun = True
+Earth_rel_Sun = False
 # Only relevant if Earth_rel_Sun = False
 # rel_vel = "CNB"
 rel_vel = "MW"
 
-day_step = 12  # Ultimately we want to use 1 to have all days
+day_step = 48  # Ultimately we want to use 1 to have all days
 integrate_pixels = True
 bound = None
 # bound: Momentum boundary condition:
