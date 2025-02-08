@@ -5,9 +5,11 @@ import astropy.constants as apc
 import astropy.units as apu
 from astropy.cosmology import Planck18 as cosmo
 import matplotlib as mpl
+import matplotlib.pyplot as plt
 from scipy.special import zeta
 from jax.scipy.integrate import trapezoid as trap
 from scipy.integrate import quad
+import healpy as hp
 
 
 
@@ -324,7 +326,9 @@ def sort_momenta(m_lightest, vels_today, vels_high_redshift):
 
 # Fermi-Dirac Distribution
 def distribution_fermi_dirac(p_values, args):
-    return 1 / (np.exp(p_values / args.T_CNB) + 1)
+    with np.errstate(over='ignore'):  # Suppress warnings
+        return 1 / (np.exp(np.minimum(p_values / args.T_CNB, 100)) + 1)  # Clip large values
+
 
 # Gaussian distribution (normalized)
 def gaussian_normalized(p, N_nu_eff, y_star, sigma_star):
@@ -376,21 +380,25 @@ def number_density(m_lightest, vels_today, vels_high_redshift, pix_sr, args, dis
 
     return jnp.array(n_cm3)
 
-file_path = r'/home/fzimmer/neutrino_clustering/sim_output/OK_sim/vectors_halo1.npy'
-pos_today, pos_high_redshift, vels_today, vels_high_redshift = extract_positions_and_velocities(file_path)
-m_lightest = 0.01 * params.eV
-pix_sr = 4 * params.Pi / 768
-
-n_sm = number_density(m_lightest, vels_today, vels_high_redshift, pix_sr, params, distribution_fermi_dirac)
-print(np.sum(n_sm))
-n_ldr = number_density(m_lightest, vels_today, vels_high_redshift, pix_sr, params, distribution_ldr)
-n_hv = number_density(m_lightest, vels_today, vels_high_redshift, pix_sr, params, distribution_hv)
-n_hvdr = number_density(m_lightest, vels_today, vels_high_redshift, pix_sr, params, distribution_hvdr)
-n_ltmid = number_density(m_lightest, vels_today, vels_high_redshift, pix_sr, params, distribution_ltmid)
-
-print("Number density for ΛCDM case:", n_sm[0])
-print("Number density for Lν-DR case:", n_ldr[0])
-print("Number density for Hν case:", n_hv[0])
-print("Number density for Hν-DR case:", n_hvdr[0])
-print("Number density for LT+Mid case:", n_ltmid[0])
+mpl.rcParams['text.usetex'] = False  # Disable LaTeX rendering
+def create_skymap(nu_density_array, params, cmap="magma", filename="skymap.png"):
+    Nside = 8  # Corresponding to Npix = 768
+    Npix = hp.nside2npix(Nside)
+    
+    # Normalization
+    n_nu_pix_0 = params.N0_cm3 / Npix 
+    norm_density = nu_density_array / n_nu_pix_0
+    
+    # Interpolation for missing pixels
+    missing_pixels = np.isnan(norm_density)
+    if np.any(missing_pixels):
+        norm_density[missing_pixels] = np.nanmean(norm_density)
+    
+    # Plot
+    hp.mollview(norm_density, title="CNB Number Density Anisotropies", cmap=cmap, unit=r'$n_{\nu, pix} / n_{\nu, pix, 0}$',
+                coord=["G"], min=np.min(norm_density), max=np.max(norm_density))
+    hp.graticule()
+    
+    plt.savefig(filename, dpi=300)
+    print(f"Skymap saved as {filename}")
 
