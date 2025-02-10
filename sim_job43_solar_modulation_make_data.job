@@ -27,4 +27,4 @@ sim_fullname=SunMod_2k
 
 python $HOME/neutrino_clustering/sim_plots41_solar_modulation_make_data_snellius.py \
 --directory $HOME/neutrino_clustering/sim_output/$sim_fullname \
---halo_num 3
+--halo_num 6
