@@ -389,7 +389,7 @@ def plot_normalized_number_density(
     output_filename="normalized_number_density_vs_mass.png",
     selected_models=("SM (ΛCDM)", "Lν-DR", "Hν", "Hν-DR", "LT+Mid")
 ):
-    fixed_mass_range = np.linspace(0.01, 0.3, 20)  
+    m_nu_values = np.linspace(0.01, 0.3, 20)  # Fixed mass range
 
     models = {
         "SM (ΛCDM)": ("blue", "solid", distribution_fermi_dirac),
@@ -404,41 +404,40 @@ def plot_normalized_number_density(
 
     densities = {}
 
-    for model, (_, linestyle, dist_func) in models.items():
-        model_densities = []
+    for model, (color, linestyle, dist_func) in models.items():
+        densities[model] = []
 
-        for fixed_mass in fixed_mass_range:
-            # Compute momenta for fixed mass as p = mv
-            momenta_today_fixed_mass = np.linalg.norm(vels_today, axis=-1) * fixed_mass
-            momenta_high_redshift_fixed_mass = np.linalg.norm(vels_high_redshift, axis=-1) * fixed_mass
+        for m in m_nu_values:
+            momenta_today = np.linalg.norm(vels_today, axis=-1) * m  # Shape: (768, 1000)
+            momenta_high_redshift = np.linalg.norm(vels_high_redshift, axis=-1) * m  # Shape: (768, 1000)
 
             # Sort momenta
-            ind_today = np.argsort(momenta_today_fixed_mass, axis=-1)
-            ind_high_redshift = np.argsort(momenta_high_redshift_fixed_mass, axis=-1)
+            ind_today = np.argsort(momenta_today, axis=-1)
+            ind_high_redshift = np.argsort(momenta_high_redshift, axis=-1)
 
-            momenta_today_sorted = np.take_along_axis(momenta_today_fixed_mass, ind_today, axis=-1)
-            momenta_high_redshift_sorted = np.take_along_axis(momenta_high_redshift_fixed_mass, ind_high_redshift, axis=-1)
+            momenta_today_sorted = np.take_along_axis(momenta_today, ind_today, axis=-1)
+            momenta_high_redshift_sorted = np.take_along_axis(momenta_high_redshift, ind_high_redshift, axis=-1)
 
-            distribution_arr = dist_func(momenta_high_redshift_sorted, params)
+            # Compute number density
+            magnitudes_today = jnp.array(momenta_today_sorted)
+            magnitudes_high_redshift = jnp.array(momenta_high_redshift_sorted)
+            distribution_arr = dist_func(magnitudes_high_redshift, params)
 
-            y = momenta_today_sorted**3 * distribution_arr
-            x = momenta_today_sorted
-            n_raw = trap(y, np.log(x), axis=-1)
+            y = magnitudes_today**3 * distribution_arr
+            x = magnitudes_today
+            n_raw = trap(y, jnp.log(x), axis=-1)
 
+            # Convert to number density per cm³
             n_cm3 = pix_sr * params.g_nu / ((2 * params.Pi)**3) * n_raw / (1 / params.cm**3)
-
-            model_densities.append(n_cm3)
-
-        densities[model] = np.array(model_densities) / params.N0_cm3
-    print("Momenta Today Shape:", np.shape(momenta_today_sorted))
-    print("Momenta High Redshift Shape:", np.shape(momenta_high_redshift_sorted))
+            densities[model].append(n_cm3)
+        densities[model] = np.array(densities[model]) / params.N0_cm3  
 
     # Plot
     plt.figure(figsize=(8, 6))
 
     for model, (color, linestyle, _) in models.items():
-        plt.semilogx(
-            fixed_mass_range, densities[model], label=model, color=color, linestyle=linestyle, linewidth=2
+        plt.loglog(
+            m_nu_values, densities[model], color=color, linestyle=linestyle, linewidth=2
         )
 
     plt.xlabel(r"Neutrino Mass $m_\nu$ [eV]", fontsize=14)
@@ -450,6 +449,7 @@ def plot_normalized_number_density(
     plt.close()
 
     print(f"Plot saved as {output_filename}")
+
 
 mpl.rcParams['text.usetex'] = False  # Disable LaTeX rendering
 def create_skymap(nu_density_array, params, cmap="magma", filename="skymap.png"):
@@ -482,11 +482,10 @@ def create_skymap(nu_density_array, params, cmap="magma", filename="skymap.png")
 
 file_path = r'/home/fzimmer/neutrino_clustering/sim_output/OK_sim/vectors_halo1.npy'
 pos_today, pos_high_redshift, vels_today, vels_high_redshift = extract_positions_and_velocities(file_path)
-plot_normalized_number_density(vels_today, vels_high_redshift)
 
 
 # n_sm = number_density(m_lightest, vels_today, vels_high_redshift, pix_sr, params, distribution_fermi_dirac)
-# # print(np.sum(n_sm))
+# print(np.sum(n_sm))
 # # n_ldr = number_density(m_lightest, vels_today, vels_high_redshift, pix_sr, params, distribution_ldr)
 # # n_hv = number_density(m_lightest, vels_today, vels_high_redshift, pix_sr, params, distribution_hv)
 # # n_hvdr = number_density(m_lightest, vels_today, vels_high_redshift, pix_sr, params, distribution_hvdr)
