@@ -255,6 +255,9 @@ class Params:
 
 params = Params()
 
+m_lightest = 0.01 *params.eV
+pix_sr = 4 * params.Pi / 768
+
 def extract_positions_and_velocities(file_path):
     """
     Extracts neutrino positions and velocities at two snapshots: today and high redshift.
@@ -380,6 +383,74 @@ def number_density(m_lightest, vels_today, vels_high_redshift, pix_sr, args, dis
 
     return jnp.array(n_cm3)
 
+def plot_normalized_number_density(
+    vels_today,
+    vels_high_redshift,
+    output_filename="normalized_number_density_vs_mass.png",
+    selected_models=("SM (ΛCDM)", "Lν-DR", "Hν", "Hν-DR", "LT+Mid")
+):
+    fixed_mass_range = np.linspace(0.01, 0.3, 20)  
+
+    models = {
+        "SM (ΛCDM)": ("blue", "solid", distribution_fermi_dirac),
+        "Lν-DR": ("red", "dashed", distribution_ldr),
+        "Hν": ("green", "dotted", distribution_hv),
+        "Hν-DR": ("purple", "dashdot", distribution_hvdr),
+        "LT+Mid": ("orange", "solid", distribution_ltmid),
+    }
+
+    if selected_models is not None:
+        models = {k: v for k, v in models.items() if k in selected_models}
+
+    densities = {}
+
+    for model, (_, linestyle, dist_func) in models.items():
+        model_densities = []
+
+        for fixed_mass in fixed_mass_range:
+            # Compute momenta for fixed mass as p = mv
+            momenta_today_fixed_mass = np.linalg.norm(vels_today, axis=-1) * fixed_mass
+            momenta_high_redshift_fixed_mass = np.linalg.norm(vels_high_redshift, axis=-1) * fixed_mass
+
+            # Sort momenta
+            ind_today = np.argsort(momenta_today_fixed_mass, axis=-1)
+            ind_high_redshift = np.argsort(momenta_high_redshift_fixed_mass, axis=-1)
+
+            momenta_today_sorted = np.take_along_axis(momenta_today_fixed_mass, ind_today, axis=-1)
+            momenta_high_redshift_sorted = np.take_along_axis(momenta_high_redshift_fixed_mass, ind_high_redshift, axis=-1)
+
+            distribution_arr = dist_func(momenta_high_redshift_sorted, params)
+
+            y = momenta_today_sorted**3 * distribution_arr
+            x = momenta_today_sorted
+            n_raw = trap(y, np.log(x), axis=-1)
+
+            n_cm3 = pix_sr * params.g_nu / ((2 * params.Pi)**3) * n_raw / (1 / params.cm**3)
+
+            model_densities.append(n_cm3)
+
+        densities[model] = np.array(model_densities) / params.N0_cm3
+    print("Momenta Today Shape:", np.shape(momenta_today_sorted))
+    print("Momenta High Redshift Shape:", np.shape(momenta_high_redshift_sorted))
+
+    # Plot
+    plt.figure(figsize=(8, 6))
+
+    for model, (color, linestyle, _) in models.items():
+        plt.semilogx(
+            fixed_mass_range, densities[model], label=model, color=color, linestyle=linestyle, linewidth=2
+        )
+
+    plt.xlabel(r"Neutrino Mass $m_\nu$ [eV]", fontsize=14)
+    plt.ylabel(r"Normalized Number Density $n_\nu / n_{\nu,0}$", fontsize=14)
+    plt.legend(fontsize=12)
+    plt.grid(True, which="both", linestyle="--", alpha=0.6)
+
+    plt.savefig(output_filename, dpi=150)
+    plt.close()
+
+    print(f"Plot saved as {output_filename}")
+
 mpl.rcParams['text.usetex'] = False  # Disable LaTeX rendering
 def create_skymap(nu_density_array, params, cmap="magma", filename="skymap.png"):
     Nside = 8  # Corresponding to Npix = 768
@@ -389,10 +460,17 @@ def create_skymap(nu_density_array, params, cmap="magma", filename="skymap.png")
     n_nu_pix_0 = params.N0_cm3 / Npix 
     norm_density = nu_density_array / n_nu_pix_0
     
-    # Interpolation for missing pixels
+    # Interpolation for the missing pixels
     missing_pixels = np.isnan(norm_density)
+
     if np.any(missing_pixels):
-        norm_density[missing_pixels] = np.nanmean(norm_density)
+        neighbors = hp.get_all_neighbours(Nside, np.arange(len(norm_density)))
+
+        for pix in np.where(missing_pixels)[0]:
+            valid_neighbors = neighbors[:, pix][~np.isnan(norm_density[neighbors[:, pix]])]
+
+            if len(valid_neighbors) > 0:
+                norm_density[pix] = np.nanmean(norm_density[valid_neighbors])
     
     # Plot
     hp.mollview(norm_density, title="CNB Number Density Anisotropies", cmap=cmap, unit=r'$n_{\nu, pix} / n_{\nu, pix, 0}$',
@@ -401,4 +479,27 @@ def create_skymap(nu_density_array, params, cmap="magma", filename="skymap.png")
     
     plt.savefig(filename, dpi=300)
     print(f"Skymap saved as {filename}")
+
+file_path = r'/home/fzimmer/neutrino_clustering/sim_output/OK_sim/vectors_halo1.npy'
+pos_today, pos_high_redshift, vels_today, vels_high_redshift = extract_positions_and_velocities(file_path)
+plot_normalized_number_density(vels_today, vels_high_redshift)
+
+
+# n_sm = number_density(m_lightest, vels_today, vels_high_redshift, pix_sr, params, distribution_fermi_dirac)
+# # print(np.sum(n_sm))
+# # n_ldr = number_density(m_lightest, vels_today, vels_high_redshift, pix_sr, params, distribution_ldr)
+# # n_hv = number_density(m_lightest, vels_today, vels_high_redshift, pix_sr, params, distribution_hv)
+# # n_hvdr = number_density(m_lightest, vels_today, vels_high_redshift, pix_sr, params, distribution_hvdr)
+# # n_ltmid = number_density(m_lightest, vels_today, vels_high_redshift, pix_sr, params, distribution_ltmid)
+
+# # print("Number density for ΛCDM case:", n_sm[0])
+# # print("Number density for Lν-DR case:", n_ldr[0])
+# # print("Number density for Hν case:", n_hv[0])
+# # print("Number density for Hν-DR case:", n_hvdr[0])
+# # print("Number density for LT+Mid case:", n_ltmid[0])
+
+# # Test
+# n_sm = n_sm[0] + 0.005 * np.random.randn(len(n_sm))
+
+# create_skymap(n_sm, params)
 
