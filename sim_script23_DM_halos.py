@@ -235,13 +235,14 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
     # So the below arrays are in this order. Even though our simulation runs 
     # backwards in time, we can leave them like this, since the correct element 
     # gets picked with the idx routine in the EOMs function above.
+    print(f'{data_dir}')
     snaps_GRID_L = jnp.load(f'{data_dir}/snaps_GRID_L_{end_str}.npy')
     snaps_DM_num = jnp.load(f'{data_dir}/snaps_DM_num_{end_str}.npy')
     snaps_CC_num = jnp.load(f'{data_dir}/snaps_CC_num_{end_str}.npy')
     snaps_progID = jnp.load(f'{data_dir}/snaps_progID_{end_str}.npy')
     snaps_DM_com = jnp.load(f'{data_dir}/snaps_DM_com_{end_str}.npy')
     snaps_QJ_abs = jnp.load(f'{data_dir}/snaps_QJ_abs_{end_str}.npy')
-
+    
     # Load grav. forces, coordinates and generation/lengths of cells in grid.
     if pars.benchmark:
         dPsi_grids, cell_grids, cell_gens = SimGrid.grid_data(
