@@ -126,6 +126,7 @@ def EOMs_relativistic(s_val, y, args):
     def outside_cell(_):
 
         # Apply long range force (incl. quadrupole) of whole grid content.
+        DM_com = snaps_DM_com[idx]
         DM_num = snaps_DM_num[idx]
         QJ_abs = snaps_QJ_abs[idx]
         grad_tot = SimExec.outside_gravity_quadrupole(
