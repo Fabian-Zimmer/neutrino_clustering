@@ -238,7 +238,7 @@ Earth_rel_Sun = False  # irrelevant actually, since we now use both velocities
 # rel_vel = "CNB"
 rel_vel = "MW"
 
-day_step = 24  # Ultimately we want to use 1 to have all days
+day_step = 12  # Ultimately we want to use 1 to have all days
 integrate_pixels = True
 bound = None
 # bound: Momentum boundary condition:
