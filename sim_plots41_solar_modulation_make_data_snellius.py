@@ -6,7 +6,7 @@ parser.add_argument('-hn', '--halo_num', required=True)
 pars = parser.parse_args()
 
 print(datetime.today().strftime('%Y-%m-%d %H:%M:%S'))
-
+print(f"Halos: {int(pars.halo_num)}")
 
 @jax.jit
 def interpolate_fd_values_parallel(p_GC_mag, pixel_indices, p_grid, fd_vals):
@@ -121,30 +121,32 @@ def calc_CNB_density_days(
 
 
         if with_DM_gravity:
-            # Calculate momentum arrays for gravity simulation
-            _, p_z0_vec, p_z4_vec, *_ = Utils.sim_vels_to_sorted_z0z4_vec(
+            # Calculate momentum arrays using output from core DM sims
+            _, p_today_vec, p_1yr_vec, *_ = Utils.sim_vels_to_sorted_z0z4_vec(
                 day_v/v_unit,  # functions expects kpc/s units 
                 nu_m_picks, 
                 merge_last_axes=False, 
                 args=args
             )
+            # (halos, masses, Npix, p_num, 3)
+            # output momenta are with numerical units of kpc/s attached
 
             # Compute phase space density
             if interp_grav_psd:
                 if Earth_frame:
                     # Transform momenta to GC frame
-                    #/ for this we use p_z4 from sims
+                    #/ for this we use p_1yr from daily sims
                     p_GC_mag, p_GC_unit = Physics.transform_momenta_to_orig_frame(
-                        p_vec=p_z4_vec, boost_vec=Ev_GC_boost[day])
+                        p_vec=p_1yr_vec, boost_vec=Ev_GC_boost[day])
                     
-                    # Find pixels (indices) that z4 momenta in GC frame point at
+                    # Pixels (indices) that 1yr momenta in GC frame point at
                     pixel_indices = Physics.get_p_vec_pixels(
                         p_unit=p_GC_unit, nside=simdata.Nside)
                     
                     # Transform momenta to Earth frame
-                    #/ for this we use p_z0 from sims
+                    #/ for this we use p_today from daily sims
                     p_E_mag, _ = Physics.transform_momenta_to_orig_frame(
-                        p_vec=p_z0_vec, boost_vec=Ev_SL_boost[day])
+                        p_vec=p_today_vec, boost_vec=Ev_SL_boost[day])
                     
                     psd = interpolate_fd_values_parallel(
                         p_GC_mag=p_GC_mag, 
@@ -154,7 +156,7 @@ def calc_CNB_density_days(
                 else:                
                     #? unfinished...    
                     psd = Physics.interpolate_fd_values(
-                        p_GC_mag=jnp.linalg.norm(p_z4_vec, axis=-1),
+                        p_GC_mag=jnp.linalg.norm(p_1yr_vec, axis=-1),
                         pixel_indices=pixel_indices,
                         p_grid=p_z0_dm,
                         fd_vals=fd_vals_z0)
