@@ -58,12 +58,20 @@ def calc_CNB_density_days(
     densities = []
     percentages = []
 
-    # Earth velocities in GC frame (includes solar system motion)
-    _, _, earth_v = SimUtil.SunEarthGC_frame_coords_posvel(
-        2024, rel_vel, Earth_rel_Sun)
-    earth_v_unit = args.km/args.s
-    boost_v = earth_v*earth_v_unit
-    # earth_v_mags = jnp.linalg.norm(earth_v, axis=-1)*earth_v_unit
+    # Units used for frame/boost related quantities
+    Ev_unit = args.km/args.s
+
+    # Need Earth velocities relative to both:
+    # 1. Galactic Centre (GC) frame (includes solar system motion)
+    # (order of 250 km/s)
+    _, _, Ev_GC = SimUtil.SunEarthGC_frame_coords_posvel(
+        2024, rel_vel, Earth_rel_Sun=False)
+    Ev_GC_boost = Ev_GC*Ev_unit
+    # 2. Sunlock (SL) frame (i.e. motion of Earth relative to only Sun)
+    # (order of 30 km/s)
+    _, _, Ev_SL = SimUtil.SunEarthGC_frame_coords_posvel(
+        2024, rel_vel, Earth_rel_Sun=True)
+    Ev_SL_boost = Ev_SL*Ev_unit
 
     # Initialize DM simulation data if using gravity
     if with_DM_gravity:
@@ -100,36 +108,38 @@ def calc_CNB_density_days(
         day_v = jnp.load(fpath)[..., 3:][None, ...]*v_unit
         # (halos, Npix, p_num, 2, 3)
 
-        if Earth_frame:
-            # Transform velocities to GC frame
-            day_v = SimUtil.S_to_Sprime_frame_trafo(
-                day_v, boost_v[day])
+        # if Earth_frame:
+        #     # Transform velocities to GC frame
+        #     day_v = SimUtil.S_to_Sprime_frame_trafo(
+        #         day_v, earth_v[day]*Ev_unit)
 
         if with_DM_gravity:
-            # Calculate momentum arrays for DM-gravity simulation
-            _, _, p_z4_vec, p_z0, p_z4, *_ = Utils.sim_vels_to_sorted_z0z4_vec(
+            # Calculate momentum arrays using output from core DM sims
+            _, p_today_vec, p_1yr_vec, *_ = Utils.sim_vels_to_sorted_z0z4_vec(
                 day_v/v_unit,  # functions expects kpc/s units 
                 nu_m_picks, 
                 merge_last_axes=False, 
                 args=args
             )
+            # (halos, masses, Npix, p_num, 3)
+            # output momenta are with numerical units of kpc/s attached
 
             # Compute phase space density
             if interp_grav_psd:
                 if Earth_frame:        
                     # Transform momenta to GC frame
+                    #/ for this we use p_1yr from daily sims
                     p_GC_mag, p_GC_unit = Physics.transform_momenta_to_orig_frame(
-                        p_vec=p_z4_vec, boost_vec=boost_v[day])
+                        p_vec=p_1yr_vec, boost_vec=Ev_GC_boost[day])
                     
-                    # Find pixels (indices) that z4 momenta in GC frame point at
+                    # Pixels (indices) that 1yr momenta in GC frame point at
                     pixel_indices = Physics.get_p_vec_pixels(
                         p_unit=p_GC_unit, nside=simdata.Nside)
-            
-                    # psd = Physics.interpolate_fd_values(
-                    #     p_GC_mag=p_GC_mag, 
-                    #     pixel_indices=pixel_indices, 
-                    #     p_grid=p_z0_dm, 
-                    #     fd_vals=fd_vals_z0)
+                    
+                    # Transform momenta to Earth frame
+                    #/ for this we use p_today from daily sims
+                    p_E_mag, _ = Physics.transform_momenta_to_orig_frame(
+                        p_vec=p_today_vec, boost_vec=Ev_SL_boost[day])
                     
                     psd = interpolate_fd_values_parallel(
                         p_GC_mag=p_GC_mag, 
@@ -139,7 +149,7 @@ def calc_CNB_density_days(
                 else:                
                     #? unfinished...    
                     psd = Physics.interpolate_fd_values(
-                        p_GC_mag=jnp.linalg.norm(p_z4_vec, axis=-1),
+                        p_GC_mag=jnp.linalg.norm(p_1yr_vec, axis=-1),
                         pixel_indices=pixel_indices,
                         p_grid=p_z0_dm,
                         fd_vals=fd_vals_z0)
@@ -165,7 +175,7 @@ def calc_CNB_density_days(
                 else:
                     n_raw = trap(p_z0**3 * psd_masked, jnp.log(p_z0), axis=-1)
             else:
-                n_raw = trap(p_z0**3 * psd, jnp.log(p_z0), axis=-1)
+                n_raw = trap(p_E_mag**3 * psd, jnp.log(p_E_mag), axis=-1)
 
         else:
             # Non-DM-gravitational calculation
@@ -191,10 +201,6 @@ def calc_CNB_density_days(
             pix_sr = 4*args.Pi
             n_dens = pix_sr*args.g_nu / ((2*args.Pi)**3) * n_raw / args.cm**-3
             n_total = jnp.array(n_dens)
-
-        # Number density as seen on Earth
-        # if Earth_frame:
-        #     n_total *= jnp.sqrt(1 - earth_v_mags[day])
 
         densities.append(n_total)
 
@@ -232,7 +238,7 @@ Earth_rel_Sun = False
 # rel_vel = "CNB"
 rel_vel = "MW"
 
-day_step = 48  # Ultimately we want to use 1 to have all days
+day_step = 12  # Ultimately we want to use 1 to have all days
 integrate_pixels = True
 bound = None
 # bound: Momentum boundary condition:
