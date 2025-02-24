@@ -146,7 +146,8 @@ def calc_CNB_density_days(
                     # Transform momenta to Earth frame
                     #/ for this we use p_today from daily sims
                     p_E_mag, _ = Physics.transform_momenta_to_orig_frame(
-                        p_vec=p_today_vec, boost_vec=Ev_SL_boost[day])
+                        # p_vec=p_today_vec, boost_vec=Ev_SL_boost[day])
+                        p_vec=p_today_vec, boost_vec=Ev_GC_boost[day])
                     
                     psd = interpolate_fd_values_parallel(
                         p_GC_mag=p_GC_mag, 
@@ -238,7 +239,7 @@ Earth_rel_Sun = False  # irrelevant actually, since we now use both velocities
 # rel_vel = "CNB"
 rel_vel = "MW"
 
-day_step = 12  # Ultimately we want to use 1 to have all days
+day_step = 24  # Ultimately we want to use 1 to have all days
 integrate_pixels = True
 bound = None
 # bound: Momentum boundary condition:
