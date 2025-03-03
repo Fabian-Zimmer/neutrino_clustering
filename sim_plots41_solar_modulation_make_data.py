@@ -66,7 +66,7 @@ def calc_CNB_density_days(
     # (order of 250 km/s)
     _, _, Ev_GC = SimUtil.SunEarthGC_frame_coords_posvel(
         2024, rel_vel, Earth_rel_Sun=False)
-    Ev_GC_boost = Ev_GC*Ev_unit
+    Ev_GC_boost = Ev_GC*Ev_unit *5
     # 2. Sunlock (SL) frame (i.e. motion of Earth relative to only Sun)
     # (order of 30 km/s)
     _, _, Ev_SL = SimUtil.SunEarthGC_frame_coords_posvel(
@@ -85,6 +85,7 @@ def calc_CNB_density_days(
             merge_last_axes=False, 
             args=args
         )
+        # (halos, masses, Npix, p_num)
 
         # Phase-space "today" through z=4 momenta and Liouville's theorem
         fd_vals_z0 = Physics.Fermi_Dirac(p_z4_dm, args)
@@ -95,6 +96,9 @@ def calc_CNB_density_days(
 
 
     for day in range(0, 365, day_step):
+        
+        t_start = time.perf_counter()
+        
         fpath = f"{days_vecs_dir}/vectors_day{day+1}.npy"
         
         if not os.path.exists(fpath):
@@ -131,7 +135,8 @@ def calc_CNB_density_days(
                     #/ for this we use p_1yr from daily sims
                     p_GC_mag, p_GC_unit = Physics.transform_momenta_to_orig_frame(
                         p_vec=p_1yr_vec, boost_vec=Ev_GC_boost[day])
-                    
+                    # (halos, masses, Npix, p_num)
+
                     # Pixels (indices) that 1yr momenta in GC frame point at
                     pixel_indices = Physics.get_p_vec_pixels(
                         p_unit=p_GC_unit, nside=simdata.Nside)
@@ -139,7 +144,8 @@ def calc_CNB_density_days(
                     # Transform momenta to Earth frame
                     #/ for this we use p_today from daily sims
                     p_E_mag, _ = Physics.transform_momenta_to_orig_frame(
-                        p_vec=p_today_vec, boost_vec=Ev_SL_boost[day])
+                        # p_vec=p_today_vec, boost_vec=Ev_SL_boost[day])
+                        p_vec=p_today_vec, boost_vec=Ev_GC_boost[day])
                     
                     psd = interpolate_fd_values_parallel(
                         p_GC_mag=p_GC_mag, 
@@ -204,6 +210,9 @@ def calc_CNB_density_days(
 
         densities.append(n_total)
 
+        tot_time = time.perf_counter() - t_start
+        print(f"Loop time: {tot_time/60.:.2f} min")
+
     results = (jnp.array(days), jnp.array(densities))
     if bound is not None and with_DM_gravity:
         results += (jnp.array(percentages),)
@@ -212,8 +221,8 @@ def calc_CNB_density_days(
 
 
 # Set preliminaries
-# sim_name = f"SunNoG"
-sim_name = f"SunMod_1k"
+sim_name = f"SunNoG"
+# sim_name = f"SunMod_1k"
 # sim_name = f"SunMod_2k"
 sim_folder = f"sim_output/{sim_name}"
 fig_folder = f"figures_local/{sim_name}"
@@ -222,13 +231,15 @@ nu_m_picks = jnp.array([0.01, 0.05, 0.1, 0.2, 0.3])*Params.eV
 simdata = SimData(sim_folder)
 
 # Folders and names
-days_vecs_dir = f"{sim_folder}/SunLock_frame"
+prefix_str = "NoG_GCboost_x5"
+days_vecs_dir = f"{sim_folder}/NoSun_vectors"
 # prefix_str = "SunLock"
-prefix_str = "SunLock_test"
+# prefix_str = "SunLock_test"
+# days_vecs_dir = f"{sim_folder}/SunLock_frame"
 
 # With DM gravity, and interpolated PSD from core sim, or FD instead
 with_DM_gravity = True
-halo_num = 1  #! only up to 3 possibe on laptop, beyond only on snellius
+halo_num = 10  #/ any number of halos work now on laptop (using loops now)
 interp_grav_psd = True
 
 # Earth frame parameters
@@ -238,13 +249,16 @@ Earth_rel_Sun = False
 # rel_vel = "CNB"
 rel_vel = "MW"
 
-day_step = 12  # Ultimately we want to use 1 to have all days
+day_step = 48  # Ultimately we want to use 1 to have all days
 integrate_pixels = True
 bound = None
 # bound: Momentum boundary condition:
 #     None - Use full momentum range
 #     True - Use p_z0 < p_esc condition
 #     False - Use p_z0 >= p_esc condition
+
+print(datetime.today().strftime('%Y-%m-%d %H:%M:%S'))
+print(f"Halos: {int(halo_num)}")
 
 # Calculate densities (extra is percentages, only for some conditions)
 days, densities, *extra = calc_CNB_density_days(
