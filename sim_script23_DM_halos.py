@@ -293,8 +293,8 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
     # Number of neutrinos per healpixel
     nu_per_pix = sim_setup["momentum_num"]
 
-    # init_vels = np.load(f'{pars.directory}/initial_velocities.npy')  
-    init_vels = np.load(f'{pars.directory}/initial_velocities_boosted.npy')  
+    init_vels = np.load(f'{pars.directory}/initial_velocities.npy')  
+    # init_vels = np.load(f'{pars.directory}/initial_velocities_boosted.npy')  
     # shape = (Npix, neutrinos per pixel, 3)
     
     # Common arguments for simulation
@@ -314,8 +314,8 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
         nu_vectors = jnp.array([future.result() for future in futures])
 
     # Save all sky neutrino vectors for current halo
-    # jnp.save(f'{pars.directory}/vectors_{end_str}.npy', nu_vectors)
-    jnp.save(f'{pars.directory}/vectors_{end_str}_boosted.npy', nu_vectors)
+    jnp.save(f'{pars.directory}/vectors_{end_str}.npy', nu_vectors)
+    # jnp.save(f'{pars.directory}/vectors_{end_str}_boosted.npy', nu_vectors)
     
     sim_time = time.perf_counter()-sim_start
     print(f"Simulation time: {sim_time/60.:.2f} min, {sim_time/(60**2):.2f} h")
