@@ -260,7 +260,7 @@ def calc_CNB_density_days(
 
 
         if with_DM_gravity:
-            # Calculate momentum arrays using output from core DM sims
+            # Calculate momentum arrays using output from daily sims
             _, p_today_vec, p_1yr_vec, *_ = Utils.sim_vels_to_sorted_z0z4_vec(
                 day_v/v_unit,  # functions expects kpc/s units 
                 nu_m_picks, 

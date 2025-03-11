@@ -2,7 +2,7 @@ from Shared.shared import *
 from Shared.specific_CNB_sim import *
 
 
-def transform_pixel_indices_euler(p_unit, cell_positions, nside):
+def transform_pixel_indices_euler(p_unit, cell_pos, earth_pos, nside):
     """
     Transform pixel indices from Earth frame to each starting cell's frame
     using Euler angle rotations.
@@ -15,13 +15,13 @@ def transform_pixel_indices_euler(p_unit, cell_positions, nside):
     Returns:
         Pixel indices in each halo's frame (shape: [halos, masses, Npix, p_num])
     """
-    num_halos = cell_positions.shape[0]
+    num_halos = cell_pos.shape[0]
     result = []
     
     # Process each halo individually
     for h in range(num_halos):
         # Get rotation matrix from Earth to this starting cell
-        R = SimUtil.get_rotation_matrix_euler(cell_positions[h])
+        R = SimUtil.get_direct_rotation(earth_pos, cell_pos[h])
         
         # Apply rotation to all momentum vectors
         # We transform from Earth frame to cell frame
@@ -29,7 +29,6 @@ def transform_pixel_indices_euler(p_unit, cell_positions, nside):
         
         # Calculate spherical coordinates in this frame
         theta = jnp.arccos(jnp.clip(rotated_p_unit[..., 2], -1.0, 1.0))
-        # theta = jnp.arccos(rotated_p_unit[..., 2])
         phi = jnp.arctan2(rotated_p_unit[..., 1], rotated_p_unit[..., 0])
         
         # Convert to pixel indices using healpy
@@ -40,7 +39,7 @@ def transform_pixel_indices_euler(p_unit, cell_positions, nside):
 
 
 def interpolate_fd_values_with_euler_rotation(
-        p_GC_mag, p_GC_unit, p_grid, fd_vals, cell_positions, nside):
+        p_PSD_mag, p_PSD_unit, p_grid, fd_vals, cell_pos, earth_pos, nside):
     """
     Interpolate distribution function values using Euler angle rotations
     to transform between reference frames.
@@ -58,7 +57,7 @@ def interpolate_fd_values_with_euler_rotation(
     """
     # Transform pixel indices to each halo's frame
     pixel_indices_halos = transform_pixel_indices_euler(
-        p_GC_unit, cell_positions, nside)
+        p_PSD_unit, cell_pos, earth_pos, nside)
     # shape: [halos, masses, Npix, p_num]
     
     @jax.jit
@@ -68,7 +67,7 @@ def interpolate_fd_values_with_euler_rotation(
         def pixel_fun(i, val):
             for m in range(p_grid.shape[1]):
                 # Use index 0 directly since p_GC_mag is the same for all halos
-                p_interp = p_GC_mag[0, m, i]
+                p_interp = p_PSD_mag[0, m, i]
 
                 # heal-pixels for current halo-mass permutation
                 pixels = pixel_indices_halos[h, m, i]
@@ -198,6 +197,7 @@ def calc_CNB_density_days(
     densities = []
     percentages = []
 
+    #region: Boost velocities
     # Units used for frame/boost related quantities
     Ev_unit = args.km/args.s
 
@@ -212,6 +212,7 @@ def calc_CNB_density_days(
     _, _, Ev_SL = SimUtil.SunEarthGC_frame_coords_posvel(
         2024, rel_vel, Earth_rel_Sun=True)
     Ev_SL_boost = Ev_SL*Ev_unit
+    #endregion
 
     # Initialize DM simulation data if using gravity
     if with_DM_gravity:
@@ -237,80 +238,77 @@ def calc_CNB_density_days(
 
     for day in range(0, 365, day_step):
         
+        #region: Preamble
         t_start = time.perf_counter()
-        
+
         fpath = f"{days_vecs_dir}/vectors_day{day+1}.npy"
-        
         if not os.path.exists(fpath):
             continue
-
+        
         print(f"Day {day+1}/365")
         days.append(day+1)
 
         # Load velocities from day simulations (these are in "SunLock" frame)
         v_unit = args.kpc/args.s
         day_v = jnp.load(fpath)[..., 3:][None, ...]*v_unit
-        # (halos, Npix, p_num, 2, 3)
-
-        # if Earth_frame:
-        #     # Transform velocities to GC frame
-        #     day_v = SimUtil.S_to_Sprime_frame_trafo(
-        #         day_v, earth_v[day]*Ev_unit)
+        # (1, Npix, p_num, 2, 3)
+        #endregion
 
         if with_DM_gravity:
-            # Calculate momentum arrays using output from core DM sims
+            # Calculate momentum arrays using output from daily sims
             _, p_today_vec, p_1yr_vec, *_ = Utils.sim_vels_to_sorted_z0z4_vec(
                 day_v/v_unit,  # functions expects kpc/s units 
                 nu_m_picks, 
                 merge_last_axes=False, 
                 args=args
             )
-            # (halos, masses, Npix, p_num, 3)
+            # (1, masses, Npix, p_num, 3)
             # output momenta are with numerical units of kpc/s attached
 
             # Compute phase space density
             if interp_grav_psd:
                 if Earth_frame:        
-                    # Transform momenta to GC frame
-                    #/ for this we use p_1yr from daily sims
-                    p_GC_mag, p_GC_unit = Physics.transform_momenta_to_orig_frame(
-                        # p_vec=p_1yr_vec, boost_vec=Ev_GC_boost[day])
-                        p_vec=p_1yr_vec, boost_vec=jnp.zeros(3))
+                    #/ Momentum transformation functions need non-zero boost
+
+                    #/ Momentum to use for PSD
+                    #? (p_1yr from daily sims, transformed into GC frame)
+                    p_PSD_mag, p_PSD_unit = Physics.transform_momenta_to_orig_frame(
+                        p_vec=p_1yr_vec, 
+                        boost_vec=Ev_GC_boost[day], 
+                        # boost_vec=jnp.zeros(3), 
+                        masses=nu_m_picks)
                     # print(p_GC_unit.shape)
                     # (1, masses, Npix, p_num), (1, masses, Npix, p_num, 3)
 
-                    # Pixels (indices) that 1yr momenta in GC frame point at
-                    # pixel_indices = Physics.get_p_vec_pixels(
-                    #     p_unit=p_GC_unit, nside=simdata.Nside)
-                    # (1, masses, Npix, p_num)
-
-                    # Transform momenta to Earth frame
-                    #/ for this we use p_today from daily sims
-                    p_E_mag, _ = Physics.transform_momenta_to_orig_frame(
-                        # p_vec=p_today_vec, boost_vec=Ev_SL_boost[day])
-                        # p_vec=p_today_vec, boost_vec=Ev_GC_boost[day])
-                        p_vec=p_today_vec, boost_vec=jnp.zeros(3))
+                    #/ Momentum to integrate over
+                    #? (p_today from daily sims, transformed into Earth frame)
+                    p_int_mag, _ = Physics.transform_momenta_to_orig_frame(
+                        p_vec=p_today_vec, 
+                        boost_vec=Ev_SL_boost[day], 
+                        # boost_vec=jnp.zeros(3), 
+                        masses=nu_m_picks)
                     
-                    # right boost direction? not minus?
+                    #? right boost direction? not minus?
 
                     psd = interpolate_fd_values_with_euler_rotation(
-                        p_GC_mag=p_GC_mag, 
-                        p_GC_unit=p_GC_unit,
+                        p_PSD_mag=p_PSD_mag, 
+                        p_PSD_unit=p_PSD_unit,
                         p_grid=p_z0_dm, 
                         fd_vals=fd_vals_z0,
-                        cell_positions=init_xyzs[:halo_num],
+                        cell_pos=init_xyzs[:halo_num],
+                        earth_pos=jnp.array([simdata.init_haloGC_dist, 0, 0]),
                         nside=simdata.Nside
                     )
-
                     # fd_vals_z0 and psd both (halos, masses, Npix, p_num)
 
-                    # Plot comparison of interpolated vs. original psd
+                    #region: Plot comparison of interpolated vs. original psd
                     # if (day+1) == 1:
                     #     compare_fd_max_values(
                     #         original_fd=fd_vals_z0, interpolated_fd=psd,
                     #         halo_idx=0, mass_idx=3, p_grid=None, 
                     #         figsize=(10, 6),
                     #         x_lims=(0, 700), y_min=0.01, y_max=0.8)
+                    #endregion
 
                 else:                
                     #? unfinished...    
@@ -322,7 +320,7 @@ def calc_CNB_density_days(
             else:
                 psd = Physics.Fermi_Dirac(p_z4, args)
 
-            # Clip PSD values
+            # Clip PSD values to avoid potential boundary issues from interp.
             psd = jnp.clip(psd, a_min=None, a_max=0.5)
 
             # Apply momentum boundary conditions if requested
@@ -341,11 +339,11 @@ def calc_CNB_density_days(
                 else:
                     n_raw = trap(p_z0**3 * psd_masked, jnp.log(p_z0), axis=-1)
             else:
-                n_raw = trap(p_E_mag**3 * psd, jnp.log(p_E_mag), axis=-1)
+                n_raw = trap(p_PSD_mag**3 * psd, jnp.log(p_PSD_mag), axis=-1)
 
         else:
             # Non-DM-gravitational calculation
-            _, _, p_z4_vec, p_z0, *_ = Utils.sim_vels_to_sorted_z0z4_vec(
+            _, p_z0, p_z4, *_ = Utils.sim_vels_to_sorted_z0z4(
                 day_v/v_unit,  # functions expects kpc/s units
                 nu_m_picks, 
                 merge_last_axes = not integrate_pixels, 
@@ -354,8 +352,7 @@ def calc_CNB_density_days(
             # p_z0/z4: (H, M, 768000) or (H, M, 768, 1000)
             # depending on merge_last_axes True or False
 
-            # psd = Physics.Fermi_Dirac(p_z4, args)
-            psd = Physics.Fermi_Dirac_boosted(p_z4_vec, boost_v[day], args)
+            psd = Physics.Fermi_Dirac(p_z4, args)
             n_raw = trap(p_z0**3 * psd, jnp.log(p_z0), axis=-1)
 
         # Compute final density
@@ -390,11 +387,12 @@ nu_m_range = jnp.load(f"{sim_folder}/neutrino_massrange_eV.npy")
 nu_m_picks = jnp.array([0.01, 0.05, 0.1, 0.2, 0.3])*Params.eV
 simdata = SimData(sim_folder)
 
+# In units of kpc (i.e array already divided by Params.kpc)
 init_xyzs = jnp.array(
     [jnp.load(f"{sim_folder}/init_xyz_halo{h+1}.npy") for h in range(10)])
 
 # Folders and names
-prefix_str = "NoG_Euler_noBoost"
+prefix_str = "NoG_newTrafo"
 days_vecs_dir = f"{sim_folder}/NoSun_vectors"
 # prefix_str = "SunLock"
 # prefix_str = "SunLock_test"
