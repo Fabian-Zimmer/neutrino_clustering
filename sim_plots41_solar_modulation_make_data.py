@@ -2,10 +2,10 @@ from Shared.shared import *
 from Shared.specific_CNB_sim import *
 
 
-def transform_pixel_indices_euler(p_unit, cell_pos, earth_pos, nside):
+def transform_pixel_indices(p_unit, cell_pos, earth_pos, nside):
     """
     Transform pixel indices from Earth frame to each starting cell's frame
-    using Euler angle rotations.
+    using Rodrigues' angle rotations.
     
     Args:
         p_unit: Momentum unit vectors in Earth frame (shape: [1, masses, Npix, p_num, 3])
@@ -28,7 +28,8 @@ def transform_pixel_indices_euler(p_unit, cell_pos, earth_pos, nside):
         rotated_p_unit = jnp.einsum('ij,abcj->abci', R, p_unit[0, ...])
         
         # Calculate spherical coordinates in this frame
-        theta = jnp.arccos(jnp.clip(rotated_p_unit[..., 2], -1.0, 1.0))
+        # theta = jnp.arccos(jnp.clip(rotated_p_unit[..., 2], -1.0, 1.0))
+        theta = jnp.arccos(rotated_p_unit[..., 2])
         phi = jnp.arctan2(rotated_p_unit[..., 1], rotated_p_unit[..., 0])
         
         # Convert to pixel indices using healpy
@@ -38,10 +39,10 @@ def transform_pixel_indices_euler(p_unit, cell_pos, earth_pos, nside):
     return jnp.stack(result)
 
 
-def interpolate_fd_values_with_euler_rotation(
+def rotate_p_and_interpolate_fd_values(
         p_PSD_mag, p_PSD_unit, p_grid, fd_vals, cell_pos, earth_pos, nside):
     """
-    Interpolate distribution function values using Euler angle rotations
+    Interpolate distribution function values using Rodrigues' angle rotations
     to transform between reference frames.
     
     Args:
@@ -56,7 +57,7 @@ def interpolate_fd_values_with_euler_rotation(
         Interpolated distribution function values (shape: [halos, masses, Npix, p_num])
     """
     # Transform pixel indices to each halo's frame
-    pixel_indices_halos = transform_pixel_indices_euler(
+    pixel_indices_halos = transform_pixel_indices(
         p_PSD_unit, cell_pos, earth_pos, nside)
     # shape: [halos, masses, Npix, p_num]
     
@@ -94,6 +95,66 @@ def interpolate_fd_values_with_euler_rotation(
                 # Linear interpolation
                 slope = (y1 - y0) / (x1 - x0)
                 val = val.at[m, i].set(y0 + slope * (p_interp - x0))
+            return val
+        
+        return jax.lax.fori_loop(0, p_grid.shape[2], pixel_fun, result)
+    
+    # Vectorize over halos
+    return jax.vmap(process_halo)(jnp.arange(p_grid.shape[0]))
+
+
+def rotate_p_and_select_closest_fd_values(
+        p_PSD_mag, p_PSD_unit, p_grid, fd_vals, cell_pos, earth_pos, nside):
+    """
+    Select distribution function values using Euler angle rotations
+    to transform between reference frames, choosing the closest p_grid value
+    instead of interpolating.
+    
+    Args:
+        p_PSD_mag: Momentum magnitudes (shape: [1, masses, Npix, p_num])
+        p_PSD_unit: Momentum unit vectors (shape: [1, masses, Npix, p_num, 3])
+        p_grid: Momentum grid (shape: [halos, masses, pixels, p_grid_size])
+        fd_vals: Distribution function values (shape: [halos, masses, pixels, p_grid_size])
+        cell_pos: Starting cell positions (shape: [halos, 3])
+        earth_pos: Earth position (shape: [3])
+        nside: HEALPix nside parameter
+        
+    Returns:
+        Selected distribution function values (shape: [halos, masses, Npix, p_num])
+    """
+    # Transform pixel indices to each halo's frame
+    pixel_indices_halos = transform_pixel_indices(
+        p_PSD_unit, cell_pos, earth_pos, nside)
+    # shape: [halos, masses, Npix, p_num]
+    
+    @jax.jit
+    def process_halo(h):
+        result = jnp.zeros_like(p_grid[h])
+        
+        def pixel_fun(i, val):
+            for m in range(p_grid.shape[1]):
+                # Use index 0 directly since p_PSD_mag is the same for all halos
+                p_interp = p_PSD_mag[0, m, i]
+
+                # heal-pixels for current halo-mass permutation
+                pixels = pixel_indices_halos[h, m, i]
+                
+                # z=0 momenta, psd values for current halo-mass permutation
+                p0_pixels = p_grid[h, m, pixels]
+                fd_pixels = fd_vals[h, m, pixels]
+                
+                # Calculate absolute differences to find closest point
+                abs_diff = jnp.abs(p0_pixels - p_interp[:, None])
+                
+                # Get indices of closest values
+                closest_idx = jnp.argmin(abs_diff, axis=1)
+                
+                # Select fd values at those indices
+                closest_fd_values = jnp.take_along_axis(
+                    fd_pixels, closest_idx[:, None], axis=1)[:, 0]
+                
+                # Set the result
+                val = val.at[m, i].set(closest_fd_values)
             return val
         
         return jax.lax.fori_loop(0, p_grid.shape[2], pixel_fun, result)
@@ -175,6 +236,7 @@ def compare_fd_max_values(
     # plt.show()
 
     return fig
+
 
 
 def calc_CNB_density_days(
@@ -274,8 +336,8 @@ def calc_CNB_density_days(
                     #? (p_1yr from daily sims, transformed into GC frame)
                     p_PSD_mag, p_PSD_unit = Physics.transform_momenta_to_orig_frame(
                         p_vec=p_1yr_vec, 
-                        boost_vec=Ev_GC_boost[day], 
-                        # boost_vec=jnp.zeros(3), 
+                        # boost_vec=Ev_GC_boost[day], 
+                        boost_vec=jnp.zeros(3), 
                         masses=nu_m_picks)
                     # print(p_GC_unit.shape)
                     # (1, masses, Npix, p_num), (1, masses, Npix, p_num, 3)
@@ -284,13 +346,14 @@ def calc_CNB_density_days(
                     #? (p_today from daily sims, transformed into Earth frame)
                     p_int_mag, _ = Physics.transform_momenta_to_orig_frame(
                         p_vec=p_today_vec, 
-                        boost_vec=Ev_SL_boost[day], 
-                        # boost_vec=jnp.zeros(3), 
+                        # boost_vec=Ev_SL_boost[day], 
+                        boost_vec=jnp.zeros(3), 
                         masses=nu_m_picks)
                     
                     #? right boost direction? not minus?
 
-                    psd = interpolate_fd_values_with_euler_rotation(
+                    # psd = rotate_p_and_interpolate_fd_values(
+                    psd = rotate_p_and_select_closest_fd_values(
                         p_PSD_mag=p_PSD_mag, 
                         p_PSD_unit=p_PSD_unit,
                         p_grid=p_z0_dm, 
@@ -392,7 +455,7 @@ init_xyzs = jnp.array(
     [jnp.load(f"{sim_folder}/init_xyz_halo{h+1}.npy") for h in range(10)])
 
 # Folders and names
-prefix_str = "NoG_newTrafo"
+prefix_str = "NoG_select"
 days_vecs_dir = f"{sim_folder}/NoSun_vectors"
 # prefix_str = "SunLock"
 # prefix_str = "SunLock_test"
