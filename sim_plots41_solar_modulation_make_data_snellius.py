@@ -491,7 +491,6 @@ def calc_CNB_density_days(
 
 
 # Set preliminaries
-sim_output_dir = str(pathlib.Path(pars.directory).parent)
 nu_m_picks = jnp.array([0.01, 0.05, 0.1, 0.2, 0.3])*Params.eV
 simdata = SimData(pars.directory)
 
@@ -519,7 +518,7 @@ Earth_rel_Sun = False
 # rel_vel = "CNB"
 rel_vel = "MW"
 
-day_step = 12  # Ultimately we want to use 1 to have all days
+day_step = 48  # Ultimately we want to use 1 to have all days
 integrate_pixels = True
 bound = None
 # bound: Momentum boundary condition:

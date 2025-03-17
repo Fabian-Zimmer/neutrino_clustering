@@ -24,7 +24,7 @@ fi
 conda activate neutrino_clustering
 
 # SunMod_2k to get to, testing with SunNoG
-sim_fullname=SunNoG
+sim_fullname=SunMod_1k
 
 python $HOME/neutrino_clustering/sim_plots41_solar_modulation_make_data_snellius.py \
 --directory $HOME/neutrino_clustering/sim_output/$sim_fullname \
