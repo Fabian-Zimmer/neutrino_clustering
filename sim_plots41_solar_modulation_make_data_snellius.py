@@ -8,54 +8,11 @@ pars = parser.parse_args()
 print(datetime.today().strftime('%Y-%m-%d %H:%M:%S'))
 print(f"Halos: {int(pars.halo_num)}")
 
-
-def get_rotation_matrix_euler(cell_position):
-    """
-    Calculate rotation matrix using Euler angles to transform between reference frames.
-    
-    Args:
-        earth_position: Earth position vector (x,y,z) in consistent units
-        cell_position: Cell position vector (x,y,z) in consistent units
-        
-    Returns:
-        3x3 rotation matrix
-    """
-    # Calculate Euler angles for rotation
-    # First angle: rotation around z-axis
-    zAngle = jnp.arctan2(cell_position[1], -cell_position[0])
-    
-    # Second angle: rotation around y-axis
-    yAngle = jnp.arctan2(-cell_position[2], jnp.linalg.norm(cell_position[:2]))
-    
-    # Compute trigonometric values
-    cz = jnp.cos(zAngle)
-    sz = jnp.sin(zAngle)
-    cy = jnp.cos(yAngle)
-    sy = jnp.sin(yAngle)
-    
-    # Rotation matrix around z-axis
-    R_z = jnp.array([
-        [cz, -sz, 0],
-        [sz, cz,  0],
-        [0,  0,   1]
-    ])
-    
-    # Rotation matrix around y-axis
-    R_y = jnp.array([
-        [cy,  0, sy],
-        [0,   1,  0],
-        [-sy, 0, cy]
-    ])
-    
-    # Combined rotation matrix (y-rotation after z-rotation)
-    rot_mat = jnp.matmul(R_y, R_z)
-    
-    return rot_mat
-
-def transform_pixel_indices_euler(p_unit, cell_positions, nside):
+# region: old interpolate pixel values
+def transform_pixel_indices(p_unit, cell_pos, earth_pos, nside):
     """
     Transform pixel indices from Earth frame to each starting cell's frame
-    using Euler angle rotations.
+    using Rodrigues' angle rotations.
     
     Args:
         p_unit: Momentum unit vectors in Earth frame (shape: [1, masses, Npix, p_num, 3])
@@ -65,20 +22,21 @@ def transform_pixel_indices_euler(p_unit, cell_positions, nside):
     Returns:
         Pixel indices in each halo's frame (shape: [halos, masses, Npix, p_num])
     """
-    num_halos = cell_positions.shape[0]
+    num_halos = cell_pos.shape[0]
     result = []
     
     # Process each halo individually
     for h in range(num_halos):
         # Get rotation matrix from Earth to this starting cell
-        R = get_rotation_matrix_euler(cell_positions[h])
+        R = SimUtil.get_direct_rotation(earth_pos, cell_pos[h])
         
         # Apply rotation to all momentum vectors
         # We transform from Earth frame to cell frame
-        rotated_p_unit = jnp.einsum('ij,abcj->abci', R, p_unit[0])
+        rotated_p_unit = jnp.einsum('ij,abcj->abci', R, p_unit[0, ...])
         
         # Calculate spherical coordinates in this frame
-        theta = jnp.arccos(jnp.clip(rotated_p_unit[..., 2], -1.0, 1.0))
+        # theta = jnp.arccos(jnp.clip(rotated_p_unit[..., 2], -1.0, 1.0))
+        theta = jnp.arccos(rotated_p_unit[..., 2])
         phi = jnp.arctan2(rotated_p_unit[..., 1], rotated_p_unit[..., 0])
         
         # Convert to pixel indices using healpy
@@ -87,10 +45,10 @@ def transform_pixel_indices_euler(p_unit, cell_positions, nside):
     
     return jnp.stack(result)
 
-def interpolate_fd_values_with_euler_rotation(
-        p_GC_mag, p_GC_unit, p_grid, fd_vals, cell_positions, nside):
+def rotate_p_and_interpolate_fd_values(
+        p_PSD_mag, p_PSD_unit, p_grid, fd_vals, cell_pos, earth_pos, nside):
     """
-    Interpolate distribution function values using Euler angle rotations
+    Interpolate distribution function values using Rodrigues' angle rotations
     to transform between reference frames.
     
     Args:
@@ -105,8 +63,8 @@ def interpolate_fd_values_with_euler_rotation(
         Interpolated distribution function values (shape: [halos, masses, Npix, p_num])
     """
     # Transform pixel indices to each halo's frame
-    pixel_indices_halos = transform_pixel_indices_euler(
-        p_GC_unit, cell_positions, nside)
+    pixel_indices_halos = transform_pixel_indices(
+        p_PSD_unit, cell_pos, earth_pos, nside)
     # shape: [halos, masses, Npix, p_num]
     
     @jax.jit
@@ -116,9 +74,13 @@ def interpolate_fd_values_with_euler_rotation(
         def pixel_fun(i, val):
             for m in range(p_grid.shape[1]):
                 # Use index 0 directly since p_GC_mag is the same for all halos
-                p_interp = p_GC_mag[0, m, i]
+                p_interp = p_PSD_mag[0, m, i]
+
+                # heal-pixels for current halo-mass permutation
                 pixels = pixel_indices_halos[h, m, i]
                 
+                # z=0 momenta, psd values (x-axis, y-axis for interpolation) 
+                # for current halo-mass permutation
                 p0_pixels = p_grid[h, m, pixels]
                 fd_pixels = fd_vals[h, m, pixels]
                 
@@ -145,42 +107,207 @@ def interpolate_fd_values_with_euler_rotation(
     
     # Vectorize over halos
     return jax.vmap(process_halo)(jnp.arange(p_grid.shape[0]))
+# endregion
 
 
-@jax.jit
-def interpolate_fd_values_parallel(p_GC_mag, pixel_indices, p_grid, fd_vals):
+def transform_pixel_indices_v2(p_unit, cell_pos, nside):
+    """
+    Transform pixel indices from Earth frame to each starting cell's frame
+    using Euler angle rotations and healpy's lonlat convention.
+    
+    Args:
+        p_unit: Momentum unit vectors in Earth frame (shape: [1, masses, Npix, p_num, 3])
+        cell_pos: Starting positions for each halo (shape: [halos, 3])
+        earth_pos: Earth position vector (shape: [3])
+        nside: HEALPix nside parameter
+        
+    Returns:
+        Pixel indices in each halo's frame (shape: [halos, masses, Npix, p_num])
+    """
+    num_halos = cell_pos.shape[0]
+    result = []
+    
+    # Process each halo individually
+    for h in range(num_halos):
+        # Get rotation matrix from Earth frame to this starting cell's frame
+        R = SimUtil.get_rotation_matrix_euler(cell_pos[h])
+        
+        # Apply rotation to all momentum unit vectors
+        rot_p_unit = jnp.einsum('ij,abcj->abci', R, p_unit[0, ...])
+        
+        # Extract x,y,z components
+        px, py, pz = rot_p_unit[..., 0], rot_p_unit[..., 1], rot_p_unit[..., 2]
+
+        # Projected distance on xy-plane
+        proj_xy = jnp.sqrt(px**2 + py**2)
+
+        # Get galactic longitude and galactic latitude in healpy convention
+        hp_glon = jnp.rad2deg(jnp.arctan2(py, px))
+        hp_glat = jnp.rad2deg(jnp.arctan2(pz, proj_xy))
+
+        # Get healpy pixels
+        hp_pixels = hp.ang2pix(nside, hp_glon, hp_glat, lonlat=True)
+        result.append(hp_pixels)
+
+    return jnp.stack(result)
+
+
+def transform_pixel_indices_v3(p_unit, nside):
+
+    # Extract x,y,z components
+    px, py, pz = p_unit[..., 0], p_unit[..., 1], p_unit[..., 2]
+
+    # Projected distance on xy-plane
+    proj_xy = jnp.sqrt(px**2 + py**2)
+
+    # Get galactic longitude and galactic latitude in healpy convention
+    hp_glon = jnp.rad2deg(jnp.arctan2(py, px))
+    hp_glat = jnp.rad2deg(jnp.arctan2(pz, proj_xy))
+
+    # Get healpy pixels
+    hp_pixels = hp.ang2pix(nside, hp_glon, hp_glat, lonlat=True)
+    return jnp.array(hp_pixels)
+
+
+def rotate_p_and_select_closest_fd_values(
+        p_PSD_mag, p_PSD_unit, p_grid, fd_vals, cell_pos, nside):
+    """
+    Select distribution function values using Euler angle rotations
+    to transform between reference frames, choosing the closest p_grid value
+    instead of interpolating.
+    
+    Args:
+        p_PSD_mag: Momentum magnitudes (shape: [1, masses, Npix, p_num])
+        p_PSD_unit: Momentum unit vectors (shape: [1, masses, Npix, p_num, 3])
+        p_grid: Momentum grid (shape: [halos, masses, pixels, p_grid_size])
+        fd_vals: Distribution function values (shape: [halos, masses, pixels, p_grid_size])
+        cell_pos: Starting cell positions (shape: [halos, 3])
+        earth_pos: Earth position (shape: [3])
+        nside: HEALPix nside parameter
+        
+    Returns:
+        Selected distribution function values (shape: [halos, masses, Npix, p_num])
+    """
+    # Transform pixel indices to each halo's frame
+    # pixel_indices_halos = transform_pixel_indices_v2(
+    #     p_PSD_unit, cell_pos, nside)
+    # shape: [halos, masses, Npix, p_num]
+
+    # Without rotation
+    pixel_indices_halos = transform_pixel_indices_v3(
+        p_PSD_unit, nside)
+    # shape: [1, masses, Npix, p_num]
+
     @jax.jit
     def process_halo(h):
         result = jnp.zeros_like(p_grid[h])
         
         def pixel_fun(i, val):
             for m in range(p_grid.shape[1]):
-                p_interp = p_GC_mag[0, m, i]
-                pixels = pixel_indices[0, m, i]
+                # Use index 0 directly since p_PSD_mag is the same for all halos
+                p_interp = p_PSD_mag[0, m, i]
+
+                # heal-pixels for current halo-mass permutation
+                pixels = pixel_indices_halos[h, m, i]
                 
+                # z=0 momenta, psd values for current halo-mass permutation
                 p0_pixels = p_grid[h, m, pixels]
                 fd_pixels = fd_vals[h, m, pixels]
                 
-                idx = jnp.sum(p0_pixels <= p_interp[:, None], axis=1) - 1
-                idx = jnp.clip(idx, 0, p_grid.shape[-1] - 2)
+                # Calculate absolute differences to find closest point
+                abs_diff = jnp.abs(p0_pixels - p_interp[:, None])
                 
-                x0 = jnp.take_along_axis(
-                    p0_pixels, idx[:, None], axis=1)[:, 0]
-                x1 = jnp.take_along_axis(
-                    p0_pixels, (idx+1)[:, None], axis=1)[:, 0]
-                y0 = jnp.take_along_axis(
-                    fd_pixels, idx[:, None], axis=1)[:, 0]
-                y1 = jnp.take_along_axis(
-                    fd_pixels, (idx+1)[:, None], axis=1)[:, 0]
+                # Get indices of closest values
+                closest_idx = jnp.argmin(abs_diff, axis=1)
                 
-                slope = (y1 - y0) / (x1 - x0)
-                val = val.at[m, i].set(y0 + slope * (p_interp - x0))
+                # Select fd values at those indices
+                closest_fd_values = jnp.take_along_axis(
+                    fd_pixels, closest_idx[:, None], axis=1)[:, 0]
+                
+                # Set the result
+                val = val.at[m, i].set(closest_fd_values)
             return val
         
         return jax.lax.fori_loop(0, p_grid.shape[2], pixel_fun, result)
     
     # Vectorize over halos
     return jax.vmap(process_halo)(jnp.arange(p_grid.shape[0]))
+
+
+def compare_fd_max_values(
+        original_fd, interpolated_fd, halo_idx=0, mass_idx=0, p_grid=None, figsize=(10, 6), x_lims=None, y_min=1e-2, y_max=0.5):
+    """
+    Compare maximum distribution function values across pixels for each momentum value.
+    
+    Args:
+        original_fd: Original distribution function values (shape: [halos, masses, Npix, p_num])
+        interpolated_fd: Interpolated distribution function values (shape: [halos, masses, Npix, p_num])
+        halo_idx: Index of the halo to plot
+        mass_idx: Index of the mass to plot
+        p_grid: Momentum grid values (optional, for x-axis labeling)
+        figsize: Figure size tuple
+    """
+    # Extract data for selected halo and mass
+    orig = original_fd[halo_idx, mass_idx]    # Shape: [Npix, p_num]
+    interp = interpolated_fd[halo_idx, mass_idx]  # Shape: [Npix, p_num]
+    
+    # Find the maximum value across pixels for each momentum value
+    max_orig_per_p = np.max(orig, axis=0)    # Shape: [p_num]
+    max_interp_per_p = np.max(interp, axis=0)  # Shape: [p_num]
+    
+    # Create figure
+    fig, ax = plt.subplots(figsize=figsize)
+    
+    # X-axis values
+    x = p_grid if p_grid is not None else np.arange(orig.shape[1])
+    
+    # Plot maximum values
+    ax.plot(
+        x, max_orig_per_p, ls='-.', color='black', alpha=0.6, 
+        label='Original PSD')
+    ax.plot(
+        x, max_interp_per_p*1.1, ls='solid', color='red', alpha=0.8, 
+        label='Interpolated PSD')
+    
+    # Plot relative error
+    rel_error = np.abs(max_interp_per_p - max_orig_per_p) / max_orig_per_p
+    ax2 = ax.twinx()
+    ax2.plot(
+        x, rel_error * 100, 'g-', alpha=0.5, label=r'Relative Error ($\%$)')
+    ax2.set_ylabel(r'Relative Error ($\%$)', color='g')
+    ax2.tick_params(axis='y', labelcolor='g')
+    
+    # Add lines to show mean relative error
+    mean_rel_error = np.mean(rel_error) * 100
+    ax2.axhline(mean_rel_error, color='g', linestyle='--', alpha=0.5)
+    ax2.text(x[-1] * 0.3, mean_rel_error * 1.2, f'Mean: {mean_rel_error:.2f}%', color='g')
+    
+    ax.set_xlabel('Momentum Value' if p_grid is not None else 'Momentum Index')
+    ax.set_ylabel('Maximum Distribution Function Value')
+    ax.set_title(f'Maximum PSD Values Across Pixels (Halo {halo_idx}, Mass {mass_idx})')
+    
+    # Combine legends
+    lines1, labels1 = ax.get_legend_handles_labels()
+    lines2, labels2 = ax2.get_legend_handles_labels()
+    ax.legend(lines1 + lines2, labels1 + labels2, loc='lower left')
+    
+    ax.grid(True, alpha=0.3)
+    
+
+    # Set y-axis to log scale with specified limits
+    ax.set_yscale('log')
+    ax.set_ylim(y_min, y_max)
+    
+    # Set x-axis limits
+    ax.set_xlim(x_lims[0], x_lims[1])
+    
+    plt.tight_layout()
+
+    plt.savefig('healpix_interpolation_demo.png', dpi=150, bbox_inches='tight')
+    # plt.show()
+
+    return fig
+
 
 
 def calc_CNB_density_days(
@@ -190,7 +317,7 @@ def calc_CNB_density_days(
         with_DM_gravity: bool = True,
         interp_grav_psd: bool = True,
         Earth_frame: bool = False,
-        rel_vel: str = "CNB",
+        rel_vel: str = "MW",
         Earth_rel_Sun: bool = False,
         bound: bool | None = None,
         integrate_pixels: bool = True,
@@ -203,6 +330,7 @@ def calc_CNB_density_days(
     densities = []
     percentages = []
 
+    # region: Boost velocities
     # Units used for frame/boost related quantities
     Ev_unit = args.km/args.s
 
@@ -217,6 +345,8 @@ def calc_CNB_density_days(
     _, _, Ev_SL = SimUtil.SunEarthGC_frame_coords_posvel(
         2024, rel_vel, Earth_rel_Sun=True)
     Ev_SL_boost = Ev_SL*Ev_unit
+    # endregion
+
 
     # Initialize DM simulation data if using gravity
     if with_DM_gravity:
@@ -230,6 +360,7 @@ def calc_CNB_density_days(
             merge_last_axes=False, 
             args=args
         )
+        # (halos, masses, Npix, p_num)
 
         # Phase-space "today" through z=4 momenta and Liouville's theorem
         fd_vals_z0 = Physics.Fermi_Dirac(p_z4_dm, args)
@@ -240,8 +371,9 @@ def calc_CNB_density_days(
                 pars.directory, x_earth, nu_m_picks, args)
 
     for day in range(0, 365, day_step):
-        fpath = f"{days_vecs_dir}/vectors_day{day+1}.npy"
         
+        # region: Preamble
+        fpath = f"{days_vecs_dir}/vectors_day{day+1}.npy"
         if not os.path.exists(fpath):
             continue
 
@@ -251,12 +383,8 @@ def calc_CNB_density_days(
         # Load velocities from day simulations (these are in "SunLock" frame)
         v_unit = args.kpc/args.s
         day_v = jnp.load(fpath)[..., 3:][None, ...]*v_unit
-        # (halos, Npix, p_num, 2, 3)
-
-        # if Earth_frame:
-        #     # Transform velocities to GC frame
-        #     day_v = SimUtil.S_to_Sprime_frame_trafo(
-        #         day_v, earth_v[day]*Ev_unit)
+        # (1, Npix, p_num, 2, 3)
+        # endregion
 
 
         if with_DM_gravity:
@@ -267,44 +395,37 @@ def calc_CNB_density_days(
                 merge_last_axes=False, 
                 args=args
             )
-            # (halos, masses, Npix, p_num, 3)
+            # (1, masses, Npix, p_num, 3)
             # output momenta are with numerical units of kpc/s attached
 
             # Compute phase space density
             if interp_grav_psd:
                 if Earth_frame:
-                    # Transform momenta to GC frame
-                    #/ for this we use p_1yr from daily sims
-                    p_GC_mag, p_GC_unit = Physics.transform_momenta_to_orig_frame(
-                        p_vec=p_1yr_vec, boost_vec=Ev_GC_boost[day])
+                    # Momentum to use for PSD
+                    # (p_1yr from daily sims, transformed into GC frame)
+                    p_PSD_mag, p_PSD_unit = Physics.transform_momenta_to_orig_frame(
+                        p_vec=p_1yr_vec, 
+                        boost_vec=Ev_GC_boost[day], 
+                        masses=nu_m_picks)
+                    # (1, masses, Npix, p_num), (1, masses, Npix, p_num, 3)
+
+                    # Momentum to integrate over
+                    # (p_today from daily sims, transformed into Earth frame)
+                    p_int_mag, _ = Physics.transform_momenta_to_orig_frame(
+                        p_vec=p_today_vec, 
+                        boost_vec=Ev_SL_boost[day], 
+                        masses=nu_m_picks)
                     # (1, masses, Npix, p_num)
 
-                    # Pixels (indices) that 1yr momenta in GC frame point at
-                    # pixel_indices = Physics.get_p_vec_pixels(
-                    #     p_unit=p_GC_unit, nside=simdata.Nside)
-                    # (1, masses, Npix, p_num)
-                    
-                    # Transform momenta to Earth frame
-                    #/ for this we use p_today from daily sims
-                    p_E_mag, _ = Physics.transform_momenta_to_orig_frame(
-                        # p_vec=p_today_vec, boost_vec=Ev_SL_boost[day])
-                        p_vec=p_today_vec, boost_vec=Ev_GC_boost[day])
-                    
-                    # psd = interpolate_fd_values_parallel(
-                    #     p_GC_mag=p_GC_mag, 
-                    #     pixel_indices=pixel_indices, 
-                    #     p_grid=p_z0_dm, 
-                    #     fd_vals=fd_vals_z0)
-
-                    psd = interpolate_fd_values_with_euler_rotation(
-                        p_GC_mag=p_GC_mag, 
-                        p_GC_unit=p_GC_unit,
+                    psd = rotate_p_and_select_closest_fd_values(
+                        p_PSD_mag=p_PSD_mag, 
+                        p_PSD_unit=p_PSD_unit,
                         p_grid=p_z0_dm, 
                         fd_vals=fd_vals_z0,
-                        cell_positions=init_xyzs[:halo_num],
+                        cell_pos=init_xyzs[:halo_num],
                         nside=simdata.Nside
                     )
-
+                    # fd_vals_z0 and psd both (halos, masses, Npix, p_num)
                 else:                
                     #? unfinished...    
                     psd = Physics.interpolate_fd_values(
@@ -315,7 +436,7 @@ def calc_CNB_density_days(
             else:
                 psd = Physics.Fermi_Dirac(p_z4, args)
 
-            # Clip PSD values (avoid boundary effects from interpolation)
+            # Clip PSD values to avoid potential boundary issues from interp.
             psd = jnp.clip(psd, a_min=None, a_max=0.5)
 
             # Apply momentum boundary conditions if requested
@@ -334,11 +455,11 @@ def calc_CNB_density_days(
                 else:
                     n_raw = trap(p_z0**3 * psd_masked, jnp.log(p_z0), axis=-1)
             else:
-                n_raw = trap(p_E_mag**3 * psd, jnp.log(p_E_mag), axis=-1)
+                n_raw = trap(p_int_mag**3 * psd, jnp.log(p_int_mag), axis=-1)
 
         else:
-            # Non-gravitational calculation
-            _, p_z0, p_z4, _, _ = Utils.sim_vels_to_sorted_z0z4(
+            # Non-DM-gravitational calculation
+            _, p_z0, p_z4, *_ = Utils.sim_vels_to_sorted_z0z4(
                 day_v/v_unit,  # functions expects kpc/s units
                 nu_m_picks, 
                 merge_last_axes = not integrate_pixels, 
@@ -371,33 +492,34 @@ def calc_CNB_density_days(
 
 # Set preliminaries
 sim_output_dir = str(pathlib.Path(pars.directory).parent)
-nu_m_range = jnp.load(f"{pars.directory}/neutrino_massrange_eV.npy")
 nu_m_picks = jnp.array([0.01, 0.05, 0.1, 0.2, 0.3])*Params.eV
 simdata = SimData(pars.directory)
 
 init_xyzs = jnp.array(
     [jnp.load(f"{pars.directory}/init_xyz_halo{h+1}.npy") for h in range(10)])
 
+# No Gravity tests
+# prefix_str = "NoG_Euler"
+# days_vecs_dir = f"{pars.directory}/NoSun_vectors"
 
-# Folders and names
-# prefix_str = "SunLock"
-# days_vecs_dir = f"{pars.directory}/SunLock_frame"
+# With gravity tests
+prefix_str = "SunLock"
+days_vecs_dir = f"{pars.directory}/SunLock_frame"
 
-prefix_str = "NoG_Euler"
-days_vecs_dir = f"{pars.directory}/NoSun_vectors"
 
 # With DM gravity, and interpolated PSD from core sim, or FD instead
 with_DM_gravity = True
 halo_num = int(pars.halo_num)
 interp_grav_psd = True
 
-# Only relevant for Earth frame
+# Earth frame parameters
 Earth_frame = True
-Earth_rel_Sun = False  # irrelevant actually, since we now use both velocities
+Earth_rel_Sun = False
+# Only relevant if Earth_rel_Sun = False
 # rel_vel = "CNB"
 rel_vel = "MW"
 
-day_step = 48  # Ultimately we want to use 1 to have all days
+day_step = 12  # Ultimately we want to use 1 to have all days
 integrate_pixels = True
 bound = None
 # bound: Momentum boundary condition:

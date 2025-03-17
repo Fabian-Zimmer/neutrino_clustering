@@ -145,6 +145,23 @@ def transform_pixel_indices_v2(p_unit, cell_pos, nside):
     return jnp.stack(result)
 
 
+def transform_pixel_indices_v3(p_unit, nside):
+
+    # Extract x,y,z components
+    px, py, pz = p_unit[..., 0], p_unit[..., 1], p_unit[..., 2]
+
+    # Projected distance on xy-plane
+    proj_xy = jnp.sqrt(px**2 + py**2)
+
+    # Get galactic longitude and galactic latitude in healpy convention
+    hp_glon = jnp.rad2deg(jnp.arctan2(py, px))
+    hp_glat = jnp.rad2deg(jnp.arctan2(pz, proj_xy))
+
+    # Get healpy pixels
+    hp_pixels = hp.ang2pix(nside, hp_glon, hp_glat, lonlat=True)
+    return jnp.array(hp_pixels)
+
+
 def rotate_p_and_select_closest_fd_values(
         p_PSD_mag, p_PSD_unit, p_grid, fd_vals, cell_pos, nside):
     """
@@ -165,9 +182,14 @@ def rotate_p_and_select_closest_fd_values(
         Selected distribution function values (shape: [halos, masses, Npix, p_num])
     """
     # Transform pixel indices to each halo's frame
-    pixel_indices_halos = transform_pixel_indices_v2(
-        p_PSD_unit, cell_pos, nside)
+    # pixel_indices_halos = transform_pixel_indices_v2(
+    #     p_PSD_unit, cell_pos, nside)
     # shape: [halos, masses, Npix, p_num]
+
+    # Without rotation
+    pixel_indices_halos = transform_pixel_indices_v3(
+        p_PSD_unit, nside)
+    # shape: [1, masses, Npix, p_num]
 
     @jax.jit
     def process_halo(h):
@@ -288,7 +310,7 @@ def calc_CNB_density_days(
         with_DM_gravity: bool = True,
         interp_grav_psd: bool = True,
         Earth_frame: bool = False,
-        rel_vel: str = "CNB",
+        rel_vel: str = "MW",
         Earth_rel_Sun: bool = False,
         bound: bool | None = None,
         integrate_pixels: bool = True,
@@ -301,7 +323,7 @@ def calc_CNB_density_days(
     densities = []
     percentages = []
 
-    #region: Boost velocities
+    # region: Boost velocities
     # Units used for frame/boost related quantities
     Ev_unit = args.km/args.s
 
@@ -316,7 +338,7 @@ def calc_CNB_density_days(
     _, _, Ev_SL = SimUtil.SunEarthGC_frame_coords_posvel(
         2024, rel_vel, Earth_rel_Sun=True)
     Ev_SL_boost = Ev_SL*Ev_unit
-    #endregion
+    # endregion
 
     # Initialize DM simulation data if using gravity
     if with_DM_gravity:
@@ -342,7 +364,7 @@ def calc_CNB_density_days(
 
     for day in range(0, 365, day_step):
         
-        #region: Preamble
+        # region: Preamble
         t_start = time.perf_counter()
 
         fpath = f"{days_vecs_dir}/vectors_day{day+1}.npy"
@@ -356,7 +378,7 @@ def calc_CNB_density_days(
         v_unit = args.kpc/args.s
         day_v = jnp.load(fpath)[..., 3:][None, ...]*v_unit
         # (1, Npix, p_num, 2, 3)
-        #endregion
+        # endregion
 
         if with_DM_gravity:
             # Calculate momentum arrays using output from daily sims
@@ -372,37 +394,22 @@ def calc_CNB_density_days(
             # Compute phase space density
             if interp_grav_psd:
                 if Earth_frame:        
-                    # Momentum transformation functions need non-zero boost
-
                     # Momentum to use for PSD
-                    # (p_1yr from daily sims, transformed into GC frame) #?
+                    # (p_1yr from daily sims, transformed into GC frame)
                     p_PSD_mag, p_PSD_unit = Physics.transform_momenta_to_orig_frame(
                         p_vec=p_1yr_vec, 
-                        # boost_vec=Ev_GC_boost[day], 
-                        boost_vec=jnp.zeros(3), 
+                        boost_vec=Ev_GC_boost[day], 
                         masses=nu_m_picks)
-                    # print(p_GC_unit.shape)
                     # (1, masses, Npix, p_num), (1, masses, Npix, p_num, 3)
 
                     # Momentum to integrate over
-                    # (p_today from daily sims, transformed into Earth frame) #?
+                    # (p_today from daily sims, transformed into Earth frame)
                     p_int_mag, _ = Physics.transform_momenta_to_orig_frame(
                         p_vec=p_today_vec, 
-                        # boost_vec=Ev_SL_boost[day], 
-                        boost_vec=jnp.zeros(3), 
+                        boost_vec=Ev_SL_boost[day], 
                         masses=nu_m_picks)
-                    
-                    #? right boost direction? not minus?
+                    # (1, masses, Npix, p_num)
 
-                    # psd = rotate_p_and_interpolate_fd_values(
-                    #     p_PSD_mag=p_PSD_mag, 
-                    #     p_PSD_unit=p_PSD_unit,
-                    #     p_grid=p_z0_dm, 
-                    #     fd_vals=fd_vals_z0,
-                    #     cell_pos=init_xyzs[:halo_num],
-                    #     earth_pos=jnp.array([simdata.init_haloGC_dist, 0, 0]),
-                    #     nside=simdata.Nside
-                    # )
                     psd = rotate_p_and_select_closest_fd_values(
                         p_PSD_mag=p_PSD_mag, 
                         p_PSD_unit=p_PSD_unit,
@@ -413,15 +420,14 @@ def calc_CNB_density_days(
                     )
                     # fd_vals_z0 and psd both (halos, masses, Npix, p_num)
 
-                    #region: Plot comparison of interpolated vs. original psd
+                    # region: Plot comparison of interpolated vs. original psd
                     # if (day+1) == 1:
                     #     compare_fd_max_values(
                     #         original_fd=fd_vals_z0, interpolated_fd=psd,
                     #         halo_idx=0, mass_idx=3, p_grid=None, 
                     #         figsize=(10, 6),
                     #         x_lims=(0, 700), y_min=0.01, y_max=0.8)
-                    #endregion
-
+                    # endregion
                 else:                
                     #? unfinished...    
                     psd = Physics.interpolate_fd_values(
@@ -451,7 +457,7 @@ def calc_CNB_density_days(
                 else:
                     n_raw = trap(p_z0**3 * psd_masked, jnp.log(p_z0), axis=-1)
             else:
-                n_raw = trap(p_PSD_mag**3 * psd, jnp.log(p_PSD_mag), axis=-1)
+                n_raw = trap(p_int_mag**3 * psd, jnp.log(p_int_mag), axis=-1)
 
         else:
             # Non-DM-gravitational calculation
@@ -489,30 +495,22 @@ def calc_CNB_density_days(
     return results
 
 
-# Set preliminaries
-sim_name = f"SunNoG"
-# sim_name = f"SunMod_1k"
+# sim_name = f"SunNoG"
+sim_name = f"SunMod_1k"
 # sim_name = f"SunMod_2k"
 sim_folder = f"sim_output/{sim_name}"
-fig_folder = f"figures_local/{sim_name}"
-nu_m_range = jnp.load(f"{sim_folder}/neutrino_massrange_eV.npy")
-nu_m_picks = jnp.array([0.01, 0.05, 0.1, 0.2, 0.3])*Params.eV
-simdata = SimData(sim_folder)
 
-# In units of kpc (i.e array already divided by Params.kpc)
-init_xyzs = jnp.array(
-    [jnp.load(f"{sim_folder}/init_xyz_halo{h+1}.npy") for h in range(10)])
+# No Gravity
+# prefix_str = "NoG_yesRot"
+# days_vecs_dir = f"{sim_folder}/NoSun_vectors"
 
-# Folders and names
-prefix_str = "NoG_select"
-days_vecs_dir = f"{sim_folder}/NoSun_vectors"
-# prefix_str = "SunLock"
-# prefix_str = "SunLock_test"
-# days_vecs_dir = f"{sim_folder}/SunLock_frame"
+# With Sun Gravity
+prefix_str = "SunLock"
+days_vecs_dir = f"{sim_folder}/SunLock_frame"
 
 # With DM gravity, and interpolated PSD from core sim, or FD instead
 with_DM_gravity = True
-halo_num = 3  #/ 5 is max on laptop with Euler angle routine
+halo_num = 5  #/ 5 is max on laptop with Euler angle routine
 interp_grav_psd = True
 
 # Earth frame parameters
@@ -522,7 +520,7 @@ Earth_rel_Sun = False
 # rel_vel = "CNB"
 rel_vel = "MW"
 
-day_step = 96  # Ultimately we want to use 1 to have all days
+day_step = 12  # Ultimately we want to use 1 to have all days
 integrate_pixels = True
 bound = None
 # bound: Momentum boundary condition:
@@ -530,8 +528,16 @@ bound = None
 #     True - Use p_z0 < p_esc condition
 #     False - Use p_z0 >= p_esc condition
 
+
 print(datetime.today().strftime('%Y-%m-%d %H:%M:%S'))
 print(f"Halos: {int(halo_num)}")
+
+# In units of kpc (i.e array already divided by Params.kpc)
+init_xyzs = jnp.array(
+    [jnp.load(f"{sim_folder}/init_xyz_halo{h+1}.npy") for h in range(10)])
+
+nu_m_picks = jnp.array([0.01, 0.05, 0.1, 0.2, 0.3])*Params.eV
+simdata = SimData(sim_folder)
 
 # Calculate densities (extra is percentages, only for some conditions)
 days, densities, *extra = calc_CNB_density_days(
@@ -548,7 +554,7 @@ days, densities, *extra = calc_CNB_density_days(
     args=Params()
 )
 
-
+# region: file saving
 # Build filename suffixes based on conditions
 suffixes = []
 if with_DM_gravity:
@@ -581,3 +587,4 @@ jnp.save(f"{sim_folder}/{prefix_str}_days_dens{suffix_str}.npy", densities)
 # Save percentages if bound condition was used
 if bound is not None and extra:
     jnp.save(f"{sim_folder}/{prefix_str}_days_perc{suffix_str}.npy", extra[0])
+# endregion
