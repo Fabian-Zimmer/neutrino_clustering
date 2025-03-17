@@ -1,8 +1,6 @@
 from Shared.shared import *
 from Shared.specific_CNB_sim import *
 
-# TEst Change
-
 # region: old interpolate pixel values
 def transform_pixel_indices(p_unit, cell_pos, earth_pos, nside):
     """
