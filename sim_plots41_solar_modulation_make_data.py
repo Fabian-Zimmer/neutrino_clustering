@@ -1,7 +1,7 @@
 from Shared.shared import *
 from Shared.specific_CNB_sim import *
 
-
+# region: old interpolate pixel values
 def transform_pixel_indices(p_unit, cell_pos, earth_pos, nside):
     """
     Transform pixel indices from Earth frame to each starting cell's frame
@@ -37,7 +37,6 @@ def transform_pixel_indices(p_unit, cell_pos, earth_pos, nside):
         result.append(jnp.array(pixels))
     
     return jnp.stack(result)
-
 
 def rotate_p_and_interpolate_fd_values(
         p_PSD_mag, p_PSD_unit, p_grid, fd_vals, cell_pos, earth_pos, nside):
@@ -101,10 +100,53 @@ def rotate_p_and_interpolate_fd_values(
     
     # Vectorize over halos
     return jax.vmap(process_halo)(jnp.arange(p_grid.shape[0]))
+# endregion
+
+
+def transform_pixel_indices_v2(p_unit, cell_pos, nside):
+    """
+    Transform pixel indices from Earth frame to each starting cell's frame
+    using Euler angle rotations and healpy's lonlat convention.
+    
+    Args:
+        p_unit: Momentum unit vectors in Earth frame (shape: [1, masses, Npix, p_num, 3])
+        cell_pos: Starting positions for each halo (shape: [halos, 3])
+        earth_pos: Earth position vector (shape: [3])
+        nside: HEALPix nside parameter
+        
+    Returns:
+        Pixel indices in each halo's frame (shape: [halos, masses, Npix, p_num])
+    """
+    num_halos = cell_pos.shape[0]
+    result = []
+    
+    # Process each halo individually
+    for h in range(num_halos):
+        # Get rotation matrix from Earth frame to this starting cell's frame
+        R = SimUtil.get_rotation_matrix_euler(cell_pos[h])
+        
+        # Apply rotation to all momentum unit vectors
+        rot_p_unit = jnp.einsum('ij,abcj->abci', R, p_unit[0, ...])
+        
+        # Extract x,y,z components
+        px, py, pz = rot_p_unit[..., 0], rot_p_unit[..., 1], rot_p_unit[..., 2]
+
+        # Projected distance on xy-plane
+        proj_xy = jnp.sqrt(px**2 + py**2)
+
+        # Get galactic longitude and galactic latitude in healpy convention
+        hp_glon = jnp.rad2deg(jnp.arctan2(py, px))
+        hp_glat = jnp.rad2deg(jnp.arctan2(pz, proj_xy))
+
+        # Get healpy pixels
+        hp_pixels = hp.ang2pix(nside, hp_glon, hp_glat, lonlat=True)
+        result.append(hp_pixels)
+
+    return jnp.stack(result)
 
 
 def rotate_p_and_select_closest_fd_values(
-        p_PSD_mag, p_PSD_unit, p_grid, fd_vals, cell_pos, earth_pos, nside):
+        p_PSD_mag, p_PSD_unit, p_grid, fd_vals, cell_pos, nside):
     """
     Select distribution function values using Euler angle rotations
     to transform between reference frames, choosing the closest p_grid value
@@ -123,10 +165,10 @@ def rotate_p_and_select_closest_fd_values(
         Selected distribution function values (shape: [halos, masses, Npix, p_num])
     """
     # Transform pixel indices to each halo's frame
-    pixel_indices_halos = transform_pixel_indices(
-        p_PSD_unit, cell_pos, earth_pos, nside)
+    pixel_indices_halos = transform_pixel_indices_v2(
+        p_PSD_unit, cell_pos, nside)
     # shape: [halos, masses, Npix, p_num]
-    
+
     @jax.jit
     def process_halo(h):
         result = jnp.zeros_like(p_grid[h])
@@ -330,10 +372,10 @@ def calc_CNB_density_days(
             # Compute phase space density
             if interp_grav_psd:
                 if Earth_frame:        
-                    #/ Momentum transformation functions need non-zero boost
+                    # Momentum transformation functions need non-zero boost
 
-                    #/ Momentum to use for PSD
-                    #? (p_1yr from daily sims, transformed into GC frame)
+                    # Momentum to use for PSD
+                    # (p_1yr from daily sims, transformed into GC frame) #?
                     p_PSD_mag, p_PSD_unit = Physics.transform_momenta_to_orig_frame(
                         p_vec=p_1yr_vec, 
                         # boost_vec=Ev_GC_boost[day], 
@@ -342,8 +384,8 @@ def calc_CNB_density_days(
                     # print(p_GC_unit.shape)
                     # (1, masses, Npix, p_num), (1, masses, Npix, p_num, 3)
 
-                    #/ Momentum to integrate over
-                    #? (p_today from daily sims, transformed into Earth frame)
+                    # Momentum to integrate over
+                    # (p_today from daily sims, transformed into Earth frame) #?
                     p_int_mag, _ = Physics.transform_momenta_to_orig_frame(
                         p_vec=p_today_vec, 
                         # boost_vec=Ev_SL_boost[day], 
@@ -353,13 +395,20 @@ def calc_CNB_density_days(
                     #? right boost direction? not minus?
 
                     # psd = rotate_p_and_interpolate_fd_values(
+                    #     p_PSD_mag=p_PSD_mag, 
+                    #     p_PSD_unit=p_PSD_unit,
+                    #     p_grid=p_z0_dm, 
+                    #     fd_vals=fd_vals_z0,
+                    #     cell_pos=init_xyzs[:halo_num],
+                    #     earth_pos=jnp.array([simdata.init_haloGC_dist, 0, 0]),
+                    #     nside=simdata.Nside
+                    # )
                     psd = rotate_p_and_select_closest_fd_values(
                         p_PSD_mag=p_PSD_mag, 
                         p_PSD_unit=p_PSD_unit,
                         p_grid=p_z0_dm, 
                         fd_vals=fd_vals_z0,
                         cell_pos=init_xyzs[:halo_num],
-                        earth_pos=jnp.array([simdata.init_haloGC_dist, 0, 0]),
                         nside=simdata.Nside
                     )
                     # fd_vals_z0 and psd both (halos, masses, Npix, p_num)
