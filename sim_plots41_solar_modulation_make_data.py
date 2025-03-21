@@ -463,17 +463,36 @@ def calc_CNB_density_days(
 
         else:
             # Non-DM-gravitational calculation
-            _, p_today, p_1yr, *_ = Utils.sim_vels_to_sorted_z0z4(
+            _, p_today_vec, p_1yr_vec, *_ = Utils.sim_vels_to_sorted_z0z4_vec(
                 day_v/v_unit,  # functions expects kpc/s units
                 nu_m_picks, 
-                merge_last_axes = not integrate_pixels, 
+                merge_last_axes=False, 
                 args=args
             )
-            # p_z0/z4: (H, M, 768000) or (H, M, 768, 1000)
-            # depending on merge_last_axes True or False
+            # (1, masses, Npix, p_num, 3)
+            # output momenta are with numerical units of kpc/s attached
 
-            psd = Physics.Fermi_Dirac(p_1yr, args)
-            n_raw = trap(p_today**3 * psd, jnp.log(p_today), axis=-1)
+            if Earth_frame:        
+                # Momentum to use for PSD
+                # (p_1yr from daily sims, transformed into GC frame)
+                p_PSD_mag, _ = Physics.transform_momenta_to_orig_frame(
+                    p_vec=p_1yr_vec, 
+                    boost_vec=Ev_GC_boost[day], 
+                    # boost_vec=jnp.zeros_like(Ev_GC_boost[0]), 
+                    masses=nu_m_picks)
+                # (1, masses, Npix, p_num), (1, masses, Npix, p_num, 3)
+
+                # Momentum to integrate over
+                # (p_today from daily sims, transformed into Earth frame)
+                p_int_mag, _ = Physics.transform_momenta_to_orig_frame(
+                    p_vec=p_today_vec, 
+                    boost_vec=Ev_SL_boost[day], 
+                    # boost_vec=jnp.zeros_like(Ev_SL_boost[0]), 
+                    masses=nu_m_picks)
+                # (1, masses, Npix, p_num)
+
+            psd = Physics.Fermi_Dirac(p_PSD_mag, args)
+            n_raw = trap(p_int_mag**3 * psd, jnp.log(p_int_mag), axis=-1)
 
         # Compute final density
         if integrate_pixels:
@@ -502,12 +521,12 @@ sim_name = f"SunMod_1k"
 # sim_name = f"SunMod_2k"
 sim_folder = f"sim_output/{sim_name}"
 
-prefix_str = "SunDop8"
-days_vecs_dir = f"{sim_folder}/SunLock_Dopri8"
+prefix_str = "SunDop5"
+days_vecs_dir = f"{sim_folder}/SunLock_Dopri5"
 
 # With DM gravity, and interpolated PSD from core sim, or FD instead
-with_DM_gravity = False
-halo_num = 1  #/ 5 is max on laptop with current routine
+with_DM_gravity = True
+halo_num = 5  #/ 5 is max on laptop with current routine
 interp_grav_psd = True
 
 # Earth frame parameters
