@@ -99,12 +99,12 @@ def backtrack_1_neutrino(
     ### Integration Solver ###
     ### ------------------ ###
 
-    solver = diffrax.Dopri5()
-    stepsize_controller = diffrax.PIDController(rtol=1e-3, atol=1e-6)
+    # solver = diffrax.Dopri5()
+    # stepsize_controller = diffrax.PIDController(rtol=1e-3, atol=1e-6)
 
     # note: more accurate solver takes too long with current EOM fctn structure
-    # solver = diffrax.Dopri8()
-    # stepsize_controller = diffrax.PIDController(rtol=1e-6, atol=1e-8)
+    solver = diffrax.Dopri8()
+    stepsize_controller = diffrax.PIDController(rtol=1e-6, atol=1e-8)
 
     # Specify timesteps where solutions should be saved
     saveat = diffrax.SaveAt(ts=jnp.array(s_int_steps))

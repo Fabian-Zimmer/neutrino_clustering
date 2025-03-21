@@ -502,8 +502,8 @@ init_xyzs = jnp.array(
 # days_vecs_dir = f"{pars.directory}/NoSun_vectors"
 
 # With gravity tests
-prefix_str = "SunLock"
-days_vecs_dir = f"{pars.directory}/SunLock_frame"
+prefix_str = "SunLock_D8"
+days_vecs_dir = f"{pars.directory}/SunLock_Dopri8"
 
 
 # With DM gravity, and interpolated PSD from core sim, or FD instead
