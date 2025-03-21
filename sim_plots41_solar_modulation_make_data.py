@@ -399,6 +399,7 @@ def calc_CNB_density_days(
                     p_PSD_mag, p_PSD_unit = Physics.transform_momenta_to_orig_frame(
                         p_vec=p_1yr_vec, 
                         boost_vec=Ev_GC_boost[day], 
+                        # boost_vec=jnp.zeros_like(Ev_GC_boost[0]), 
                         masses=nu_m_picks)
                     # (1, masses, Npix, p_num), (1, masses, Npix, p_num, 3)
 
@@ -407,6 +408,7 @@ def calc_CNB_density_days(
                     p_int_mag, _ = Physics.transform_momenta_to_orig_frame(
                         p_vec=p_today_vec, 
                         boost_vec=Ev_SL_boost[day], 
+                        # boost_vec=jnp.zeros_like(Ev_SL_boost[0]), 
                         masses=nu_m_picks)
                     # (1, masses, Npix, p_num)
 
@@ -461,7 +463,7 @@ def calc_CNB_density_days(
 
         else:
             # Non-DM-gravitational calculation
-            _, p_z0, p_z4, *_ = Utils.sim_vels_to_sorted_z0z4(
+            _, p_today, p_1yr, *_ = Utils.sim_vels_to_sorted_z0z4(
                 day_v/v_unit,  # functions expects kpc/s units
                 nu_m_picks, 
                 merge_last_axes = not integrate_pixels, 
@@ -470,8 +472,8 @@ def calc_CNB_density_days(
             # p_z0/z4: (H, M, 768000) or (H, M, 768, 1000)
             # depending on merge_last_axes True or False
 
-            psd = Physics.Fermi_Dirac(p_z4, args)
-            n_raw = trap(p_z0**3 * psd, jnp.log(p_z0), axis=-1)
+            psd = Physics.Fermi_Dirac(p_1yr, args)
+            n_raw = trap(p_today**3 * psd, jnp.log(p_today), axis=-1)
 
         # Compute final density
         if integrate_pixels:
@@ -500,17 +502,12 @@ sim_name = f"SunMod_1k"
 # sim_name = f"SunMod_2k"
 sim_folder = f"sim_output/{sim_name}"
 
-# No Gravity
-# prefix_str = "NoG_yesRot"
-# days_vecs_dir = f"{sim_folder}/NoSun_vectors"
-
-# With Sun Gravity
-prefix_str = "SunLock"
-days_vecs_dir = f"{sim_folder}/SunLock_frame"
+prefix_str = "SunDop8"
+days_vecs_dir = f"{sim_folder}/SunLock_Dopri8"
 
 # With DM gravity, and interpolated PSD from core sim, or FD instead
-with_DM_gravity = True
-halo_num = 5  #/ 5 is max on laptop with Euler angle routine
+with_DM_gravity = False
+halo_num = 1  #/ 5 is max on laptop with current routine
 interp_grav_psd = True
 
 # Earth frame parameters
