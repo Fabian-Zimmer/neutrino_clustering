@@ -48,17 +48,16 @@ def EOMs_sun(s_val, y, args):
     # idx = jnp.abs(z_int_steps - z).argmin()
 
     # Find t (lookback time) corresponding to s_val via interpolation.
-    # t = Utils.jax_interpolate(s_val, s_int_steps, t_int_steps)*s
+    t = Utils.jax_interpolate(s_val, s_int_steps, t_int_steps)*s
 
     # Compute current position of Sun w.r.t. CNB(==CMB) frame, given starting 
     # position and velocity vectors of current day being simulated
-    # sun_pos_t = sun_pos - sun_vel*t
+    sun_pos_t = sun_pos - sun_vel*t
 
     # Compute gradient of sun.
     eps = 696_340*km  # solar radius in numerical units
-    # grad_sun = SimExec.sun_gravity(x_i, eps, sun_pos_t)
-    # grad_sun = SimExec.sun_gravity(x_i, eps, sun_pos[idx])
-    grad_sun = SimExec.sun_gravity(x_i, eps, sun_pos)
+    grad_sun = SimExec.sun_gravity(x_i, eps, sun_pos_t)  # SunMove frame
+    # grad_sun = SimExec.sun_gravity(x_i, eps, sun_pos)  # SunLock frame
 
     # Add gravity vector of DM sim cell
     grad_tot = grad_sun #+ dPsi_Sun_cell
@@ -99,12 +98,12 @@ def backtrack_1_neutrino(
     ### Integration Solver ###
     ### ------------------ ###
 
-    # solver = diffrax.Dopri5()
-    # stepsize_controller = diffrax.PIDController(rtol=1e-3, atol=1e-6)
+    solver = diffrax.Dopri5()
+    stepsize_controller = diffrax.PIDController(rtol=1e-3, atol=1e-6)
 
     # note: more accurate solver takes too long with current EOM fctn structure
-    solver = diffrax.Dopri8()
-    stepsize_controller = diffrax.PIDController(rtol=1e-6, atol=1e-8)
+    # solver = diffrax.Dopri8()
+    # stepsize_controller = diffrax.PIDController(rtol=1e-6, atol=1e-8)
 
     # Specify timesteps where solutions should be saved
     saveat = diffrax.SaveAt(ts=jnp.array(s_int_steps))
