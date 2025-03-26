@@ -477,8 +477,8 @@ def calc_CNB_density_days(
                 # (p_1yr from daily sims, transformed into GC frame)
                 p_PSD_mag, _ = Physics.transform_momenta_to_orig_frame(
                     p_vec=p_1yr_vec, 
-                    boost_vec=Ev_GC_boost[day], 
-                    # boost_vec=jnp.zeros_like(Ev_GC_boost[0]), 
+                    # boost_vec=Ev_GC_boost[day],
+                    boost_vec=jnp.zeros_like(Ev_GC_boost[0]), 
                     masses=nu_m_picks)
                 # (1, masses, Npix, p_num), (1, masses, Npix, p_num, 3)
 
@@ -521,12 +521,12 @@ sim_name = f"SunMod_1k"
 # sim_name = f"SunMod_2k"
 sim_folder = f"sim_output/{sim_name}"
 
-prefix_str = "SunDop5"
-days_vecs_dir = f"{sim_folder}/SunLock_Dopri5"
+prefix_str = "SunMoveDop5_SLboost"
+days_vecs_dir = f"{sim_folder}/SunMove_Dopri5"
 
 # With DM gravity, and interpolated PSD from core sim, or FD instead
-with_DM_gravity = True
-halo_num = 5  #/ 5 is max on laptop with current routine
+with_DM_gravity = False
+halo_num = 1  #/ 5 is max on laptop with current routine
 interp_grav_psd = True
 
 # Earth frame parameters

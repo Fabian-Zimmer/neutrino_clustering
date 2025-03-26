@@ -63,7 +63,7 @@ def f_distr(v_range, t_index, m_nu, bound, v_0):
     def bound_case(_):
 
         # v_for_f = v_inf + v_Sun  # original
-        v_for_f = v_inf + v_CNB  #TODO: test
+        v_for_f = v_inf + v_Sun*2  #TODO: test
         v_for_f_mag = jnp.linalg.norm(v_for_f, axis=-1)
 
         # Create mask for velocity magnitudes smaller than escape velocity
@@ -86,7 +86,7 @@ def f_distr(v_range, t_index, m_nu, bound, v_0):
     def unbound_case(_):
 
         # v_for_f = v_inf + v_CNB  # original
-        v_for_f = v_inf + v_Sun  #TODO: test
+        v_for_f = v_inf + v_CNB*2  #TODO: test
         v_for_f_mag = jnp.linalg.norm(v_for_f, axis=-1)
 
         f_v = m_nu**3/(jnp.exp(m_nu*v_for_f_mag/Params.T_CNB)+1)
@@ -161,12 +161,12 @@ def compute_modulations(m_nu_light, m_nu_heavy, out_dir):
         if bound == False:
             jnp.save(
                 # f"{out_dir}/annual_densities_{m_nu}eV_unbound.npy",  # orig
-                f"{out_dir}/annual_densities_{m_nu}eV_unbound_v_switch_div1000.npy",  #TODO
+                f"{out_dir}/annual_densities_{m_nu}eV_unbound_v_fast.npy",  #TODO
                 densities)
         if bound == True:
             jnp.save(
                 # f"{out_dir}/annual_densities_{v_0/(Params.km/Params.s)}kms_{m_nu}eV_bound.npy",  # original
-                f"{out_dir}/annual_densities_{v_0/(Params.km/Params.s)}kms_{m_nu}eV_bound_v_switch_div1000.npy",  #TODO 
+                f"{out_dir}/annual_densities_{v_0/(Params.km/Params.s)}kms_{m_nu}eV_bound_v_fast.npy",  #TODO 
                 densities)
 
 
