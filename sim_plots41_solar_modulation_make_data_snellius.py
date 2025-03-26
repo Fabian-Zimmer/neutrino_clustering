@@ -5,9 +5,6 @@ parser.add_argument('--directory', required=True)
 parser.add_argument('-hn', '--halo_num', required=True)
 pars = parser.parse_args()
 
-print(datetime.today().strftime('%Y-%m-%d %H:%M:%S'))
-print(f"Halos: {int(pars.halo_num)}")
-
 # region: old interpolate pixel values
 def transform_pixel_indices(p_unit, cell_pos, earth_pos, nside):
     """
@@ -373,6 +370,8 @@ def calc_CNB_density_days(
     for day in range(0, 365, day_step):
         
         # region: Preamble
+        t_start = time.perf_counter()
+
         fpath = f"{days_vecs_dir}/vectors_day{day+1}.npy"
         if not os.path.exists(fpath):
             continue
@@ -395,7 +394,7 @@ def calc_CNB_density_days(
                 merge_last_axes=False, 
                 args=args
             )
-            # (1, masses, Npix, p_num, 3)
+            # (1, masses, Npix, p_num, 3) vec, (1, masses, Npix, p_num) mag
             # output momenta are with numerical units of kpc/s attached
 
             # Compute phase space density
@@ -405,7 +404,8 @@ def calc_CNB_density_days(
                     # (p_1yr from daily sims, transformed into GC frame)
                     p_PSD_mag, p_PSD_unit = Physics.transform_momenta_to_orig_frame(
                         p_vec=p_1yr_vec, 
-                        boost_vec=Ev_GC_boost[day], 
+                        # boost_vec=Ev_GC_boost[day], 
+                        boost_vec=jnp.zeros_like(Ev_GC_boost[0]), 
                         masses=nu_m_picks)
                     # (1, masses, Npix, p_num), (1, masses, Npix, p_num, 3)
 
@@ -413,7 +413,8 @@ def calc_CNB_density_days(
                     # (p_today from daily sims, transformed into Earth frame)
                     p_int_mag, _ = Physics.transform_momenta_to_orig_frame(
                         p_vec=p_today_vec, 
-                        boost_vec=Ev_SL_boost[day], 
+                        # boost_vec=Ev_SL_boost[day], 
+                        boost_vec=jnp.zeros_like(Ev_SL_boost[0]), 
                         masses=nu_m_picks)
                     # (1, masses, Npix, p_num)
 
@@ -459,17 +460,36 @@ def calc_CNB_density_days(
 
         else:
             # Non-DM-gravitational calculation
-            _, p_z0, p_z4, *_ = Utils.sim_vels_to_sorted_z0z4(
+            _, p_today_vec, p_1yr_vec, *_ = Utils.sim_vels_to_sorted_z0z4_vec(
                 day_v/v_unit,  # functions expects kpc/s units
                 nu_m_picks, 
-                merge_last_axes = not integrate_pixels, 
+                merge_last_axes=False, 
                 args=args
             )
-            # p_z0/z4: (H, M, 768000) or (H, M, 768, 1000)
-            # depending on merge_last_axes True or False
+            # (1, masses, Npix, p_num, 3)
+            # output momenta are with numerical units of kpc/s attached
 
-            psd = Physics.Fermi_Dirac(p_z4, args)
-            n_raw = trap(p_z0**3 * psd, jnp.log(p_z0), axis=-1)
+            if Earth_frame:        
+                # Momentum to use for PSD
+                # (p_1yr from daily sims, transformed into GC frame)
+                p_PSD_mag, _ = Physics.transform_momenta_to_orig_frame(
+                    p_vec=p_1yr_vec, 
+                    # boost_vec=Ev_GC_boost[day],
+                    boost_vec=jnp.zeros_like(Ev_GC_boost[0]), 
+                    masses=nu_m_picks)
+                # (1, masses, Npix, p_num), (1, masses, Npix, p_num, 3)
+
+                # Momentum to integrate over
+                # (p_today from daily sims, transformed into Earth frame)
+                p_int_mag, _ = Physics.transform_momenta_to_orig_frame(
+                    p_vec=p_today_vec, 
+                    # boost_vec=Ev_SL_boost[day], 
+                    boost_vec=jnp.zeros_like(Ev_SL_boost[0]), 
+                    masses=nu_m_picks)
+                # (1, masses, Npix, p_num)
+
+            psd = Physics.Fermi_Dirac(p_PSD_mag, args)
+            n_raw = trap(p_int_mag**3 * psd, jnp.log(p_int_mag), axis=-1)
 
         # Compute final density
         if integrate_pixels:
@@ -483,6 +503,9 @@ def calc_CNB_density_days(
 
         densities.append(n_total)
 
+        tot_time = time.perf_counter() - t_start
+        print(f"Loop time: {tot_time/60.:.2f} min")
+
     results = (jnp.array(days), jnp.array(densities))
     if bound is not None and with_DM_gravity:
         results += (jnp.array(percentages),)
@@ -490,21 +513,8 @@ def calc_CNB_density_days(
     return results
 
 
-# Set preliminaries
-nu_m_picks = jnp.array([0.01, 0.05, 0.1, 0.2, 0.3])*Params.eV
-simdata = SimData(pars.directory)
-
-init_xyzs = jnp.array(
-    [jnp.load(f"{pars.directory}/init_xyz_halo{h+1}.npy") for h in range(10)])
-
-# No Gravity tests
-# prefix_str = "NoG_Euler"
-# days_vecs_dir = f"{pars.directory}/NoSun_vectors"
-
-# With gravity tests
-prefix_str = "SunLock_D8"
-days_vecs_dir = f"{pars.directory}/SunLock_Dopri8"
-
+prefix_str = "SunMoveDop5_noBoost"
+days_vecs_dir = f"{pars.directory}/SunMove_Dopri5"
 
 # With DM gravity, and interpolated PSD from core sim, or FD instead
 with_DM_gravity = True
@@ -518,13 +528,24 @@ Earth_rel_Sun = False
 # rel_vel = "CNB"
 rel_vel = "MW"
 
-day_step = 48  # Ultimately we want to use 1 to have all days
+day_step = 12  # Ultimately we want to use 1 to have all days
 integrate_pixels = True
 bound = None
 # bound: Momentum boundary condition:
 #     None - Use full momentum range
 #     True - Use p_z0 < p_esc condition
 #     False - Use p_z0 >= p_esc condition
+
+
+print(datetime.today().strftime('%Y-%m-%d %H:%M:%S'))
+print(f"Halos: {int(pars.halo_num)}")
+
+# In units of kpc (i.e array already divided by Params.kpc)
+init_xyzs = jnp.array(
+    [jnp.load(f"{pars.directory}/init_xyz_halo{h+1}.npy") for h in range(10)])
+
+nu_m_picks = jnp.array([0.01, 0.05, 0.1, 0.2, 0.3])*Params.eV
+simdata = SimData(pars.directory)
 
 # Calculate densities (extra is percentages, only for some conditions)
 days, densities, *extra = calc_CNB_density_days(
@@ -541,7 +562,7 @@ days, densities, *extra = calc_CNB_density_days(
     args=Params()
 )
 
-
+# region: file saving
 # Build filename suffixes based on conditions
 suffixes = []
 if with_DM_gravity:
@@ -575,3 +596,4 @@ jnp.save(f"{pars.directory}/{prefix_str}_days_dens{suffix_str}.npy", densities)
 if bound is not None and extra:
     jnp.save(
         f"{pars.directory}/{prefix_str}_days_perc{suffix_str}.npy", extra[0])
+# endregion

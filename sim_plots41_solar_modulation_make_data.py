@@ -388,7 +388,7 @@ def calc_CNB_density_days(
                 merge_last_axes=False, 
                 args=args
             )
-            # (1, masses, Npix, p_num, 3)
+            # (1, masses, Npix, p_num, 3) vec, (1, masses, Npix, p_num) mag
             # output momenta are with numerical units of kpc/s attached
 
             # Compute phase space density
@@ -398,8 +398,8 @@ def calc_CNB_density_days(
                     # (p_1yr from daily sims, transformed into GC frame)
                     p_PSD_mag, p_PSD_unit = Physics.transform_momenta_to_orig_frame(
                         p_vec=p_1yr_vec, 
-                        boost_vec=Ev_GC_boost[day], 
-                        # boost_vec=jnp.zeros_like(Ev_GC_boost[0]), 
+                        # boost_vec=Ev_GC_boost[day], 
+                        boost_vec=jnp.zeros_like(Ev_GC_boost[0]), 
                         masses=nu_m_picks)
                     # (1, masses, Npix, p_num), (1, masses, Npix, p_num, 3)
 
@@ -407,8 +407,8 @@ def calc_CNB_density_days(
                     # (p_today from daily sims, transformed into Earth frame)
                     p_int_mag, _ = Physics.transform_momenta_to_orig_frame(
                         p_vec=p_today_vec, 
-                        boost_vec=Ev_SL_boost[day], 
-                        # boost_vec=jnp.zeros_like(Ev_SL_boost[0]), 
+                        # boost_vec=Ev_SL_boost[day], 
+                        boost_vec=jnp.zeros_like(Ev_SL_boost[0]), 
                         masses=nu_m_picks)
                     # (1, masses, Npix, p_num)
 
@@ -486,8 +486,8 @@ def calc_CNB_density_days(
                 # (p_today from daily sims, transformed into Earth frame)
                 p_int_mag, _ = Physics.transform_momenta_to_orig_frame(
                     p_vec=p_today_vec, 
-                    boost_vec=Ev_SL_boost[day], 
-                    # boost_vec=jnp.zeros_like(Ev_SL_boost[0]), 
+                    # boost_vec=Ev_SL_boost[day], 
+                    boost_vec=jnp.zeros_like(Ev_SL_boost[0]), 
                     masses=nu_m_picks)
                 # (1, masses, Npix, p_num)
 
@@ -521,7 +521,7 @@ sim_name = f"SunMod_1k"
 # sim_name = f"SunMod_2k"
 sim_folder = f"sim_output/{sim_name}"
 
-prefix_str = "SunMoveDop5_SLboost"
+prefix_str = "SunMoveDop5_half_T_CNB"
 days_vecs_dir = f"{sim_folder}/SunMove_Dopri5"
 
 # With DM gravity, and interpolated PSD from core sim, or FD instead
