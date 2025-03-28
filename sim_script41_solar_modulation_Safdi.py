@@ -62,8 +62,7 @@ def f_distr(v_range, t_index, m_nu, bound, v_0):
 
     def bound_case(_):
 
-        # v_for_f = v_inf + v_Sun  # original
-        v_for_f = v_inf + v_Sun*2  #TODO: test
+        v_for_f = v_inf + v_Sun  # original
         v_for_f_mag = jnp.linalg.norm(v_for_f, axis=-1)
 
         # Create mask for velocity magnitudes smaller than escape velocity
@@ -85,8 +84,7 @@ def f_distr(v_range, t_index, m_nu, bound, v_0):
 
     def unbound_case(_):
 
-        # v_for_f = v_inf + v_CNB  # original
-        v_for_f = v_inf + v_CNB*2  #TODO: test
+        v_for_f = v_inf + v_CNB  # original
         v_for_f_mag = jnp.linalg.norm(v_for_f, axis=-1)
 
         f_v = m_nu**3/(jnp.exp(m_nu*v_for_f_mag/Params.T_CNB)+1)

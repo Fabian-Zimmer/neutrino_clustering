@@ -491,7 +491,15 @@ def calc_CNB_density_days(
                     masses=nu_m_picks)
                 # (1, masses, Npix, p_num)
 
-            psd = Physics.Fermi_Dirac(p_PSD_mag, args)
+            # Fermi-Dirac as boundary PSD
+            # psd = Physics.Fermi_Dirac(p_PSD_mag, args)
+
+            # SHM as boundary PSD
+            v_0 = 400*args.km/args.s
+            v_esc_MW = 550*args.km/args.s
+            psd = Physics.SHM_PSD(
+                day_v[..., -1, :], v_esc_MW, v_0, args)[:, None, ...]
+
             n_raw = trap(p_int_mag**3 * psd, jnp.log(p_int_mag), axis=-1)
 
         # Compute final density
@@ -521,8 +529,8 @@ sim_name = f"SunMod_1k"
 # sim_name = f"SunMod_2k"
 sim_folder = f"sim_output/{sim_name}"
 
-prefix_str = "SunMoveDop5_half_T_CNB"
-days_vecs_dir = f"{sim_folder}/SunMove_Dopri5"
+prefix_str = "SunMoveDop5_SHM2"
+days_vecs_dir = f"{sim_folder}/SunMove_Dopri5_wrtMW"
 
 # With DM gravity, and interpolated PSD from core sim, or FD instead
 with_DM_gravity = False
@@ -552,7 +560,7 @@ print(f"Halos: {int(halo_num)}")
 init_xyzs = jnp.array(
     [jnp.load(f"{sim_folder}/init_xyz_halo{h+1}.npy") for h in range(10)])
 
-nu_m_picks = jnp.array([0.01, 0.05, 0.1, 0.2, 0.3])*Params.eV
+nu_m_picks = jnp.array([0.01, 0.05, 0.15, 0.2, 0.3])*Params.eV
 simdata = SimData(sim_folder)
 
 # Calculate densities (extra is percentages, only for some conditions)
