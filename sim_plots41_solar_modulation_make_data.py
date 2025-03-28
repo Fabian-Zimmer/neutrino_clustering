@@ -330,12 +330,12 @@ def calc_CNB_density_days(
     # Need Earth velocities relative to both:
     # 1. Galactic Centre (GC) frame (includes solar system motion)
     # (order of 250 km/s)
-    _, _, Ev_GC = SimUtil.SunEarthGC_frame_coords_posvel(
+    _, _, Ev_GC, _ = SimUtil.SunEarthGC_frame_coords_posvel(
         2024, rel_vel, Earth_rel_Sun=False)
     Ev_GC_boost = Ev_GC*Ev_unit
     # 2. Sunlock (SL) frame (i.e. motion of Earth relative to only Sun)
     # (order of 30 km/s)
-    _, _, Ev_SL = SimUtil.SunEarthGC_frame_coords_posvel(
+    _, _, Ev_SL, _ = SimUtil.SunEarthGC_frame_coords_posvel(
         2024, rel_vel, Earth_rel_Sun=True)
     Ev_SL_boost = Ev_SL*Ev_unit
     # endregion
@@ -529,8 +529,8 @@ sim_name = f"SunMod_1k"
 # sim_name = f"SunMod_2k"
 sim_folder = f"sim_output/{sim_name}"
 
-prefix_str = "SunMoveDop5_SHM2"
-days_vecs_dir = f"{sim_folder}/SunMove_Dopri5_wrtMW"
+prefix_str = "SunMoveDop5_New"
+days_vecs_dir = f"{sim_folder}/SunMove_Dopri5_New_wrtMW"
 
 # With DM gravity, and interpolated PSD from core sim, or FD instead
 with_DM_gravity = False
