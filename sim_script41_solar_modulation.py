@@ -163,7 +163,7 @@ def simulate_neutrinos_1_pix(init_xyz, init_vels, common_args):
 
 # New function that agrees with Safdi
 _, sun_positions, sun_velocities = SimUtil.get_sun_pos_vel_earth_gc_frame(
-    year=2024, rel_vel="MW", Earth_rel_Sun=False)
+    year=2024, rel_vel="CNB", Earth_rel_Sun=False)
 sun_positions *= Params.AU
 sun_velocities *= Params.km/Params.s
 
