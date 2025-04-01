@@ -226,7 +226,6 @@ for day in range(0, 365, 12):  #note: for testing, subset of all days
     common_args = (
         s_int_steps_1year, z_int_steps_1year, t_int_steps_1year, 
         sun_positions[day], sun_velocities[day], dPsi_Sun_cell,
-        # jnp.roll(sun_positions, -int(day), axis=0), sun_velocities[day], dPsi_Sun_cell,
         Params.kpc, Params.km, Params.s)
 
     if pars.testing:

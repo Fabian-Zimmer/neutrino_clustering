@@ -431,12 +431,7 @@ def calc_CNB_density_days(
                     #         x_lims=(0, 700), y_min=0.01, y_max=0.8)
                     # endregion
                 else:                
-                    #? unfinished...    
-                    psd = Physics.interpolate_fd_values(
-                        p_GC_mag=jnp.linalg.norm(p_1yr_vec, axis=-1),
-                        pixel_indices=pixel_indices,
-                        p_grid=p_z0_dm,
-                        fd_vals=fd_vals_z0)
+                    ...
             else:
                 psd = Physics.Fermi_Dirac(p_z4, args)
 
@@ -492,13 +487,13 @@ def calc_CNB_density_days(
                 # (1, masses, Npix, p_num)
 
             # Fermi-Dirac as boundary PSD
-            # psd = Physics.Fermi_Dirac(p_PSD_mag, args)
+            psd = Physics.Fermi_Dirac(p_PSD_mag, args)
 
             # SHM as boundary PSD
-            v_0 = 400*args.km/args.s
-            v_esc_MW = 550*args.km/args.s
-            psd = Physics.SHM_PSD(
-                day_v[..., -1, :], v_esc_MW, v_0, args)[:, None, ...]
+            # v_0 = 400*args.km/args.s  # 220, 400
+            # v_esc_MW = 550*args.km/args.s
+            # psd = Physics.SHM_PSD(
+            #     day_v[..., -1, :], v_esc_MW, v_0, args)[:, None, ...]
 
             n_raw = trap(p_int_mag**3 * psd, jnp.log(p_int_mag), axis=-1)
 
@@ -529,12 +524,12 @@ sim_name = f"SunMod_1k"
 # sim_name = f"SunMod_2k"
 sim_folder = f"sim_output/{sim_name}"
 
-prefix_str = "SunMoveDop5_New"
+prefix_str = "SunMoveDop5"
 days_vecs_dir = f"{sim_folder}/SunMove_Dopri5_New_wrtMW"
 
 # With DM gravity, and interpolated PSD from core sim, or FD instead
-with_DM_gravity = False
-halo_num = 1  #/ 5 is max on laptop with current routine
+with_DM_gravity = True
+halo_num = 3  #/ 5 is max on laptop with current routine
 interp_grav_psd = True
 
 # Earth frame parameters
@@ -605,10 +600,13 @@ suffix_str = f"_{'_'.join(suffixes)}" if suffixes else ""
 print(f"Done: {prefix_str}{suffix_str}")
 
 # Save arrays with prefix and suffix
-jnp.save(f"{sim_folder}/{prefix_str}_days_nums{suffix_str}.npy", days)
-jnp.save(f"{sim_folder}/{prefix_str}_days_dens{suffix_str}.npy", densities)
+jnp.save(
+    f"{sim_folder}/annual_densities_numerical/{prefix_str}_days_nums{suffix_str}.npy", days)
+jnp.save(
+    f"{sim_folder}/annual_densities_numerical/{prefix_str}_days_dens{suffix_str}.npy", densities)
 
 # Save percentages if bound condition was used
 if bound is not None and extra:
-    jnp.save(f"{sim_folder}/{prefix_str}_days_perc{suffix_str}.npy", extra[0])
+    jnp.save(
+        f"{sim_folder}/annual_densities_numerical/{prefix_str}_days_perc{suffix_str}.npy", extra[0])
 # endregion
