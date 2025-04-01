@@ -1,13 +1,13 @@
 #!/bin/bash
-#SBATCH --job-name=SunMove_1k_Dop5
+#SBATCH --job-name=SunMove_1k_Dop5_New
 #SBATCH -p rome
 #SBATCH -t 04:00:00
 #SBATCH -N 1
 #SBATCH --tasks-per-node=1
 #SBATCH --cpus-per-task=128
 #SBATCH --mem=224000
-#SBATCH -o jobs/SunMove_1k_Dop5.out
-#SBATCH -e jobs/SunMove_1k_Dop5.err
+#SBATCH -o jobs/SunMove_1k_Dop5_New.out
+#SBATCH -e jobs/SunMove_1k_Dop5_New.err
 #SBATCH -v
 
 
