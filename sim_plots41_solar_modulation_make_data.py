@@ -487,13 +487,13 @@ def calc_CNB_density_days(
                 # (1, masses, Npix, p_num)
 
             # Fermi-Dirac as boundary PSD
-            psd = Physics.Fermi_Dirac(p_PSD_mag, args)
+            # psd = Physics.Fermi_Dirac(p_PSD_mag, args)
 
             # SHM as boundary PSD
-            # v_0 = 400*args.km/args.s  # 220, 400
-            # v_esc_MW = 550*args.km/args.s
-            # psd = Physics.SHM_PSD(
-            #     day_v[..., -1, :], v_esc_MW, v_0, args)[:, None, ...]
+            v_0 = 220*args.km/args.s  # 220, 400
+            v_esc_MW = 550*args.km/args.s
+            psd = Physics.SHM_PSD(
+                day_v[..., -1, :], v_esc_MW, v_0, args)[:, None, ...]
 
             n_raw = trap(p_int_mag**3 * psd, jnp.log(p_int_mag), axis=-1)
 
@@ -524,12 +524,12 @@ sim_name = f"SunMod_1k"
 # sim_name = f"SunMod_2k"
 sim_folder = f"sim_output/{sim_name}"
 
-prefix_str = "SunMoveDop5"
-days_vecs_dir = f"{sim_folder}/SunMove_Dopri5_New_wrtMW"
+prefix_str = "SunMoveDop5_old_SHM_220v0"
+days_vecs_dir = f"{sim_folder}/SunMove_Dopri5_wrtMW"
 
 # With DM gravity, and interpolated PSD from core sim, or FD instead
-with_DM_gravity = True
-halo_num = 3  #/ 5 is max on laptop with current routine
+with_DM_gravity = False
+halo_num = 1  #/ 5 is max on laptop with current routine
 interp_grav_psd = True
 
 # Earth frame parameters
