@@ -487,13 +487,13 @@ def calc_CNB_density_days(
                 # (1, masses, Npix, p_num)
 
             # Fermi-Dirac as boundary PSD
-            # psd = Physics.Fermi_Dirac(p_PSD_mag, args)
+            psd = Physics.Fermi_Dirac(p_PSD_mag, args)
 
             # SHM as boundary PSD
-            v_0 = 220*args.km/args.s  # 220, 400
-            v_esc_MW = 550*args.km/args.s
-            psd = Physics.SHM_PSD(
-                day_v[..., -1, :], v_esc_MW, v_0, args)[:, None, ...]
+            # v_0 = 400*args.km/args.s  # 220, 400
+            # v_esc_MW = 550*args.km/args.s
+            # psd = Physics.SHM_PSD(
+            #     day_v[..., -1, :], v_esc_MW, v_0, args)[:, None, ...]
 
             n_raw = trap(p_int_mag**3 * psd, jnp.log(p_int_mag), axis=-1)
 
@@ -524,8 +524,8 @@ sim_name = f"SunMod_1k"
 # sim_name = f"SunMod_2k"
 sim_folder = f"sim_output/{sim_name}"
 
-prefix_str = "SunMoveDop5_old_SHM_220v0"
-days_vecs_dir = f"{sim_folder}/SunMove_Dopri5_wrtMW"
+prefix_str = "SunMoveDop5_new_Sun_vel"
+days_vecs_dir = f"{sim_folder}/SunMove_Dopri5_wrtCNB"
 
 # With DM gravity, and interpolated PSD from core sim, or FD instead
 with_DM_gravity = False
@@ -536,8 +536,8 @@ interp_grav_psd = True
 Earth_frame = True
 Earth_rel_Sun = False
 # Only relevant if Earth_rel_Sun = False
-# rel_vel = "CNB"
-rel_vel = "MW"
+rel_vel = "CNB"
+# rel_vel = "MW"
 
 day_step = 12  # Ultimately we want to use 1 to have all days
 integrate_pixels = True
@@ -555,7 +555,8 @@ print(f"Halos: {int(halo_num)}")
 init_xyzs = jnp.array(
     [jnp.load(f"{sim_folder}/init_xyz_halo{h+1}.npy") for h in range(10)])
 
-nu_m_picks = jnp.array([0.01, 0.05, 0.15, 0.2, 0.3])*Params.eV
+# nu_m_picks = jnp.array([0.01, 0.05, 0.15, 0.2, 0.3])*Params.eV
+nu_m_picks = jnp.array([0.15, 0.2, 0.25, 0.3, 0.01])*Params.eV
 simdata = SimData(sim_folder)
 
 # Calculate densities (extra is percentages, only for some conditions)
