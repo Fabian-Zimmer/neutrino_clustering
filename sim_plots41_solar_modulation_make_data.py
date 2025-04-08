@@ -322,6 +322,7 @@ def calc_CNB_density_days(
     days = []
     densities = []
     percentages = []
+    psds = []
 
     # region: Boost velocities
     # Units used for frame/boost related quantities
@@ -487,13 +488,13 @@ def calc_CNB_density_days(
                 # (1, masses, Npix, p_num)
 
             # Fermi-Dirac as boundary PSD
-            psd = Physics.Fermi_Dirac(p_PSD_mag, args)
+            # psd = Physics.Fermi_Dirac(p_PSD_mag, args)
 
             # SHM as boundary PSD
-            # v_0 = 400*args.km/args.s  # 220, 400
-            # v_esc_MW = 550*args.km/args.s
-            # psd = Physics.SHM_PSD(
-            #     day_v[..., -1, :], v_esc_MW, v_0, args)[:, None, ...]
+            v_0 = 220*args.km/args.s  # 220, 400
+            v_esc_MW = 550*args.km/args.s
+            psd = Physics.SHM_PSD(
+                day_v[..., -1, :], v_esc_MW, v_0, args)[:, None, ...]
 
             n_raw = trap(p_int_mag**3 * psd, jnp.log(p_int_mag), axis=-1)
 
@@ -508,11 +509,12 @@ def calc_CNB_density_days(
             n_total = jnp.array(n_dens)
 
         densities.append(n_total)
+        psds.append(psd)
 
         tot_time = time.perf_counter() - t_start
         print(f"Loop time: {tot_time/60.:.2f} min")
 
-    results = (jnp.array(days), jnp.array(densities))
+    results = (jnp.array(days), jnp.array(densities), jnp.array(psds))
     if bound is not None and with_DM_gravity:
         results += (jnp.array(percentages),)
     
@@ -524,11 +526,11 @@ sim_name = f"SunMod_1k"
 # sim_name = f"SunMod_2k"
 sim_folder = f"sim_output/{sim_name}"
 
-prefix_str = "SunMoveDop5_new_Sun_vel"
-days_vecs_dir = f"{sim_folder}/SunMove_Dopri5_wrtCNB"
+prefix_str = "SunMoveDop5_fin"
+days_vecs_dir = f"{sim_folder}/SunMove_Dopri5_wrtMW"
 
 # With DM gravity, and interpolated PSD from core sim, or FD instead
-with_DM_gravity = False
+with_DM_gravity = True
 halo_num = 1  #/ 5 is max on laptop with current routine
 interp_grav_psd = True
 
@@ -536,8 +538,8 @@ interp_grav_psd = True
 Earth_frame = True
 Earth_rel_Sun = False
 # Only relevant if Earth_rel_Sun = False
-rel_vel = "CNB"
-# rel_vel = "MW"
+# rel_vel = "CNB"
+rel_vel = "MW"
 
 day_step = 12  # Ultimately we want to use 1 to have all days
 integrate_pixels = True
@@ -560,7 +562,7 @@ nu_m_picks = jnp.array([0.15, 0.2, 0.25, 0.3, 0.01])*Params.eV
 simdata = SimData(sim_folder)
 
 # Calculate densities (extra is percentages, only for some conditions)
-days, densities, *extra = calc_CNB_density_days(
+days, densities, psds, *extra = calc_CNB_density_days(
     days_vecs_dir=days_vecs_dir, 
     day_step=day_step,
     with_DM_gravity=with_DM_gravity,
@@ -605,6 +607,8 @@ jnp.save(
     f"{sim_folder}/annual_densities_numerical/{prefix_str}_days_nums{suffix_str}.npy", days)
 jnp.save(
     f"{sim_folder}/annual_densities_numerical/{prefix_str}_days_dens{suffix_str}.npy", densities)
+jnp.save(
+    f"{sim_folder}/annual_densities_numerical/{prefix_str}_days_psds{suffix_str}.npy", psds)
 
 # Save percentages if bound condition was used
 if bound is not None and extra:
