@@ -53,14 +53,23 @@ def f_distr(v_range, t_index, m_nu, bound, v_0):
     """Phase-space distribution at Earth's location."""
 
     # Get x,y,z coords.
-    v_nu = Utils.v_mag_to_xyz(v_range, Params.key)
+    # v_nu = Utils.v_mag_to_xyz(v_range, Params.key)
 
-    # Compute v_inf and v argument as used for f(v)
-    r_s = earth_positions[t_index]
-    v_s = v_nu + earth_velocities[t_index]
-    v_inf = v_infinity(v_s, r_s)
+    # # Compute v_inf and v argument as used for f(v)
+    # r_s = earth_positions[t_index]
+    # v_s = v_nu + earth_velocities[t_index]
+    # v_inf = v_infinity(v_s, r_s)
 
     def bound_case(_):
+
+        # v_nu = Utils.v_mag_to_xyz_biased(
+        #     v_range, Params.key, -v_Sun, cone_angle_rad=jnp.pi/12)
+        v_nu = Utils.v_mag_to_xyz(v_range, Params.key)
+
+        # Compute v_inf and v argument as used for f(v)
+        r_s = earth_positions[t_index]
+        v_s = v_nu + earth_velocities[t_index]
+        v_inf = v_infinity(v_s, r_s)
 
         v_for_f = v_inf + v_Sun  # original
         v_for_f_mag = jnp.linalg.norm(v_for_f, axis=-1)
@@ -84,6 +93,15 @@ def f_distr(v_range, t_index, m_nu, bound, v_0):
 
     def unbound_case(_):
 
+        # v_nu = Utils.v_mag_to_xyz_biased(
+        #     v_range, Params.key, -v_CNB, cone_angle_rad=jnp.pi/12)
+        v_nu = Utils.v_mag_to_xyz(v_range, Params.key)
+
+        # Compute v_inf and v argument as used for f(v)
+        r_s = earth_positions[t_index]
+        v_s = v_nu + earth_velocities[t_index]
+        v_inf = v_infinity(v_s, r_s)
+
         v_for_f = v_inf + v_CNB  # original
         v_for_f_mag = jnp.linalg.norm(v_for_f, axis=-1)
 
@@ -101,7 +119,7 @@ def number_density(t_index, m_nu, bound, v_0):
     """Calculate the neutrino number density at time t (a certain day)."""
 
     # note: below reso of (0.001, 100, 100_000), curves are wonky
-    p_range = jnp.geomspace(0.001, 1000, 10_000_000) * Params.T_CNB
+    p_range = jnp.geomspace(0.001, 1000, 1_000_000) * Params.T_CNB
     v_range = p_range / m_nu
 
     def bound_case(_):
@@ -158,13 +176,11 @@ def compute_modulations(m_nu_light, m_nu_heavy, out_dir):
 
         if bound == False:
             jnp.save(
-                # f"{out_dir}/annual_densities_{m_nu}eV_unbound.npy",  # orig
-                f"{out_dir}/annual_densities_{m_nu}eV_unbound_v_fast.npy",  #TODO
+                f"{out_dir}/annual_densities_{m_nu}eV_unbound.npy",  # orig
                 densities)
         if bound == True:
             jnp.save(
-                # f"{out_dir}/annual_densities_{v_0/(Params.km/Params.s)}kms_{m_nu}eV_bound.npy",  # original
-                f"{out_dir}/annual_densities_{v_0/(Params.km/Params.s)}kms_{m_nu}eV_bound_v_fast.npy",  #TODO 
+                f"{out_dir}/annual_densities_{v_0/(Params.km/Params.s)}kms_{m_nu}eV_bound.npy",  # orig
                 densities)
 
 
@@ -172,4 +188,4 @@ m_nu_l = 0.15
 m_nu_h = 0.35
 # compute_modulations(m_nu_l, m_nu_h)
 # compute_modulations(m_nu_l, m_nu_h)
-compute_modulations(m_nu_l, m_nu_h, out_dir="sim_output/SunMod_1k")
+compute_modulations(m_nu_l, m_nu_h, out_dir="sim_output/SunMod_1k/annual_densities_analytical")
