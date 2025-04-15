@@ -162,8 +162,8 @@ def simulate_neutrinos_1_pix(init_xyz, init_vels, common_args):
 # sun_velocities *= Params.km/Params.s
 
 # New function that agrees with Safdi
-_, sun_positions, sun_velocities = SimUtil.get_sun_pos_vel_earth_gc_frame(
-    year=2024, rel_vel="CNB", Earth_rel_Sun=False)
+_, sun_positions, sun_velocities, _ = SimUtil.get_sun_earth_galactic_data(
+    year=2024, rel_vel="MW", Earth_rel_Sun=False)
 sun_positions *= Params.AU
 sun_velocities *= Params.km/Params.s
 
@@ -215,8 +215,12 @@ dPsi_Sun_cell = dPsi_grids[z_idx, cell_idx, :]
 # Lists for pixel and total number densities
 tot_dens_days_l = []
 pix_dens_days_l = []
-# for day in range(0, 365, 1):  #note: all days of the year
-for day in range(0, 365, 12):  #note: for testing, subset of all days
+
+#/ 12-steps is enough to see trends, no need to go to 1-steps
+# for day in range(0, 365, 12):
+
+#/ For special simulation with increased Npix, decreased p_num
+for day in (60, 240):
 
     # Select 1 years worth of redshift steps, +1 because we select second 
     # last time step in integration routine due to infinities issue (see above)
