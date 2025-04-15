@@ -326,6 +326,7 @@ def calc_CNB_density_days(
     days = []
     densities = []
     percentages = []
+    psds = []
 
     # region: Boost velocities
     # Units used for frame/boost related quantities
@@ -334,12 +335,12 @@ def calc_CNB_density_days(
     # Need Earth velocities relative to both:
     # 1. Galactic Centre (GC) frame (includes solar system motion)
     # (order of 250 km/s)
-    _, _, Ev_GC = SimUtil.SunEarthGC_frame_coords_posvel(
+    _, _, Ev_GC, _ = SimUtil.SunEarthGC_frame_coords_posvel(
         2024, rel_vel, Earth_rel_Sun=False)
     Ev_GC_boost = Ev_GC*Ev_unit
     # 2. Sunlock (SL) frame (i.e. motion of Earth relative to only Sun)
     # (order of 30 km/s)
-    _, _, Ev_SL = SimUtil.SunEarthGC_frame_coords_posvel(
+    _, _, Ev_SL, _ = SimUtil.SunEarthGC_frame_coords_posvel(
         2024, rel_vel, Earth_rel_Sun=True)
     Ev_SL_boost = Ev_SL*Ev_unit
     # endregion
@@ -367,7 +368,10 @@ def calc_CNB_density_days(
             p_esc, _ = SimUtil.get_p_esc(
                 pars.directory, x_earth, nu_m_picks, args)
 
-    for day in range(0, 365, day_step):
+    # for day in range(0, 365, day_step):
+
+    #/ For special sim with more velocity directions
+    for day in (60, 240):
         
         # region: Preamble
         t_start = time.perf_counter()
@@ -428,12 +432,7 @@ def calc_CNB_density_days(
                     )
                     # fd_vals_z0 and psd both (halos, masses, Npix, p_num)
                 else:                
-                    #? unfinished...    
-                    psd = Physics.interpolate_fd_values(
-                        p_GC_mag=jnp.linalg.norm(p_1yr_vec, axis=-1),
-                        pixel_indices=pixel_indices,
-                        p_grid=p_z0_dm,
-                        fd_vals=fd_vals_z0)
+                    ...
             else:
                 psd = Physics.Fermi_Dirac(p_z4, args)
 
@@ -502,19 +501,20 @@ def calc_CNB_density_days(
             n_total = jnp.array(n_dens)
 
         densities.append(n_total)
+        psds.append(psd)
 
         tot_time = time.perf_counter() - t_start
         print(f"Loop time: {tot_time/60.:.2f} min")
 
-    results = (jnp.array(days), jnp.array(densities))
+    results = (jnp.array(days), jnp.array(densities), jnp.array(psds))
     if bound is not None and with_DM_gravity:
         results += (jnp.array(percentages),)
     
     return results
 
 
-prefix_str = "SunMoveDop5_noBoost"
-days_vecs_dir = f"{pars.directory}/SunMove_Dopri5"
+prefix_str = "SunMoveDop5_PSD"
+days_vecs_dir = f"{pars.directory}/SunMove_Dopri5_wrtMW"
 
 # With DM gravity, and interpolated PSD from core sim, or FD instead
 with_DM_gravity = True
@@ -542,13 +542,13 @@ print(f"Halos: {int(pars.halo_num)}")
 
 # In units of kpc (i.e array already divided by Params.kpc)
 init_xyzs = jnp.array(
-    [jnp.load(f"{pars.directory}/init_xyz_halo{h+1}.npy") for h in range(10)])
+    [jnp.load(f"{pars.directory}/init_xyz_halo{h+1}.npy") for h in range(halo_num)])
 
 nu_m_picks = jnp.array([0.01, 0.05, 0.1, 0.2, 0.3])*Params.eV
 simdata = SimData(pars.directory)
 
 # Calculate densities (extra is percentages, only for some conditions)
-days, densities, *extra = calc_CNB_density_days(
+days, densities, psds, *extra = calc_CNB_density_days(
     days_vecs_dir=days_vecs_dir, 
     day_step=day_step,
     with_DM_gravity=with_DM_gravity,
@@ -588,9 +588,12 @@ suffix_str = f"_{'_'.join(suffixes)}" if suffixes else ""
 
 print(f"Done: {prefix_str}{suffix_str}")
 
-# Save arrays with prefix and suffix
-jnp.save(f"{pars.directory}/{prefix_str}_days_nums{suffix_str}.npy", days)
-jnp.save(f"{pars.directory}/{prefix_str}_days_dens{suffix_str}.npy", densities)
+jnp.save(
+    f"{pars.directory}/annual_densities_numerical/{prefix_str}_days_nums{suffix_str}.npy", days)
+jnp.save(
+    f"{pars.directory}/annual_densities_numerical/{prefix_str}_days_dens{suffix_str}.npy", densities)
+jnp.save(
+    f"{pars.directory}/annual_densities_numerical/{prefix_str}_days_psds{suffix_str}.npy", psds)
 
 # Save percentages if bound condition was used
 if bound is not None and extra:
