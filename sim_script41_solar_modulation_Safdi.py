@@ -30,25 +30,6 @@ v_Sun = jnp.array([11, 232, 7])*Params.km/Params.s
 
 
 @jax.jit
-def v_infinity(v_s, r_s):
-    """
-    Calculate the initial Solar-frame velocity for particles, s.t. they have velocity v_s at Earth's location.
-    """
-    
-    v_GM = 2*Params.G*Params.Msun/jnp.linalg.norm(r_s, axis=-1)
-    v_inf2 = jnp.linalg.norm(v_s, axis=-1)**2 - v_GM
-    v_inf = jnp.sqrt(jnp.maximum(0, v_inf2))
-    # v_inf = jnp.sqrt(v_inf2)
-    r_s_unit = r_s / jnp.linalg.norm(r_s, axis=-1)
-    vr_s_dot = jnp.dot(v_s, r_s_unit)
-
-    numer = v_inf2[..., None]*v_s + v_inf[..., None]*v_GM/2*r_s_unit - v_inf[..., None]*v_s*vr_s_dot[..., None]
-    denom = v_inf2 + v_GM/2 - v_inf*vr_s_dot
-    
-    return numer / denom[..., None]
-
-
-@jax.jit
 def f_distr(v_range, t_index, m_nu, bound, v_0):
     """Phase-space distribution at Earth's location."""
 
@@ -58,7 +39,7 @@ def f_distr(v_range, t_index, m_nu, bound, v_0):
     # # Compute v_inf and v argument as used for f(v)
     # r_s = earth_positions[t_index]
     # v_s = v_nu + earth_velocities[t_index]
-    # v_inf = v_infinity(v_s, r_s)
+    # v_inf = SimPlot.v_infinity(v_s, r_s)
 
     def bound_case(_):
 
@@ -69,7 +50,7 @@ def f_distr(v_range, t_index, m_nu, bound, v_0):
         # Compute v_inf and v argument as used for f(v)
         r_s = earth_positions[t_index]
         v_s = v_nu + earth_velocities[t_index]
-        v_inf = v_infinity(v_s, r_s)
+        v_inf = SimPlot.v_infinity(v_s, r_s)
 
         v_for_f = v_inf + v_Sun  # original
         v_for_f_mag = jnp.linalg.norm(v_for_f, axis=-1)
@@ -100,7 +81,7 @@ def f_distr(v_range, t_index, m_nu, bound, v_0):
         # Compute v_inf and v argument as used for f(v)
         r_s = earth_positions[t_index]
         v_s = v_nu + earth_velocities[t_index]
-        v_inf = v_infinity(v_s, r_s)
+        v_inf = SimPlot.v_infinity(v_s, r_s)
 
         v_for_f = v_inf + v_CNB  # original
         v_for_f_mag = jnp.linalg.norm(v_for_f, axis=-1)
