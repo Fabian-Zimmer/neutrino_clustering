@@ -363,7 +363,10 @@ def calc_CNB_density_days(
             p_esc, _ = SimUtil.get_p_esc(sim_folder, x_earth, nu_m_picks, args)
 
 
-    for day in range(0, 365, day_step):
+    # for day in range(0, 365, day_step):
+
+    #/ For special sim with more velocity directions
+    for day in (60, 240):
         
         # region: Preamble
         t_start = time.perf_counter()
@@ -522,11 +525,11 @@ def calc_CNB_density_days(
 
 
 # sim_name = f"SunNoG"
-sim_name = f"SunMod_1k"
-# sim_name = f"SunMod_2k"
+# sim_name = f"SunMod_1k"
+sim_name = f"SunMod_PSD"
 sim_folder = f"sim_output/{sim_name}"
 
-prefix_str = "SunMoveDop5_fin"
+prefix_str = "SunMoveDop5_PSD"
 days_vecs_dir = f"{sim_folder}/SunMove_Dopri5_wrtMW"
 
 # With DM gravity, and interpolated PSD from core sim, or FD instead
@@ -555,7 +558,7 @@ print(f"Halos: {int(halo_num)}")
 
 # In units of kpc (i.e array already divided by Params.kpc)
 init_xyzs = jnp.array(
-    [jnp.load(f"{sim_folder}/init_xyz_halo{h+1}.npy") for h in range(10)])
+    [jnp.load(f"{sim_folder}/init_xyz_halo{h+1}.npy") for h in range(halo_num)])
 
 # nu_m_picks = jnp.array([0.01, 0.05, 0.15, 0.2, 0.3])*Params.eV
 nu_m_picks = jnp.array([0.15, 0.2, 0.25, 0.3, 0.01])*Params.eV
