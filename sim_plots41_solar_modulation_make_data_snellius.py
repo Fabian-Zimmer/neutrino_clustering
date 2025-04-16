@@ -371,7 +371,8 @@ def calc_CNB_density_days(
     # for day in range(0, 365, day_step):
 
     #/ For special sim with more velocity directions
-    for day in (60, 240):
+    # for day in (60, 240):
+    for day in (125, 305):
         
         # region: Preamble
         t_start = time.perf_counter()
