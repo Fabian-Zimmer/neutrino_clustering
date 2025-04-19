@@ -316,7 +316,6 @@ def calc_CNB_density_days(
         Earth_frame: bool = False,
         rel_vel: str = "MW",
         Earth_rel_Sun: bool = False,
-        bound: bool | None = None,
         integrate_pixels: bool = True,
         args = None):
 
@@ -325,7 +324,6 @@ def calc_CNB_density_days(
 
     days = []
     densities = []
-    percentages = []
     psds = []
 
     # region: Boost velocities
@@ -362,14 +360,9 @@ def calc_CNB_density_days(
 
         # Phase-space "today" through z=4 momenta and Liouville's theorem
         fd_vals_z0 = Physics.Fermi_Dirac(p_z4_dm, args)
-        
-        if bound is not None:
-            x_earth = jnp.array([8.127, 0., 0.])*args.kpc
-            p_esc, _ = SimUtil.get_p_esc(
-                pars.directory, x_earth, nu_m_picks, args)
+
 
     # for day in range(0, 365, day_step):
-
     #/ For special sim with more velocity directions
     # for day in (60, 240):
     for day in (125, 305):
@@ -440,23 +433,8 @@ def calc_CNB_density_days(
             # Clip PSD values to avoid potential boundary issues from interp.
             psd = jnp.clip(psd, a_min=None, a_max=0.5)
 
-            # Apply momentum boundary conditions if requested
-            if bound is not None:
-                if bound:
-                    esc_mask = p_z0 < p_esc[:halo_num, :, None, None]
-                else:
-                    esc_mask = p_z0 >= p_esc[:halo_num, :, None, None]
-                
-                if integrate_pixels:
-                    psd_masked = jnp.where(esc_mask, psd, 0.)
-                    n_raw = trap(p_z0**3 * psd_masked, jnp.log(p_z0), axis=-1)
-                    n_norm = trap(p_z0**3 * psd, jnp.log(p_z0), axis=-1)
-                    perc = (n_raw/n_norm) * 100
-                    percentages.append(perc)
-                else:
-                    n_raw = trap(p_z0**3 * psd_masked, jnp.log(p_z0), axis=-1)
-            else:
-                n_raw = trap(p_int_mag**3 * psd, jnp.log(p_int_mag), axis=-1)
+            # Integration for number density (without constants and units)
+            n_raw = trap(p_int_mag**3 * psd, jnp.log(p_int_mag), axis=-1)
 
         else:
             # Non-DM-gravitational calculation
@@ -508,9 +486,6 @@ def calc_CNB_density_days(
         print(f"Loop time: {tot_time/60.:.2f} min")
 
     results = (jnp.array(days), jnp.array(densities), jnp.array(psds))
-    if bound is not None and with_DM_gravity:
-        results += (jnp.array(percentages),)
-    
     return results
 
 
@@ -531,11 +506,6 @@ rel_vel = "MW"
 
 day_step = 12  # Ultimately we want to use 1 to have all days
 integrate_pixels = True
-bound = None
-# bound: Momentum boundary condition:
-#     None - Use full momentum range
-#     True - Use p_z0 < p_esc condition
-#     False - Use p_z0 >= p_esc condition
 
 
 print(datetime.today().strftime('%Y-%m-%d %H:%M:%S'))
@@ -549,7 +519,7 @@ nu_m_picks = jnp.array([0.01, 0.05, 0.1, 0.2, 0.3])*Params.eV
 simdata = SimData(pars.directory)
 
 # Calculate densities (extra is percentages, only for some conditions)
-days, densities, psds, *extra = calc_CNB_density_days(
+days, densities, psds = calc_CNB_density_days(
     days_vecs_dir=days_vecs_dir, 
     day_step=day_step,
     with_DM_gravity=with_DM_gravity,
@@ -558,7 +528,6 @@ days, densities, psds, *extra = calc_CNB_density_days(
     Earth_frame=Earth_frame,
     rel_vel=rel_vel,
     Earth_rel_Sun=Earth_rel_Sun,
-    bound=bound,
     integrate_pixels=integrate_pixels,
     args=Params()
 )
@@ -581,8 +550,6 @@ if Earth_frame:
             suffixes.append('Earth_frame_wrtCNB')
         if rel_vel == "MW":
             suffixes.append('Earth_frame_wrtMW')
-if bound is not None:
-    suffixes.append('bound' if bound else 'unbound')
 if integrate_pixels:
     suffixes.append('int_pixels')
 suffix_str = f"_{'_'.join(suffixes)}" if suffixes else ""
@@ -595,9 +562,4 @@ jnp.save(
     f"{pars.directory}/annual_densities_numerical/{prefix_str}_days_dens{suffix_str}.npy", densities)
 jnp.save(
     f"{pars.directory}/annual_densities_numerical/{prefix_str}_days_psds{suffix_str}.npy", psds)
-
-# Save percentages if bound condition was used
-if bound is not None and extra:
-    jnp.save(
-        f"{pars.directory}/{prefix_str}_days_perc{suffix_str}.npy", extra[0])
 # endregion
