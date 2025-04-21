@@ -74,7 +74,8 @@ def make2_simulation_parameters(
         neutrino_massrange_eV[idx] = m_val
 
     # Neutrino momentum range.
-    neutrino_momenta = np.geomspace(p_start*T_CNB, p_stop*T_CNB, p_num)
+    # neutrino_momenta = np.geomspace(p_start*T_CNB, p_stop*T_CNB, p_num)
+    neutrino_momenta = np.linspace(p_start*T_CNB, p_stop*T_CNB, p_num)
 
     # Logarithmic redshift spacing, and conversion to integration variable s.
     z_int_steps = np.geomspace(z_int_shift, z_int_stop+z_int_shift, z_int_num)
