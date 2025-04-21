@@ -5,109 +5,8 @@ parser.add_argument('--directory', required=True)
 parser.add_argument('-hn', '--halo_num', required=True)
 pars = parser.parse_args()
 
-# region: old interpolate pixel values
-def transform_pixel_indices(p_unit, cell_pos, earth_pos, nside):
-    """
-    Transform pixel indices from Earth frame to each starting cell's frame
-    using Rodrigues' angle rotations.
-    
-    Args:
-        p_unit: Momentum unit vectors in Earth frame (shape: [1, masses, Npix, p_num, 3])
-        cell_positions: Starting positions for each halo (shape: [halos, 3])
-        nside: HEALPix nside parameter
-        
-    Returns:
-        Pixel indices in each halo's frame (shape: [halos, masses, Npix, p_num])
-    """
-    num_halos = cell_pos.shape[0]
-    result = []
-    
-    # Process each halo individually
-    for h in range(num_halos):
-        # Get rotation matrix from Earth to this starting cell
-        R = SimUtil.get_direct_rotation(earth_pos, cell_pos[h])
-        
-        # Apply rotation to all momentum vectors
-        # We transform from Earth frame to cell frame
-        rotated_p_unit = jnp.einsum('ij,abcj->abci', R, p_unit[0, ...])
-        
-        # Calculate spherical coordinates in this frame
-        # theta = jnp.arccos(jnp.clip(rotated_p_unit[..., 2], -1.0, 1.0))
-        theta = jnp.arccos(rotated_p_unit[..., 2])
-        phi = jnp.arctan2(rotated_p_unit[..., 1], rotated_p_unit[..., 0])
-        
-        # Convert to pixel indices using healpy
-        pixels = hp.ang2pix(nside, theta, phi)
-        result.append(jnp.array(pixels))
-    
-    return jnp.stack(result)
 
-def rotate_p_and_interpolate_fd_values(
-        p_PSD_mag, p_PSD_unit, p_grid, fd_vals, cell_pos, earth_pos, nside):
-    """
-    Interpolate distribution function values using Rodrigues' angle rotations
-    to transform between reference frames.
-    
-    Args:
-        p_GC_mag: Momentum magnitudes (shape: [1, masses, Npix, p_num])
-        p_GC_unit: Momentum unit vectors (shape: [1, masses, Npix, p_num, 3])
-        p_grid: Momentum grid (shape: [halos, masses, pixels, p_grid_size])
-        fd_vals: Distribution function values (shape: [halos, masses, pixels, p_grid_size])
-        cell_positions: Starting cell positions (shape: [halos, 3])
-        nside: HEALPix nside parameter
-        
-    Returns:
-        Interpolated distribution function values (shape: [halos, masses, Npix, p_num])
-    """
-    # Transform pixel indices to each halo's frame
-    pixel_indices_halos = transform_pixel_indices(
-        p_PSD_unit, cell_pos, earth_pos, nside)
-    # shape: [halos, masses, Npix, p_num]
-    
-    @jax.jit
-    def process_halo(h):
-        result = jnp.zeros_like(p_grid[h])
-        
-        def pixel_fun(i, val):
-            for m in range(p_grid.shape[1]):
-                # Use index 0 directly since p_GC_mag is the same for all halos
-                p_interp = p_PSD_mag[0, m, i]
-
-                # heal-pixels for current halo-mass permutation
-                pixels = pixel_indices_halos[h, m, i]
-                
-                # z=0 momenta, psd values (x-axis, y-axis for interpolation) 
-                # for current halo-mass permutation
-                p0_pixels = p_grid[h, m, pixels]
-                fd_pixels = fd_vals[h, m, pixels]
-                
-                # Find indices for interpolation
-                idx = jnp.sum(p0_pixels <= p_interp[:, None], axis=1) - 1
-                idx = jnp.clip(idx, 0, p_grid.shape[-1] - 2)
-                
-                # Get interpolation points
-                x0 = jnp.take_along_axis(
-                    p0_pixels, idx[:, None], axis=1)[:, 0]
-                x1 = jnp.take_along_axis(
-                    p0_pixels, (idx+1)[:, None], axis=1)[:, 0]
-                y0 = jnp.take_along_axis(
-                    fd_pixels, idx[:, None], axis=1)[:, 0]
-                y1 = jnp.take_along_axis(
-                    fd_pixels, (idx+1)[:, None], axis=1)[:, 0]
-                
-                # Linear interpolation
-                slope = (y1 - y0) / (x1 - x0)
-                val = val.at[m, i].set(y0 + slope * (p_interp - x0))
-            return val
-        
-        return jax.lax.fori_loop(0, p_grid.shape[2], pixel_fun, result)
-    
-    # Vectorize over halos
-    return jax.vmap(process_halo)(jnp.arange(p_grid.shape[0]))
-# endregion
-
-
-def transform_pixel_indices_v2(p_unit, cell_pos, nside):
+def transform_pixel_indices_rot(p_unit, cell_pos, nside):
     """
     Transform pixel indices from Earth frame to each starting cell's frame
     using Euler angle rotations and healpy's lonlat convention.
@@ -149,7 +48,7 @@ def transform_pixel_indices_v2(p_unit, cell_pos, nside):
     return jnp.stack(result)
 
 
-def transform_pixel_indices_v3(p_unit, nside):
+def transform_pixel_indices_no_rot(p_unit, nside):
 
     # Extract x,y,z components
     px, py, pz = p_unit[..., 0], p_unit[..., 1], p_unit[..., 2]
@@ -186,12 +85,12 @@ def rotate_p_and_select_closest_fd_values(
         Selected distribution function values (shape: [halos, masses, Npix, p_num])
     """
     # Transform pixel indices to each halo's frame
-    # pixel_indices_halos = transform_pixel_indices_v2(
+    # pixel_indices_halos = transform_pixel_indices_rot(
     #     p_PSD_unit, cell_pos, nside)
     # shape: [halos, masses, Npix, p_num]
 
     # Without rotation
-    pixel_indices_halos = transform_pixel_indices_v3(
+    pixel_indices_halos = transform_pixel_indices_no_rot(
         p_PSD_unit, nside)
     # shape: [1, masses, Npix, p_num]
 
@@ -515,7 +414,8 @@ print(f"Halos: {int(pars.halo_num)}")
 init_xyzs = jnp.array(
     [jnp.load(f"{pars.directory}/init_xyz_halo{h+1}.npy") for h in range(halo_num)])
 
-nu_m_picks = jnp.array([0.01, 0.05, 0.1, 0.2, 0.3])*Params.eV
+# nu_m_picks = jnp.array([0.01, 0.05, 0.1, 0.2, 0.3])*Params.eV
+nu_m_picks = jnp.array([0.15, 0.2, 0.25, 0.3, 0.01])*Params.eV
 simdata = SimData(pars.directory)
 
 # Calculate densities (extra is percentages, only for some conditions)
