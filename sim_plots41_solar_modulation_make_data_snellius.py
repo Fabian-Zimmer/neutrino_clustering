@@ -388,8 +388,8 @@ def calc_CNB_density_days(
     return results
 
 
-prefix_str = "SunMoveDop5_PSD"
-days_vecs_dir = f"{pars.directory}/SunMove_Dopri5_wrtMW"
+prefix_str = "SunMoveDop8_PSD"
+days_vecs_dir = f"{pars.directory}/SunMove_Dopri8_wrtMW"
 
 # With DM gravity, and interpolated PSD from core sim, or FD instead
 with_DM_gravity = True

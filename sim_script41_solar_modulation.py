@@ -98,12 +98,11 @@ def backtrack_1_neutrino(
     ### Integration Solver ###
     ### ------------------ ###
 
-    solver = diffrax.Dopri5()
-    stepsize_controller = diffrax.PIDController(rtol=1e-3, atol=1e-6)
+    # solver = diffrax.Dopri5()
+    # stepsize_controller = diffrax.PIDController(rtol=1e-3, atol=1e-6)
 
-    # note: more accurate solver takes too long with current EOM fctn structure
-    # solver = diffrax.Dopri8()
-    # stepsize_controller = diffrax.PIDController(rtol=1e-6, atol=1e-8)
+    solver = diffrax.Dopri8()
+    stepsize_controller = diffrax.PIDController(rtol=1e-6, atol=1e-8)
 
     # Specify timesteps where solutions should be saved
     saveat = diffrax.SaveAt(ts=jnp.array(s_int_steps))
@@ -222,9 +221,6 @@ pix_dens_days_l = []
 #/ For special simulation with increased Npix, decreased p_num
 # for day in (60, 240):
 for day in (125, 305):  # cuz we go back in time: 365-240=125 and 365-60=305
-
-    if day == 125:
-        continue
 
     # Select 1 years worth of redshift steps, +1 because we select second 
     # last time step in integration routine due to infinities issue (see above)
