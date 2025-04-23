@@ -223,6 +223,9 @@ pix_dens_days_l = []
 # for day in (60, 240):
 for day in (125, 305):  # cuz we go back in time: 365-240=125 and 365-60=305
 
+    if day == 125:
+        continue
+
     # Select 1 years worth of redshift steps, +1 because we select second 
     # last time step in integration routine due to infinities issue (see above)
     z_int_steps_1year = z_int_steps_all[day:day+365+1]

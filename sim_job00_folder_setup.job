@@ -23,7 +23,7 @@ fi
 conda activate neutrino_clustering
 
 
-sim_fullname=SunMod_PSD_log
+sim_fullname=SunMod_PSD_Nside_128
 
 python $HOME/neutrino_clustering/make1_simulation_box.py \
 --box_directory /projects/0/prjs0781/simulation_data/Tango_sims \
@@ -33,7 +33,7 @@ python $HOME/neutrino_clustering/make1_simulation_box.py \
 
 python $HOME/neutrino_clustering/make2_simulation_parameters.py \
 --sim_dir $HOME/neutrino_clustering/sim_output/$sim_fullname \
---healpix_nside 64 \
+--healpix_nside 128 \
 --nu_mass_start 0.01 \
 --nu_mass_stop 0.3 \
 --nu_mass_num 50 \

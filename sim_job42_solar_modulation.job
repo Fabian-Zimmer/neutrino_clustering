@@ -1,13 +1,13 @@
 #!/bin/bash
-#SBATCH --job-name=SunMove_PSD
+#SBATCH --job-name=SunMove_PSD_Nside_128
 #SBATCH -p rome
-#SBATCH -t 02:00:00
+#SBATCH -t 08:00:00
 #SBATCH -N 1
 #SBATCH --tasks-per-node=1
 #SBATCH --cpus-per-task=128
 #SBATCH --mem=224000
-#SBATCH -o jobs/SunMove_PSD.out
-#SBATCH -e jobs/SunMove_PSD.err
+#SBATCH -o jobs/SunMove_PSD_Nside_128.out
+#SBATCH -e jobs/SunMove_PSD_Nside_128.err
 #SBATCH -v
 
 
@@ -25,7 +25,7 @@ fi
 conda activate neutrino_clustering
 
 
-sim_fullname=SunMod_PSD
+sim_fullname=SunMod_PSD_Nside_128
 
 python $HOME/neutrino_clustering/sim_script41_solar_modulation.py \
 --directory $HOME/neutrino_clustering/sim_output/$sim_fullname \
