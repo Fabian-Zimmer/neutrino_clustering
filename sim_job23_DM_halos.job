@@ -1,13 +1,13 @@
 #!/bin/bash
-#SBATCH --job-name=1Halo_PSD_Nside_128
+#SBATCH --job-name=1Halo_PSD_Nside_32
 #SBATCH -p rome
 #SBATCH -t 00:30:00
 #SBATCH -N 1
 #SBATCH --tasks-per-node=1
 #SBATCH --cpus-per-task=128
 #SBATCH --mem=224000
-#SBATCH -o jobs/1Halo_PSD_Nside_128.out
-#SBATCH -e jobs/1Halo_PSD_Nside_128.err
+#SBATCH -o jobs/1Halo_PSD_Nside_32.out
+#SBATCH -e jobs/1Halo_PSD_Nside_32.err
 #SBATCH -v
 #SBATCH --exclusive
 
@@ -24,7 +24,7 @@ fi
 
 conda activate neutrino_clustering
 
-sim_fullname=SunMod_PSD_Nside_128
+sim_fullname=SunMod_PSD_Nside_32
 
 python $HOME/neutrino_clustering/sim_script23_DM_halos.py \
 --directory $HOME/neutrino_clustering/sim_output/$sim_fullname \
