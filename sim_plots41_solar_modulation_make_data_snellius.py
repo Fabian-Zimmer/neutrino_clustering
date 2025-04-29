@@ -57,8 +57,8 @@ def transform_pixel_indices_no_rot(p_unit, nside):
     proj_xy = jnp.sqrt(px**2 + py**2)
 
     # Get galactic longitude and galactic latitude in healpy convention
-    hp_glon = jnp.rad2deg(jnp.arctan2(py, px))
-    hp_glat = jnp.rad2deg(jnp.arctan2(pz, proj_xy))
+    hp_glon = jnp.arctan2(py, px) * Params.deg
+    hp_glat = jnp.arctan2(pz, proj_xy) * Params.deg
 
     # Get healpy pixels
     hp_pixels = hp.ang2pix(nside, hp_glon, hp_glat, lonlat=True)
@@ -263,7 +263,6 @@ def calc_CNB_density_days(
 
     # for day in range(0, 365, day_step):
     #/ For special sim with more velocity directions
-    # for day in (60, 240):
     for day in (125, 305):
         
         # region: Preamble
@@ -388,8 +387,8 @@ def calc_CNB_density_days(
     return results
 
 
-prefix_str = "SunMoveDop5_test"
-days_vecs_dir = f"{pars.directory}/SunMove_Dopri5_test"
+prefix_str = "SunMoveDop5_Nside_32"
+days_vecs_dir = f"{pars.directory}/SunMove_Dopri5"
 
 # With DM gravity, and interpolated PSD from core sim, or FD instead
 with_DM_gravity = True

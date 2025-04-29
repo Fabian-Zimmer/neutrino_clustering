@@ -23,7 +23,7 @@ fi
 
 conda activate neutrino_clustering
 
-sim_fullname=SunMod_1k
+sim_fullname=SunMod_PSD_Nside_32
 
 python $HOME/neutrino_clustering/sim_plots41_solar_modulation_make_data_snellius.py \
 --directory $HOME/neutrino_clustering/sim_output/$sim_fullname \

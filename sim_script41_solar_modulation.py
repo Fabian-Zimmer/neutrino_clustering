@@ -222,8 +222,8 @@ pix_dens_days_l = []
 #/ For special simulation with increased Npix, decreased p_num
 for day in (125, 305):  # cuz we go back in time: 365-240=125 and 365-60=305
 
-    if day == 125:
-        continue
+    # if day == 125:
+    #     continue
 
     # Select 1 years worth of redshift steps, +1 because we select second 
     # last time step in integration routine due to infinities issue (see above)
