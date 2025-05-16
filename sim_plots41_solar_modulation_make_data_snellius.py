@@ -261,9 +261,10 @@ def calc_CNB_density_days(
         fd_vals_z0 = Physics.Fermi_Dirac(p_z4_dm, args)
 
 
-    # for day in range(0, 365, day_step):
+    for day in range(0, 365, day_step):
+
     #/ For special sim with more velocity directions
-    for day in (125, 305):
+    # for day in (125, 305):
         
         # region: Preamble
         t_start = time.perf_counter()
@@ -387,8 +388,8 @@ def calc_CNB_density_days(
     return results
 
 
-prefix_str = "SunMoveDop5_Nside_32"
-days_vecs_dir = f"{pars.directory}/SunMove_Dopri5"
+prefix_str = "SunMod_1k_all_halos"
+days_vecs_dir = f"{pars.directory}/SunMove_Dopri5_wrtMW"
 
 # With DM gravity, and interpolated PSD from core sim, or FD instead
 with_DM_gravity = True
@@ -411,7 +412,7 @@ print(f"Halos: {int(pars.halo_num)}")
 
 # In units of kpc (i.e array already divided by Params.kpc)
 init_xyzs = jnp.array(
-    [jnp.load(f"{pars.directory}/init_xyz_halo{h+1}.npy") for h in range(halo_num)])
+    [jnp.load(f"{pars.directory}/init_xyz_halo{h+1}.npy") for h in range(halo_num) if h != 19])
 
 # nu_m_picks = jnp.array([0.01, 0.05, 0.1, 0.2, 0.3])*Params.eV
 nu_m_picks = jnp.array([0.15, 0.2, 0.25, 0.3, 0.01])*Params.eV

@@ -1,11 +1,11 @@
 #!/bin/bash
 #SBATCH --job-name=ModData
 #SBATCH -p rome
-#SBATCH -t 00:10:00
+#SBATCH -t 03:00:00
 #SBATCH -N 1
 #SBATCH --tasks-per-node=1
-#SBATCH --cpus-per-task=64
-#SBATCH --mem=112000
+#SBATCH --cpus-per-task=128
+#SBATCH --mem=224000
 #SBATCH -o jobs/ModData.out
 #SBATCH -e jobs/ModData.err
 #SBATCH -v
@@ -23,8 +23,8 @@ fi
 
 conda activate neutrino_clustering
 
-sim_fullname=SunMod_PSD_Nside_32
+sim_fullname=SunMod_1k
 
 python $HOME/neutrino_clustering/sim_plots41_solar_modulation_make_data_snellius.py \
 --directory $HOME/neutrino_clustering/sim_output/$sim_fullname \
---halo_num 1
+--halo_num 30
