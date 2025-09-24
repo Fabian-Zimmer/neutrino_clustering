@@ -1,0 +1,30 @@
+#!/bin/bash
+#SBATCH --job-name=ModData
+#SBATCH -p rome
+#SBATCH -t 03:00:00
+#SBATCH -N 1
+#SBATCH --tasks-per-node=1
+#SBATCH --cpus-per-task=128
+#SBATCH --mem=224000
+#SBATCH -o jobs/ModData.out
+#SBATCH -e jobs/ModData.err
+#SBATCH -v
+
+
+# rome  node- full: 128/224 ; half: 64/112 ; quarter: 32/56 ; CPUs/GB.
+# genoa node- full: 192/336 ; half: 96/168 ; quarter: 48/84 ; CPUs/GB.
+
+module purge
+
+# Load .bashrc if it exists
+if [ -f "$HOME/.bashrc" ]; then
+    source $HOME/.bashrc
+fi
+
+conda activate neutrino_clustering
+
+sim_fullname=SunMod_1k
+
+python $HOME/neutrino_clustering/sim_plots41_solar_modulation_make_data_snellius.py \
+--directory $HOME/neutrino_clustering/sim_output/$sim_fullname \
+--halo_num 30

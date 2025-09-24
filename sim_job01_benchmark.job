@@ -1,0 +1,25 @@
+#!/bin/bash
+#SBATCH --job-name=benchSet
+#SBATCH -p rome
+#SBATCH -t 00:10:00
+#SBATCH -N 1
+#SBATCH --tasks-per-node=1
+#SBATCH --cpus-per-task=32
+#SBATCH --mem=56000
+#SBATCH -o jobs/benchSet.out
+#SBATCH -e jobs/benchSet.err
+#SBATCH -v
+
+# rome  node- full: 128/224 ; half: 64/112 ; quarter: 32/56 ; CPUs/GB.
+# genoa node- full: 192/336 ; half: 96/168 ; quarter: 48/84 ; CPUs/GB.
+
+module purge
+
+# Load .bashrc if it exists
+if [ -f "$HOME/.bashrc" ]; then
+    source $HOME/.bashrc
+fi
+
+conda activate neutrino_clustering
+
+python $HOME/neutrino_clustering/make0_benchmark_halo.py
