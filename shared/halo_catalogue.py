@@ -95,3 +95,4 @@ class HaloCatalogue:
 
             self.metallicity_stars = catalogue.apertures.zmet_star_30_kpc.to("dimensionless").value[mask]
 
+

@@ -268,3 +268,4 @@ make1_simulation_box(
     z0_snap=int(args.initial_snap_z0), 
     z4_snap=int(args.final_snap_z4)
 )
+

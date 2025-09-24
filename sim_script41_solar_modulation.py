@@ -274,3 +274,4 @@ for day in (125, 305):  # cuz we go back in time: 365-240=125 and 365-60=305
 
 total_time = time.perf_counter() - total_start
 print(f"Total time: {total_time/60.:.2f} min, {total_time/(60**2):.2f} h")
+

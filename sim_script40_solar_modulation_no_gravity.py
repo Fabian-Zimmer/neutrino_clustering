@@ -254,3 +254,4 @@ for day in range(0, 365, 12):  #note: for testing, subset of all days
 
 total_time = time.perf_counter() - total_start
 print(f"Total time: {total_time/60.:.2f} min, {total_time/(60**2):.2f} h")
+

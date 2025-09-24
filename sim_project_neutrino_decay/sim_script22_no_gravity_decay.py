@@ -448,3 +448,4 @@ if pars.total_densities:
 
 total_time = time.perf_counter() - total_start
 print(f"Total time: {total_time/60.:.2f} min, {total_time/(60**2):.2f} h")
+

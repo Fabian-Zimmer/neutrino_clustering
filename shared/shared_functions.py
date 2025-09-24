@@ -541,3 +541,4 @@ def delete_temp_data(path_to_wildcard_files):
             os.remove(f)
         except OSError:
             print("Error while deleting file (file not found")
+

@@ -370,3 +370,4 @@ jnp.save(f"{pars.directory}/total_densities.npy", jnp.array(tot_dens_halo_l))
 
 tot_time = time.perf_counter() - total_start
 print(f"Total time: {tot_time/60.:.2f} min, {tot_time/(60**2):.2f} h")
+

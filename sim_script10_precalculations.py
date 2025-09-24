@@ -323,3 +323,4 @@ for halo_j, halo_ID in enumerate(halo_batch_IDs):
 
 total_time = time.perf_counter() - total_start
 print(f'Total time: {total_time/60.} min, {total_time/(60**2)} h.')
+
