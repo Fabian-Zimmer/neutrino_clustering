@@ -1,0 +1,220 @@
+"""Natural units (eV-based, c = hbar = k_B = 1) and physical constants.
+
+Multiply by a unit to go into numerical units, divide to get a plain number,
+e.g. `8.2*Params.kpc` and `x/Params.kpc`."""
+
+
+import numpy as np
+import astropy.units as apu
+import astropy.constants as apc
+import astropy.cosmology as apcosmo
+import natpy  # noqa: F401  (adds Quantity.convert to astropy, used below)
+from scipy.special import zeta
+import jax
+import jax.numpy as jnp
+import chex
+
+# Planck 2018 cosmology, used for the cosmological parameters below.
+cosmo = apcosmo.Planck18
+
+
+@chex.dataclass
+class Params:
+
+    #############
+    ### Units ###
+    #############
+    
+    MB_UNIT: float = 1000**2
+    GB_UNIT: float = 1000**3
+    Binary_MB_unit: float = 1024**2
+    Binary_GB_unit: float = 1024**3
+    Pi: float      = jnp.pi
+    hc_val: float  = (apc.h/(2*Pi)*apc.c).convert(apu.eV*apu.cm).value
+
+    eV: float     = 1.                         # Unit of energy: eV
+    meV: float    = 1.0e-3*eV
+    keV: float    = 1.0e3*eV
+    MeV: float    = 1.0e3*keV
+    GeV: float    = 1.0e3*MeV
+    TeV: float    = 1.0e3*GeV
+    erg: float    = TeV/1.602                  # erg
+    J: float      = 1.0e7*erg                  # joule
+    K: float      = 8.61732814974493e-5*eV     # Kelvin
+    muK: float    = 1e-6*K                     # micro Kelvin
+    kB: float     = 1.380649e-23*J/K
+
+    cm: float     = (1/hc_val)/eV              # centi-meter
+    m: float      = 1.0e2*cm
+    km: float     = 1.0e3*m
+    pc: float     = 3.08567758128e18*cm        # parsec
+    kpc: float    = 1.0e3*pc
+    Mpc: float    = 1.0e3*kpc
+    AU: float     = (((1*apu.AU).convert(apu.m)).value)*m
+
+    # note: 
+    # Natural units defined via c=1, i.e. s/m = 299792458
+    s: float      = 2.99792458e10*cm           # second
+    day: float    = 24*60*60*s
+    yr: float     = 365*24*60*60*s
+    Gyr: float    = 1e9*yr
+    t0: float     = 13.787*Gyr
+    Hz: float     = 1.0/s
+    c: float      = 299792458*m/s
+
+    kg: float     = J/m**2*s**2
+    gram: float   = kg/1000.
+    Msun: float   = 1.988409870698051e30*kg    # Mass of the Sun
+    G: float      = 6.6743e-11*m**3/kg/s**2    # Gravitational constant
+    Da: float     = 1.66053906660e-27*kg       # Dalton or atomic mass unit (u)
+
+    deg: float    = Pi/180.0                   # Degree
+    arcmin: float = deg/60.                    # Arcminute
+    arcsec: float = arcmin/60.                 # Arcsecond
+    sr: float     = 1.                         # Steradian
+
+
+    #################
+    ### Constants ###
+    #################
+
+    # Cosmological parameters
+    h: float       = cosmo.h
+    H0: float      = h * 100 * km/s/Mpc
+    Omega_C: float = cosmo.Odm0     # cold dark matter
+    Omega_B: float = cosmo.Ob0      # baryonic matter
+    Omega_R: float = cosmo.Ogamma0  # radiation
+    Omega_M: float = cosmo.Om0      # total matter
+    Omega_L: float = cosmo.Ode0     # dark energy
+
+    # Temperature of CMB
+    T_CMB: float = cosmo.Tcmb0.value * K
+
+    # N_eff parameter from https://doi.org/10.1103/PhysRevD.108.L121301
+    N_eff: float = 3.043
+
+    # Temperature of CNB
+    T_CNB = jnp.power(4/11, 1/3)*T_CMB * jnp.power(N_eff/3, 1/4)
+
+    # Function for temperature of CNB with N_eff as input
+    def T_CNB_fct(N_eff=N_eff, T_CMB=T_CMB):
+        return jnp.power(4/11, 1/3)*T_CMB * jnp.power(N_eff/3, 1/4)
+
+    # Redshift to last-scattering surfaces of CMB and CNB
+    Z_LSS_CMB: float = 1100.0
+    Z_LSS_CNB: float = 6.e9
+
+    # Scale factor at neutrino decoupling
+    a_ndec: float = 1e-10
+
+    # Neutrino degrees of freedom (d.o.f.)
+    g_nu: float = 1.
+
+    # Cosmological (i.e. LambdaCDM) relic neutrino number density, per d.o.f.
+    N0 = zeta(3.)/Pi**2 * T_CNB**3 * (3./4.)
+    N0_cm3 = N0/cm**-3
+
+    # Cosmolofical relic neutrino energy density, per d.o.g.
+    rho_0 = Pi**2/30 * T_CNB**4 * (7./8.)
+
+    # Key to fix random numbers of code
+    key = jax.random.PRNGKey(0)
+
+    #############################
+    ### Simulation Parameters ###
+    #############################
+    p_start: float = 0.01
+    p_stop: float  = 400.0
+    p_num: int     = 1000
+    phis: int      = 20
+    thetas: int    = 20
+
+    ##########################################
+    ### Parameters - Mertsch et al. (2020) ###
+    ##########################################
+
+    # NFW parameters for Milky Way.
+    Mvir_MW  = 2.03e12*Msun                            # Virial mass
+    rho0_MW  = 1.06e7*(Msun/kpc**3)                    # density normalization
+    Rs_MW    = 19.9*kpc                                # scale radius 
+    Rvir_MW  = 333.5*kpc                               # virial radius
+
+    # NFW parameters for Virgo Cluster.
+    Mvir_VC  = 6.9e14*Msun                             # Virial mass
+    rho0_VC  = 8.08e5*(Msun/kpc**3)                    # density normalization
+    Rs_VC    = 399.1*kpc                               # scale radius 
+    Rvir_VC  = 2328.8*kpc                              # virial radius
+
+    # Coordinates.
+    GLAT_VC = 74.44                                    # Galactic latitude
+    GLON_VC = 283.81                                   # Galactic longitude
+    DIST_VC = 16.5e3*kpc                               # Distance
+
+    # Translated to cartesian coordinates [kpc] in our setup (from fct.halo_pos).
+    X_VC    = np.array([-4289.63477282, 1056.51861602, 15895.27621304])
+
+
+
+    ##########################
+    ### PTOLEMY Parameters ###
+    ##########################
+    """From https://arxiv.org/abs/1902.05508."""
+    sigma_avg: float = 3.834e-45*cm**2   # velocity-averaged cross-section
+    M_T: float       = 100*gram          # target total Tritium mass in setup
+    M_3H: float      = 2809.432*MeV      # atomic mass of Helium-3 (3He)
+    M_3He: float     = 2809.413*MeV      # atomic mass of 3H (Tritium)
+    m_3H: float      = 2808.921*MeV      # nuclear mass of 3H (Tritium)
+    m_3He: float     = 2808.391*MeV      # nuclear mass of Helium-3 (3He)
+    N_T: float       = M_T / m_3H        # number of Tritium atoms
+
+    m_e: float       = 0.510998950*MeV   # electron mass
+    m_n: float       = 939.56542052*MeV  # neutron mass
+    m_p: float       = 938.27208816*MeV  # proton mass
+
+    # Kinetic energy of electron at beta-decay endpoint, with a massless neutrino.
+    """Lower eqn. of (5.5) in http://arxiv.org/abs/2109.02900."""
+    K0_end: float = ((m_3H - m_e)**2 - m_3He**2)/(2*m_3H)
+
+
+    ###########################
+    ### Neutrino Parameters ###
+    ###########################
+    # Taken from https://arxiv.org/abs/2007.14792
+
+    # PMNS matrix elements of electron flavor (absolute value squared), i.e.
+    # |U_e1|^2, |U_e2|^2, |U_e3|^2
+    # Taken as average values between upper and lower limits from eqn. (4.2)
+
+    # For Normal Ordering
+    U_ei_AbsSq_NO = jnp.array([0.681, 0.297, 0.0222])
+
+    # For Inverted Ordering
+    U_ei_AbsSq_IO = jnp.array([0.0222, 0.681, 0.297])
+
+    # Measured neutrino mass squared differences from Table 3 (witout SK atm. data)
+    Del_m21_Sq: float = 7.42e-5 * eV**2
+    Del_m31_Sq_NO: float = 2.514e-3 * eV**2
+    Del_m32_Sq_IO: float = 2.497e-3 * eV**2
+
+
+    # Keyword arguments for healpy maps and matplotlib grids (used via args=Params()).
+    healpy_dict = dict(
+        coord=['G'],
+        graticule=True,
+        graticule_labels=True,
+        xlabel="longitude",
+        ylabel="latitude",
+        cb_orientation="horizontal",
+        projection_type="mollweide",
+        flip='astro',
+        latitude_grid_spacing=45,
+        longitude_grid_spacing=45,
+        phi_convention='counterclockwise',
+    )
+
+    grid_dict = dict(
+        visible=True, 
+        which="both", 
+        ls="dashed", 
+        alpha=0.5
+    )
