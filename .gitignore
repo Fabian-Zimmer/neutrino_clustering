@@ -1,0 +1,18 @@
+# Python and tooling
+__pycache__/
+*.py[cod]
+.venv/
+.ipynb_checkpoints/
+.ruff_cache/
+.DS_Store
+
+# Data, simulation runs, figures and job logs live outside git (see README)
+/data/
+/runs/
+/figures/
+/jobs/
+*.npy
+*.npz
+*.hdf5
+*.h5
+*.dat
