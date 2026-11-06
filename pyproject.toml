@@ -1,0 +1,87 @@
+[project]
+name = "neutrino-clustering"
+version = "2.0.0"
+description = "N-1-body simulations of relic neutrinos (CNB) through dark matter halos"
+readme = "README.md"
+authors = [{ name = "Fabian Zimmer" }]
+# Versions are pinned to the environment that produced the published results.
+requires-python = ">=3.10,<3.11"
+dependencies = [
+    "jax==0.4.23",
+    "jaxlib==0.4.23",
+    "diffrax==0.5.0",
+    "equinox==0.11.3",
+    "chex==0.1.85",
+    "numpy==1.26.3",
+    "scipy==1.12.0",
+    "astropy==6.0.0",
+    "matplotlib==3.8.2",
+    "healpy==1.16.6",
+    "pandas==2.2.0",
+    "scikit-learn==1.4.0",
+    "h5py==3.10.0",
+    "pyyaml==6.0.1",
+    "psutil==5.9.8",
+    "funcy==2.0",
+    "natpy==0.1.1",
+    "colorcet==3.0.1",
+]
+
+[project.optional-dependencies]
+# Reading the raw SWIFT/VELOCIraptor simulation box (scripts/make_box.py).
+box = [
+    "velociraptor==0.16.1",
+    "swiftsimio==7.0.1",
+    "unyt==3.0.1",
+]
+# Sampling the NFW benchmark halo (scripts/make_benchmark_halo.py).
+benchmark = [
+    "commah==0.3",
+    "pynverse==0.1.4.6",
+]
+
+[dependency-groups]
+notebooks = [
+    "ipykernel==6.29.0",
+    "nbstripout==0.7.1",
+]
+dev = [
+    "ruff==0.6.9",
+]
+
+[tool.uv]
+default-groups = ["notebooks"]
+# Transitive versions from the original conda environment (neutrino_clustering.yml).
+constraint-dependencies = [
+    "absl-py==2.1.0",
+    "jaxtyping==0.2.25",
+    "lineax==0.0.4",
+    "optimistix==0.0.6",
+    "ml-dtypes==0.3.2",
+    "opt-einsum==3.3.0",
+    "typeguard==2.13.3",
+    "toolz==0.12.1",
+    "pyerfa==2.0.1.1",
+    "contourpy==1.2.0",
+    "fonttools==4.47.2",
+    "kiwisolver==1.4.5",
+    "pillow==10.0.1",
+    "joblib==1.3.2",
+    "threadpoolctl==3.2.0",
+    "cosmolopy==0.4.1",
+]
+
+# cosmolopy (needed by commah) builds a C extension with SWIG.
+[tool.uv.extra-build-dependencies]
+cosmolopy = ["swig==4.1.1.post1"]
+
+[build-system]
+requires = ["uv_build>=0.8,<0.14"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-name = "cnb"
+
+[tool.ruff]
+line-length = 100
+extend-include = ["*.ipynb"]
