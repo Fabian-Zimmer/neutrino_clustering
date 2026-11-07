@@ -1,0 +1,35 @@
+#!/bin/bash
+# One job script for every step of the pipeline. Submit from the repo root:
+#
+#   mkdir -p jobs
+#   sbatch [sbatch options] slurm/run.job <script> <config>
+#   sbatch -t 00:30:00 slurm/run.job scripts/simulate.py configs/dm_halos.yaml
+#
+# The defaults below are a full rome node on Snellius. Override them on the
+# command line (-t, --cpus-per-task, --mem, -J); each config lists the
+# settings that were used for its steps. Keep CPUs_simulations and
+# CPUs_precalculations in the config equal to --cpus-per-task.
+#
+# rome  node- full: 128/224 ; half: 64/112 ; quarter: 32/56 ; CPUs/GB.
+# genoa node- full: 192/336 ; half: 96/168 ; quarter: 48/84 ; CPUs/GB.
+
+#SBATCH --job-name=cnb
+#SBATCH -p rome
+#SBATCH -t 01:00:00
+#SBATCH -N 1
+#SBATCH --tasks-per-node=1
+#SBATCH --cpus-per-task=128
+#SBATCH --mem=224000
+#SBATCH --exclusive
+#SBATCH -o jobs/%x_%j.out
+#SBATCH -e jobs/%x_%j.err
+
+set -euo pipefail
+
+module purge
+
+cd "$SLURM_SUBMIT_DIR"
+
+# The environment is defined by pyproject.toml and uv.lock (install uv once
+# with `curl -LsSf https://astral.sh/uv/install.sh | sh`).
+uv run --frozen python "$@"

@@ -1,0 +1,53 @@
+# Relic neutrinos in Milky-Way-like DM halos of the box (papers 1 and 2).
+# Parameters as in the *_1k runs (e.g. runs/SunMod_1k/sim_parameters.yaml):
+# healpix Nside 8, 1000 log-spaced momenta per pixel.
+#
+#   sbatch -t 00:10:00 --cpus-per-task=32 --mem=56000 slurm/run.job scripts/make_box.py configs/dm_halos.yaml
+#   sbatch -t 00:10:00 --cpus-per-task=32 --mem=56000 slurm/run.job scripts/make_parameters.py configs/dm_halos.yaml
+#   sbatch -t 04:00:00 slurm/run.job scripts/precalculate_grids.py configs/dm_halos.yaml
+#   sbatch -t 04:00:00 slurm/run.job scripts/simulate.py configs/dm_halos.yaml
+
+run_dir: runs/Dopri5_1k                 # parameters and outputs of this run
+data_dir: data/halo_grids               # precalculated grids (can be shared between runs)
+box_directory: /projects/0/prjs0781/simulation_data/Tango_sims   # raw SWIFT box (Snellius)
+
+box:                                    # scripts/make_box.py
+  initial_snap_z0: 36
+  final_snap_z4: 12
+
+parameters:                             # scripts/make_parameters.py
+  healpix_nside: 8
+  nu_mass_start: 0.01                   # eV, mass range for total densities
+  nu_mass_stop: 0.3
+  nu_mass_num: 50
+  nu_sim_mass: 0.3                      # eV, mass used to turn momenta into velocities
+  specific_masses: [0.01, 0.05, 0.1, 0.2, 0.3]
+  p_start: 0.01                         # momenta in units of T_CNB
+  p_stop: 400.0
+  p_num: 1000
+  p_spacing: log                        # log (*_1k runs) or linear (SunMod_PSD* runs)
+  init_x_dis: 8.178                     # kpc, Earth's distance from the halo centre
+  z_int_shift: 0.1
+  z_int_stop: 4.0
+  z_int_num: 100
+  CPUs_precalculations: 128
+  CPUs_simulations: 128
+  memory_limit_GB: 224
+  DM_in_cell_limit: 1000
+
+halos:                                  # halo sample from the box's halo catalogue
+  mass_gauge: 12.0                      # log10(M/Msun) and range [lower, upper] x 1e12 Msun
+  mass_lower: 0.6
+  mass_upper: 2.0
+  halo_num: 30
+  skip: [20]                            # halo 20 has no DM position data at snapshot 0012
+
+precalculate:
+  sim_type: halos                       # halos | benchmark
+
+simulate:
+  mode: halos
+  relativistic: true                    # false: Newtonian EOMs (compare notebook rel_EOMs)
+  save_all_z: false                     # true: keep vectors at all 100 z steps, no densities
+  skymap_masses: [0.01, 0.05, 0.1, 0.2, 0.3]   # eV, masses for pixel_densities.npy
+  testing: false                        # true: only the first pixel, no multiprocessing
