@@ -1,6 +1,9 @@
+"""Gravitational acceleration of an NFW Milky Way halo at Earth's position (check for paper 3)."""
+
 import numpy as np
 import matplotlib.pyplot as plt
-from Shared.shared import Params
+
+from cnb.units import Params
 
 class NFWHalo:
     """

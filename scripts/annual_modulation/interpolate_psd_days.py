@@ -1,19 +1,27 @@
-from Shared.shared import *
-from Shared.specific_CNB_sim import *
+"""Annual modulation: daily number densities with the phase-space density of the DM halo runs.
+
+For each simulated day (vectors_day*.npy), interpolates the gravitational
+phase-space density of the DM halo simulations (vectors_halo*.npy in the same
+run folder) onto the day's momenta and integrates the number density. Saves
+<run_dir>/n_nu_days.npy and days_nrs.npy. Superseded by make_density_data.py
+(with_DM_gravity + interp_grav_psd), kept for reference.
+
+Usage: python scripts/annual_modulation/interpolate_psd_days.py configs/solar_modulation.yaml
+"""
+
+from cnb.config import config_from_cli
+
 import gc
+from jax.scipy.integrate import trapezoid as trap
+import jax.numpy as jnp
+import os
 
-# sim_name = f"Dopri5_1k"
-# sim_folder = f"sim_output_data/{sim_name}"
+from cnb.physics import Physics
+from cnb.sim_data import SimData
+from cnb.units import Params
+from cnb.utils import Utils
 
-# sim_name = f"SunMod_1k"
-# sim_folder = f"sim_output/{sim_name}"
-
-sim_name = f"high_res"
-sim_folder = f"sim_output/{sim_name}"
-
-fig_folder = f"figures_local/{sim_name}"
-Cl_folder = f"Shared/Cls"
-nu_m_range = jnp.load(f"{sim_folder}/neutrino_massrange_eV.npy")
+sim_folder = config_from_cli(__doc__)["run_dir"]
 nu_m_picks = jnp.array([0.01, 0.05, 0.1, 0.2, 0.3])*Params.eV
 simdata = SimData(sim_folder)
 
@@ -65,7 +73,7 @@ for day in range(365):
         ### ================== ###
 
         # Neutrino velocities
-        halo_num = 2
+        halo_num = 2  # DM halo runs (vectors_halo*.npy) to take the PSD from
         vels = SimData.load_velocities(sim_dir=sim_folder, halo_num=halo_num)
 
         # Convert velocities to momenta

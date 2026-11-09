@@ -1,6 +1,23 @@
-from Shared.shared import *
-from Shared.specific_CNB_sim import *
+"""Annual modulation from the analytical approach of Safdi et al. (paper 3 comparison).
 
+Number density on Earth over one year for a Fermi-Dirac (unbound) and a
+standard-halo-model (bound) neutrino population, using Earth's orbit. Saves to
+<run_dir>/annual_densities_analytical/.
+
+Usage: python scripts/annual_modulation/analytical_modulation_safdi.py configs/solar_modulation.yaml
+"""
+
+from cnb.config import config_from_cli
+from astropy.time import Time
+from jax.scipy.integrate import trapezoid as trap
+import jax
+import jax.numpy as jnp
+import jax.scipy as jsp
+import os
+
+from cnb.astro import Astro
+from cnb.units import Params
+from cnb.utils import Utils
 
 ### ==================================== ###
 ### Get Earth's positions and velocities ###
@@ -9,9 +26,9 @@ from Shared.specific_CNB_sim import *
 year = 2023
 
 earth_positions = jnp.array(
-    [pos for _, pos in SimUtil.calculate_earth_position(year)])*Params.AU
+    [pos for _, pos in Astro.calculate_earth_position(year)])*Params.AU
 earth_velocities = jnp.array(
-    [vel for _, vel in SimUtil.calculate_earth_velocity(year)])*Params.km/Params.s
+    [vel for _, vel in Astro.calculate_earth_velocity(year)])*Params.km/Params.s
 # print(earth_positions.shape, earth_velocities.shape)
 # print(earth_positions[0], jnp.linalg.norm(earth_velocities[0]))
 
@@ -39,7 +56,7 @@ def f_distr(v_range, t_index, m_nu, bound, v_0):
     # # Compute v_inf and v argument as used for f(v)
     # r_s = earth_positions[t_index]
     # v_s = v_nu + earth_velocities[t_index]
-    # v_inf = SimPlot.v_infinity(v_s, r_s)
+    # v_inf = Astro.v_infinity(v_s, r_s)
 
     def bound_case(_):
 
@@ -50,7 +67,7 @@ def f_distr(v_range, t_index, m_nu, bound, v_0):
         # Compute v_inf and v argument as used for f(v)
         r_s = earth_positions[t_index]
         v_s = v_nu + earth_velocities[t_index]
-        v_inf = SimPlot.v_infinity(v_s, r_s)
+        v_inf = Astro.v_infinity(v_s, r_s)
 
         v_for_f = v_inf + v_Sun  # original
         v_for_f_mag = jnp.linalg.norm(v_for_f, axis=-1)
@@ -81,7 +98,7 @@ def f_distr(v_range, t_index, m_nu, bound, v_0):
         # Compute v_inf and v argument as used for f(v)
         r_s = earth_positions[t_index]
         v_s = v_nu + earth_velocities[t_index]
-        v_inf = SimPlot.v_infinity(v_s, r_s)
+        v_inf = Astro.v_infinity(v_s, r_s)
 
         v_for_f = v_inf + v_CNB  # original
         v_for_f_mag = jnp.linalg.norm(v_for_f, axis=-1)
@@ -165,8 +182,10 @@ def compute_modulations(m_nu_light, m_nu_heavy, out_dir):
                 densities)
 
 
-m_nu_l = 0.15
-m_nu_h = 0.35
-# compute_modulations(m_nu_l, m_nu_h)
-# compute_modulations(m_nu_l, m_nu_h)
-compute_modulations(m_nu_l, m_nu_h, out_dir="sim_output/SunMod_1k/annual_densities_analytical")
+if __name__ == "__main__":
+    out_dir = f"{config_from_cli(__doc__)['run_dir']}/annual_densities_analytical"
+    os.makedirs(out_dir, exist_ok=True)
+
+    m_nu_l = 0.15
+    m_nu_h = 0.35
+    compute_modulations(m_nu_l, m_nu_h, out_dir=out_dir)
