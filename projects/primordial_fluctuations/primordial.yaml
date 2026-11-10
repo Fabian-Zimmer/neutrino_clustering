@@ -1,0 +1,20 @@
+# Primordial fluctuations (paper 2, arXiv:2407.14582).
+# The run in run_dir must exist (scripts/simulate.py, mode: halos). For a
+# z_cut, simulate a run that stops at that redshift (parameters.z_int_stop),
+# as the old runs Dopri5_1k_z0p15, _z0p5, _z1, _z2.
+#
+#   sbatch -t 00:10:00 --cpus-per-task=32 --mem=56000 slurm/run.job projects/primordial_fluctuations/fluctuation_densities.py projects/primordial_fluctuations/primordial.yaml
+
+run_dir: runs/Dopri5_1k
+cl_dir: data/primordial/Cls             # Cl's from CLASS: Cls_z=<z>_m=<m>eV.npy
+delta_dir: data/primordial/Deltas       # output: fluctuation maps Delta_matrix_*.npy
+
+halos:
+  halo_num: 30
+  skip: [20]
+
+primordial:
+  z_cut: null                           # null: run ends at z~4; else 0.15, 0.5, 1, 2
+  masses: [0.01, 0.05, 0.1, 0.2, 0.3]   # eV; the z_cut runs used [0.01, 0.1]
+  random_phases: true                   # true: other seed per momentum bin; false: seed 5 for all
+  seeds: 10                             # fluctuation_densities_seeds.py only

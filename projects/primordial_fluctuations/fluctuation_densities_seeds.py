@@ -1,49 +1,45 @@
-from Shared.specific_CNB_sim import *
+"""Number densities including primordial fluctuations, for several random seeds (paper 2).
 
-# This script solely computes the pixel and total densities,
-# when including the primordial temperature fluctuations, 
-# drawn from different seeds.
+Same as fluctuation_densities.py, but draws the fluctuation maps for 10 seeds
+(Primordial.generate_DeltaTs_seeds) to estimate the scatter between
+realisations. Saves *_seeds_halo<N>[_random_phases].npy in run_dir.
 
-# Argparse inputs.
-parser = argparse.ArgumentParser()
-parser.add_argument('--sim_dir', required=True)
-parser.add_argument('--shared_dir', required=True)
-parser.add_argument('--halo_num', required=True)
-parser.add_argument('--redshift_cut', required=True)
-pars = parser.parse_args()
+Usage: python projects/primordial_fluctuations/fluctuation_densities_seeds.py projects/primordial_fluctuations/primordial.yaml
+"""
 
-if pars.redshift_cut == "0.5":
-    z_cut = 0.5
-elif pars.redshift_cut == "0.15":
-    z_cut = 0.15
-else:
-    z_cut = int(pars.redshift_cut)
+import jax.numpy as jnp
+
+from cnb.config import config_from_cli
+from cnb.physics import Physics
+from cnb.primordial import Primordial
+from cnb.sim_data import SimData
+from cnb.units import Params
+
+cfg = config_from_cli(__doc__)
+pf = cfg["primordial"]
+run_dir, Cl_folder, Delta_folder = cfg["run_dir"], cfg["cl_dir"], cfg["delta_dir"]
+skip = set(cfg["halos"].get("skip", []))
+
+# Redshift where the simulation ends (z~4 for full runs).
+z_cut = 4 if pf["z_cut"] is None else pf["z_cut"]
 
 # Load simulation parameters
-simdata = SimData(pars.sim_dir)
+simdata = SimData(run_dir)
 
-nu_m_picks = jnp.array([
-    0.01, 
-    # 0.05, 
-    0.1, 
-    # 0.2, 
-    # 0.3
-])*Params.eV
+nu_m_picks = jnp.array(pf["masses"])*Params.eV
 m_num = len(nu_m_picks)
-seeds = jnp.arange(10)
+seeds = jnp.arange(pf["seeds"])
 
 # note: False for synchronized harmonic maps for all q bins
-random_phases = True
+random_phases = pf["random_phases"]
 
 ### ============= ###
 ### Create Deltas ###
 ### ============= ###
 
 
-Cl_folder = f"Shared/Cls"
-Delta_folder = f"Shared/Deltas"
 
-Deltas_z0_matrix, Deltas_z_cut_matrix = SimUtil.generate_DeltaTs_seeds(
+Deltas_z0_matrix, Deltas_z_cut_matrix = Primordial.generate_DeltaTs_seeds(
     m_arr=nu_m_picks,
     Cl_dir=Cl_folder,
     Delta_dir=Delta_folder,
@@ -58,14 +54,14 @@ Deltas_z0_matrix, Deltas_z_cut_matrix = SimUtil.generate_DeltaTs_seeds(
 ### Do calculations for all halos ###
 ### ============================= ###
 
-for halo_j in range(int(pars.halo_num)):
+for halo_j in range(int(cfg["halos"]["halo_num"])):
 
-    # note: "Broken" halo, no DM position data at snapshot 0012.
-    if halo_j == 19:
+    # note: "Broken" halos (e.g. no DM position data at snapshot 0012).
+    if halo_j+1 in skip:
         continue
 
     # Load neutrino vectors from simulation
-    nu_vectors = jnp.load(f'{pars.sim_dir}/vectors_halo{halo_j+1}.npy')
+    nu_vectors = jnp.load(f'{run_dir}/vectors_halo{halo_j+1}.npy')
 
     # Convert to momenta
     v_arr = nu_vectors[..., 3:]
@@ -133,21 +129,21 @@ for halo_j in range(int(pars.halo_num)):
 
     if random_phases:
         jnp.save(
-            f"{pars.sim_dir}/Deltas_seeds_halo{halo_j+1}_random_phases.npy", 
+            f"{run_dir}/Deltas_seeds_halo{halo_j+1}_random_phases.npy", 
             jnp.array(Deltas_seeds_l))
         jnp.save(
-            f"{pars.sim_dir}/pixel_densities_incl_PFs_seeds_halo{halo_j+1}_random_phases.npy", 
+            f"{run_dir}/pixel_densities_incl_PFs_seeds_halo{halo_j+1}_random_phases.npy", 
             jnp.array(pix_dens_incl_PFs_seeds_l))
         jnp.save(
-            f"{pars.sim_dir}/total_densities_incl_PFs_seeds_halo{halo_j+1}_random_phases.npy", 
+            f"{run_dir}/total_densities_incl_PFs_seeds_halo{halo_j+1}_random_phases.npy", 
             jnp.array(tot_dens_incl_PFs_seeds_l))
     else:
         jnp.save(
-            f"{pars.sim_dir}/Deltas_seeds_halo{halo_j+1}.npy", 
+            f"{run_dir}/Deltas_seeds_halo{halo_j+1}.npy", 
             jnp.array(Deltas_seeds_l))
         jnp.save(
-            f"{pars.sim_dir}/pixel_densities_incl_PFs_seeds_halo{halo_j+1}.npy", 
+            f"{run_dir}/pixel_densities_incl_PFs_seeds_halo{halo_j+1}.npy", 
             jnp.array(pix_dens_incl_PFs_seeds_l))
         jnp.save(
-            f"{pars.sim_dir}/total_densities_incl_PFs_seeds_halo{halo_j+1}.npy", 
+            f"{run_dir}/total_densities_incl_PFs_seeds_halo{halo_j+1}.npy", 
             jnp.array(tot_dens_incl_PFs_seeds_l))
