@@ -1,18 +1,22 @@
-from Shared.shared import *
-from Shared.specific_CNB_decay import *
 from scipy.optimize import fsolve
+import jax.numpy as jnp
+import numpy as np
+
+from cnb.physics import Physics
+from cnb.sim_data import SimData
+from cnb.units import Params
 # note: Using numpy routines for fsolve compatibility
 
 sim_name = f"no_gravity"
-#! marias files are inside the Data/decay folder
-decay_dir = f"Data/decay"
-sim_folder = f"{decay_dir}/sim_output/{sim_name}"
-fig_folder = f"{decay_dir}/figures_local/{sim_name}"
+#! marias files are inside the data/decay folder
+decay_dir = f"data/decay"
+sim_folder = f"{decay_dir}/runs/{sim_name}"
+fig_folder = f"{decay_dir}/figures/{sim_name}"
 nu_m_range = jnp.load(f"{sim_folder}/neutrino_massrange_eV.npy")
 nu_m_picks = jnp.array([0.01, 0.05, 0.1, 0.2, 0.3])*Params.eV
 simdata = SimData(sim_folder)
 
-save_dir = f"sim_output/no_gravity_decay_test"
+save_dir = f"runs/no_gravity_decay_test"
 
 # note: We must have realistic neutrino masses
 m_light, m_mid, m_heavy = Physics.neutrino_masses(

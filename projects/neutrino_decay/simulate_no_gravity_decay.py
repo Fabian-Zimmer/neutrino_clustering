@@ -1,5 +1,16 @@
-from Shared.specific_CNB_sim import *
-from Shared.specific_CNB_decay import *
+from concurrent.futures import ProcessPoolExecutor
+import argparse
+import diffrax
+import jax
+import jax.numpy as jnp
+import numpy as np
+import time
+
+from decay import Decay
+from cnb.physics import Physics
+from cnb.sim_data import SimData
+from cnb.units import Params
+from cnb.utils import Utils
 
 total_start = time.perf_counter()
 
@@ -270,6 +281,9 @@ def simulate_neutrinos_1_pix(init_xyz, init_vels, Nr_column, common_args):
 
 # Lists for pixel and total number densities: d=daughter, p=parent, nd=no_decay
 pix_dens_l_used = []
+pix_dens_l_d = []   # daughters, parents, no decay (were never initialised before)
+pix_dens_l_p = []
+pix_dens_l_nd = []
 tot_dens_l_used = []
 pix_dens_l_rest = []
 tot_dens_l_rest = []

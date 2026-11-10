@@ -1,18 +1,28 @@
-from Shared.specific_CNB_sim import *
 import jax.random as random
-from scipy.optimize import fsolve
-from scipy.optimize import minimize
+from concurrent.futures import ProcessPoolExecutor
+import argparse
+import diffrax
+import jax
+import jax.numpy as jnp
+import numpy as np
+import time
+import yaml
+
+from cnb.physics import Physics
+from cnb.sim_data import SimData
+from cnb.units import Params
+from cnb.utils import Utils
 
 total_start = time.perf_counter()
 
 angle_momentum_decay = jnp.load(
-    f'sim_output/no_gravity/neutrino_angle_momentum_decay.npy') 
+    f'runs/no_gravity/neutrino_angle_momentum_decay.npy') 
 decayed_neutrinos_z = jnp.load(
-    f'sim_output/no_gravity/decayed_neutrinos_z.npy')
+    f'runs/no_gravity/decayed_neutrinos_z.npy')
 z_array = jnp.load(
-    f'sim_output/no_gravity/z_int_steps.npy')
+    f'runs/no_gravity/z_int_steps.npy')
 neutrino_momenta = jnp.load(
-    f'sim_output/no_gravity/neutrino_momenta.npy')
+    f'runs/no_gravity/neutrino_momenta.npy')
 
 m_h = 0.05 
 m_l = 0.3 

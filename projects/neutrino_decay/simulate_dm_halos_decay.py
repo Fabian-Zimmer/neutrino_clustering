@@ -1,5 +1,18 @@
-from Shared.specific_CNB_sim import *
-from Shared.specific_CNB_decay import *
+import argparse
+import diffrax
+import jax
+import jax.numpy as jnp
+import numpy as np
+import time
+
+from decay import Decay
+from cnb.forces import Forces
+from cnb.grid import SimGrid
+from cnb.physics import Physics
+from cnb.sim_data import SimData
+from cnb.units import Params
+from cnb.utils import Utils
+
 total_start = time.perf_counter()
 
 
@@ -12,7 +25,7 @@ parser.add_argument('-mg', '--mass_gauge', required=True)
 parser.add_argument('-ml', '--mass_lower', required=True)
 parser.add_argument('-mu', '--mass_upper', required=True)
 parser.add_argument('-hn', '--halo_num', required=True)
-parser.add_argument('--halo_num', required=True)
+parser.add_argument('--data_dir', default='data/halo_grids')
 parser.add_argument('--m_lightest', required=True)
 parser.add_argument('--gamma', required=True)
 parser.add_argument(
@@ -22,6 +35,7 @@ parser.add_argument(
 parser.add_argument(
     '--benchmark', required=True, action=argparse.BooleanOptionalAction)
 pars = parser.parse_args()
+data_dir = pars.data_dir
 
 # Instantiate simulation parameter class
 simdata = SimData(pars.directory)
@@ -66,7 +80,7 @@ first_negative_indices = jnp.where(
 
 
 # Create halo batch, files and other simulation setup parameters and arrays
-DM_mass, CPUs_sim, neutrinos, init_dis, zeds_snaps, z_int_steps, s_int_steps, nu_massrange, data_dir, halo_batch_IDs, halo_num = SimData.simulation_setup(
+DM_mass, CPUs_sim, neutrinos, init_dis, zeds_snaps, z_int_steps, s_int_steps, nu_massrange, halo_batch_IDs, halo_num = SimData.simulation_setup(
     sim_dir=pars.directory,
     m_lower=pars.mass_lower,
     m_upper=pars.mass_upper,
@@ -184,7 +198,7 @@ def EOMs(s_val, y, args):
         cell_grid = cell_grid_data[idx]
         cell_gens = cell_gens_data[idx]
         
-        cell_idx, *_ = SimExec.nu_in_which_cell(
+        cell_idx, *_ = Forces.nu_in_which_cell(
             x_i, cell_grid, cell_gens, snap_GRID_L)
         grad_tot = dPsi_grid[cell_idx, :]
 
@@ -196,7 +210,7 @@ def EOMs(s_val, y, args):
         DM_com = snaps_DM_com[idx]
         DM_num = snaps_DM_num[idx]
         QJ_abs = snaps_QJ_abs[idx]
-        grad_tot = SimExec.outside_gravity_quadrupole(
+        grad_tot = Forces.outside_gravity_quadrupole(
             x_i, DM_com, DM_mass, DM_num, QJ_abs)
 
         return grad_tot
@@ -288,6 +302,9 @@ def simulate_neutrinos_1_pix(init_xyz, init_vels, Nr_column,common_args):
 
 # Lists for pixel and total number densities
 pix_dens_l_used = []
+pix_dens_l_d = []   # daughters, parents, no decay (were never initialised before)
+pix_dens_l_p = []
+pix_dens_l_nd = []
 tot_dens_l_used = []
 pix_dens_l_rest = []
 tot_dens_l_rest = []

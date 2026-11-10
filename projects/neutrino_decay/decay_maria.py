@@ -1,7 +1,13 @@
-from Shared.shared import *
-import jax.random as random
+"""Original neutrino decay module by Maria (class `decay`); decay.py is the cleaned version."""
+
 from scipy.optimize import fsolve
-from scipy.optimize import minimize
+from jax.scipy.integrate import trapezoid as trap
+import jax
+import jax.numpy as jnp
+import matplotlib.pyplot as plt
+import numpy as np
+
+from cnb.physics import Physics
 
 class decay():
 
